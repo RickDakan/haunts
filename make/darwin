@@ -1,0 +1,10 @@
+gb -m
+
+rm -rf haunts.app
+mkdir -p haunts.app/Contents/MacOS
+mkdir -p haunts.app/Contents/lib
+
+cp haunts haunts.app/Contents/MacOS/haunts
+cp lib/libglop.so haunts.app/Contents/lib/
+
+cp -r data/* haunts.app/Contents/
