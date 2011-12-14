@@ -1,0 +1,31 @@
+{
+  "Themes" : [
+    "Burial Ground",
+    "Mad Scientist",
+    "Ancient Gods"
+  ],
+  "Sizes" : [
+    {
+      "Name" : "Small",
+      "Dx": 10,
+      "Dy": 10
+    },
+    {
+      "Name" : "Medium",
+      "Dx": 20,
+      "Dy": 15
+    },
+    {
+      "Name" : "Large",
+      "Dx": 20,
+      "Dy": 20
+    }
+  ],
+  "Decor" : [
+    "Paintings",
+    "Taxidermy",
+    "Bookshelves",
+    "Laboratory",
+    "Stray Tools"
+  ]
+}

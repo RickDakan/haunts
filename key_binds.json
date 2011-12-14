@@ -1,0 +1,9 @@
+{
+  "zoom in"   : "r",
+  "zoom out"  : "f",
+  "pan left"  : "a",
+  "pan right" : "d",
+  "pan up"    : "w",
+  "pan down"  : "s",
+  "quit"      : "ctrl+q"
+}
