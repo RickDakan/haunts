@@ -3,7 +3,6 @@ package base
 import (
   "glop/gin"
   "strings"
-  "fmt"
 )
 
 type KeyBinds map[string]string
@@ -40,9 +39,6 @@ func (kb KeyBinds) MakeKeyMap() KeyMap {
   for key,val := range kb {
     kids := getKeysFromString(val)
 
-    fmt.Printf("key: %v\n", key)
-    fmt.Printf("val: %v\n", val)
-    fmt.Printf("kids: %v\n", kids)
     if len(kids) == 1 {
       key_map[key] = gin.In().GetKey(kids[0])
     } else {

@@ -87,7 +87,7 @@ type RoomEditorPanel struct {
   Room *Room
 }
 
-func MakeRoomEditorPanel(room *Room) *RoomEditorPanel {
+func MakeRoomEditorPanel(room *Room) (*RoomViewer, *RoomEditorPanel) {
   var rep RoomEditorPanel
   rep.Room = room
   rep.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)  
@@ -109,10 +109,11 @@ func MakeRoomEditorPanel(room *Room) *RoomEditorPanel {
   pane.AddChild(rep.decor)
 
   rep.HorizontalTable = gui.MakeHorizontalTable()
-  viewer,_ := MakeRoomViewer("/Users/runningwild/Downloads/floor_01.png", 100, 30, 30, 65)
+  viewer := MakeRoomViewer(30, 30, 65)
+  viewer.ReloadFloor("/Users/runningwild/Downloads/floor_01.png")
   rep.AddChild(viewer)
   rep.AddChild(pane)
-  return &rep
+  return viewer, &rep
 }
 
 func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {

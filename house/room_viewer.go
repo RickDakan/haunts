@@ -58,10 +58,97 @@ type RoomViewer struct {
   flattened_drawables []sprite.ZDrawable
   flattened_positions []mathgl.Vec3
 
-  // Don't need to keep the image around once it's loaded into texture memory,
-  // only need to keep around the dimensions
-  bg_dims gui.Dims
+  dx,dy int
+
+  floor textureData
+  floor_reload_output chan textureData
+  floor_reload_input chan string
+
+  wall textureData
+  wall_reload_output chan textureData
+  wall_reload_input chan string
+
+
+  // // Don't need to keep the image around once it's loaded into texture memory,
+  // // only need to keep around the dimensions
+  // bg_dims gui.Dims
+  // texture gl.Texture
+}
+
+func (rv *RoomViewer) ReloadFloor(path string) {
+  fmt.Printf("sending %s...\n", path)
+  rv.floor_reload_input <- path
+  fmt.Printf("sendt.\n")
+}
+
+func (rv *RoomViewer) ReloadWall(path string) {
+  rv.wall_reload_input <- path
+}
+func bindToTexture(td *textureData) {
+  gl.Enable(gl.TEXTURE_2D)
+  td.texture = gl.GenTexture()
+  td.texture.Bind(gl.TEXTURE_2D)
+  gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+  glu.Build2DMipmaps(gl.TEXTURE_2D, 4, td.dims.Dx, td.dims.Dy, gl.RGBA, td.image.Pix)
+  td.image = nil
+}
+func (rv *RoomViewer) reloader() {
+  done := false
+  for !done {
+    select {
+    case td := <-rv.floor_reload_output:
+      rv.floor.texture.Delete()
+      rv.floor = td
+      bindToTexture(&rv.floor)
+
+    case td := <-rv.wall_reload_output:
+      rv.wall.texture.Delete()
+      rv.wall = td
+      bindToTexture(&rv.wall)
+
+    default:
+      done = true
+    }
+  }
+}
+
+type textureData struct {
+  dims    gui.Dims
   texture gl.Texture
+  image   *image.RGBA
+}
+
+func textureDataReloadRoutine(input <-chan string, output chan<- textureData) {
+  for path := range input {
+    f, err := os.Open(path)
+    if err != nil {
+      fmt.Printf("Error: %v\n", err)
+      // TODO: Log an error here
+      continue
+    }
+    image_data, _, err := image.Decode(f)
+    f.Close()
+    if err != nil {
+      fmt.Printf("Error: %v\n", err)
+      // TODO: Log an error here
+      continue
+    }
+
+    var td textureData
+
+    td.dims.Dx = image_data.Bounds().Dx()
+    td.dims.Dy = image_data.Bounds().Dy()
+
+    td.image = image.NewRGBA(image.Rect(0, 0, td.dims.Dx, td.dims.Dy))
+    draw.Draw(td.image, image_data.Bounds(), image_data, image.Point{0, 0}, draw.Over)
+
+    output <- td
+  }
+  close(output)
 }
 
 func (rv *RoomViewer) String() string {
@@ -81,48 +168,32 @@ func (rv *RoomViewer) AddFlattenedDrawable(x, y float32, zd sprite.ZDrawable) {
   rv.flattened_positions = append(rv.flattened_positions, mathgl.Vec3{x, y, 0})
 }
 
-func MakeRoomViewer(bg_path string, block_size, dx, dy int, angle float32) (*RoomViewer, error) {
+func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
 
-  f, err := os.Open(bg_path)
-  if err != nil {
-    return nil, err
-  }
-  defer f.Close()
-  bg, _, err := image.Decode(f)
-  if err != nil {
-    return nil, err
-  }
+  rv.floor_reload_output = make(chan textureData)
+  rv.floor_reload_input = make(chan string)
+  rv.wall_reload_output = make(chan textureData)
+  rv.wall_reload_input = make(chan string)
 
-  rv.block_size = block_size
+  go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
+  go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
+
+  rv.block_size = 1.0
+  rv.dx = dx
+  rv.dy = dy
   rv.angle = angle
-
-  rv.bg_dims.Dx = bg.Bounds().Dx()
-  rv.bg_dims.Dy = bg.Bounds().Dy()
-  rgba := image.NewRGBA(image.Rect(0, 0, rv.bg_dims.Dx, rv.bg_dims.Dy))
-  draw.Draw(rgba, bg.Bounds(), bg, image.Point{0, 0}, draw.Over)
-
-  gl.Enable(gl.TEXTURE_2D)
-  rv.texture = gl.GenTexture()
-  rv.texture.Bind(gl.TEXTURE_2D)
-  gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-  glu.Build2DMipmaps(gl.TEXTURE_2D, 4, rv.bg_dims.Dx, rv.bg_dims.Dy, gl.RGBA, rgba.Pix)
-
-  rv.Zoom(-1)
-  rv.fx = float32(rv.bg_dims.Dx / rv.block_size / 2)
-  rv.fy = float32(rv.bg_dims.Dy / rv.block_size / 2)
-
+  rv.fx = float32(rv.dx / 2)
+  rv.fy = float32(rv.dy / 2)
+  rv.Zoom(1)
   rv.makeMat()
   rv.Request_dims.Dx = 100
   rv.Request_dims.Dy = 100
   rv.Ex = true
   rv.Ey = true
-  return &rv, nil
+
+  return &rv
 }
 
 func (rv *RoomViewer) makeMat() {
@@ -190,8 +261,8 @@ func (rv *RoomViewer) Move(dx, dy float64) {
   dx, dy = dy+dx, dy-dx
   rv.fx += float32(dx) / rv.zoom
   rv.fy += float32(dy) / rv.zoom
-  rv.fx = clamp(rv.fx, 0, float32(rv.bg_dims.Dx/rv.block_size))
-  rv.fy = clamp(rv.fy, 0, float32(rv.bg_dims.Dy/rv.block_size))
+  rv.fx = clamp(rv.fx, 0, float32(rv.dx))
+  rv.fy = clamp(rv.fy, 0, float32(rv.dy))
   rv.makeMat()
 }
 
@@ -201,14 +272,16 @@ func (rv *RoomViewer) Zoom(dz float64) {
     return
   }
   exp := math.Log(float64(rv.zoom)) + dz
-  exp = float64(clamp(float32(exp), -1.25, 1.25))
+  exp = float64(clamp(float32(exp), 2.5, 5.0))
   rv.zoom = float32(math.Exp(exp))
   rv.makeMat()
 }
 
 func (rv *RoomViewer) Draw(region gui.Region) {
+  rv.reloader()
   region.PushClipPlanes()
   defer region.PopClipPlanes()
+
   if rv.Render_region.X != region.X || rv.Render_region.Y != region.Y || rv.Render_region.Dx != region.Dx || rv.Render_region.Dy != region.Dy {
     rv.Render_region = region
     rv.makeMat()
@@ -225,8 +298,8 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Color3d(1, 0, 0)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-  fdx := float32(rv.bg_dims.Dx)
-  fdy := float32(rv.bg_dims.Dy)
+  fdx := float32(rv.dx)
+  fdy := float32(rv.dy)
 
   // Draw a simple border around the viewer
   gl.Color4d(1, .3, .3, 1)
@@ -239,7 +312,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.End()
 
   gl.Enable(gl.TEXTURE_2D)
-  rv.texture.Bind(gl.TEXTURE_2D)
+  rv.floor.texture.Bind(gl.TEXTURE_2D)
   gl.Color4d(1.0, 1.0, 1.0, 1.0)
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 0)
@@ -255,13 +328,13 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4f(0, 0, 0, 0.5)
   gl.Begin(gl.LINES)
-  for i := float32(0); i < float32(rv.bg_dims.Dx); i += float32(rv.block_size) {
+  for i := float32(0); i < float32(rv.dx); i += float32(rv.block_size) {
     gl.Vertex2f(i, 0)
-    gl.Vertex2f(i, float32(rv.bg_dims.Dy))
+    gl.Vertex2f(i, float32(rv.dy))
   }
-  for j := float32(0); j < float32(rv.bg_dims.Dy); j += float32(rv.block_size) {
+  for j := float32(0); j < float32(rv.dy); j += float32(rv.block_size) {
     gl.Vertex2f(0, j)
-    gl.Vertex2f(float32(rv.bg_dims.Dx), j)
+    gl.Vertex2f(float32(rv.dx), j)
   }
   gl.End()
 

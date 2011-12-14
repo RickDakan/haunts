@@ -65,12 +65,28 @@ func main() {
   // anch := gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
   room := house.MakeRoom()
   // anch.AddChild(house.MakeRoomEditorPanel(room), gui.Anchor{ 0.5, 0.5, 0.5, 0.5})
-  ui.AddChild(house.MakeRoomEditorPanel(room))
+  viewer,editor := house.MakeRoomEditorPanel(room)
+  ui.AddChild(editor)
   // ui.AddChild(anch)
 
+  sys.Think()
+  ui.Draw()
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
     ui.Draw()
+    zoom := key_map["zoom in"].FramePressAmt() - key_map["zoom out"].FramePressAmt()
+    viewer.Zoom(zoom / 50)
+    pan_x := key_map["pan right"].FramePressAmt() - key_map["pan left"].FramePressAmt()
+    pan_y := key_map["pan up"].FramePressAmt() - key_map["pan down"].FramePressAmt()
+    viewer.Move(pan_x * 7, pan_y * 7)
   }
 }
+
+
+
+
+
+
+
+
