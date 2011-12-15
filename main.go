@@ -65,21 +65,51 @@ func main() {
   // anch := gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
   room := house.MakeRoom()
   // anch.AddChild(house.MakeRoomEditorPanel(room), gui.Anchor{ 0.5, 0.5, 0.5, 0.5})
-  viewer,editor := house.MakeRoomEditorPanel(room)
+  editor := house.MakeRoomEditorPanel(room, datadir)
+  viewer := editor.RoomViewer
   ui.AddChild(editor)
   // ui.AddChild(anch)
 
   sys.Think()
   ui.Draw()
+  runtime.GOMAXPROCS(8)
+  var anchor *gui.AnchorBox
+  var chooser *gui.FileChooser
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
     ui.Draw()
-    zoom := key_map["zoom in"].FramePressAmt() - key_map["zoom out"].FramePressAmt()
-    viewer.Zoom(zoom / 50)
-    pan_x := key_map["pan right"].FramePressAmt() - key_map["pan left"].FramePressAmt()
-    pan_y := key_map["pan up"].FramePressAmt() - key_map["pan down"].FramePressAmt()
-    viewer.Move(pan_x * 7, pan_y * 7)
+    zoom := key_map["zoom in"].FramePressSum() - key_map["zoom out"].FramePressSum()
+    viewer.Zoom(zoom / 500)
+    pan_x := key_map["pan right"].FramePressSum() - key_map["pan left"].FramePressSum()
+    pan_y := key_map["pan up"].FramePressSum() - key_map["pan down"].FramePressSum()
+    if key_map["load"].FramePressCount() > 0 && chooser == nil {
+      callback := func(path string, err error) {
+        if err != nil && filepath.Ext(path) == ".room" {
+          // Load room
+        }
+        ui.DropFocus()
+        ui.RemoveChild(anchor)
+        chooser = nil
+        anchor = nil
+
+        new_room := house.LoadRoom(path)
+        if new_room != nil {
+          ui.RemoveChild(editor)
+          room = new_room
+          editor = house.MakeRoomEditorPanel(room, datadir)
+          viewer = editor.RoomViewer
+          ui.AddChild(editor)
+        }
+      }
+      chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(".room"))
+      anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+      anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+      ui.AddChild(anchor)
+      ui.TakeFocus(chooser)
+    }
+
+    viewer.Move(pan_x, pan_y)
   }
 }
 

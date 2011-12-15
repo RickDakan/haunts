@@ -5,5 +5,6 @@
   "pan right" : "d",
   "pan up"    : "w",
   "pan down"  : "s",
-  "quit"      : "ctrl+q"
+  "load"      : "l",
+  "quit"      : "gui+q"
 }

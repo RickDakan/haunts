@@ -76,9 +76,7 @@ type RoomViewer struct {
 }
 
 func (rv *RoomViewer) ReloadFloor(path string) {
-  fmt.Printf("sending %s...\n", path)
   rv.floor_reload_input <- path
-  fmt.Printf("sendt.\n")
 }
 
 func (rv *RoomViewer) ReloadWall(path string) {
@@ -123,7 +121,49 @@ type textureData struct {
 }
 
 func textureDataReloadRoutine(input <-chan string, output chan<- textureData) {
-  for path := range input {
+  gathered := make(chan string)
+
+  // This go-routine guarantees that there is no way someone can call Reload*()
+  // several times in a row and dead-lock everything because they didn't call
+  // Think() enough times while doing so.  This go-routine just collects
+  // requests and queues them up to send them off later, essentially like a
+  // buffered channel except of variable size.
+  go func() {
+    var pending []string
+    var next,last string
+    active := true
+    for active {
+      if len(pending) == 0 {
+        next,active = <-input
+        if next == last { continue }
+        last = next
+        if active {
+          pending = append(pending, next)
+        }
+      } else {
+        select {
+        case next,active = <-input:
+          if next == last { continue }
+          last = next
+          if active {
+            pending = append(pending, next)
+          }
+
+        case gathered <- pending[0]:
+          pending = pending[1:]
+          if len(pending) == 0 {
+            pending = nil
+          }
+        }
+      }
+    }
+    for _,path := range pending {
+      gathered <- path
+    }
+    close(gathered)
+  } ()
+
+  for path := range gathered {
     f, err := os.Open(path)
     if err != nil {
       fmt.Printf("Error: %v\n", err)
@@ -153,6 +193,11 @@ func textureDataReloadRoutine(input <-chan string, output chan<- textureData) {
 
 func (rv *RoomViewer) String() string {
   return "viewer"
+}
+
+func (rv *RoomViewer) SetDims(dx,dy int) {
+  rv.dx = dx
+  rv.dy = dy
 }
 
 func (rv *RoomViewer) AddUprightDrawable(x, y float32, zd sprite.ZDrawable) {
@@ -302,7 +347,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   fdy := float32(rv.dy)
 
   // Draw a simple border around the viewer
-  gl.Color4d(1, .3, .3, 1)
+  gl.Color4d(0.1, 0.3, 0.8, 1)
   gl.Begin(gl.QUADS)
   fbs := float32(rv.block_size)
   gl.Vertex2f(-fbs, -fbs)
@@ -311,22 +356,49 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Vertex2f(fdx+fbs, -fbs)
   gl.End()
 
+
+  // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
   rv.floor.texture.Bind(gl.TEXTURE_2D)
   gl.Color4d(1.0, 1.0, 1.0, 1.0)
   gl.Begin(gl.QUADS)
-  gl.TexCoord2f(0, 0)
-  gl.Vertex2f(0, 0)
-  gl.TexCoord2f(0, -1)
-  gl.Vertex2f(0, fdy)
-  gl.TexCoord2f(1, -1)
-  gl.Vertex2f(fdx, fdy)
-  gl.TexCoord2f(1, 0)
-  gl.Vertex2f(fdx, 0)
+    gl.TexCoord2f(0, 0)
+    gl.Vertex2f(0, 0)
+    gl.TexCoord2f(0, -1)
+    gl.Vertex2f(0, fdy)
+    gl.TexCoord2f(1, -1)
+    gl.Vertex2f(fdx, fdy)
+    gl.TexCoord2f(1, 0)
+    gl.Vertex2f(fdx, 0)
+  gl.End()
+
+
+  // Draw the wall
+  rv.wall.texture.Bind(gl.TEXTURE_2D)
+  corner := float32(rv.dx) / float32(rv.dx + rv.dy)
+  fdz := float32(-7.0)
+  gl.Begin(gl.QUADS)
+    gl.TexCoord2f(corner, 0)
+    gl.Vertex3f(fdx, fdy, 0)
+    gl.TexCoord2f(corner, -1)
+    gl.Vertex3f(fdx, fdy, fdz)
+    gl.TexCoord2f(0, -1)
+    gl.Vertex3f(0, fdy, fdz)
+    gl.TexCoord2f(0, 0)
+    gl.Vertex3f(0, fdy, 0)
+
+    gl.TexCoord2f(1, 0)
+    gl.Vertex3f(fdx, 0, 0)
+    gl.TexCoord2f(1, -1)
+    gl.Vertex3f(fdx, 0, fdz)
+    gl.TexCoord2f(corner, -1)
+    gl.Vertex3f(fdx, fdy, fdz)
+    gl.TexCoord2f(corner, 0)
+    gl.Vertex3f(fdx, fdy, 0)
   gl.End()
 
   gl.Disable(gl.TEXTURE_2D)
-  gl.Color4f(0, 0, 0, 0.5)
+  gl.Color4f(1, 0, 0, 0.3)
   gl.Begin(gl.LINES)
   for i := float32(0); i < float32(rv.dx); i += float32(rv.block_size) {
     gl.Vertex2f(i, 0)
