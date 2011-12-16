@@ -34,6 +34,7 @@ func init() {
   quit = gin.In().BindDerivedKey("quit", gin.In().MakeBinding('q', []gin.KeyId{ gin.EitherShift }, []bool{ true }))
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
+  base.SetDatadir(datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
     panic(err.Error())
@@ -63,7 +64,13 @@ func main() {
     panic(err.Error())
   }
   // anch := gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-  room := house.MakeRoom()
+  var room *house.Room
+  path := base.GetStoreVal("last room path")
+  if path != "" {
+    room = house.LoadRoom(path)
+  } else {
+    room = house.MakeRoom()
+  }
   // anch.AddChild(house.MakeRoomEditorPanel(room), gui.Anchor{ 0.5, 0.5, 0.5, 0.5})
   editor := house.MakeRoomEditorPanel(room, datadir)
   viewer := editor.RoomViewer
@@ -96,6 +103,7 @@ func main() {
 
           new_room := house.LoadRoom(path)
           if new_room != nil {
+            base.SetStoreVal("last room path", path)
             ui.RemoveChild(editor)
             room = new_room
             editor = house.MakeRoomEditorPanel(room, datadir)
@@ -114,11 +122,3 @@ func main() {
     }
   }
 }
-
-
-
-
-
-
-
-

@@ -16,10 +16,6 @@ var (
   tags    Tags
 )
 
-func init() {
-  fmt.Printf("")
-}
-
 // Sets the directory to/from which all data will be saved/loaded
 // Also immediately loads/reloads all Tags
 func SetDatadir(_datadir string) error {
@@ -232,7 +228,10 @@ func LoadRoom(path string) *Room {
 func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   var rep RoomEditorPanel
   rep.Room = room
-  rep.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)  
+  if room.Name == "" {
+    room.Name = "name"
+  }
+  rep.name = gui.MakeTextEditLine("standard", room.Name, 300, 1, 1, 1, 1)  
 
   if room.Floor_path == "" {
     room.Floor_path = datadir
@@ -245,6 +244,12 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   rep.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
 
   rep.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
+  for i := range tags.RoomSizes {
+    if tags.RoomSizes[i].String() == room.Size.String() {
+      rep.room_size.SetSelectedIndex(i)
+      break
+    }
+  }
   rep.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
   rep.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
   rep.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
@@ -263,6 +268,7 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   pane.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
     target_path := room.Save(datadir, time.Now().UnixNano())
     if target_path != "" {
+      base.SetStoreVal("last room path", target_path)
       // The paths can change when we save them so we should update the widgets
       if !filepath.IsAbs(room.Floor_path) {
         room.Floor_path = filepath.Join(target_path, room.Floor_path)
@@ -326,18 +332,3 @@ func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

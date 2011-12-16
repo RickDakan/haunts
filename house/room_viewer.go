@@ -16,10 +16,6 @@ import (
   "github.com/arbaal/mathgl"
 )
 
-func init() {
-  fmt.Printf("")
-}
-
 type RoomViewer struct {
   gui.Childless
   gui.EmbeddedWidget

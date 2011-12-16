@@ -63,3 +63,28 @@ func RelativePath(a,b string) string {
   ret := filepath.Join(filepath.Join(aparts...), filepath.Join(bparts...))
   return filepath.Clean(ret)
 }
+
+var datadir string
+func SetDatadir(_datadir string) {
+  datadir = _datadir
+}
+func GetStoreVal(key string) string {
+  var store map[string]string
+  LoadJson(filepath.Join(datadir, ".store"), &store)
+  if store == nil {
+    store = make(map[string]string)
+  }
+  val := store[key]
+  return val
+}
+
+func SetStoreVal(key,val string) {
+  var store map[string]string
+  path := filepath.Join(datadir, ".store")
+  LoadJson(path, &store)
+  if store == nil {
+    store = make(map[string]string)
+  }
+  store[key] = val
+  SaveJson(path, store)
+}
