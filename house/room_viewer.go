@@ -23,9 +23,6 @@ type RoomViewer struct {
   gui.NonThinker
   gui.NonFocuser
 
-  // Length of the side of block in the source image.
-  block_size int
-
   // All events received by the viewer are passed to the handler
   handler gin.EventHandler
 
@@ -221,7 +218,6 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
   go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
 
-  rv.block_size = 1.0
   rv.dx = dx
   rv.dy = dy
   rv.angle = angle
@@ -251,8 +247,8 @@ func (rv *RoomViewer) makeMat() {
 
   // Move the viewer so that (rv.fx,rv.fy) is at the origin, and hence becomes centered
   // in the window
-  xoff := (rv.fx + 0.5) * float32(rv.block_size)
-  yoff := (rv.fy + 0.5) * float32(rv.block_size)
+  xoff := rv.fx + 0.5
+  yoff := rv.fy + 0.5
   m.Translation(-xoff, -yoff, 0)
   rv.mat.Multiply(&m)
 
@@ -272,11 +268,11 @@ func (rv *RoomViewer) modelviewToBoard(mx, my float32) (float32, float32) {
   mz := (my - float32(rv.Render_region.Y+rv.Render_region.Dy/2)) * float32(math.Tan(float64(rv.angle*math.Pi/180)))
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&rv.imat)
-  return v.X / float32(rv.block_size), v.Y / float32(rv.block_size)
+  return v.X, v.Y
 }
 
 func (rv *RoomViewer) boardToModelview(mx, my float32) (x, y, z float32) {
-  v := mathgl.Vec4{X: mx * float32(rv.block_size), Y: my * float32(rv.block_size), W: 1}
+  v := mathgl.Vec4{X: mx, Y: my, W: 1}
   v.Transform(&rv.mat)
   x, y, z = v.X, v.Y, v.Z
   return
@@ -339,17 +335,14 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Color3d(1, 0, 0)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-  fdx := float32(rv.dx)
-  fdy := float32(rv.dy)
 
   // Draw a simple border around the viewer
   gl.Color4d(0.1, 0.3, 0.8, 1)
   gl.Begin(gl.QUADS)
-  fbs := float32(rv.block_size)
-  gl.Vertex2f(-fbs, -fbs)
-  gl.Vertex2f(-fbs, fdy+fbs)
-  gl.Vertex2f(fdx+fbs, fdy+fbs)
-  gl.Vertex2f(fdx+fbs, -fbs)
+  gl.Vertex2i(-1, -1)
+  gl.Vertex2i(-1, rv.dy+1)
+  gl.Vertex2i(rv.dx+1, rv.dy+1)
+  gl.Vertex2i(rv.dx+1, -1)
   gl.End()
 
 
@@ -358,49 +351,49 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   rv.floor.texture.Bind(gl.TEXTURE_2D)
   gl.Color4d(1.0, 1.0, 1.0, 1.0)
   gl.Begin(gl.QUADS)
-    gl.TexCoord2f(0, 0)
-    gl.Vertex2f(0, 0)
-    gl.TexCoord2f(0, -1)
-    gl.Vertex2f(0, fdy)
-    gl.TexCoord2f(1, -1)
-    gl.Vertex2f(fdx, fdy)
-    gl.TexCoord2f(1, 0)
-    gl.Vertex2f(fdx, 0)
+    gl.TexCoord2i(0, 0)
+    gl.Vertex2i(0, 0)
+    gl.TexCoord2i(0, -1)
+    gl.Vertex2i(0, rv.dy)
+    gl.TexCoord2i(1, -1)
+    gl.Vertex2i(rv.dx, rv.dy)
+    gl.TexCoord2i(1, 0)
+    gl.Vertex2i(rv.dx, 0)
   gl.End()
 
 
   // Draw the wall
   rv.wall.texture.Bind(gl.TEXTURE_2D)
   corner := float32(rv.dx) / float32(rv.dx + rv.dy)
-  fdz := float32(-7.0)
+  dz := 7
   gl.Begin(gl.QUADS)
     gl.TexCoord2f(corner, 0)
-    gl.Vertex3f(fdx, fdy, 0)
+    gl.Vertex3i(rv.dx, rv.dy, 0)
     gl.TexCoord2f(corner, -1)
-    gl.Vertex3f(fdx, fdy, fdz)
+    gl.Vertex3i(rv.dx, rv.dy, -dz)
     gl.TexCoord2f(0, -1)
-    gl.Vertex3f(0, fdy, fdz)
+    gl.Vertex3i(0, rv.dy, -dz)
     gl.TexCoord2f(0, 0)
-    gl.Vertex3f(0, fdy, 0)
+    gl.Vertex3i(0, rv.dy, 0)
 
     gl.TexCoord2f(1, 0)
-    gl.Vertex3f(fdx, 0, 0)
+    gl.Vertex3i(rv.dx, 0, 0)
     gl.TexCoord2f(1, -1)
-    gl.Vertex3f(fdx, 0, fdz)
+    gl.Vertex3i(rv.dx, 0, -dz)
     gl.TexCoord2f(corner, -1)
-    gl.Vertex3f(fdx, fdy, fdz)
+    gl.Vertex3i(rv.dx, rv.dy, -dz)
     gl.TexCoord2f(corner, 0)
-    gl.Vertex3f(fdx, fdy, 0)
+    gl.Vertex3i(rv.dx, rv.dy, 0)
   gl.End()
 
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4f(1, 0, 0, 0.3)
   gl.Begin(gl.LINES)
-  for i := float32(0); i < float32(rv.dx); i += float32(rv.block_size) {
+  for i := float32(0); i < float32(rv.dx); i += 1.0 {
     gl.Vertex2f(i, 0)
     gl.Vertex2f(i, float32(rv.dy))
   }
-  for j := float32(0); j < float32(rv.dy); j += float32(rv.block_size) {
+  for j := float32(0); j < float32(rv.dy); j += 1.0 {
     gl.Vertex2f(0, j)
     gl.Vertex2f(float32(rv.dx), j)
   }
@@ -408,7 +401,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
 
   for i := range rv.flattened_positions {
     v := rv.flattened_positions[i]
-    rv.flattened_drawables[i].Render(v.X, v.Y, 0, float32(rv.block_size))
+    rv.flattened_drawables[i].Render(v.X, v.Y, 0, 1.0)
   }
   rv.flattened_positions = rv.flattened_positions[0:0]
   rv.flattened_drawables = rv.flattened_drawables[0:0]
