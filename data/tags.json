@@ -4,7 +4,7 @@
     "Mad Scientist",
     "Ancient Gods"
   ],
-  "Sizes" : [
+  "RoomSizes" : [
     {
       "Name" : "Small",
       "Dx": 10,
@@ -20,6 +20,11 @@
       "Dx": 20,
       "Dy": 20
     }
+  ],
+  "HouseSizes" : [
+    "House",
+    "Mansion",
+    "Estate"
   ],
   "Decor" : [
     "Paintings",

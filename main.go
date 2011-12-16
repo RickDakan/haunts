@@ -79,37 +79,39 @@ func main() {
     sys.SwapBuffers()
     sys.Think()
     ui.Draw()
-    zoom := key_map["zoom in"].FramePressSum() - key_map["zoom out"].FramePressSum()
-    viewer.Zoom(zoom / 500)
-    pan_x := key_map["pan right"].FramePressSum() - key_map["pan left"].FramePressSum()
-    pan_y := key_map["pan up"].FramePressSum() - key_map["pan down"].FramePressSum()
-    if key_map["load"].FramePressCount() > 0 && chooser == nil {
-      callback := func(path string, err error) {
-        if err != nil && filepath.Ext(path) == ".room" {
-          // Load room
-        }
-        ui.DropFocus()
-        ui.RemoveChild(anchor)
-        chooser = nil
-        anchor = nil
+    if ui.FocusWidget() == nil {
+      zoom := key_map["zoom in"].FramePressSum() - key_map["zoom out"].FramePressSum()
+      viewer.Zoom(zoom / 500)
+      pan_x := key_map["pan right"].FramePressSum() - key_map["pan left"].FramePressSum()
+      pan_y := key_map["pan up"].FramePressSum() - key_map["pan down"].FramePressSum()
+      if key_map["load"].FramePressCount() > 0 && chooser == nil {
+        callback := func(path string, err error) {
+          if err != nil && filepath.Ext(path) == ".room" {
+            // Load room
+          }
+          ui.DropFocus()
+          ui.RemoveChild(anchor)
+          chooser = nil
+          anchor = nil
 
-        new_room := house.LoadRoom(path)
-        if new_room != nil {
-          ui.RemoveChild(editor)
-          room = new_room
-          editor = house.MakeRoomEditorPanel(room, datadir)
-          viewer = editor.RoomViewer
-          ui.AddChild(editor)
+          new_room := house.LoadRoom(path)
+          if new_room != nil {
+            ui.RemoveChild(editor)
+            room = new_room
+            editor = house.MakeRoomEditorPanel(room, datadir)
+            viewer = editor.RoomViewer
+            ui.AddChild(editor)
+          }
         }
+        chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(".room"))
+        anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+        anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+        ui.AddChild(anchor)
+        ui.TakeFocus(chooser)
       }
-      chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(".room"))
-      anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-      anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
-      ui.AddChild(anchor)
-      ui.TakeFocus(chooser)
-    }
 
-    viewer.Move(pan_x, pan_y)
+      viewer.Move(pan_x, pan_y)
+    }
   }
 }
 

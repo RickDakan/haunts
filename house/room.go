@@ -8,6 +8,7 @@ import (
   "glop/util/algorithm"
   "os"
   "io"
+  "time"
 )
 
 var (
@@ -46,9 +47,10 @@ func (r *RoomSize) format() string {
 
 
 type Tags struct {
-  Themes []string
-  Sizes  []RoomSize
-  Decor  []string
+  Themes     []string
+  RoomSizes  []RoomSize
+  HouseSizes []string
+  Decor      []string
 }
 
 type Room struct {
@@ -84,6 +86,7 @@ type RoomEditorPanel struct {
   floor_path *gui.FileWidget
   wall_path  *gui.FileWidget
   themes     *gui.CheckBoxes
+  sizes      *gui.CheckBoxes
   decor      *gui.CheckBoxes
 
   Room       *Room
@@ -241,9 +244,10 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   }
   rep.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
 
-  rep.room_size = gui.MakeComboTextBox(algorithm.Map(tags.Sizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
-  rep.themes = gui.MakeCheckTextBox(tags.Themes, 300)
-  rep.decor = gui.MakeCheckTextBox(tags.Decor, 300)
+  rep.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
+  rep.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
+  rep.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
+  rep.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
 
   pane := gui.MakeVerticalTable()
   pane.Params().Spacing = 3  
@@ -254,9 +258,10 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   pane.AddChild(rep.wall_path)
   pane.AddChild(rep.room_size)
   pane.AddChild(rep.themes)
+  pane.AddChild(rep.sizes)
   pane.AddChild(rep.decor)
   pane.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
-    target_path := room.Save(datadir, t)
+    target_path := room.Save(datadir, time.Now().UnixNano())
     if target_path != "" {
       // The paths can change when we save them so we should update the widgets
       if !filepath.IsAbs(room.Floor_path) {
@@ -281,7 +286,7 @@ func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
   w.HorizontalTable.Think(ui, t)
   w.Room.Name = w.name.GetText()
 
-  w.Room.Size = tags.Sizes[w.room_size.GetComboedIndex()]
+  w.Room.Size = tags.RoomSizes[w.room_size.GetComboedIndex()]
   w.RoomViewer.SetDims(w.Room.Size.Dx, w.Room.Size.Dy)
 
   w.Room.Floor_path = w.floor_path.GetPath()
