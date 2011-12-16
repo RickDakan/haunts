@@ -82,11 +82,19 @@ func main() {
   runtime.GOMAXPROCS(8)
   var anchor *gui.AnchorBox
   var chooser *gui.FileChooser
+  var angle float32 = 65
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
     ui.Draw()
     if ui.FocusWidget() == nil {
+      pang := angle
+      pang += float32(gin.In().GetKey(gin.Up).FramePressCount() - gin.In().GetKey(gin.Down).FramePressCount())
+      if pang != angle {
+        angle = pang
+        fmt.Printf("angle: %f\n", angle)
+        viewer.AdjAngle(angle)
+      }
       zoom := key_map["zoom in"].FramePressSum() - key_map["zoom out"].FramePressSum()
       viewer.Zoom(zoom / 500)
       pan_x := key_map["pan right"].FramePressSum() - key_map["pan left"].FramePressSum()

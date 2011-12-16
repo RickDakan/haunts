@@ -70,7 +70,7 @@ func SetDatadir(_datadir string) {
 }
 func GetStoreVal(key string) string {
   var store map[string]string
-  LoadJson(filepath.Join(datadir, ".store"), &store)
+  LoadJson(filepath.Join(datadir, "store"), &store)
   if store == nil {
     store = make(map[string]string)
   }
@@ -80,7 +80,7 @@ func GetStoreVal(key string) string {
 
 func SetStoreVal(key,val string) {
   var store map[string]string
-  path := filepath.Join(datadir, ".store")
+  path := filepath.Join(datadir, "store")
   LoadJson(path, &store)
   if store == nil {
     store = make(map[string]string)

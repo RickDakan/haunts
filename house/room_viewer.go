@@ -14,7 +14,89 @@ import (
   "gl/glu"
   "math"
   "github.com/arbaal/mathgl"
+  "sort"
 )
+
+type RectObject interface {
+  // Position in board coordinates
+  Pos() mathgl.Vec2
+
+  // Dimensions in board coordinates
+  Dims() mathgl.Vec2
+
+  Render(pos mathgl.Vec2, width float32)
+}
+
+type furniture struct {
+  td textureData
+  pos mathgl.Vec2
+  dims mathgl.Vec2
+  image_dims mathgl.Vec2
+}
+func (f *furniture) Pos() mathgl.Vec2 {
+  return f.pos
+}
+func (f *furniture) Dims() mathgl.Vec2 {
+  return f.dims
+}
+func (f *furniture) Render(pos mathgl.Vec2, width float32) {
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Color4d(1, 0, 0, 0.3)
+  // Draw a furniture tile
+  dy := width * (f.image_dims.Y / f.image_dims.X)
+  // gl.Begin(gl.QUADS)
+  // gl.Vertex2f(pos.X, pos.Y)
+  // gl.Vertex2f(pos.X, pos.Y + dy)
+  // gl.Vertex2f(pos.X + width, pos.Y + dy)
+  // gl.Vertex2f(pos.X + width, pos.Y)
+  // gl.End()
+
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Color4d(1, 1, 1, 1)
+  // Draw a furniture tile
+  f.td.texture.Bind(gl.TEXTURE_2D)
+  gl.Begin(gl.QUADS)
+  gl.TexCoord2f(0, 1)
+  gl.Vertex2f(pos.X, pos.Y)
+  gl.TexCoord2f(0, 0)
+  gl.Vertex2f(pos.X, pos.Y + dy)
+  gl.TexCoord2f(1, 0)
+  gl.Vertex2f(pos.X + width, pos.Y + dy)
+  gl.TexCoord2f(1, 1)
+  gl.Vertex2f(pos.X + width, pos.Y)
+  gl.End()
+}
+
+
+
+
+type rectObjectArray []RectObject
+func (r rectObjectArray) Len() int {
+  return len(r)
+}
+func (r rectObjectArray) Swap(i,j int) {
+  r[i],r[j] = r[j],r[i]
+}
+func (r rectObjectArray) Less(i,j int) bool {
+  idims := r[i].Dims()
+  ifar := r[i].Pos()
+  ifar.Add(&idims)
+
+  jdims := r[j].Dims()
+  jfar := r[j].Pos()
+  jfar.Add(&jdims)
+
+  if ifar.X <= r[j].Pos().X { return false }
+  if ifar.Y <= r[j].Pos().Y { return false }
+  if jfar.X <= r[i].Pos().X { return true }
+  if jfar.Y <= r[i].Pos().Y { return true }
+
+  if r[i].Pos().X != r[j].Pos().X {
+    return r[i].Pos().X < r[j].Pos().X
+  }
+  return r[i].Pos().Y < r[j].Pos().Y
+}
+
 
 type RoomViewer struct {
   gui.Childless
@@ -51,6 +133,8 @@ type RoomViewer struct {
   flattened_drawables []sprite.ZDrawable
   flattened_positions []mathgl.Vec3
 
+  furn rectObjectArray
+
   dx,dy int
 
   floor textureData
@@ -61,6 +145,13 @@ type RoomViewer struct {
   wall_reload_output chan textureData
   wall_reload_input chan string
 
+  table textureData
+  table_reload_output chan textureData
+  table_reload_input chan string
+
+  cube textureData
+  cube_reload_output chan textureData
+  cube_reload_input chan string
 
   // // Don't need to keep the image around once it's loaded into texture memory,
   // // only need to keep around the dimensions
@@ -100,6 +191,53 @@ func (rv *RoomViewer) reloader() {
       rv.wall.texture.Delete()
       rv.wall = td
       bindToTexture(&rv.wall)
+
+    case td := <-rv.table_reload_output:
+      fmt.Printf("table reload: %v\n", td.texture)
+      rv.table.texture.Delete()
+      rv.table = td
+      bindToTexture(&rv.table)
+      f := &furniture{
+        td: rv.table,
+        pos: mathgl.Vec2{1,3},
+        dims: mathgl.Vec2{5,3},
+        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
+      }
+      rv.furn = append(rv.furn, f)
+      f = &furniture{
+        td: rv.table,
+        pos: mathgl.Vec2{9,7},
+        dims: mathgl.Vec2{5,3},
+        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
+      }
+      rv.furn = append(rv.furn, f)
+      f = &furniture{
+        td: rv.table,
+        pos: mathgl.Vec2{3,6},
+        dims: mathgl.Vec2{5,3},
+        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
+      }
+      rv.furn = append(rv.furn, f)
+      f = &furniture{
+        td: rv.table,
+        pos: mathgl.Vec2{7,2},
+        dims: mathgl.Vec2{5,3},
+        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
+      }
+      rv.furn = append(rv.furn, f)
+
+    case td := <-rv.cube_reload_output:
+      fmt.Printf("cube reload: %v\n", td.texture)
+      rv.cube.texture.Delete()
+      rv.cube = td
+      bindToTexture(&rv.cube)
+      f := &furniture{
+        td: rv.cube,
+        pos: mathgl.Vec2{2,2},
+        dims: mathgl.Vec2{1,1},
+        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
+      }
+      rv.furn = append(rv.furn, f)
 
     default:
       done = true
@@ -214,10 +352,17 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   rv.floor_reload_input = make(chan string)
   rv.wall_reload_output = make(chan textureData)
   rv.wall_reload_input = make(chan string)
+  rv.table_reload_output = make(chan textureData)
+  rv.table_reload_input = make(chan string)
+  rv.cube_reload_output = make(chan textureData)
+  rv.cube_reload_input = make(chan string)
 
   go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
   go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
-
+  go textureDataReloadRoutine(rv.table_reload_input, rv.table_reload_output)
+  go textureDataReloadRoutine(rv.cube_reload_input, rv.cube_reload_output)
+  rv.table_reload_input <- "/Users/runningwild/Downloads/table_02.png"
+// /  rv.cube_reload_input <- "/Users/runningwild/Downloads/cube.png"
   rv.dx = dx
   rv.dy = dy
   rv.angle = angle
@@ -230,12 +375,22 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   rv.Ex = true
   rv.Ey = true
 
+
+
   return &rv
+}
+
+func (rv *RoomViewer) AdjAngle(ang float32) {
+  rv.angle = ang
+  rv.makeMat()
 }
 
 func (rv *RoomViewer) makeMat() {
   var m mathgl.Mat4
   rv.mat.Translation(float32(rv.Render_region.Dx/2+rv.Render_region.X), float32(rv.Render_region.Dy/2+rv.Render_region.Y), 0)
+
+  // NOTE: If we want to change 45 to *anything* else then we need to do the
+  // appropriate math for rendering quads for furniture
   m.RotationZ(45 * math.Pi / 180)
   rv.mat.Multiply(&m)
   m.RotationAxisAngle(mathgl.Vec3{X: -1, Y: 1}, -float32(rv.angle)*math.Pi/180)
@@ -386,8 +541,11 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.Vertex3i(rv.dx, rv.dy, 0)
   gl.End()
 
+
+
   gl.Disable(gl.TEXTURE_2D)
-  gl.Color4f(1, 0, 0, 0.3)
+  gl.Color4f(1, 0, 1, 0.9)
+  gl.LineWidth(3.0)
   gl.Begin(gl.LINES)
   for i := float32(0); i < float32(rv.dx); i += 1.0 {
     gl.Vertex2f(i, 0)
@@ -398,6 +556,26 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.Vertex2f(float32(rv.dx), j)
   }
   gl.End()
+
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Color4d(1, 1, 1, 1)
+  // Draw a furniture tile
+  rv.cube.texture.Bind(gl.TEXTURE_2D)
+  gl.PushMatrix()
+  gl.LoadIdentity()
+
+  sort.Sort(rv.furn)
+  for _,f := range rv.furn {
+  near_x := f.Pos().X
+  near_y := f.Pos().Y
+  furn_dx := f.Dims().X
+  furn_dy := f.Dims().Y
+  leftx,_,_ := rv.boardToModelview(near_x, near_y + furn_dy)
+  rightx,_,_ := rv.boardToModelview(near_x + furn_dx, near_y)
+  _,boty,_ := rv.boardToModelview(near_x, near_y)
+    f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+  }
+  gl.PopMatrix()
 
   for i := range rv.flattened_positions {
     v := rv.flattened_positions[i]
