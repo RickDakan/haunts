@@ -5,6 +5,7 @@ import (
   "glop/gin"
   "glop/gui"
   "glop/system"
+  "glop/render"
   "runtime"
   "path/filepath"
   "os"
@@ -47,7 +48,7 @@ func main() {
       data := debug.Stack()
       fmt.Printf("%s\n", string(data))
       out,err := os.Open("crash.txt")
-      if err != nil {
+      if err == nil {
         out.Write(data)
         out.Close()
       }
@@ -57,8 +58,11 @@ func main() {
   factor := 1.0
   wdx := int(1200 * factor)
   wdy := int(675 * factor)
-  sys.CreateWindow(10, 10, wdx, wdy)
-  sys.EnableVSync(true)
+  render.Init()
+  render.Queue(func() {
+    sys.CreateWindow(10, 10, wdx, wdy)
+    sys.EnableVSync(true)
+  })
   ui,err := gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
@@ -78,7 +82,10 @@ func main() {
   // ui.AddChild(anch)
 
   sys.Think()
-  ui.Draw()
+  render.Queue(func() {
+    ui.Draw()
+  })
+  render.Purge()
   runtime.GOMAXPROCS(8)
   var anchor *gui.AnchorBox
   var chooser *gui.FileChooser
@@ -86,7 +93,10 @@ func main() {
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
-    ui.Draw()
+    render.Queue(func() {
+      ui.Draw()
+    })
+    render.Purge()
     if ui.FocusWidget() == nil {
       pang := angle
       pang += float32(gin.In().GetKey(gin.Up).FramePressCount() - gin.In().GetKey(gin.Down).FramePressCount())
