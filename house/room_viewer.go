@@ -15,6 +15,7 @@ import (
   "math"
   "github.com/arbaal/mathgl"
   "sort"
+  "haunts/texture"
 )
 
 type RectObject interface {
@@ -137,11 +138,11 @@ type RoomViewer struct {
 
   dx,dy int
 
-  floor textureData
+  floor *texture.Data
   floor_reload_output chan textureData
   floor_reload_input chan string
 
-  wall textureData
+  wall *texture.Data
   wall_reload_output chan textureData
   wall_reload_input chan string
 
@@ -160,11 +161,11 @@ type RoomViewer struct {
 }
 
 func (rv *RoomViewer) ReloadFloor(path string) {
-  rv.floor_reload_input <- path
+  rv.floor = texture.LoadFromPath(path)
 }
 
 func (rv *RoomViewer) ReloadWall(path string) {
-  rv.wall_reload_input <- path
+  rv.wall = texture.LoadFromPath(path)
 }
 func bindToTexture(td *textureData) {
   gl.Enable(gl.TEXTURE_2D)
@@ -182,16 +183,6 @@ func (rv *RoomViewer) reloader() {
   done := false
   for !done {
     select {
-    case td := <-rv.floor_reload_output:
-      rv.floor.texture.Delete()
-      rv.floor = td
-      bindToTexture(&rv.floor)
-
-    case td := <-rv.wall_reload_output:
-      rv.wall.texture.Delete()
-      rv.wall = td
-      bindToTexture(&rv.wall)
-
     case td := <-rv.table_reload_output:
       fmt.Printf("table reload: %v\n", td.texture)
       rv.table.texture.Delete()
@@ -357,8 +348,10 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   rv.cube_reload_output = make(chan textureData)
   rv.cube_reload_input = make(chan string)
 
-  go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
-  go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
+
+
+  // go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
+  // go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
   go textureDataReloadRoutine(rv.table_reload_input, rv.table_reload_output)
   go textureDataReloadRoutine(rv.cube_reload_input, rv.cube_reload_output)
   rv.table_reload_input <- "/Users/runningwild/Downloads/table_02.png"
@@ -503,7 +496,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
-  rv.floor.texture.Bind(gl.TEXTURE_2D)
+  rv.floor.Bind()
   gl.Color4d(1.0, 1.0, 1.0, 1.0)
   gl.Begin(gl.QUADS)
     gl.TexCoord2i(0, 0)
@@ -518,7 +511,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
 
 
   // Draw the wall
-  rv.wall.texture.Bind(gl.TEXTURE_2D)
+  rv.wall.Bind()
   corner := float32(rv.dx) / float32(rv.dx + rv.dy)
   dz := 7
   gl.Begin(gl.QUADS)
