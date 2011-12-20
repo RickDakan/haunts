@@ -1,101 +1,87 @@
 package house
 
 import (
-  "fmt"
   "glop/gui"
   "glop/gin"
   "glop/sprite"
-  "os"
-  "image"
-  "image/draw"
-  _ "image/png"
-  _ "image/jpeg"
+  "glop/util/algorithm"
   "gl"
-  "gl/glu"
   "math"
   "github.com/arbaal/mathgl"
-  "sort"
   "haunts/texture"
 )
 
 type RectObject interface {
   // Position in board coordinates
-  Pos() mathgl.Vec2
+  Pos() (int, int)
 
   // Dimensions in board coordinates
-  Dims() mathgl.Vec2
+  Dims() (int, int)
 
   Render(pos mathgl.Vec2, width float32)
+  RenderDims(pos mathgl.Vec2, width float32)
 }
-
-type furniture struct {
-  td textureData
-  pos mathgl.Vec2
-  dims mathgl.Vec2
-  image_dims mathgl.Vec2
-}
-func (f *furniture) Pos() mathgl.Vec2 {
-  return f.pos
-}
-func (f *furniture) Dims() mathgl.Vec2 {
-  return f.dims
-}
-func (f *furniture) Render(pos mathgl.Vec2, width float32) {
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Color4d(1, 0, 0, 0.3)
-  // Draw a furniture tile
-  dy := width * (f.image_dims.Y / f.image_dims.X)
-  // gl.Begin(gl.QUADS)
-  // gl.Vertex2f(pos.X, pos.Y)
-  // gl.Vertex2f(pos.X, pos.Y + dy)
-  // gl.Vertex2f(pos.X + width, pos.Y + dy)
-  // gl.Vertex2f(pos.X + width, pos.Y)
-  // gl.End()
-
-  gl.Enable(gl.TEXTURE_2D)
-  gl.Color4d(1, 1, 1, 1)
-  // Draw a furniture tile
-  f.td.texture.Bind(gl.TEXTURE_2D)
-  gl.Begin(gl.QUADS)
-  gl.TexCoord2f(0, 1)
-  gl.Vertex2f(pos.X, pos.Y)
-  gl.TexCoord2f(0, 0)
-  gl.Vertex2f(pos.X, pos.Y + dy)
-  gl.TexCoord2f(1, 0)
-  gl.Vertex2f(pos.X + width, pos.Y + dy)
-  gl.TexCoord2f(1, 1)
-  gl.Vertex2f(pos.X + width, pos.Y)
-  gl.End()
-}
-
-
 
 
 type rectObjectArray []RectObject
-func (r rectObjectArray) Len() int {
-  return len(r)
-}
-func (r rectObjectArray) Swap(i,j int) {
-  r[i],r[j] = r[j],r[i]
+// TODO: This is like super-dumb and super-slow - find a better way
+func (r rectObjectArray) Order() rectObjectArray {
+  g := make(map[RectObject]map[RectObject]bool)
+  for i := range r {
+    g[r[i]] = make(map[RectObject]bool)
+  }
+  for i := range r {
+    for j := range r {
+      if i != j && r.LessX(i, j) {
+        g[r[j]][r[i]] = true
+      }
+    }
+  }
+  for i := range r {
+    for j := range r {
+      if _,ok := g[r[i]][r[j]]; ok { continue }
+      if i != j && r.LessY(i, j) {
+        g[r[j]][r[i]] = true
+      }
+    }
+  }
+  var nr rectObjectArray
+  used := make(map[RectObject]bool)
+  for len(nr) < len(g) {
+    for k,v := range g {
+      if len(v) == 0 && !used[k] {
+        nr = append(nr, k)
+        for _,v := range g {
+          delete(v, k)
+        }
+        used[k] = true
+        break
+      }
+    }
+  }
+  return nr
 }
 func (r rectObjectArray) Less(i,j int) bool {
-  idims := r[i].Dims()
-  ifar := r[i].Pos()
-  ifar.Add(&idims)
-
-  jdims := r[j].Dims()
-  jfar := r[j].Pos()
-  jfar.Add(&jdims)
-
-  if ifar.X <= r[j].Pos().X { return false }
-  if ifar.Y <= r[j].Pos().Y { return false }
-  if jfar.X <= r[i].Pos().X { return true }
-  if jfar.Y <= r[i].Pos().Y { return true }
-
-  if r[i].Pos().X != r[j].Pos().X {
-    return r[i].Pos().X < r[j].Pos().X
-  }
-  return r[i].Pos().Y < r[j].Pos().Y
+  ix,iy := r[i].Pos()
+  jdx,jdy := r[j].Dims()
+  jx,jy := r[j].Pos()
+  jx2 := jx + jdx - 1
+  jy2 := jy + jdy - 1
+  return jx2 < ix || (!(jx2 < ix) && jy2 < iy)
+}
+func (r rectObjectArray) LessX(i,j int) bool {
+  ix,_ := r[i].Pos()
+  jdx,_ := r[j].Dims()
+  jx,_ := r[j].Pos()
+  jx2 := jx + jdx - 1
+  return jx2 < ix
+}
+func (r rectObjectArray) LessY(i,j int) bool {
+  _,iy := r[i].Pos()
+  _,jdy := r[j].Dims()
+  _,jy := r[j].Pos()
+  jy2 := jy + jdy - 1
+  return jy2 < iy
 }
 
 
@@ -134,30 +120,40 @@ type RoomViewer struct {
   flattened_drawables []sprite.ZDrawable
   flattened_positions []mathgl.Vec3
 
+  // temp_object is something that the user is moving around to consider placing
+  // in the room.
+  temp_object *Furniture
+
   furn rectObjectArray
 
   dx,dy int
 
   floor *texture.Data
-  floor_reload_output chan textureData
-  floor_reload_input chan string
-
   wall *texture.Data
-  wall_reload_output chan textureData
-  wall_reload_input chan string
-
-  table textureData
-  table_reload_output chan textureData
-  table_reload_input chan string
-
-  cube textureData
-  cube_reload_output chan textureData
-  cube_reload_input chan string
+  table *texture.Data
 
   // // Don't need to keep the image around once it's loaded into texture memory,
   // // only need to keep around the dimensions
   // bg_dims gui.Dims
   // texture gl.Texture
+}
+
+func (rv *RoomViewer) SetTempObject(f *Furniture) {
+  rv.RemoveFurniture(rv.temp_object)
+  rv.temp_object = f
+  if rv.temp_object != nil {
+    rv.AddFurniture(rv.temp_object)
+  }
+}
+
+func (rv *RoomViewer) AddFurniture(f *Furniture) {
+  rv.furn = append(rv.furn, f)
+  rv.furn = rv.furn.Order()
+}
+
+func (rv *RoomViewer) RemoveFurniture(f *Furniture) {
+  rv.furn = algorithm.Choose(rv.furn, func(a interface{}) bool { return a.(*Furniture) != f }).(rectObjectArray)
+  rv.furn = rv.furn.Order()
 }
 
 func (rv *RoomViewer) ReloadFloor(path string) {
@@ -166,151 +162,6 @@ func (rv *RoomViewer) ReloadFloor(path string) {
 
 func (rv *RoomViewer) ReloadWall(path string) {
   rv.wall = texture.LoadFromPath(path)
-}
-func bindToTexture(td *textureData) {
-  gl.Enable(gl.TEXTURE_2D)
-  td.texture = gl.GenTexture()
-  td.texture.Bind(gl.TEXTURE_2D)
-  gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-  gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-  glu.Build2DMipmaps(gl.TEXTURE_2D, 4, td.dims.Dx, td.dims.Dy, gl.RGBA, td.image.Pix)
-  td.image = nil
-}
-func (rv *RoomViewer) reloader() {
-  done := false
-  for !done {
-    select {
-    case td := <-rv.table_reload_output:
-      fmt.Printf("table reload: %v\n", td.texture)
-      rv.table.texture.Delete()
-      rv.table = td
-      bindToTexture(&rv.table)
-      f := &furniture{
-        td: rv.table,
-        pos: mathgl.Vec2{1,3},
-        dims: mathgl.Vec2{5,3},
-        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
-      }
-      rv.furn = append(rv.furn, f)
-      f = &furniture{
-        td: rv.table,
-        pos: mathgl.Vec2{9,7},
-        dims: mathgl.Vec2{5,3},
-        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
-      }
-      rv.furn = append(rv.furn, f)
-      f = &furniture{
-        td: rv.table,
-        pos: mathgl.Vec2{3,6},
-        dims: mathgl.Vec2{5,3},
-        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
-      }
-      rv.furn = append(rv.furn, f)
-      f = &furniture{
-        td: rv.table,
-        pos: mathgl.Vec2{7,2},
-        dims: mathgl.Vec2{5,3},
-        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
-      }
-      rv.furn = append(rv.furn, f)
-
-    case td := <-rv.cube_reload_output:
-      fmt.Printf("cube reload: %v\n", td.texture)
-      rv.cube.texture.Delete()
-      rv.cube = td
-      bindToTexture(&rv.cube)
-      f := &furniture{
-        td: rv.cube,
-        pos: mathgl.Vec2{2,2},
-        dims: mathgl.Vec2{1,1},
-        image_dims: mathgl.Vec2{ float32(td.image.Rect.Dx()), float32(td.image.Rect.Dy()) },
-      }
-      rv.furn = append(rv.furn, f)
-
-    default:
-      done = true
-    }
-  }
-}
-
-type textureData struct {
-  dims    gui.Dims
-  texture gl.Texture
-  image   *image.RGBA
-}
-
-func textureDataReloadRoutine(input <-chan string, output chan<- textureData) {
-  gathered := make(chan string)
-
-  // This go-routine guarantees that there is no way someone can call Reload*()
-  // several times in a row and dead-lock everything because they didn't call
-  // Think() enough times while doing so.  This go-routine just collects
-  // requests and queues them up to send them off later, essentially like a
-  // buffered channel except of variable size.
-  go func() {
-    var pending []string
-    var next,last string
-    active := true
-    for active {
-      if len(pending) == 0 {
-        next,active = <-input
-        if next == last { continue }
-        last = next
-        if active {
-          pending = append(pending, next)
-        }
-      } else {
-        select {
-        case next,active = <-input:
-          if next == last { continue }
-          last = next
-          if active {
-            pending = append(pending, next)
-          }
-
-        case gathered <- pending[0]:
-          pending = pending[1:]
-          if len(pending) == 0 {
-            pending = nil
-          }
-        }
-      }
-    }
-    for _,path := range pending {
-      gathered <- path
-    }
-    close(gathered)
-  } ()
-
-  for path := range gathered {
-    f, err := os.Open(path)
-    if err != nil {
-      fmt.Printf("Error: %v\n", err)
-      // TODO: Log an error here
-      continue
-    }
-    image_data, _, err := image.Decode(f)
-    f.Close()
-    if err != nil {
-      fmt.Printf("Error: %v\n", err)
-      // TODO: Log an error here
-      continue
-    }
-
-    var td textureData
-
-    td.dims.Dx = image_data.Bounds().Dx()
-    td.dims.Dy = image_data.Bounds().Dy()
-
-    td.image = image.NewRGBA(image.Rect(0, 0, td.dims.Dx, td.dims.Dy))
-    draw.Draw(td.image, image_data.Bounds(), image_data, image.Point{0, 0}, draw.Over)
-
-    output <- td
-  }
-  close(output)
 }
 
 func (rv *RoomViewer) String() string {
@@ -339,23 +190,6 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
 
-  rv.floor_reload_output = make(chan textureData)
-  rv.floor_reload_input = make(chan string)
-  rv.wall_reload_output = make(chan textureData)
-  rv.wall_reload_input = make(chan string)
-  rv.table_reload_output = make(chan textureData)
-  rv.table_reload_input = make(chan string)
-  rv.cube_reload_output = make(chan textureData)
-  rv.cube_reload_input = make(chan string)
-
-
-
-  // go textureDataReloadRoutine(rv.floor_reload_input, rv.floor_reload_output)
-  // go textureDataReloadRoutine(rv.wall_reload_input, rv.wall_reload_output)
-  go textureDataReloadRoutine(rv.table_reload_input, rv.table_reload_output)
-  go textureDataReloadRoutine(rv.cube_reload_input, rv.cube_reload_output)
-  rv.table_reload_input <- "/Users/runningwild/Downloads/table_02.png"
-// /  rv.cube_reload_input <- "/Users/runningwild/Downloads/cube.png"
   rv.dx = dx
   rv.dy = dy
   rv.angle = angle
@@ -367,9 +201,6 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   rv.Request_dims.Dy = 100
   rv.Ex = true
   rv.Ey = true
-
-
-
   return &rv
 }
 
@@ -463,7 +294,6 @@ func (rv *RoomViewer) Zoom(dz float64) {
 }
 
 func (rv *RoomViewer) Draw(region gui.Region) {
-  rv.reloader()
   region.PushClipPlanes()
   defer region.PopClipPlanes()
 
@@ -553,21 +383,25 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
   // Draw a furniture tile
-  rv.cube.texture.Bind(gl.TEXTURE_2D)
   gl.PushMatrix()
   gl.LoadIdentity()
 
-  sort.Sort(rv.furn)
-  for _,f := range rv.furn {
-  near_x := f.Pos().X
-  near_y := f.Pos().Y
-  furn_dx := f.Dims().X
-  furn_dy := f.Dims().Y
-  leftx,_,_ := rv.boardToModelview(near_x, near_y + furn_dy)
-  rightx,_,_ := rv.boardToModelview(near_x + furn_dx, near_y)
-  _,boty,_ := rv.boardToModelview(near_x, near_y)
+  furn := rv.furn
+  for i := 0; i < len(furn); i++ {
+    f := furn[i]
+    near_x,near_y := f.Pos()
+    furn_dx,furn_dy := f.Dims()
+    leftx,_,_ := rv.boardToModelview(float32(near_x), float32(near_y + furn_dy))
+    rightx,_,_ := rv.boardToModelview(float32(near_x + furn_dx), float32(near_y))
+    _,boty,_ := rv.boardToModelview(float32(near_x), float32(near_y))
+    if f == rv.temp_object {
+      gl.Color4d(1, 1, 1, 0.5)
+    } else {
+      gl.Color4d(1, 1, 1, 1)
+    }
     f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
+
   gl.PopMatrix()
 
   for i := range rv.flattened_positions {

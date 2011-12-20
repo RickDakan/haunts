@@ -48,7 +48,6 @@ func (m *Manager) LoadFromPath(path string) *Data {
   if data,ok := m.registry[path]; ok {
     return data
   }
-
   var data Data
   m.registry[path] = &data
 
@@ -67,6 +66,8 @@ func (m *Manager) LoadFromPath(path string) *Data {
 
     data.Dx = im.Bounds().Dx()
     data.Dy = im.Bounds().Dy()
+    rgba := image.NewRGBA(image.Rect(0, 0, data.Dx, data.Dy))
+    draw.Draw(rgba, im.Bounds(), im, image.Point{0, 0}, draw.Over)
     render.Queue(func() {
       gl.Enable(gl.TEXTURE_2D)
       data.texture = gl.GenTexture()
@@ -76,10 +77,6 @@ func (m *Manager) LoadFromPath(path string) *Data {
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-
-
-      rgba := image.NewRGBA(image.Rect(0, 0, data.Dx, data.Dy))
-      draw.Draw(rgba, im.Bounds(), im, image.Point{0, 0}, draw.Over)
       glu.Build2DMipmaps(gl.TEXTURE_2D, 4, data.Dx, data.Dy, gl.RGBA, rgba.Pix)
     })
   } ()

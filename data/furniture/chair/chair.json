@@ -1,0 +1,6 @@
+{
+  "Name": "Chair",
+  "Dx": 1,
+  "Dy": 1,
+  "Texture_path": "../chair.png"
+}

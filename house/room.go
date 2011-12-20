@@ -1,14 +1,15 @@
 package house
 
 import (
+  "glop/gin"
   "glop/gui"
-  "haunts/base"
   "path/filepath"
   "fmt"
   "glop/util/algorithm"
   "os"
   "io"
   "time"
+  "haunts/base"
 )
 
 var (
@@ -87,6 +88,10 @@ type RoomEditorPanel struct {
 
   Room       *Room
   RoomViewer *RoomViewer
+
+  // If we're moving around temporary objects in the room or something they'll
+  // be stored temporarily here
+  object *Furniture
 }
 
 func imagePathFilter(path string, isdir bool) bool {
@@ -236,6 +241,7 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   if room.Floor_path == "" {
     room.Floor_path = datadir
   }
+  fmt.Printf("floor path: %s\n", room.Floor_path)
   rep.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
 
   if room.Wall_path == "" {
@@ -265,6 +271,17 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   pane.AddChild(rep.themes)
   pane.AddChild(rep.sizes)
   pane.AddChild(rep.decor)
+  fpaths,fnames := AllFurnitureInDir(filepath.Join(datadir, "furniture"))
+  for i := range fpaths {
+    path := fpaths[i]
+    name := fnames[i]
+    pane.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
+      f,err := LoadFurniture(path)
+      if err != nil { return }
+      rep.object = f
+      rep.RoomViewer.SetTempObject(rep.object)
+    }))
+  }
   pane.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
     target_path := room.Save(datadir, time.Now().UnixNano())
     if target_path != "" {
@@ -288,7 +305,35 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   return &rep
 }
 
+func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if w.HorizontalTable.Respond(ui, group) {
+    return true
+  }
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    if w.object != nil {
+      w.RoomViewer.SetTempObject(nil)
+      w.object = nil
+    }
+    return true
+  }
+  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    if w.object != nil {
+      w.RoomViewer.SetTempObject(nil)
+      w.RoomViewer.AddFurniture(w.object)
+      w.object = nil
+    }
+    return true
+  }
+  return false
+}
+
 func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
+  if w.object != nil {
+    mx,my := gin.In().GetCursor("Mouse").Point()
+    bx,by := w.RoomViewer.WindowToBoard(mx, my)
+    w.object.X = int(bx - float32(w.object.Dx) / 2)
+    w.object.Y = int(by - float32(w.object.Dy) / 2)
+  }
   w.HorizontalTable.Think(ui, t)
   w.Room.Name = w.name.GetText()
 
