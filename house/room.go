@@ -50,9 +50,12 @@ type Tags struct {
   Decor      []string
 }
 
+
 type Room struct {
   Name string
   Size RoomSize
+
+  Furniture []*Furniture
 
   // Paths to the floor and wall textures, relative to some basic datadir
   Floor_path string
@@ -92,6 +95,14 @@ type RoomEditorPanel struct {
   // If we're moving around temporary objects in the room or something they'll
   // be stored temporarily here
   object *Furniture
+
+  // Distance from the mouse to the center of the object, in board coordinates
+  drag_anchor struct{ x,y float32 }
+
+  // True iff the selected object should be placed when the mouse button is
+  // released.  If false this object will be placed when the mouse button is
+  // clicked.
+  drop_on_release bool
 }
 
 func imagePathFilter(path string, isdir bool) bool {
@@ -227,6 +238,9 @@ func LoadRoom(path string) *Room {
   }
   room.Floor_path = filepath.Clean(filepath.Join(path, room.Floor_path))
   room.Wall_path = filepath.Clean(filepath.Join(path, room.Wall_path))
+  for i := range room.Furniture {
+    room.Furniture[i].Load()
+  }
   return &room
 }
 
@@ -271,14 +285,18 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   pane.AddChild(rep.themes)
   pane.AddChild(rep.sizes)
   pane.AddChild(rep.decor)
-  fpaths,fnames := AllFurnitureInDir(filepath.Join(datadir, "furniture"))
-  for i := range fpaths {
-    path := fpaths[i]
+  fnames := GetAllFurnitureNames()
+  for i := range fnames {
     name := fnames[i]
     pane.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
-      f,err := LoadFurniture(path)
-      if err != nil { return }
+      f := MakeFurniture(name)
+      if f == nil { return }
+      fmt.Printf("obj: %v\n", f)
       rep.object = f
+      rep.drop_on_release = false
+      dx,dy := rep.object.Dims()
+      rep.drag_anchor.x = float32(dx - 1) / 2
+      rep.drag_anchor.y = float32(dy - 1) / 2
       rep.RoomViewer.SetTempObject(rep.object)
     }))
   }
@@ -300,6 +318,9 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
 
   rep.HorizontalTable = gui.MakeHorizontalTable()
   rep.RoomViewer = MakeRoomViewer(room.Size.Dx, room.Size.Dy, 65)
+  for _,f := range room.Furniture {
+    rep.RoomViewer.AddFurniture(f)
+  }
   rep.AddChild(rep.RoomViewer)
   rep.AddChild(pane)
   return &rep
@@ -316,11 +337,24 @@ func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
     return true
   }
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if w.object != nil {
+  if found,event := group.FindEvent(gin.MouseLButton); found {
+    if w.object != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
       w.RoomViewer.SetTempObject(nil)
       w.RoomViewer.AddFurniture(w.object)
+      w.Room.Furniture = append(w.Room.Furniture, w.object)
       w.object = nil
+    } else if w.object == nil && event.Type == gin.Press {
+      bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
+      w.object = w.RoomViewer.SelectFurnitureAt(event.Key.Cursor().Point())
+      w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
+        return a.(*Furniture) != w.object
+      }).([]*Furniture)
+      w.drop_on_release = true
+      if w.object != nil {
+        px,py := w.object.Pos()
+        w.drag_anchor.x = bx - float32(px) - 0.5
+        w.drag_anchor.y = by - float32(py) - 0.5
+      }
     }
     return true
   }
@@ -331,8 +365,9 @@ func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
   if w.object != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := w.RoomViewer.WindowToBoard(mx, my)
-    w.object.X = int(bx - float32(w.object.Dx) / 2)
-    w.object.Y = int(by - float32(w.object.Dy) / 2)
+    w.object.X = int(bx - w.drag_anchor.x)
+    w.object.Y = int(by - w.drag_anchor.y)
+    w.RoomViewer.MoveFurniture()
   }
   w.HorizontalTable.Think(ui, t)
   w.Room.Name = w.name.GetText()

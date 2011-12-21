@@ -16,7 +16,7 @@ type Data struct {
   texture gl.Texture
 
   // If there was an error loading this texture it will be stored here
-  err error
+  Err error
 }
 
 func (d *Data) Bind() {
@@ -54,13 +54,13 @@ func (m *Manager) LoadFromPath(path string) *Data {
   go func() {
     f,err := os.Open(path)
     if err != nil {
-      data.err = err
+      data.Err = err
       return
     }
     im,_,err := image.Decode(f)
     f.Close()
     if err != nil {
-      data.err = err
+      data.Err = err
       return
     }
 

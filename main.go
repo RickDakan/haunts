@@ -64,6 +64,7 @@ func main() {
     sys.EnableVSync(true)
   })
   ui,err := gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
+  house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   if err != nil {
     panic(err.Error())
   }

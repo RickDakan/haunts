@@ -24,40 +24,82 @@ type RectObject interface {
 
 
 type rectObjectArray []RectObject
-// TODO: This is like super-dumb and super-slow - find a better way
 func (r rectObjectArray) Order() rectObjectArray {
-  g := make(map[RectObject]map[RectObject]bool)
-  for i := range r {
-    g[r[i]] = make(map[RectObject]bool)
-  }
-  for i := range r {
-    for j := range r {
-      if i != j && r.LessX(i, j) {
-        g[r[j]][r[i]] = true
-      }
-    }
-  }
-  for i := range r {
-    for j := range r {
-      if _,ok := g[r[i]][r[j]]; ok { continue }
-      if i != j && r.LessY(i, j) {
-        g[r[j]][r[i]] = true
-      }
-    }
-  }
   var nr rectObjectArray
-  used := make(map[RectObject]bool)
-  for len(nr) < len(g) {
-    for k,v := range g {
-      if len(v) == 0 && !used[k] {
-        nr = append(nr, k)
-        for _,v := range g {
-          delete(v, k)
-        }
-        used[k] = true
-        break
+  if len(r) == 0 {
+    return nil
+  }
+  if len(r) == 1 {
+    nr = append(nr, r[0])
+    return nr
+  }
+
+  minx,miny := r[0].Pos()
+  maxx,maxy := r[0].Pos()
+  for i := range r {
+    x,y := r[i].Pos()
+    if x < minx { minx = x }
+    if y < miny { miny = y }
+    if x > maxx { maxx = x }
+    if y > maxy { maxy = y }
+  }
+
+  // check for an x-divide
+  var low,high rectObjectArray
+  for divx := minx; divx <= maxx; divx++ {
+    low = low[0:0]
+    high = high[0:0]
+    for i := range r {
+      x,_ := r[i].Pos()
+      dx,_ := r[i].Dims()
+      if x >= divx {
+        high = append(high, r[i])
+      }
+      if x + dx - 1 < divx {
+        low = append(low, r[i])
       }
     }
+    if len(low) + len(high) == len(r) && len(low) >= 1 && len(high) >= 1 {
+      low = low.Order()
+      for i := range low {
+        nr = append(nr, low[i])
+      }
+      high = high.Order()
+      for i := range high {
+        nr = append(nr, high[i])
+      }
+      return nr
+    }
+  }
+
+  // check for a y-divide
+  for divy := miny; divy <= maxy; divy++ {
+    low = low[0:0]
+    high = high[0:0]
+    for i := range r {
+      _,y := r[i].Pos()
+      _,dy := r[i].Dims()
+      if y >= divy {
+        high = append(high, r[i])
+      }
+      if y + dy - 1 < divy {
+        low = append(low, r[i])
+      }
+    }
+    if len(low) + len(high) == len(r) && len(low) >= 1 && len(high) >= 1 {
+      low = low.Order()
+      for i := range low {
+        nr = append(nr, low[i])
+      }
+      high = high.Order()
+      for i := range high {
+        nr = append(nr, high[i])
+      }
+      return nr
+    }
+  }
+  for i := range r {
+    nr = append(nr, r[i])
   }
   return nr
 }
@@ -97,6 +139,9 @@ type RoomViewer struct {
 
   // Focus, in map coordinates
   fx, fy float32
+
+  // Mouse position, in board coordinates
+  mx, my int
 
   // The viewing angle, 0 means the map is viewed head-on, 90 means the map is viewed
   // on its edge (i.e. it would not be visible)
@@ -144,15 +189,37 @@ func (rv *RoomViewer) SetTempObject(f *Furniture) {
   if rv.temp_object != nil {
     rv.AddFurniture(rv.temp_object)
   }
+  rv.MoveFurniture()
+}
+
+func (rv *RoomViewer) SelectFurnitureAt(wx,wy int) *Furniture {
+  bx,by := rv.WindowToBoard(wx, wy)
+  rv.temp_object = rv.furnitureAt(int(bx), int(by))
+  return rv.temp_object
+}
+
+func (rv *RoomViewer) furnitureAt(bx,by int) *Furniture {
+  for i := range rv.furn {
+    x,y := rv.furn[i].Pos()
+    dx,dy := rv.furn[i].Dims()
+    if bx >= x && bx < x + dx && by >= y && by < y + dy {
+      return rv.furn[i].(*Furniture)
+    }
+  }
+  return nil
 }
 
 func (rv *RoomViewer) AddFurniture(f *Furniture) {
   rv.furn = append(rv.furn, f)
-  rv.furn = rv.furn.Order()
+  rv.MoveFurniture()
 }
 
 func (rv *RoomViewer) RemoveFurniture(f *Furniture) {
   rv.furn = algorithm.Choose(rv.furn, func(a interface{}) bool { return a.(*Furniture) != f }).(rectObjectArray)
+  rv.MoveFurniture()
+}
+
+func (rv *RoomViewer) MoveFurniture() {
   rv.furn = rv.furn.Order()
 }
 
@@ -386,9 +453,10 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.PushMatrix()
   gl.LoadIdentity()
 
-  furn := rv.furn
-  for i := 0; i < len(furn); i++ {
-    f := furn[i]
+  rv.furn = rv.furn.Order()
+  furn_over := rv.furnitureAt(rv.mx, rv.my)
+  for i := len(rv.furn) - 1; i >= 0; i-- {
+    f := rv.furn[i]
     near_x,near_y := f.Pos()
     furn_dx,furn_dy := f.Dims()
     leftx,_,_ := rv.boardToModelview(float32(near_x), float32(near_y + furn_dy))
@@ -397,7 +465,11 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     if f == rv.temp_object {
       gl.Color4d(1, 1, 1, 0.5)
     } else {
-      gl.Color4d(1, 1, 1, 1)
+      if f == furn_over {
+        gl.Color4d(0.5, 1, 0.5, 1)
+      } else {
+        gl.Color4d(1, 1, 1, 1)
+      }
     }
     f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
@@ -433,6 +505,12 @@ func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
 }
 
 func (rv *RoomViewer) DoRespond(event_group gui.EventGroup) (bool, bool) {
+  cursor := event_group.Events[0].Key.Cursor()
+  if cursor != nil && cursor.Name() == "Mouse" {
+    mx,my := rv.WindowToBoard(cursor.Point())
+    rv.mx = int(mx)
+    rv.my = int(my)
+  }
   if rv.handler != nil {
     rv.handler.HandleEventGroup(event_group.EventGroup)
   }
