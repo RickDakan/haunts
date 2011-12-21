@@ -79,32 +79,6 @@ func MakeRoom() *Room {
   return &r
 }
 
-type RoomEditorPanel struct {
-  *gui.HorizontalTable
-  name       *gui.TextEditLine
-  room_size  *gui.ComboBox
-  floor_path *gui.FileWidget
-  wall_path  *gui.FileWidget
-  themes     *gui.CheckBoxes
-  sizes      *gui.CheckBoxes
-  decor      *gui.CheckBoxes
-
-  Room       *Room
-  RoomViewer *RoomViewer
-
-  // If we're moving around temporary objects in the room or something they'll
-  // be stored temporarily here
-  object *Furniture
-
-  // Distance from the mouse to the center of the object, in board coordinates
-  drag_anchor struct{ x,y float32 }
-
-  // True iff the selected object should be placed when the mouse button is
-  // released.  If false this object will be placed when the mouse button is
-  // clicked.
-  drop_on_release bool
-}
-
 func imagePathFilter(path string, isdir bool) bool {
   if isdir {
     return path[0] != '.'
@@ -244,90 +218,177 @@ func LoadRoom(path string) *Room {
   return &room
 }
 
+type FurniturePanel struct {
+  *gui.VerticalTable
+  name       *gui.TextEditLine
+  room_size  *gui.ComboBox
+  floor_path *gui.FileWidget
+  wall_path  *gui.FileWidget
+  themes     *gui.CheckBoxes
+  sizes      *gui.CheckBoxes
+  decor      *gui.CheckBoxes
+
+  Room       *Room
+  RoomViewer *RoomViewer
+
+  // If we're moving around temporary objects in the room or something they'll
+  // be stored temporarily here
+  object *Furniture
+
+  // If we're in the middle of moving an object and this widget gets collapsed
+  // we want to put the object back where it was before we started dragging it.
+  prev_object *Furniture
+
+  // Distance from the mouse to the center of the object, in board coordinates
+  drag_anchor struct{ x,y float32 }
+
+  // True iff the selected object should be placed when the mouse button is
+  // released.  If false this object will be placed when the mouse button is
+  // clicked.
+  drop_on_release bool
+}
+
+func (w *FurniturePanel) Collapse() {
+  if w.object != nil && w.prev_object != nil {
+    w.RoomViewer.AddFurniture(w.prev_object)
+  }
+  w.RoomViewer.SetTempObject(nil)
+  w.prev_object = nil
+  w.object = nil
+}
+func (w *FurniturePanel) Expand() {
+}
+
+type tabWidget interface {
+  Collapse()
+  Expand()
+}
+
+type RoomEditorPanel struct {
+  *gui.HorizontalTable
+  tab *gui.TabFrame
+  widgets []tabWidget
+
+  Room       *Room
+  RoomViewer *RoomViewer
+}
+
+func (w *RoomEditorPanel) SelectTab(n int) {
+  if n != w.tab.SelectedTab() {
+    w.widgets[w.tab.SelectedTab()].Collapse()
+    w.tab.SelectTab(n)
+    w.widgets[n].Expand()
+  }
+}
+
 func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   var rep RoomEditorPanel
+
   rep.Room = room
+  rep.HorizontalTable = gui.MakeHorizontalTable()
+  rep.RoomViewer = MakeRoomViewer(room.Size.Dx, room.Size.Dy, 65)
+  for _,f := range room.Furniture {
+    rep.RoomViewer.AddFurniture(f)
+  }
+  rep.RoomViewer.ReloadFloor(room.Floor_path)
+  rep.RoomViewer.ReloadWall(room.Wall_path)
+
+  rep.AddChild(rep.RoomViewer)
+
+
+  var tabs []gui.Widget
+
+  furniture := makeFurniturePanel(room, rep.RoomViewer, datadir)
+  tabs = append(tabs, furniture)
+  rep.widgets = append(rep.widgets, furniture)
+
+  other := MakeOtherPanel()
+  tabs = append(tabs, other)
+  rep.widgets = append(rep.widgets, other)
+
+  rep.tab = gui.MakeTabFrame(tabs)
+  rep.AddChild(rep.tab)
+
+  return &rep
+}
+
+func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *FurniturePanel {
+  var fp FurniturePanel
+  fp.Room = room
+  fp.RoomViewer = viewer
   if room.Name == "" {
     room.Name = "name"
   }
-  rep.name = gui.MakeTextEditLine("standard", room.Name, 300, 1, 1, 1, 1)  
+  fp.name = gui.MakeTextEditLine("standard", room.Name, 300, 1, 1, 1, 1)  
 
   if room.Floor_path == "" {
     room.Floor_path = datadir
   }
   fmt.Printf("floor path: %s\n", room.Floor_path)
-  rep.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
+  fp.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
 
   if room.Wall_path == "" {
     room.Wall_path = datadir
   }
-  rep.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
+  fp.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
 
-  rep.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
+  fp.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
   for i := range tags.RoomSizes {
     if tags.RoomSizes[i].String() == room.Size.String() {
-      rep.room_size.SetSelectedIndex(i)
+      fp.room_size.SetSelectedIndex(i)
       break
     }
   }
-  rep.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
-  rep.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
-  rep.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
+  fp.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
+  fp.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
+  fp.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
 
-  pane := gui.MakeVerticalTable()
-  pane.Params().Spacing = 3  
-  pane.Params().Background.R = 0.3
-  pane.Params().Background.B = 1
-  pane.AddChild(rep.name)
-  pane.AddChild(rep.floor_path)
-  pane.AddChild(rep.wall_path)
-  pane.AddChild(rep.room_size)
-  pane.AddChild(rep.themes)
-  pane.AddChild(rep.sizes)
-  pane.AddChild(rep.decor)
+  fp.VerticalTable = gui.MakeVerticalTable()
+  fp.VerticalTable.Params().Spacing = 3  
+  fp.VerticalTable.Params().Background.R = 0.3
+  fp.VerticalTable.Params().Background.B = 1
+  fp.VerticalTable.AddChild(fp.name)
+  fp.VerticalTable.AddChild(fp.floor_path)
+  fp.VerticalTable.AddChild(fp.wall_path)
+  fp.VerticalTable.AddChild(fp.room_size)
+  fp.VerticalTable.AddChild(fp.themes)
+  fp.VerticalTable.AddChild(fp.sizes)
+  fp.VerticalTable.AddChild(fp.decor)
   fnames := GetAllFurnitureNames()
   for i := range fnames {
     name := fnames[i]
-    pane.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
+    fp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       f := MakeFurniture(name)
       if f == nil { return }
       fmt.Printf("obj: %v\n", f)
-      rep.object = f
-      rep.drop_on_release = false
-      dx,dy := rep.object.Dims()
-      rep.drag_anchor.x = float32(dx - 1) / 2
-      rep.drag_anchor.y = float32(dy - 1) / 2
-      rep.RoomViewer.SetTempObject(rep.object)
+      fp.object = f
+      fp.drop_on_release = false
+      dx,dy := fp.object.Dims()
+      fp.drag_anchor.x = float32(dx - 1) / 2
+      fp.drag_anchor.y = float32(dy - 1) / 2
+      fp.RoomViewer.SetTempObject(fp.object)
     }))
   }
-  pane.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
+  fp.VerticalTable.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
     target_path := room.Save(datadir, time.Now().UnixNano())
     if target_path != "" {
       base.SetStoreVal("last room path", target_path)
       // The paths can change when we save them so we should update the widgets
       if !filepath.IsAbs(room.Floor_path) {
         room.Floor_path = filepath.Join(target_path, room.Floor_path)
-        rep.floor_path.SetPath(room.Floor_path)
+        fp.floor_path.SetPath(room.Floor_path)
       }
       if !filepath.IsAbs(room.Wall_path) {
         room.Wall_path = filepath.Join(target_path, room.Wall_path)
-        rep.wall_path.SetPath(room.Wall_path)
+        fp.wall_path.SetPath(room.Wall_path)
       }
     }
   }))
-
-  rep.HorizontalTable = gui.MakeHorizontalTable()
-  rep.RoomViewer = MakeRoomViewer(room.Size.Dx, room.Size.Dy, 65)
-  for _,f := range room.Furniture {
-    rep.RoomViewer.AddFurniture(f)
-  }
-  rep.AddChild(rep.RoomViewer)
-  rep.AddChild(pane)
-  return &rep
+  return &fp
 }
 
-func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if w.HorizontalTable.Respond(ui, group) {
+func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if w.VerticalTable.Respond(ui, group) {
     return true
   }
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
@@ -346,6 +407,10 @@ func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     } else if w.object == nil && event.Type == gin.Press {
       bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
       w.object = w.RoomViewer.SelectFurnitureAt(event.Key.Cursor().Point())
+      if w.object != nil {
+        w.prev_object = new(Furniture)
+        *w.prev_object = *w.object
+      }
       w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
         return a.(*Furniture) != w.object
       }).([]*Furniture)
@@ -361,7 +426,7 @@ func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 
-func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
+func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
   if w.object != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := w.RoomViewer.WindowToBoard(mx, my)
@@ -369,7 +434,7 @@ func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
     w.object.Y = int(by - w.drag_anchor.y)
     w.RoomViewer.MoveFurniture()
   }
-  w.HorizontalTable.Think(ui, t)
+  w.VerticalTable.Think(ui, t)
   w.Room.Name = w.name.GetText()
 
   w.Room.Size = tags.RoomSizes[w.room_size.GetComboedIndex()]
@@ -411,4 +476,25 @@ func (w *RoomEditorPanel) Think(ui *gui.Gui, t int64) {
       delete(w.Room.Decor, tags.Decor[i])
     }
   }
+}
+
+type OtherPanel struct {
+  *gui.VerticalTable
+}
+
+func MakeOtherPanel() *OtherPanel {
+  var op OtherPanel
+  op.VerticalTable = gui.MakeVerticalTable()
+  op.AddChild(gui.MakeTextEditLine("standard", "foo", 300, 1, 1, 1, 1))
+  op.AddChild(gui.MakeTextEditLine("standard", "bar", 300, 1, 1, 1, 1))
+  op.AddChild(gui.MakeTextEditLine("standard", "wingding", 300, 1, 1, 1, 1))
+  return &op
+}
+
+func (w *OtherPanel) Collapse() {
+  
+}
+
+func (w *OtherPanel) Expand() {
+  
 }

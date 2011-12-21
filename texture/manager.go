@@ -20,6 +20,9 @@ type Data struct {
 }
 
 func (d *Data) Bind() {
+  if d.Err != nil {
+    println("ERror: ", d.Err.Error())
+  }
   d.texture.Bind(gl.TEXTURE_2D)
 }
 

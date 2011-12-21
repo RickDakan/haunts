@@ -137,6 +137,12 @@ func main() {
         ui.TakeFocus(chooser)
       }
 
+      for i := 1; i <= 9; i++ {
+        if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
+          editor.SelectTab(i - 1)
+        }
+      }
+
       viewer.Move(pan_x, pan_y)
     }
   }
