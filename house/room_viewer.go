@@ -126,13 +126,20 @@ func (r rectObjectArray) LessY(i,j int) bool {
   return jy2 < iy
 }
 
+type selectMode int
+const (
+  selectNothing selectMode = iota
+  selectFurniture
+  selectCells
+)
 
 type RoomViewer struct {
   gui.Childless
   gui.EmbeddedWidget
   gui.BasicZone
-  gui.NonThinker
   gui.NonFocuser
+  gui.NonResponder
+  gui.NonThinker
 
   // All events received by the viewer are passed to the handler
   handler gin.EventHandler
@@ -175,12 +182,17 @@ type RoomViewer struct {
 
   floor *texture.Data
   wall *texture.Data
-  table *texture.Data
 
-  // // Don't need to keep the image around once it's loaded into texture memory,
-  // // only need to keep around the dimensions
-  // bg_dims gui.Dims
-  // texture gl.Texture
+  // This tells us what to highlight based on the mouse position
+  select_mode selectMode
+}
+
+func (rv *RoomViewer) SetSelectMode(mode selectMode) {
+  rv.select_mode = mode
+}
+
+func (rv *RoomViewer) SelectCells() {
+  rv.select_mode = selectCells
 }
 
 func (rv *RoomViewer) SetTempObject(f *Furniture) {
@@ -465,7 +477,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     if f == rv.temp_object {
       gl.Color4d(1, 1, 1, 0.5)
     } else {
-      if f == furn_over {
+      if f == furn_over && rv.select_mode == selectFurniture {
         gl.Color4d(0.5, 1, 0.5, 1)
       } else {
         gl.Color4d(1, 1, 1, 1)
@@ -504,15 +516,8 @@ func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
   rv.handler = handler
 }
 
-func (rv *RoomViewer) DoRespond(event_group gui.EventGroup) (bool, bool) {
-  cursor := event_group.Events[0].Key.Cursor()
-  if cursor != nil && cursor.Name() == "Mouse" {
-    mx,my := rv.WindowToBoard(cursor.Point())
-    rv.mx = int(mx)
-    rv.my = int(my)
-  }
-  if rv.handler != nil {
-    rv.handler.HandleEventGroup(event_group.EventGroup)
-  }
-  return false, false
+func (rv *RoomViewer) Think(*gui.Gui, int64) {
+  mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
+  rv.mx = int(mx)
+  rv.my = int(my)
 }
