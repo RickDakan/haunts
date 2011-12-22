@@ -126,11 +126,11 @@ func (r rectObjectArray) LessY(i,j int) bool {
   return jy2 < iy
 }
 
-type selectMode int
+type editMode int
 const (
-  selectNothing selectMode = iota
-  selectFurniture
-  selectCells
+  editNothing editMode = iota
+  editFurniture
+  editWallTextures
 )
 
 type RoomViewer struct {
@@ -160,9 +160,13 @@ type RoomViewer struct {
   // The modelview matrix that is sent to opengl.  Updated any time focus, zoom, or viewing
   // angle changes
   mat mathgl.Mat4
+  left_wall_mat mathgl.Mat4
+  right_wall_mat mathgl.Mat4
 
   // Inverse of mat
   imat mathgl.Mat4
+  left_wall_imat mathgl.Mat4
+  right_wall_imat mathgl.Mat4
 
   // All drawables that will be drawn parallel to the window
   upright_drawables []sprite.ZDrawable
@@ -175,8 +179,10 @@ type RoomViewer struct {
   // temp_object is something that the user is moving around to consider placing
   // in the room.
   temp_object *Furniture
-
   furn rectObjectArray
+
+  temp_wall_texture *WallTexture
+  wall_textures []*WallTexture
 
   dx,dy int
 
@@ -184,15 +190,47 @@ type RoomViewer struct {
   wall *texture.Data
 
   // This tells us what to highlight based on the mouse position
-  select_mode selectMode
+  edit_mode editMode
 }
 
-func (rv *RoomViewer) SetSelectMode(mode selectMode) {
-  rv.select_mode = mode
+func (rv *RoomViewer) SetEditMode(mode editMode) {
+  rv.edit_mode = mode
 }
 
-func (rv *RoomViewer) SelectCells() {
-  rv.select_mode = selectCells
+func (rv *RoomViewer) SetTempWallTexture(wt *WallTexture) {
+  rv.RemoveWallTexture(rv.temp_wall_texture)
+  rv.temp_wall_texture = wt
+  if rv.temp_wall_texture != nil {
+    rv.AddWallTexture(rv.temp_wall_texture)
+  }
+}
+
+func (rv *RoomViewer) AddWallTexture(wt *WallTexture) {
+  rv.wall_textures = append(rv.wall_textures, wt)
+}
+
+func (rv *RoomViewer) RemoveWallTexture(wt *WallTexture) {
+  rv.wall_textures = algorithm.Choose(rv.wall_textures, func(a interface{}) bool { return a.(*WallTexture) != wt }).([]*WallTexture)
+}
+
+func (rv *RoomViewer) SelectWallTextureAt(wx,wy int) *WallTexture {
+  pos,height := rv.WindowToWall(wx, wy)
+  rv.temp_wall_texture = rv.wallTextureAt(pos, height)
+  return rv.temp_wall_texture
+}
+
+func (rv *RoomViewer) wallTextureAt(pos,height float32) *WallTexture {
+  sum := float32(rv.dx + rv.dy)
+  pos *= sum
+  for _,tex := range rv.wall_textures {
+    dx := float32(tex.texture_data.Dx) / 100
+    dy := float32(tex.texture_data.Dy) / 100
+    tpos := tex.Pos * sum
+    if pos >= tpos - dx && pos < tpos + dx && height >= tex.Height - dy && height < tex.Height + dy {
+      return tex
+    }
+  }
+  return nil
 }
 
 func (rv *RoomViewer) SetTempObject(f *Furniture) {
@@ -312,6 +350,27 @@ func (rv *RoomViewer) makeMat() {
 
   rv.imat.Assign(&rv.mat)
   rv.imat.Inverse()
+
+  // Also make the mats for the left and right walls based on this mat
+  rv.left_wall_mat.Assign(&rv.mat)
+  m.RotationX(-math.Pi/2)
+  rv.left_wall_mat.Multiply(&m)
+  m.Translation(0, 0, float32(rv.dy))
+  rv.left_wall_mat.Multiply(&m)
+  rv.left_wall_imat.Assign(&rv.left_wall_mat)
+  rv.left_wall_imat.Inverse()
+
+  rv.right_wall_mat.Assign(&rv.mat)
+  m.RotationX(-math.Pi/2)
+  rv.right_wall_mat.Multiply(&m)
+  m.RotationY(math.Pi/2)
+  rv.right_wall_mat.Multiply(&m)
+  m.Scaling(-1, 1, 1)
+  rv.right_wall_mat.Multiply(&m)
+  m.Translation(0, 0, float32(rv.dx))
+  rv.right_wall_mat.Multiply(&m)
+  rv.right_wall_imat.Assign(&rv.right_wall_mat)
+  rv.right_wall_imat.Inverse()
 }
 
 // Transforms a cursor position in window coordinates to board coordinates.  Does not check
@@ -322,8 +381,70 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
   return rv.modelviewToBoard(mx, my)
 }
 
+func (rv *RoomViewer) WindowToWall(wx, wy int) (pos, height float32) {
+  lbx,lby,ldist := rv.modelviewToLeftWall(float32(wx), float32(wy))
+  rbx,rby,rdist := rv.modelviewToRightWall(float32(wx), float32(wy))
+  sum := float32(rv.dx + rv.dy)
+  if ldist < rdist {
+    pos = lbx / sum
+    height = lby
+  } else {
+    pos = (sum - rbx) / sum
+    height = rby
+  }
+  return
+}
+
+func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {
+  mz := d2p(rv.left_wall_mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
+  v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
+  v.Transform(&rv.left_wall_imat)
+  return v.X, v.Y, mz
+}
+
+func (rv *RoomViewer) modelviewToRightWall(mx, my float32) (x,y,dist float32) {
+  mz := d2p(rv.right_wall_mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
+  v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
+  v.Transform(&rv.right_wall_imat)
+  return v.X, v.Y, mz
+}
+
+func (rv *RoomViewer) leftWallToModelview(bx,by float32) (x, y, z float32) {
+  v := mathgl.Vec4{X: bx, Y: by, W: 1}
+  v.Transform(&rv.left_wall_mat)
+  return v.X, v.Y, v.Z
+}
+
+func (rv *RoomViewer) rightWallToModelview(bx,by float32) (x, y, z float32) {
+  v := mathgl.Vec4{X: bx, Y: by, W: 1}
+  v.Transform(&rv.right_wall_mat)
+  return v.X, v.Y, v.Z
+}
+
+func d2p(mat mathgl.Mat4, point,ray mathgl.Vec3) float32{
+  var sub mathgl.Vec3
+  sub.X = mat[12]
+  sub.Y = mat[13]
+  sub.Z = mat[14]
+  mat[12],mat[13],mat[14] = 0,0,0
+  point.Subtract(&sub)
+  point.Scale(-1)
+  ray.Normalize()
+  dist := point.Dot(mat.GetForwardVec3())
+
+  var n,r mathgl.Vec3
+  n.X = mat.GetForwardVec3().X
+  n.Y = mat.GetForwardVec3().Y
+  n.Z = mat.GetForwardVec3().Z
+  r.Assign(&ray)
+  cos := n.Dot(&r) / (n.Length() * r.Length())
+  R := dist / float32(math.Sin(math.Pi/2 - math.Acos(float64(cos))))
+  return R
+}
+
 func (rv *RoomViewer) modelviewToBoard(mx, my float32) (float32, float32) {
-  mz := (my - float32(rv.Render_region.Y+rv.Render_region.Dy/2)) * float32(math.Tan(float64(rv.angle*math.Pi/180)))
+  mz := d2p(rv.mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
+//  mz := (my - float32(rv.Render_region.Y+rv.Render_region.Dy/2)) * float32(math.Tan(float64(rv.angle*math.Pi/180)))
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&rv.imat)
   return v.X, v.Y
@@ -403,24 +524,10 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.End()
 
 
-  // Draw the floor
-  gl.Enable(gl.TEXTURE_2D)
-  rv.floor.Bind()
-  gl.Color4d(1.0, 1.0, 1.0, 1.0)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2i(0, 0)
-    gl.Vertex2i(0, 0)
-    gl.TexCoord2i(0, -1)
-    gl.Vertex2i(0, rv.dy)
-    gl.TexCoord2i(1, -1)
-    gl.Vertex2i(rv.dx, rv.dy)
-    gl.TexCoord2i(1, 0)
-    gl.Vertex2i(rv.dx, 0)
-  gl.End()
-
-
   // Draw the wall
   rv.wall.Bind()
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Color4f(1, 1, 1, 1)
   corner := float32(rv.dx) / float32(rv.dx + rv.dy)
   dz := 7
   gl.Begin(gl.QUADS)
@@ -442,8 +549,35 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.TexCoord2f(corner, 0)
     gl.Vertex3i(rv.dx, rv.dy, 0)
   gl.End()
+  for _,tex := range rv.wall_textures {
+    tex.Render(rv.dx, rv.dy)
+  }
 
-
+  // Draw the floor
+  gl.Enable(gl.TEXTURE_2D)
+  rv.floor.Bind()
+  gl.Color4d(1.0, 1.0, 1.0, 1.0)
+  gl.Begin(gl.QUADS)
+    gl.TexCoord2i(0, 0)
+    gl.Vertex2i(0, 0)
+    gl.TexCoord2i(0, -1)
+    gl.Vertex2i(0, rv.dy)
+    gl.TexCoord2i(1, -1)
+    gl.Vertex2i(rv.dx, rv.dy)
+    gl.TexCoord2i(1, 0)
+    gl.Vertex2i(rv.dx, 0)
+  gl.End()
+  // If we're in cell-select mode we can highlight the cell our mouse is over
+  // if rv.edit_mode == selectCells && rv.mx >= 0 && rv.mx < rv.dx && rv.my >= 0 && rv.my < rv.dy {
+  //   gl.Disable(gl.TEXTURE_2D)
+  //   gl.Color4d(0.5, 1, 0.5, 1)
+  //   gl.Begin(gl.QUADS)
+  //     gl.Vertex2i(rv.mx, rv.my)
+  //     gl.Vertex2i(rv.mx, rv.my + 1)
+  //     gl.Vertex2i(rv.mx + 1, rv.my + 1)
+  //     gl.Vertex2i(rv.mx + 1, rv.my)
+  //   gl.End()
+  // }
 
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4f(1, 0, 1, 0.9)
@@ -477,10 +611,14 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     if f == rv.temp_object {
       gl.Color4d(1, 1, 1, 0.5)
     } else {
-      if f == furn_over && rv.select_mode == selectFurniture {
-        gl.Color4d(0.5, 1, 0.5, 1)
+      if rv.edit_mode == editFurniture {
+        if f == furn_over {
+          gl.Color4d(0.5, 1, 0.5, 1)
+        } else {
+          gl.Color4d(1, 1, 1, 1)
+        }
       } else {
-        gl.Color4d(1, 1, 1, 1)
+        gl.Color4d(1, 1, 1, 0.4)
       }
     }
     f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)

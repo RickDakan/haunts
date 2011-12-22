@@ -64,10 +64,12 @@ func main() {
     sys.EnableVSync(true)
   })
   ui,err := gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
-  house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   if err != nil {
     panic(err.Error())
   }
+  house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
+  house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
+
   // anch := gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
   var room *house.Room
   path := base.GetStoreVal("last room path")

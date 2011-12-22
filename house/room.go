@@ -57,6 +57,8 @@ type Room struct {
 
   Furniture []*Furniture
 
+  WallTextures []*WallTexture
+
   // Paths to the floor and wall textures, relative to some basic datadir
   Floor_path string
   Wall_path  string
@@ -215,6 +217,10 @@ func LoadRoom(path string) *Room {
   for i := range room.Furniture {
     room.Furniture[i].Load()
   }
+
+  for i := range room.WallTextures {
+    room.WallTextures[i].Load()
+  }
   return &room
 }
 
@@ -257,9 +263,11 @@ func (w *FurniturePanel) Collapse() {
   w.object = nil
 }
 func (w *FurniturePanel) Expand() {
+  w.RoomViewer.SetEditMode(editFurniture)
 }
 
 type tabWidget interface {
+  Respond(*gui.Gui, gui.EventGroup) bool
   Collapse()
   Expand()
 }
@@ -273,10 +281,19 @@ type RoomEditorPanel struct {
   RoomViewer *RoomViewer
 }
 
+
+// Manually pass all events to the tabs, regardless of location, since the tabs
+// need to know where the user clicks.
+func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  return w.widgets[w.tab.SelectedTab()].Respond(ui, group)
+}
+
 func (w *RoomEditorPanel) SelectTab(n int) {
+  if n < 0 || n >= len(w.widgets) { return }
   if n != w.tab.SelectedTab() {
     w.widgets[w.tab.SelectedTab()].Collapse()
     w.tab.SelectTab(n)
+    w.RoomViewer.SetEditMode(editNothing)
     w.widgets[n].Expand()
   }
 }
@@ -290,6 +307,9 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   for _,f := range room.Furniture {
     rep.RoomViewer.AddFurniture(f)
   }
+  for _,wt := range room.WallTextures {
+    rep.RoomViewer.AddWallTexture(wt)
+  }
   rep.RoomViewer.ReloadFloor(room.Floor_path)
   rep.RoomViewer.ReloadWall(room.Wall_path)
 
@@ -302,12 +322,13 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   tabs = append(tabs, furniture)
   rep.widgets = append(rep.widgets, furniture)
 
-  other := MakeOtherPanel()
-  tabs = append(tabs, other)
-  rep.widgets = append(rep.widgets, other)
+  wall := MakeWallPanel(rep.Room, rep.RoomViewer)
+  tabs = append(tabs, wall)
+  rep.widgets = append(rep.widgets, wall)
 
   rep.tab = gui.MakeTabFrame(tabs)
   rep.AddChild(rep.tab)
+  rep.RoomViewer.SetEditMode(editFurniture)
 
   return &rep
 }
@@ -324,7 +345,6 @@ func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *Furnitu
   if room.Floor_path == "" {
     room.Floor_path = datadir
   }
-  fmt.Printf("floor path: %s\n", room.Floor_path)
   fp.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
 
   if room.Wall_path == "" {
@@ -360,7 +380,6 @@ func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *Furnitu
     fp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       f := MakeFurniture(name)
       if f == nil { return }
-      fmt.Printf("obj: %v\n", f)
       fp.object = f
       fp.drop_on_release = false
       dx,dy := fp.object.Dims()
@@ -478,23 +497,95 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
   }
 }
 
-type OtherPanel struct {
+type WallPanel struct {
   *gui.VerticalTable
+  room *Room
+  viewer *RoomViewer
+
+  wall_texture *WallTexture
+  prev_wall_texture *WallTexture
+  drag_anchor struct{ pos,height float32 }
+  drop_on_release bool
 }
 
-func MakeOtherPanel() *OtherPanel {
-  var op OtherPanel
-  op.VerticalTable = gui.MakeVerticalTable()
-  op.AddChild(gui.MakeTextEditLine("standard", "foo", 300, 1, 1, 1, 1))
-  op.AddChild(gui.MakeTextEditLine("standard", "bar", 300, 1, 1, 1, 1))
-  op.AddChild(gui.MakeTextEditLine("standard", "wingding", 300, 1, 1, 1, 1))
-  return &op
+func MakeWallPanel(room *Room, viewer *RoomViewer) *WallPanel {
+  var wp WallPanel
+  wp.room = room
+  wp.viewer = viewer
+  wp.VerticalTable = gui.MakeVerticalTable()
+
+  fnames := GetAllWallTextureNames()
+  for i := range fnames {
+    name := fnames[i]
+    wp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
+      wt := MakeWallTexture(name)
+      if wt == nil { return }
+      wp.wall_texture = wt
+      wp.wall_texture.Pos = 0.4
+      wp.wall_texture.Height = 3
+      wp.drag_anchor.pos = 0
+      wp.drag_anchor.height = 0
+      wp.drop_on_release = false
+      wp.viewer.SetTempWallTexture(wt)
+    }))
+  }
+
+  return &wp
 }
 
-func (w *OtherPanel) Collapse() {
+func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if w.VerticalTable.Respond(ui, group) {
+    return true
+  }
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    if w.wall_texture != nil {
+      w.viewer.SetTempWallTexture(nil)
+      w.wall_texture = nil
+    }
+    return true
+  }
+  if found,event := group.FindEvent(gin.MouseLButton); found {
+    if w.wall_texture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
+      w.viewer.SetTempWallTexture(nil)
+      w.viewer.AddWallTexture(w.wall_texture)
+      w.room.WallTextures = append(w.room.WallTextures, w.wall_texture)
+      w.wall_texture = nil
+    } else if w.wall_texture == nil && event.Type == gin.Press {
+      pos,height := w.viewer.WindowToWall(event.Key.Cursor().Point())
+      w.wall_texture = w.viewer.SelectWallTextureAt(event.Key.Cursor().Point())
+      if w.wall_texture != nil {
+        w.prev_wall_texture = new(WallTexture)
+        *w.prev_wall_texture = *w.wall_texture
+      }
+      w.room.WallTextures = algorithm.Choose(w.room.WallTextures, func(a interface{}) bool {
+        return a.(*WallTexture) != w.wall_texture
+      }).([]*WallTexture)
+      w.drop_on_release = true
+      if w.wall_texture != nil {
+        w.drag_anchor.pos = pos - w.wall_texture.Pos
+        w.drag_anchor.height = height - float32(w.wall_texture.Height)
+      }
+    }
+    return true
+  }
+  return false
+}
+
+func (w *WallPanel) Think(ui *gui.Gui, t int64) {
+  if w.wall_texture != nil {
+    mx,my := gin.In().GetCursor("Mouse").Point()
+    pos,height := w.viewer.WindowToWall(mx, my)
+    w.wall_texture.Pos = pos - w.drag_anchor.pos
+    w.wall_texture.Height = height - w.drag_anchor.height
+  }
+  w.VerticalTable.Think(ui, t)
+
+}
+
+func (w *WallPanel) Collapse() {
   
 }
 
-func (w *OtherPanel) Expand() {
-  
+func (w *WallPanel) Expand() {
+
 }
