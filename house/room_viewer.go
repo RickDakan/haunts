@@ -131,6 +131,7 @@ const (
   editNothing editMode = iota
   editFurniture
   editWallTextures
+  editCells
 )
 
 type RoomViewer struct {
@@ -191,6 +192,8 @@ type RoomViewer struct {
 
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
+
+  selected_walls map[int]bool
 }
 
 func (rv *RoomViewer) SetEditMode(mode editMode) {
@@ -318,6 +321,8 @@ func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
   rv.Request_dims.Dy = 100
   rv.Ex = true
   rv.Ey = true
+  rv.selected_walls = make(map[int]bool)
+
   return &rv
 }
 
@@ -551,6 +556,28 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.End()
   for _,tex := range rv.wall_textures {
     tex.Render(rv.dx, rv.dy)
+  }
+  gl.Disable(gl.TEXTURE_2D)
+  for v := range rv.selected_walls {
+    if v < rv.dx {
+      gl.Begin(gl.QUADS)
+        gl.Color4f(1, 0, 0, 0.0)
+        gl.Vertex3i(v+1, rv.dy, 0)
+        gl.Vertex3i(v, rv.dy, 0)
+        gl.Color4f(1, 0, 0, 0.5)
+        gl.Vertex3i(v, rv.dy, -10)
+        gl.Vertex3i(v+1, rv.dy, -10)
+      gl.End()
+    } else {
+      gl.Begin(gl.QUADS)
+        gl.Color4f(1, 0, 0, 0.0)
+        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v - 1, 0)
+        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v, 0)
+        gl.Color4f(1, 0, 0, 0.5)
+        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v, -10)
+        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v - 1, -10)
+      gl.End()
+    }
   }
 
   // Draw the floor

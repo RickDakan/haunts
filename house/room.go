@@ -1,14 +1,11 @@
 package house
 
 import (
-  "glop/gin"
   "glop/gui"
   "path/filepath"
   "fmt"
-  "glop/util/algorithm"
   "os"
   "io"
-  "time"
   "haunts/base"
 )
 
@@ -51,6 +48,20 @@ type Tags struct {
 }
 
 
+type WallData struct {
+  Door_allowed bool
+}
+
+type CellPos struct {
+  X,Y int
+}
+
+type CellData struct {
+  CanHaveDoor       bool  // Only sensible at the edges of a room
+  CanSpawnExplorers bool
+  CanSpawnOthers    bool
+}
+
 type Room struct {
   Name string
   Size RoomSize
@@ -58,10 +69,13 @@ type Room struct {
   Furniture []*Furniture
 
   WallTextures []*WallTexture
+  WallData []WallData // TODO: GET RID OF THIS
 
   // Paths to the floor and wall textures, relative to some basic datadir
   Floor_path string
   Wall_path  string
+
+  Cell_data [][]CellData
 
   // What house themes this room is appropriate for
   Themes map[string]bool
@@ -79,6 +93,24 @@ func MakeRoom() *Room {
   r.Sizes = make(map[string]bool)
   r.Decor = make(map[string]bool)
   return &r
+}
+
+func (r *Room) Resize(size RoomSize) {
+  if len(r.Cell_data) > size.Dx {
+    r.Cell_data = r.Cell_data[0 : size.Dx]
+  }
+  for len(r.Cell_data) < size.Dx {
+    r.Cell_data = append(r.Cell_data, []CellData{})
+  }
+  for i := range r.Cell_data {
+    if len(r.Cell_data[i]) > size.Dy {
+      r.Cell_data[i] = r.Cell_data[i][0 : size.Dy]
+    }
+    for len(r.Cell_data[i]) < size.Dy {
+      r.Cell_data[i] = append(r.Cell_data[i], CellData{})
+    }
+  }
+  r.Size = size
 }
 
 func imagePathFilter(path string, isdir bool) bool {
@@ -224,48 +256,6 @@ func LoadRoom(path string) *Room {
   return &room
 }
 
-type FurniturePanel struct {
-  *gui.VerticalTable
-  name       *gui.TextEditLine
-  room_size  *gui.ComboBox
-  floor_path *gui.FileWidget
-  wall_path  *gui.FileWidget
-  themes     *gui.CheckBoxes
-  sizes      *gui.CheckBoxes
-  decor      *gui.CheckBoxes
-
-  Room       *Room
-  RoomViewer *RoomViewer
-
-  // If we're moving around temporary objects in the room or something they'll
-  // be stored temporarily here
-  object *Furniture
-
-  // If we're in the middle of moving an object and this widget gets collapsed
-  // we want to put the object back where it was before we started dragging it.
-  prev_object *Furniture
-
-  // Distance from the mouse to the center of the object, in board coordinates
-  drag_anchor struct{ x,y float32 }
-
-  // True iff the selected object should be placed when the mouse button is
-  // released.  If false this object will be placed when the mouse button is
-  // clicked.
-  drop_on_release bool
-}
-
-func (w *FurniturePanel) Collapse() {
-  if w.object != nil && w.prev_object != nil {
-    w.RoomViewer.AddFurniture(w.prev_object)
-  }
-  w.RoomViewer.SetTempObject(nil)
-  w.prev_object = nil
-  w.object = nil
-}
-func (w *FurniturePanel) Expand() {
-  w.RoomViewer.SetEditMode(editFurniture)
-}
-
 type tabWidget interface {
   Respond(*gui.Gui, gui.EventGroup) bool
   Collapse()
@@ -326,6 +316,10 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   tabs = append(tabs, wall)
   rep.widgets = append(rep.widgets, wall)
 
+  cells := MakeCellPanel(rep.Room, rep.RoomViewer)
+  tabs = append(tabs, cells)
+  rep.widgets = append(rep.widgets, cells)
+
   rep.tab = gui.MakeTabFrame(tabs)
   rep.AddChild(rep.tab)
   rep.RoomViewer.SetEditMode(editFurniture)
@@ -333,259 +327,9 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   return &rep
 }
 
-func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *FurniturePanel {
-  var fp FurniturePanel
-  fp.Room = room
-  fp.RoomViewer = viewer
-  if room.Name == "" {
-    room.Name = "name"
-  }
-  fp.name = gui.MakeTextEditLine("standard", room.Name, 300, 1, 1, 1, 1)  
-
-  if room.Floor_path == "" {
-    room.Floor_path = datadir
-  }
-  fp.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
-
-  if room.Wall_path == "" {
-    room.Wall_path = datadir
-  }
-  fp.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
-
-  fp.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
-  for i := range tags.RoomSizes {
-    if tags.RoomSizes[i].String() == room.Size.String() {
-      fp.room_size.SetSelectedIndex(i)
-      break
-    }
-  }
-  fp.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
-  fp.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
-  fp.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
-
-  fp.VerticalTable = gui.MakeVerticalTable()
-  fp.VerticalTable.Params().Spacing = 3  
-  fp.VerticalTable.Params().Background.R = 0.3
-  fp.VerticalTable.Params().Background.B = 1
-  fp.VerticalTable.AddChild(fp.name)
-  fp.VerticalTable.AddChild(fp.floor_path)
-  fp.VerticalTable.AddChild(fp.wall_path)
-  fp.VerticalTable.AddChild(fp.room_size)
-  fp.VerticalTable.AddChild(fp.themes)
-  fp.VerticalTable.AddChild(fp.sizes)
-  fp.VerticalTable.AddChild(fp.decor)
-  fnames := GetAllFurnitureNames()
-  for i := range fnames {
-    name := fnames[i]
-    fp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
-      f := MakeFurniture(name)
-      if f == nil { return }
-      fp.object = f
-      fp.drop_on_release = false
-      dx,dy := fp.object.Dims()
-      fp.drag_anchor.x = float32(dx - 1) / 2
-      fp.drag_anchor.y = float32(dy - 1) / 2
-      fp.RoomViewer.SetTempObject(fp.object)
-    }))
-  }
-  fp.VerticalTable.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
-    target_path := room.Save(datadir, time.Now().UnixNano())
-    if target_path != "" {
-      base.SetStoreVal("last room path", target_path)
-      // The paths can change when we save them so we should update the widgets
-      if !filepath.IsAbs(room.Floor_path) {
-        room.Floor_path = filepath.Join(target_path, room.Floor_path)
-        fp.floor_path.SetPath(room.Floor_path)
-      }
-      if !filepath.IsAbs(room.Wall_path) {
-        room.Wall_path = filepath.Join(target_path, room.Wall_path)
-        fp.wall_path.SetPath(room.Wall_path)
-      }
-    }
-  }))
-  return &fp
-}
-
-func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if w.VerticalTable.Respond(ui, group) {
-    return true
-  }
-  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.object != nil {
-      w.RoomViewer.SetTempObject(nil)
-      w.object = nil
-    }
-    return true
-  }
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    if w.object != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
-      w.RoomViewer.SetTempObject(nil)
-      w.RoomViewer.AddFurniture(w.object)
-      w.Room.Furniture = append(w.Room.Furniture, w.object)
-      w.object = nil
-    } else if w.object == nil && event.Type == gin.Press {
-      bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
-      w.object = w.RoomViewer.SelectFurnitureAt(event.Key.Cursor().Point())
-      if w.object != nil {
-        w.prev_object = new(Furniture)
-        *w.prev_object = *w.object
-      }
-      w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
-        return a.(*Furniture) != w.object
-      }).([]*Furniture)
-      w.drop_on_release = true
-      if w.object != nil {
-        px,py := w.object.Pos()
-        w.drag_anchor.x = bx - float32(px) - 0.5
-        w.drag_anchor.y = by - float32(py) - 0.5
-      }
-    }
-    return true
-  }
-  return false
-}
-
-func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
-  if w.object != nil {
-    mx,my := gin.In().GetCursor("Mouse").Point()
-    bx,by := w.RoomViewer.WindowToBoard(mx, my)
-    w.object.X = int(bx - w.drag_anchor.x)
-    w.object.Y = int(by - w.drag_anchor.y)
-    w.RoomViewer.MoveFurniture()
-  }
-  w.VerticalTable.Think(ui, t)
-  w.Room.Name = w.name.GetText()
-
-  w.Room.Size = tags.RoomSizes[w.room_size.GetComboedIndex()]
-  w.RoomViewer.SetDims(w.Room.Size.Dx, w.Room.Size.Dy)
-
-  w.Room.Floor_path = w.floor_path.GetPath()
-  w.Room.Wall_path = w.wall_path.GetPath()
-
-  w.RoomViewer.ReloadFloor(w.Room.Floor_path)
-  w.RoomViewer.ReloadWall(w.Room.Wall_path)
-
-
-  for i := range tags.Themes {
-    selected := false
-    for _,j := range w.themes.GetSelectedIndexes() {
-      if j == i {
-        selected = true
-        break
-      }
-    }
-    if selected {
-      w.Room.Themes[tags.Themes[i]] = true
-    } else if _,ok := w.Room.Themes[tags.Themes[i]]; ok {
-      delete(w.Room.Themes, tags.Themes[i])
-    }
-  }
-
-  for i := range tags.Decor {
-    selected := false
-    for _,j := range w.decor.GetSelectedIndexes() {
-      if j == i {
-        selected = true
-        break
-      }
-    }
-    if selected {
-      w.Room.Decor[tags.Decor[i]] = true
-    } else if _,ok := w.Room.Decor[tags.Decor[i]]; ok {
-      delete(w.Room.Decor, tags.Decor[i])
-    }
-  }
-}
-
-type WallPanel struct {
-  *gui.VerticalTable
-  room *Room
-  viewer *RoomViewer
-
-  wall_texture *WallTexture
-  prev_wall_texture *WallTexture
-  drag_anchor struct{ pos,height float32 }
-  drop_on_release bool
-}
-
-func MakeWallPanel(room *Room, viewer *RoomViewer) *WallPanel {
-  var wp WallPanel
-  wp.room = room
-  wp.viewer = viewer
-  wp.VerticalTable = gui.MakeVerticalTable()
-
-  fnames := GetAllWallTextureNames()
-  for i := range fnames {
-    name := fnames[i]
-    wp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
-      wt := MakeWallTexture(name)
-      if wt == nil { return }
-      wp.wall_texture = wt
-      wp.wall_texture.Pos = 0.4
-      wp.wall_texture.Height = 3
-      wp.drag_anchor.pos = 0
-      wp.drag_anchor.height = 0
-      wp.drop_on_release = false
-      wp.viewer.SetTempWallTexture(wt)
-    }))
-  }
-
-  return &wp
-}
-
-func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if w.VerticalTable.Respond(ui, group) {
-    return true
-  }
-  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.wall_texture != nil {
-      w.viewer.SetTempWallTexture(nil)
-      w.wall_texture = nil
-    }
-    return true
-  }
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    if w.wall_texture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
-      w.viewer.SetTempWallTexture(nil)
-      w.viewer.AddWallTexture(w.wall_texture)
-      w.room.WallTextures = append(w.room.WallTextures, w.wall_texture)
-      w.wall_texture = nil
-    } else if w.wall_texture == nil && event.Type == gin.Press {
-      pos,height := w.viewer.WindowToWall(event.Key.Cursor().Point())
-      w.wall_texture = w.viewer.SelectWallTextureAt(event.Key.Cursor().Point())
-      if w.wall_texture != nil {
-        w.prev_wall_texture = new(WallTexture)
-        *w.prev_wall_texture = *w.wall_texture
-      }
-      w.room.WallTextures = algorithm.Choose(w.room.WallTextures, func(a interface{}) bool {
-        return a.(*WallTexture) != w.wall_texture
-      }).([]*WallTexture)
-      w.drop_on_release = true
-      if w.wall_texture != nil {
-        w.drag_anchor.pos = pos - w.wall_texture.Pos
-        w.drag_anchor.height = height - float32(w.wall_texture.Height)
-      }
-    }
-    return true
-  }
-  return false
-}
-
-func (w *WallPanel) Think(ui *gui.Gui, t int64) {
-  if w.wall_texture != nil {
-    mx,my := gin.In().GetCursor("Mouse").Point()
-    pos,height := w.viewer.WindowToWall(mx, my)
-    w.wall_texture.Pos = pos - w.drag_anchor.pos
-    w.wall_texture.Height = height - w.drag_anchor.height
-  }
-  w.VerticalTable.Think(ui, t)
-
-}
-
-func (w *WallPanel) Collapse() {
-  
-}
-
-func (w *WallPanel) Expand() {
-
-}
+type selectMode int
+const (
+  selectOff selectMode = iota
+  selectOn
+  deselect
+)
