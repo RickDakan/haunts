@@ -3,6 +3,7 @@ package base
 import (
   "os"
   "encoding/json"
+  "encoding/gob"
   "io/ioutil"
   "strings"
   "path/filepath"
@@ -21,10 +22,7 @@ func LoadJson(path string, target interface{}) error {
     return err
   }
   err = json.Unmarshal(data, target)
-  if err != nil {
-    return err
-  }
-  return nil
+  return err
 }
 
 func SaveJson(path string, source interface{}) error {
@@ -38,10 +36,31 @@ func SaveJson(path string, source interface{}) error {
   }
   defer f.Close()
   _,err = f.Write(data)
+  return err
+}
+
+// Opens the file named by path, reads it all, decodes it as gob into target,
+// then closes the file.  Returns the first error found while doing this or nil.
+func LoadGob(path string, target interface{}) error {
+  f, err := os.Open(path)
   if err != nil {
     return err
   }
-  return nil
+  defer f.Close()
+  dec := gob.NewDecoder(f)
+  err = dec.Decode(target)
+  return err
+}
+
+func SaveGob(path string, source interface{}) error {
+  f, err := os.Create(path)
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+  enc := gob.NewEncoder(f)
+  err = enc.Encode(source)
+  return err
 }
 
 // Returns a path rel such that filepath.Join(a, rel) and b refer to the same
