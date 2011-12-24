@@ -2,15 +2,27 @@ package house
 
 import (
   "glop/gui"
+  "glop/gin"
 )
+
+type CellPos struct {
+  X,Y int
+}
+
+type CellData struct {
+  CanHaveDoor       bool  // Only sensible at the edges of a room
+  CanSpawnExplorers bool
+  CanSpawnOthers    bool
+  CanBeGoal         bool
+}
 
 type CellPanel struct {
   *gui.VerticalTable
   room *Room
   viewer *RoomViewer
 
-  selecting_cells selectMode
-  selected_cells map[int]bool
+  select_mode selectMode
+  selected_cells map[CellPos]bool
 }
 
 func MakeCellPanel(room *Room, viewer *RoomViewer) *CellPanel {
@@ -18,7 +30,7 @@ func MakeCellPanel(room *Room, viewer *RoomViewer) *CellPanel {
   cp.room = room
   cp.viewer = viewer
   cp.VerticalTable = gui.MakeVerticalTable()
-  cp.selected_cells = make(map[int]bool)
+  cp.selected_cells = make(map[CellPos]bool)
   return &cp
 }
 
@@ -26,13 +38,10 @@ func (w *CellPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
   }
-  // if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-  //   if w.wall_texture != nil {
-  //     w.viewer.SetTempWallTexture(nil)
-  //     w.wall_texture = nil
-  //   }
-  //   return true
-  // }
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    w.Collapse()
+    return true
+  }
   // if found,event := group.FindEvent(gin.MouseLButton); found {
   //   if w.wall_texture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
   //     w.viewer.SetTempWallTexture(nil)
@@ -102,7 +111,8 @@ func (w *CellPanel) Think(ui *gui.Gui, t int64) {
 }
 
 func (w *CellPanel) Collapse() {
-  w.selecting_cells = selectOff
+  w.select_mode = modeNoSelect
+  w.selected_cells = make(map[CellPos]bool)
 }
 
 func (w *CellPanel) Expand() {

@@ -142,6 +142,8 @@ type RoomViewer struct {
   gui.NonResponder
   gui.NonThinker
 
+  room *Room
+
   // All events received by the viewer are passed to the handler
   handler gin.EventHandler
 
@@ -177,15 +179,12 @@ type RoomViewer struct {
   flattened_drawables []sprite.ZDrawable
   flattened_positions []mathgl.Vec3
 
-  // temp_object is something that the user is moving around to consider placing
-  // in the room.
-  temp_object *Furniture
-  furn rectObjectArray
+  Temp struct {
+    Furniture *Furniture
+  }
 
   temp_wall_texture *WallTexture
   wall_textures []*WallTexture
-
-  dx,dy int
 
   floor *texture.Data
   wall *texture.Data
@@ -223,7 +222,7 @@ func (rv *RoomViewer) SelectWallTextureAt(wx,wy int) *WallTexture {
 }
 
 func (rv *RoomViewer) wallTextureAt(pos,height float32) *WallTexture {
-  sum := float32(rv.dx + rv.dy)
+  sum := float32(rv.room.Size.Dx + rv.room.Size.Dy)
   pos *= sum
   for _,tex := range rv.wall_textures {
     dx := float32(tex.texture_data.Dx) / 100
@@ -236,46 +235,6 @@ func (rv *RoomViewer) wallTextureAt(pos,height float32) *WallTexture {
   return nil
 }
 
-func (rv *RoomViewer) SetTempObject(f *Furniture) {
-  rv.RemoveFurniture(rv.temp_object)
-  rv.temp_object = f
-  if rv.temp_object != nil {
-    rv.AddFurniture(rv.temp_object)
-  }
-  rv.MoveFurniture()
-}
-
-func (rv *RoomViewer) SelectFurnitureAt(wx,wy int) *Furniture {
-  bx,by := rv.WindowToBoard(wx, wy)
-  rv.temp_object = rv.furnitureAt(int(bx), int(by))
-  return rv.temp_object
-}
-
-func (rv *RoomViewer) furnitureAt(bx,by int) *Furniture {
-  for i := range rv.furn {
-    x,y := rv.furn[i].Pos()
-    dx,dy := rv.furn[i].Dims()
-    if bx >= x && bx < x + dx && by >= y && by < y + dy {
-      return rv.furn[i].(*Furniture)
-    }
-  }
-  return nil
-}
-
-func (rv *RoomViewer) AddFurniture(f *Furniture) {
-  rv.furn = append(rv.furn, f)
-  rv.MoveFurniture()
-}
-
-func (rv *RoomViewer) RemoveFurniture(f *Furniture) {
-  rv.furn = algorithm.Choose(rv.furn, func(a interface{}) bool { return a.(*Furniture) != f }).(rectObjectArray)
-  rv.MoveFurniture()
-}
-
-func (rv *RoomViewer) MoveFurniture() {
-  rv.furn = rv.furn.Order()
-}
-
 func (rv *RoomViewer) ReloadFloor(path string) {
   rv.floor = texture.LoadFromPath(path)
 }
@@ -286,11 +245,6 @@ func (rv *RoomViewer) ReloadWall(path string) {
 
 func (rv *RoomViewer) String() string {
   return "viewer"
-}
-
-func (rv *RoomViewer) SetDims(dx,dy int) {
-  rv.dx = dx
-  rv.dy = dy
 }
 
 func (rv *RoomViewer) AddUprightDrawable(x, y float32, zd sprite.ZDrawable) {
@@ -306,15 +260,13 @@ func (rv *RoomViewer) AddFlattenedDrawable(x, y float32, zd sprite.ZDrawable) {
   rv.flattened_positions = append(rv.flattened_positions, mathgl.Vec3{x, y, 0})
 }
 
-func MakeRoomViewer(dx, dy int, angle float32) *RoomViewer {
+func MakeRoomViewer(room *Room, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
-
-  rv.dx = dx
-  rv.dy = dy
+  rv.room = room
   rv.angle = angle
-  rv.fx = float32(rv.dx / 2)
-  rv.fy = float32(rv.dy / 2)
+  rv.fx = float32(rv.room.Size.Dx / 2)
+  rv.fy = float32(rv.room.Size.Dy / 2)
   rv.Zoom(1)
   rv.makeMat()
   rv.Request_dims.Dx = 100
@@ -360,7 +312,7 @@ func (rv *RoomViewer) makeMat() {
   rv.left_wall_mat.Assign(&rv.mat)
   m.RotationX(-math.Pi/2)
   rv.left_wall_mat.Multiply(&m)
-  m.Translation(0, 0, float32(rv.dy))
+  m.Translation(0, 0, float32(rv.room.Size.Dy))
   rv.left_wall_mat.Multiply(&m)
   rv.left_wall_imat.Assign(&rv.left_wall_mat)
   rv.left_wall_imat.Inverse()
@@ -372,7 +324,7 @@ func (rv *RoomViewer) makeMat() {
   rv.right_wall_mat.Multiply(&m)
   m.Scaling(-1, 1, 1)
   rv.right_wall_mat.Multiply(&m)
-  m.Translation(0, 0, float32(rv.dx))
+  m.Translation(0, 0, float32(rv.room.Size.Dx))
   rv.right_wall_mat.Multiply(&m)
   rv.right_wall_imat.Assign(&rv.right_wall_mat)
   rv.right_wall_imat.Inverse()
@@ -389,7 +341,7 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
 func (rv *RoomViewer) WindowToWall(wx, wy int) (pos, height float32) {
   lbx,lby,ldist := rv.modelviewToLeftWall(float32(wx), float32(wy))
   rbx,rby,rdist := rv.modelviewToRightWall(float32(wx), float32(wy))
-  sum := float32(rv.dx + rv.dy)
+  sum := float32(rv.room.Size.Dx + rv.room.Size.Dy)
   if ldist < rdist {
     pos = lbx / sum
     height = lby
@@ -482,8 +434,8 @@ func (rv *RoomViewer) Move(dx, dy float64) {
   dx, dy = dy+dx, dy-dx
   rv.fx += float32(dx) / rv.zoom
   rv.fy += float32(dy) / rv.zoom
-  rv.fx = clamp(rv.fx, 0, float32(rv.dx))
-  rv.fy = clamp(rv.fy, 0, float32(rv.dy))
+  rv.fx = clamp(rv.fx, 0, float32(rv.room.Size.Dx))
+  rv.fy = clamp(rv.fy, 0, float32(rv.room.Size.Dy))
   rv.makeMat()
 }
 
@@ -523,9 +475,9 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Color4d(0.1, 0.3, 0.8, 1)
   gl.Begin(gl.QUADS)
   gl.Vertex2i(-1, -1)
-  gl.Vertex2i(-1, rv.dy+1)
-  gl.Vertex2i(rv.dx+1, rv.dy+1)
-  gl.Vertex2i(rv.dx+1, -1)
+  gl.Vertex2i(-1, rv.room.Size.Dy+1)
+  gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
+  gl.Vertex2i(rv.room.Size.Dx+1, -1)
   gl.End()
 
 
@@ -533,49 +485,49 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   rv.wall.Bind()
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4f(1, 1, 1, 1)
-  corner := float32(rv.dx) / float32(rv.dx + rv.dy)
+  corner := float32(rv.room.Size.Dx) / float32(rv.room.Size.Dx + rv.room.Size.Dy)
   dz := 7
   gl.Begin(gl.QUADS)
     gl.TexCoord2f(corner, 0)
-    gl.Vertex3i(rv.dx, rv.dy, 0)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
     gl.TexCoord2f(corner, -1)
-    gl.Vertex3i(rv.dx, rv.dy, -dz)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, -dz)
     gl.TexCoord2f(0, -1)
-    gl.Vertex3i(0, rv.dy, -dz)
+    gl.Vertex3i(0, rv.room.Size.Dy, -dz)
     gl.TexCoord2f(0, 0)
-    gl.Vertex3i(0, rv.dy, 0)
+    gl.Vertex3i(0, rv.room.Size.Dy, 0)
 
     gl.TexCoord2f(1, 0)
-    gl.Vertex3i(rv.dx, 0, 0)
+    gl.Vertex3i(rv.room.Size.Dx, 0, 0)
     gl.TexCoord2f(1, -1)
-    gl.Vertex3i(rv.dx, 0, -dz)
+    gl.Vertex3i(rv.room.Size.Dx, 0, -dz)
     gl.TexCoord2f(corner, -1)
-    gl.Vertex3i(rv.dx, rv.dy, -dz)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, -dz)
     gl.TexCoord2f(corner, 0)
-    gl.Vertex3i(rv.dx, rv.dy, 0)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
   gl.End()
   for _,tex := range rv.wall_textures {
-    tex.Render(rv.dx, rv.dy)
+    tex.Render(rv.room.Size.Dx, rv.room.Size.Dy)
   }
   gl.Disable(gl.TEXTURE_2D)
   for v := range rv.selected_walls {
-    if v < rv.dx {
+    if v < rv.room.Size.Dx {
       gl.Begin(gl.QUADS)
         gl.Color4f(1, 0, 0, 0.0)
-        gl.Vertex3i(v+1, rv.dy, 0)
-        gl.Vertex3i(v, rv.dy, 0)
+        gl.Vertex3i(v+1, rv.room.Size.Dy, 0)
+        gl.Vertex3i(v, rv.room.Size.Dy, 0)
         gl.Color4f(1, 0, 0, 0.5)
-        gl.Vertex3i(v, rv.dy, -10)
-        gl.Vertex3i(v+1, rv.dy, -10)
+        gl.Vertex3i(v, rv.room.Size.Dy, -10)
+        gl.Vertex3i(v+1, rv.room.Size.Dy, -10)
       gl.End()
     } else {
       gl.Begin(gl.QUADS)
         gl.Color4f(1, 0, 0, 0.0)
-        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v - 1, 0)
-        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v, 0)
+        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v - 1, 0)
+        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v, 0)
         gl.Color4f(1, 0, 0, 0.5)
-        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v, -10)
-        gl.Vertex3i(rv.dx, rv.dx + rv.dy - v - 1, -10)
+        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v, -10)
+        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v - 1, -10)
       gl.End()
     }
   }
@@ -588,14 +540,14 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.TexCoord2i(0, 0)
     gl.Vertex2i(0, 0)
     gl.TexCoord2i(0, -1)
-    gl.Vertex2i(0, rv.dy)
+    gl.Vertex2i(0, rv.room.Size.Dy)
     gl.TexCoord2i(1, -1)
-    gl.Vertex2i(rv.dx, rv.dy)
+    gl.Vertex2i(rv.room.Size.Dx, rv.room.Size.Dy)
     gl.TexCoord2i(1, 0)
-    gl.Vertex2i(rv.dx, 0)
+    gl.Vertex2i(rv.room.Size.Dx, 0)
   gl.End()
   // If we're in cell-select mode we can highlight the cell our mouse is over
-  // if rv.edit_mode == selectCells && rv.mx >= 0 && rv.mx < rv.dx && rv.my >= 0 && rv.my < rv.dy {
+  // if rv.edit_mode == selectCells && rv.mx >= 0 && rv.mx < rv.room.Size.Dx && rv.my >= 0 && rv.my < rv.room.Size.Dy {
   //   gl.Disable(gl.TEXTURE_2D)
   //   gl.Color4d(0.5, 1, 0.5, 1)
   //   gl.Begin(gl.QUADS)
@@ -610,13 +562,13 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Color4f(1, 0, 1, 0.9)
   gl.LineWidth(3.0)
   gl.Begin(gl.LINES)
-  for i := float32(0); i < float32(rv.dx); i += 1.0 {
+  for i := float32(0); i < float32(rv.room.Size.Dx); i += 1.0 {
     gl.Vertex2f(i, 0)
-    gl.Vertex2f(i, float32(rv.dy))
+    gl.Vertex2f(i, float32(rv.room.Size.Dy))
   }
-  for j := float32(0); j < float32(rv.dy); j += 1.0 {
+  for j := float32(0); j < float32(rv.room.Size.Dy); j += 1.0 {
     gl.Vertex2f(0, j)
-    gl.Vertex2f(float32(rv.dx), j)
+    gl.Vertex2f(float32(rv.room.Size.Dx), j)
   }
   gl.End()
 
@@ -626,16 +578,23 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.PushMatrix()
   gl.LoadIdentity()
 
-  rv.furn = rv.furn.Order()
-  furn_over := rv.furnitureAt(rv.mx, rv.my)
-  for i := len(rv.furn) - 1; i >= 0; i-- {
-    f := rv.furn[i]
+  var furn rectObjectArray
+  for _,f := range rv.room.Furniture {
+    furn = append(furn, f)
+  }
+  if rv.Temp.Furniture != nil {
+    furn = append(furn, rv.Temp.Furniture)
+  }
+  furn = furn.Order()
+  var furn_over *Furniture
+  for i := len(furn) - 1; i >= 0; i-- {
+    f := furn[i]
     near_x,near_y := f.Pos()
     furn_dx,furn_dy := f.Dims()
     leftx,_,_ := rv.boardToModelview(float32(near_x), float32(near_y + furn_dy))
     rightx,_,_ := rv.boardToModelview(float32(near_x + furn_dx), float32(near_y))
     _,boty,_ := rv.boardToModelview(float32(near_x), float32(near_y))
-    if f == rv.temp_object {
+    if f == rv.Temp.Furniture {
       gl.Color4d(1, 1, 1, 0.5)
     } else {
       if rv.edit_mode == editFurniture {

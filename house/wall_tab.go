@@ -15,7 +15,7 @@ type WallPanel struct {
   prev_wall_texture *WallTexture
   drag_anchor struct{ pos,height float32 }
   drop_on_release bool
-  selecting_walls selectMode
+  select_mode selectMode
   selected_walls map[int]bool
 }
 
@@ -73,10 +73,10 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         if index >= 0 && index < len(w.room.WallData) {
           if w.selected_walls[index] {
             delete(w.selected_walls, index)
-            w.selecting_walls = deselect
+            w.select_mode = modeDeselect
           } else {
             w.selected_walls[index] = true
-            w.selecting_walls = selectOn
+            w.select_mode = modeSelect
           }
         }
       }
@@ -89,22 +89,22 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         w.drag_anchor.height = height - float32(w.wall_texture.Height)
       }
     } else if event.Type == gin.Release {
-      w.selecting_walls = selectOff
+      w.select_mode = modeNoSelect
     }
     return true
   }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil && cursor.Name() == "Mouse" {
-    if w.selecting_walls == selectOn || w.selecting_walls == deselect {
+    if w.select_mode == modeSelect || w.select_mode == modeDeselect {
       pos,_ := w.viewer.WindowToWall(cursor.Point())
       index := int(pos * float32(len(w.room.WallData)))
       if index >= 0 && index < len(w.room.WallData) {
-        if w.selecting_walls == selectOn {
+        if w.select_mode == modeSelect {
           w.selected_walls[index] = true
-          w.selecting_walls = selectOn
+          w.select_mode = modeSelect
         } else {
           delete(w.selected_walls, index)
-          w.selecting_walls = deselect
+          w.select_mode = modeDeselect
         }
       }
     }
@@ -131,6 +131,7 @@ func (w *WallPanel) Collapse() {
   w.viewer.SetTempWallTexture(nil)
   w.prev_wall_texture = nil
   w.wall_texture = nil
+  w.select_mode = modeNoSelect
 }
 
 func (w *WallPanel) Expand() {

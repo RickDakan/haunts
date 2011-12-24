@@ -22,10 +22,6 @@ type FurniturePanel struct {
   Room       *Room
   RoomViewer *RoomViewer
 
-  // If we're moving around temporary objects in the room or something they'll
-  // be stored temporarily here
-  object *Furniture
-
   // If we're in the middle of moving an object and this widget gets collapsed
   // we want to put the object back where it was before we started dragging it.
   prev_object *Furniture
@@ -40,12 +36,11 @@ type FurniturePanel struct {
 }
 
 func (w *FurniturePanel) Collapse() {
-  if w.object != nil && w.prev_object != nil {
-    w.RoomViewer.AddFurniture(w.prev_object)
-  }
-  w.RoomViewer.SetTempObject(nil)
+  w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
+    return a.(*Furniture) != w.prev_object
+  }).([]*Furniture)
   w.prev_object = nil
-  w.object = nil
+  w.RoomViewer.Temp.Furniture = nil
 }
 func (w *FurniturePanel) Expand() {
   w.RoomViewer.SetEditMode(editFurniture)
@@ -98,12 +93,11 @@ func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *Furnitu
     fp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       f := MakeFurniture(name)
       if f == nil { return }
-      fp.object = f
+      fp.RoomViewer.Temp.Furniture = f
       fp.drop_on_release = false
-      dx,dy := fp.object.Dims()
+      dx,dy := fp.RoomViewer.Temp.Furniture.Dims()
       fp.drag_anchor.x = float32(dx - 1) / 2
       fp.drag_anchor.y = float32(dy - 1) / 2
-      fp.RoomViewer.SetTempObject(fp.object)
     }))
   }
   fp.VerticalTable.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
@@ -129,31 +123,39 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.object != nil {
-      w.RoomViewer.SetTempObject(nil)
-      w.object = nil
+    if w.RoomViewer.Temp.Furniture != nil {
+      w.RoomViewer.Temp.Furniture = nil
+      w.RoomViewer.Temp.Furniture = nil
     }
     return true
   }
   if found,event := group.FindEvent(gin.MouseLButton); found {
-    if w.object != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
-      w.RoomViewer.SetTempObject(nil)
-      w.RoomViewer.AddFurniture(w.object)
-      w.Room.Furniture = append(w.Room.Furniture, w.object)
-      w.object = nil
-    } else if w.object == nil && event.Type == gin.Press {
+    if w.RoomViewer.Temp.Furniture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
+      w.Room.Furniture = append(w.Room.Furniture, w.RoomViewer.Temp.Furniture)
+      w.RoomViewer.Temp.Furniture = nil
+    } else if w.RoomViewer.Temp.Furniture == nil && event.Type == gin.Press {
       bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
-      w.object = w.RoomViewer.SelectFurnitureAt(event.Key.Cursor().Point())
-      if w.object != nil {
+      w.RoomViewer.Temp.Furniture = nil
+      for i := range w.Room.Furniture {
+        x,y := w.Room.Furniture[i].Pos()
+        dx,dy := w.Room.Furniture[i].Dims()
+        if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
+          w.RoomViewer.Temp.Furniture = w.Room.Furniture[i]
+          w.Room.Furniture[i] = w.Room.Furniture[len(w.Room.Furniture) - 1]
+          w.Room.Furniture = w.Room.Furniture[0 : len(w.Room.Furniture) - 1]
+          break
+        }
+      }
+      if w.RoomViewer.Temp.Furniture != nil {
         w.prev_object = new(Furniture)
-        *w.prev_object = *w.object
+        *w.prev_object = *w.RoomViewer.Temp.Furniture
       }
       w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
-        return a.(*Furniture) != w.object
+        return a.(*Furniture) != w.RoomViewer.Temp.Furniture
       }).([]*Furniture)
       w.drop_on_release = true
-      if w.object != nil {
-        px,py := w.object.Pos()
+      if w.RoomViewer.Temp.Furniture != nil {
+        px,py := w.RoomViewer.Temp.Furniture.Pos()
         w.drag_anchor.x = bx - float32(px) - 0.5
         w.drag_anchor.y = by - float32(py) - 0.5
       }
@@ -164,18 +166,16 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
-  if w.object != nil {
+  if w.RoomViewer.Temp.Furniture != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := w.RoomViewer.WindowToBoard(mx, my)
-    w.object.X = int(bx - w.drag_anchor.x)
-    w.object.Y = int(by - w.drag_anchor.y)
-    w.RoomViewer.MoveFurniture()
+    w.RoomViewer.Temp.Furniture.X = int(bx - w.drag_anchor.x)
+    w.RoomViewer.Temp.Furniture.Y = int(by - w.drag_anchor.y)
   }
   w.VerticalTable.Think(ui, t)
   w.Room.Name = w.name.GetText()
 
   w.Room.Resize(tags.RoomSizes[w.room_size.GetComboedIndex()])
-  w.RoomViewer.SetDims(w.Room.Size.Dx, w.Room.Size.Dy)
   if w.Room.Size.Dx + w.Room.Size.Dy != len(w.Room.WallData) {
     wall_data := make([]WallData, w.Room.Size.Dx + w.Room.Size.Dy)
     for i := 0; i < len(wall_data) && i < len(w.Room.WallData); i++ {

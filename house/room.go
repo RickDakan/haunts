@@ -52,16 +52,6 @@ type WallData struct {
   Door_allowed bool
 }
 
-type CellPos struct {
-  X,Y int
-}
-
-type CellData struct {
-  CanHaveDoor       bool  // Only sensible at the edges of a room
-  CanSpawnExplorers bool
-  CanSpawnOthers    bool
-}
-
 type Room struct {
   Name string
   Size RoomSize
@@ -293,10 +283,7 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
 
   rep.Room = room
   rep.HorizontalTable = gui.MakeHorizontalTable()
-  rep.RoomViewer = MakeRoomViewer(room.Size.Dx, room.Size.Dy, 65)
-  for _,f := range room.Furniture {
-    rep.RoomViewer.AddFurniture(f)
-  }
+  rep.RoomViewer = MakeRoomViewer(room, 65)
   for _,wt := range room.WallTextures {
     rep.RoomViewer.AddWallTexture(wt)
   }
@@ -329,7 +316,7 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
 
 type selectMode int
 const (
-  selectOff selectMode = iota
-  selectOn
-  deselect
+  modeNoSelect selectMode = iota
+  modeSelect
+  modeDeselect
 )
