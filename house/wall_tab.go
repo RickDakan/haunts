@@ -119,9 +119,7 @@ func (w *WallPanel) Think(ui *gui.Gui, t int64) {
     w.wall_texture.Pos = pos - w.drag_anchor.pos
     w.wall_texture.Height = height - w.drag_anchor.height
   }
-  w.viewer.selected_walls = w.selected_walls
   w.VerticalTable.Think(ui, t)
-
 }
 
 func (w *WallPanel) Collapse() {

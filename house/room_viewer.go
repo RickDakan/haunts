@@ -183,6 +183,10 @@ type RoomViewer struct {
     Furniture *Furniture
   }
 
+  Selected struct {
+    Cells map[CellPos]bool
+  }
+
   temp_wall_texture *WallTexture
   wall_textures []*WallTexture
 
@@ -191,8 +195,6 @@ type RoomViewer struct {
 
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
-
-  selected_walls map[int]bool
 }
 
 func (rv *RoomViewer) SetEditMode(mode editMode) {
@@ -273,7 +275,8 @@ func MakeRoomViewer(room *Room, angle float32) *RoomViewer {
   rv.Request_dims.Dy = 100
   rv.Ex = true
   rv.Ey = true
-  rv.selected_walls = make(map[int]bool)
+
+  rv.Selected.Cells = make(map[CellPos]bool)
 
   return &rv
 }
@@ -509,28 +512,6 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   for _,tex := range rv.wall_textures {
     tex.Render(rv.room.Size.Dx, rv.room.Size.Dy)
   }
-  gl.Disable(gl.TEXTURE_2D)
-  for v := range rv.selected_walls {
-    if v < rv.room.Size.Dx {
-      gl.Begin(gl.QUADS)
-        gl.Color4f(1, 0, 0, 0.0)
-        gl.Vertex3i(v+1, rv.room.Size.Dy, 0)
-        gl.Vertex3i(v, rv.room.Size.Dy, 0)
-        gl.Color4f(1, 0, 0, 0.5)
-        gl.Vertex3i(v, rv.room.Size.Dy, -10)
-        gl.Vertex3i(v+1, rv.room.Size.Dy, -10)
-      gl.End()
-    } else {
-      gl.Begin(gl.QUADS)
-        gl.Color4f(1, 0, 0, 0.0)
-        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v - 1, 0)
-        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v, 0)
-        gl.Color4f(1, 0, 0, 0.5)
-        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v, -10)
-        gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dx + rv.room.Size.Dy - v - 1, -10)
-      gl.End()
-    }
-  }
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
@@ -546,21 +527,27 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.TexCoord2i(1, 0)
     gl.Vertex2i(rv.room.Size.Dx, 0)
   gl.End()
-  // If we're in cell-select mode we can highlight the cell our mouse is over
-  // if rv.edit_mode == selectCells && rv.mx >= 0 && rv.mx < rv.room.Size.Dx && rv.my >= 0 && rv.my < rv.room.Size.Dy {
-  //   gl.Disable(gl.TEXTURE_2D)
-  //   gl.Color4d(0.5, 1, 0.5, 1)
-  //   gl.Begin(gl.QUADS)
-  //     gl.Vertex2i(rv.mx, rv.my)
-  //     gl.Vertex2i(rv.mx, rv.my + 1)
-  //     gl.Vertex2i(rv.mx + 1, rv.my + 1)
-  //     gl.Vertex2i(rv.mx + 1, rv.my)
-  //   gl.End()
-  // }
+
+  if rv.edit_mode == editCells {
+    gl.Disable(gl.TEXTURE_2D)
+    gl.Color4d(0.3, 1, 0.3, 0.7)
+    gl.Begin(gl.QUADS)
+      for pos := range rv.Selected.Cells {
+        gl.Vertex2i(pos.X, pos.Y)
+        gl.Vertex2i(pos.X, pos.Y + 1)
+        gl.Vertex2i(pos.X + 1, pos.Y + 1)
+        gl.Vertex2i(pos.X + 1, pos.Y)
+      }
+    gl.End()
+  }
 
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4f(1, 0, 1, 0.9)
-  gl.LineWidth(3.0)
+  if rv.edit_mode == editCells {
+    gl.LineWidth(0.02 * rv.zoom)
+  } else {
+    gl.LineWidth(0.05 * rv.zoom)
+  }
   gl.Begin(gl.LINES)
   for i := float32(0); i < float32(rv.room.Size.Dx); i += 1.0 {
     gl.Vertex2f(i, 0)
@@ -572,12 +559,41 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   }
   gl.End()
 
+  if rv.edit_mode == editCells {
+    gl.Disable(gl.TEXTURE_2D)
+    gl.Color4d(1, 0, 0, 1)
+    gl.LineWidth(0.05 * rv.zoom)
+    gl.Begin(gl.LINES)
+      for _,f := range rv.room.Furniture {
+        x,y := f.Pos()
+        dx,dy := f.Dims()
+        gl.Vertex2i(x, y)
+        gl.Vertex2i(x, y + dy)
+
+        gl.Vertex2i(x, y + dy)
+        gl.Vertex2i(x + dx, y + dy)
+
+        gl.Vertex2i(x + dx, y + dy)
+        gl.Vertex2i(x + dx, y)
+
+        gl.Vertex2i(x + dx, y)
+        gl.Vertex2i(x, y)
+      }
+    gl.End()
+  }
+
+  if rv.edit_mode == editCells {
+    for i := range rv.room.Cell_data {
+      for j := range rv.room.Cell_data[i] {
+        rv.room.Cell_data[i][j].Render(i, j, rv.room.Size.Dx, rv.room.Size.Dy)
+      }
+    }
+  }
+
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
-  // Draw a furniture tile
   gl.PushMatrix()
   gl.LoadIdentity()
-
   var furn rectObjectArray
   for _,f := range rv.room.Furniture {
     furn = append(furn, f)
@@ -609,7 +625,6 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     }
     f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
-
   gl.PopMatrix()
 
   for i := range rv.flattened_positions {
