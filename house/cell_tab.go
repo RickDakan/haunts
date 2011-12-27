@@ -186,23 +186,25 @@ func (w *CellPanel) Respond(ui *gui.Gui, group gui.EventGroup) (consumed bool) {
     w.updateRemoveCell()
     return true
   }
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    if event.Type == gin.Press {
-      bx,by := w.viewer.WindowToBoard(event.Key.Cursor().Point())
-      if w.viewer.Selected.Cells[CellPos{ int(bx), int(by) }] {
-        w.select_mode = modeDeselect
-      } else {
-        w.select_mode = modeSelect
-      }
-    } else if event.Type == gin.Release {
-      w.select_mode = modeNoSelect
-    }
-    consumed = true
-  }
+
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil && cursor.Name() == "Mouse" {
-    bx,by := w.viewer.WindowToBoard(cursor.Point())
+    bx,by := w.viewer.WindowToBoard(group.Events[0].Key.Cursor().Point())
     pos := CellPos{ int(bx), int(by) }
+    if bx < 0 { pos.X-- }
+    if by < 0 { pos.Y-- }
+    if found,event := group.FindEvent(gin.MouseLButton); found {
+      if event.Type == gin.Press {
+        if w.viewer.Selected.Cells[pos] {
+          w.select_mode = modeDeselect
+        } else {
+          w.select_mode = modeSelect
+        }
+      } else if event.Type == gin.Release {
+        w.select_mode = modeNoSelect
+      }
+      consumed = true
+    }
     if w.select_mode == modeSelect {
       if pos.InRange(w.room.Size) {
         if _,ok := w.viewer.Selected.Cells[pos]; !ok {
@@ -210,7 +212,7 @@ func (w *CellPanel) Respond(ui *gui.Gui, group gui.EventGroup) (consumed bool) {
           if len(w.viewer.Selected.Cells) == 1 {
             w.updateInitWithCell(w.room.Cell_data[pos.X][pos.Y])
           } else {
-            w.updateAddCell(w.room.Cell_data[int(bx)][int(by)])
+            w.updateAddCell(w.room.Cell_data[pos.X][pos.Y])
           }
         }
       }
