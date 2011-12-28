@@ -285,7 +285,7 @@ func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
   rep.HorizontalTable = gui.MakeHorizontalTable()
   rep.RoomViewer = MakeRoomViewer(room, 65)
   for _,wt := range room.WallTextures {
-    rep.RoomViewer.AddWallTexture(wt)
+    rep.Room.WallTextures = append(rep.Room.WallTextures, wt)
   }
   rep.RoomViewer.ReloadFloor(room.Floor_path)
   rep.RoomViewer.ReloadWall(room.Wall_path)

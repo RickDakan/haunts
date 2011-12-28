@@ -3,6 +3,7 @@ package house
 import (
   "haunts/base"
   "haunts/texture"
+  "github.com/arbaal/mathgl"
   "gl"
   "path/filepath"
   "os"
@@ -77,65 +78,42 @@ type wallTextureDef struct {
 }
 
 type WallTextureInst struct {
-  // Position of the center of this texture along the length of the wall, 0
-  // being the left-most edge of the wall, 1 being the right-most.
-  Pos float32
-
-  // Height, in units of cells, of the center of this texture above the base
-  // of the wall.
-  Height float32
+  // Position of the texture in floor coordinates.  If these coordinates exceed
+  // either the dx or dy of the room, then this texture will be drawn, at least
+  // partially, on the wall.  The coordinates should not both exceed the
+  // dimensions of the room.
+  X,Y float32
+  Rot float32
 }
 
-func (wt *WallTexture) Render(dx,dy int) {
+func (wt *WallTexture) Render() {
   dx2 := float32(wt.texture_data.Dx) / 100 / 2
-  dz2 := float32(wt.texture_data.Dy) / 100 / 2
+  dy2 := float32(wt.texture_data.Dy) / 100 / 2
   gl.Enable(gl.TEXTURE_2D)
   wt.texture_data.Bind()
-  wpos := float32(dx + dy) * wt.Pos
+
+  var rot mathgl.Mat3
+  rot.RotationZ(wt.Rot)
+
+  ll := mathgl.Vec2{ - dx2, - dy2 }
+  ul := mathgl.Vec2{ - dx2, + dy2 }
+  ur := mathgl.Vec2{ + dx2, + dy2 }
+  lr := mathgl.Vec2{ + dx2, - dy2 }
+
+  ll.Transform(&rot)
+  ul.Transform(&rot)
+  ur.Transform(&rot)
+  lr.Transform(&rot)
+
+  gl.Color4f(1, 1, 1, 1)
   gl.Begin(gl.QUADS)
-    if wpos + dx2 < float32(dx) {
-      gl.TexCoord2f(-1, 0)
-      gl.Vertex3f(wpos - dx2, float32(dy), -wt.Height - dz2)
-      gl.TexCoord2f(-1, 1)
-      gl.Vertex3f(wpos - dx2, float32(dy), -wt.Height + dz2)
-      gl.TexCoord2f(0, 1)
-      gl.Vertex3f(wpos + dx2, float32(dy), -wt.Height + dz2)
-      gl.TexCoord2f(0, 0)
-      gl.Vertex3f(wpos + dx2, float32(dy), -wt.Height - dz2)
-    } else if wpos - dx2 > float32(dx) {
-      gl.TexCoord2f(1, 0)
-      gl.Vertex3f(float32(dx), float32(dy + dx) - wpos - dx2, -wt.Height - dz2)
-      gl.TexCoord2f(1, 1)
-      gl.Vertex3f(float32(dx), float32(dy + dx) - wpos - dx2, -wt.Height + dz2)
-      gl.TexCoord2f(0, 1)
-      gl.Vertex3f(float32(dx), float32(dy + dx) - wpos + dx2, -wt.Height + dz2)
-      gl.TexCoord2f(0, 0)
-      gl.Vertex3f(float32(dx), float32(dy + dx) - wpos + dx2, -wt.Height - dz2)
-    } else {
-      // It spans a corner, so we need to draw it as two separate quads
-//      var corner float32
-      var corner float32
-      left := wpos - dx2
-      right := float32(dx + dy) - wpos - dx2
-      corner = 1 - (float32(dx) - left) / (wpos + dx2 - left)
-      gl.TexCoord2f(-1, 0)
-      gl.Vertex3f(left, float32(dy), -wt.Height - dz2)
-      gl.TexCoord2f(-1, 1)
-      gl.Vertex3f(left, float32(dy), -wt.Height + dz2)
-      gl.TexCoord2f(-corner, 1)
-      gl.Vertex3f(float32(dx), float32(dy), -wt.Height + dz2)
-      gl.TexCoord2f(-corner, 0)
-      gl.Vertex3f(float32(dx), float32(dy), -wt.Height - dz2)
-
-      gl.TexCoord2f(-corner, 0)
-      gl.Vertex3f(float32(dx), float32(dx), -wt.Height - dz2)
-      gl.TexCoord2f(-corner, 1)
-      gl.Vertex3f(float32(dx), float32(dx), -wt.Height + dz2)
-      gl.TexCoord2f(0, 1)
-      gl.Vertex3f(float32(dx), right, -wt.Height + dz2)
-      gl.TexCoord2f(0, 0)
-      gl.Vertex3f(float32(dx), right, -wt.Height - dz2)
-
-    }
+  gl.TexCoord2i(0, 0)
+  gl.Vertex2f(wt.X + ll.X, wt.Y + ll.Y)
+  gl.TexCoord2i(0, -1)
+  gl.Vertex2f(wt.X + ul.X, wt.Y + ul.Y)
+  gl.TexCoord2i(-1, -1)
+  gl.Vertex2f(wt.X + ur.X, wt.Y + ur.Y)
+  gl.TexCoord2i(-1, 0)
+  gl.Vertex2f(wt.X + lr.X, wt.Y + lr.Y)
   gl.End()
 }

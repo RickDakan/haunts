@@ -1,10 +1,10 @@
 package house
 
 import (
+  "fmt"
   "glop/gui"
   "glop/gin"
   "glop/sprite"
-  "glop/util/algorithm"
   "gl"
   "math"
   "github.com/arbaal/mathgl"
@@ -181,14 +181,12 @@ type RoomViewer struct {
 
   Temp struct {
     Furniture *Furniture
+    WallTexture *WallTexture
   }
 
   Selected struct {
     Cells map[CellPos]bool
   }
-
-  temp_wall_texture *WallTexture
-  wall_textures []*WallTexture
 
   floor *texture.Data
   wall *texture.Data
@@ -199,42 +197,6 @@ type RoomViewer struct {
 
 func (rv *RoomViewer) SetEditMode(mode editMode) {
   rv.edit_mode = mode
-}
-
-func (rv *RoomViewer) SetTempWallTexture(wt *WallTexture) {
-  rv.RemoveWallTexture(rv.temp_wall_texture)
-  rv.temp_wall_texture = wt
-  if rv.temp_wall_texture != nil {
-    rv.AddWallTexture(rv.temp_wall_texture)
-  }
-}
-
-func (rv *RoomViewer) AddWallTexture(wt *WallTexture) {
-  rv.wall_textures = append(rv.wall_textures, wt)
-}
-
-func (rv *RoomViewer) RemoveWallTexture(wt *WallTexture) {
-  rv.wall_textures = algorithm.Choose(rv.wall_textures, func(a interface{}) bool { return a.(*WallTexture) != wt }).([]*WallTexture)
-}
-
-func (rv *RoomViewer) SelectWallTextureAt(wx,wy int) *WallTexture {
-  pos,height := rv.WindowToWall(wx, wy)
-  rv.temp_wall_texture = rv.wallTextureAt(pos, height)
-  return rv.temp_wall_texture
-}
-
-func (rv *RoomViewer) wallTextureAt(pos,height float32) *WallTexture {
-  sum := float32(rv.room.Size.Dx + rv.room.Size.Dy)
-  pos *= sum
-  for _,tex := range rv.wall_textures {
-    dx := float32(tex.texture_data.Dx) / 100
-    dy := float32(tex.texture_data.Dy) / 100
-    tpos := tex.Pos * sum
-    if pos >= tpos - dx && pos < tpos + dx && height >= tex.Height - dy && height < tex.Height + dy {
-      return tex
-    }
-  }
-  return nil
 }
 
 func (rv *RoomViewer) ReloadFloor(path string) {
@@ -323,36 +285,47 @@ func (rv *RoomViewer) makeMat() {
   rv.right_wall_mat.Assign(&rv.mat)
   m.RotationX(-math.Pi/2)
   rv.right_wall_mat.Multiply(&m)
-  m.RotationY(math.Pi/2)
+  m.RotationY(-math.Pi/2)
   rv.right_wall_mat.Multiply(&m)
-  m.Scaling(-1, 1, 1)
+  m.Scaling(1, 1, 1)
   rv.right_wall_mat.Multiply(&m)
-  m.Translation(0, 0, float32(rv.room.Size.Dx))
+  m.Translation(0, 0, -float32(rv.room.Size.Dx))
   rv.right_wall_mat.Multiply(&m)
+  swap_x_y := mathgl.Mat4 {
+    0,1,0,0,
+    1,0,0,0,
+    0,0,1,0,
+    0,0,0,1,
+  }
+  rv.right_wall_mat.Multiply(&swap_x_y)
   rv.right_wall_imat.Assign(&rv.right_wall_mat)
   rv.right_wall_imat.Inverse()
 }
 
-// Transforms a cursor position in window coordinates to board coordinates.  Does not check
-// to make sure that the values returned represent a valid position on the board.
+// Transforms a cursor position in window coordinates to board coordinates.
 func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
-  mx := float32(wx)
-  my := float32(wy)
-  return rv.modelviewToBoard(mx, my)
-}
-
-func (rv *RoomViewer) WindowToWall(wx, wy int) (pos, height float32) {
+  fx,fy,fdist := rv.modelviewToBoard(float32(wx), float32(wy))
   lbx,lby,ldist := rv.modelviewToLeftWall(float32(wx), float32(wy))
   rbx,rby,rdist := rv.modelviewToRightWall(float32(wx), float32(wy))
-  sum := float32(rv.room.Size.Dx + rv.room.Size.Dy)
-  if ldist < rdist {
-    pos = lbx / sum
-    height = lby
-  } else {
-    pos = (sum - rbx) / sum
-    height = rby
+  if fdist < ldist && fdist < rdist {
+    if fx > float32(rv.room.Size.Dx) {
+      fx = float32(rv.room.Size.Dx)
+    }
+    if fy > float32(rv.room.Size.Dy) {
+      fy = float32(rv.room.Size.Dy)
+    }
+    return fx, fy
   }
-  return
+  if ldist < rdist {
+    if lbx > float32(rv.room.Size.Dx) {
+      lbx = float32(rv.room.Size.Dx)
+    }
+    return lbx, lby + float32(rv.room.Size.Dy)
+  }
+    if rby > float32(rv.room.Size.Dy) {
+      rby = float32(rv.room.Size.Dy)
+    }
+  return rbx + float32(rv.room.Size.Dx), rby
 }
 
 func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {
@@ -402,12 +375,12 @@ func d2p(mat mathgl.Mat4, point,ray mathgl.Vec3) float32{
   return R
 }
 
-func (rv *RoomViewer) modelviewToBoard(mx, my float32) (float32, float32) {
+func (rv *RoomViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
   mz := d2p(rv.mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
 //  mz := (my - float32(rv.Render_region.Y+rv.Render_region.Dy/2)) * float32(math.Tan(float64(rv.angle*math.Pi/180)))
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&rv.imat)
-  return v.X, v.Y
+  return v.X, v.Y, mz
 }
 
 func (rv *RoomViewer) boardToModelview(mx, my float32) (x, y, z float32) {
@@ -453,53 +426,31 @@ func (rv *RoomViewer) Zoom(dz float64) {
   rv.makeMat()
 }
 
-func (rv *RoomViewer) Draw(region gui.Region) {
-  region.PushClipPlanes()
-  defer region.PopClipPlanes()
+func (rv *RoomViewer) drawWall() {
+  gl.Enable(gl.STENCIL_TEST)
+  defer gl.Disable(gl.STENCIL_TEST)
 
-  if rv.Render_region.X != region.X || rv.Render_region.Y != region.Y || rv.Render_region.Dx != region.Dx || rv.Render_region.Dy != region.Dy {
-    rv.Render_region = region
-    rv.makeMat()
-  }
-  gl.MatrixMode(gl.MODELVIEW)
-  gl.PushMatrix()
-  gl.LoadIdentity()
-  gl.MultMatrixf(&rv.mat[0])
-  defer gl.PopMatrix()
-
-  gl.Disable(gl.DEPTH_TEST)
+  // Right wall
+  gl.ClearStencil(0)
+  gl.Clear(gl.STENCIL_BUFFER_BIT)
+  gl.StencilFunc(gl.ALWAYS, 1, 1)
+  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
   gl.Disable(gl.TEXTURE_2D)
-  gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-  gl.Color3d(1, 0, 0)
-  gl.Enable(gl.BLEND)
-  gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-  // Draw a simple border around the viewer
-  gl.Color4d(0.1, 0.3, 0.8, 1)
-  gl.Begin(gl.QUADS)
-  gl.Vertex2i(-1, -1)
-  gl.Vertex2i(-1, rv.room.Size.Dy+1)
-  gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
-  gl.Vertex2i(rv.room.Size.Dx+1, -1)
-  gl.End()
-
-
-  // Draw the wall
-  rv.wall.Bind()
-  gl.Enable(gl.TEXTURE_2D)
-  gl.Color4f(1, 1, 1, 1)
-  corner := float32(rv.room.Size.Dx) / float32(rv.room.Size.Dx + rv.room.Size.Dy)
   dz := 7
   gl.Begin(gl.QUADS)
-    gl.TexCoord2f(corner, 0)
-    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
-    gl.TexCoord2f(corner, -1)
+    gl.Vertex3i(rv.room.Size.Dx, 0, 0)
+    gl.Vertex3i(rv.room.Size.Dx, 0, -dz)
     gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, -dz)
-    gl.TexCoord2f(0, -1)
-    gl.Vertex3i(0, rv.room.Size.Dy, -dz)
-    gl.TexCoord2f(0, 0)
-    gl.Vertex3i(0, rv.room.Size.Dy, 0)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
+  gl.End()
+  gl.StencilFunc(gl.EQUAL, 1, 1)
+  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
+  gl.Enable(gl.TEXTURE_2D)
+  rv.wall.Bind()
+  gl.Color4f(1, 1, 1, 1)
+  corner := float32(rv.room.Size.Dx) / float32(rv.room.Size.Dx + rv.room.Size.Dy)
+  gl.Begin(gl.QUADS)
     gl.TexCoord2f(1, 0)
     gl.Vertex3i(rv.room.Size.Dx, 0, 0)
     gl.TexCoord2f(1, -1)
@@ -509,9 +460,93 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.TexCoord2f(corner, 0)
     gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
   gl.End()
-  for _,tex := range rv.wall_textures {
-    tex.Render(rv.room.Size.Dx, rv.room.Size.Dy)
+
+  gl.PushMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.right_wall_mat[0])
+  var texs []WallTexture
+  for _,tex := range rv.room.WallTextures {
+    texs = append(texs, *tex)
   }
+  if rv.Temp.WallTexture != nil {
+    texs = append(texs, *rv.Temp.WallTexture)
+  }
+  for _,tex := range texs {
+    fmt.Printf("Starting at %f %f\n", tex.X, tex.Y)
+    dx, dy := float32(rv.room.Size.Dx), float32(rv.room.Size.Dy)
+    if tex.Y > dy {
+      tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
+    }
+    if tex.X > dx {
+      tex.Rot -= 3.1415926535 / 2
+    }
+    tex.X -= dx
+    fmt.Printf("Rendering at %f %f\n", tex.X, tex.Y)
+    tex.Render()
+  }
+  gl.PopMatrix()
+
+  // Left wall
+  gl.ClearStencil(0)
+  gl.Clear(gl.STENCIL_BUFFER_BIT)
+  gl.StencilFunc(gl.ALWAYS, 1, 1)
+  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Begin(gl.QUADS)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, -dz)
+    gl.Vertex3i(0, rv.room.Size.Dy, -dz)
+    gl.Vertex3i(0, rv.room.Size.Dy, 0)
+  gl.End()
+  gl.StencilFunc(gl.EQUAL, 1, 1)
+  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+
+  rv.wall.Bind()
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Color4f(1, 1, 1, 1)
+  gl.Begin(gl.QUADS)
+    gl.TexCoord2f(corner, 0)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, 0)
+    gl.TexCoord2f(corner, -1)
+    gl.Vertex3i(rv.room.Size.Dx, rv.room.Size.Dy, -dz)
+    gl.TexCoord2f(0, -1)
+    gl.Vertex3i(0, rv.room.Size.Dy, -dz)
+    gl.TexCoord2f(0, 0)
+    gl.Vertex3i(0, rv.room.Size.Dy, 0)
+  gl.End()
+
+  gl.PushMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.left_wall_mat[0])
+  for _,tex := range texs {
+    dx, dy := float32(rv.room.Size.Dx), float32(rv.room.Size.Dy)
+    if tex.X > dx {
+      tex.X, tex.Y = dx + dy - tex.Y, dy + tex.X - dx
+    }
+    tex.Y -= dy
+    tex.Render()
+  }
+  gl.PopMatrix()
+
+}
+
+func (rv *RoomViewer) drawFloor() {
+  gl.Enable(gl.STENCIL_TEST)
+  defer gl.Disable(gl.STENCIL_TEST)
+
+  gl.ClearStencil(0)
+  gl.Clear(gl.STENCIL_BUFFER_BIT)
+  gl.StencilFunc(gl.ALWAYS, 1, 1)
+  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Begin(gl.QUADS)
+    gl.Vertex2i(0, 0)
+    gl.Vertex2i(0, rv.room.Size.Dy)
+    gl.Vertex2i(rv.room.Size.Dx, rv.room.Size.Dy)
+    gl.Vertex2i(rv.room.Size.Dx, 0)
+  gl.End()
+  gl.StencilFunc(gl.EQUAL, 1, 1)
+  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
@@ -527,6 +562,27 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     gl.TexCoord2i(1, 0)
     gl.Vertex2i(rv.room.Size.Dx, 0)
   gl.End()
+  {
+//    clip := gui.Region{ gui.Point{0, 0}, gui.Dims{rv.room.Size.Dx, rv.room.Size.Dy} }
+//    clip.PushClipPlanes()
+    var texs []*WallTexture
+    for _,tex := range rv.room.WallTextures {
+      texs = append(texs, tex)
+    }
+    if rv.Temp.WallTexture != nil {
+      texs = append(texs, rv.Temp.WallTexture)
+    }
+    for _,tex := range texs {
+      if tex.X >= float32(rv.room.Size.Dx) {
+        tex.Rot -= 3.1415926535 / 2
+      }
+      tex.Render()
+      if tex.X >= float32(rv.room.Size.Dx) {
+        tex.Rot += 3.1415926535 / 2
+      }
+    }
+//    clip.PopClipPlanes()
+  }
 
   if rv.edit_mode == editCells {
     gl.Disable(gl.TEXTURE_2D)
@@ -589,6 +645,41 @@ func (rv *RoomViewer) Draw(region gui.Region) {
       }
     }
   }
+
+}
+
+func (rv *RoomViewer) Draw(region gui.Region) {
+  region.PushClipPlanes()
+  defer region.PopClipPlanes()
+
+  if rv.Render_region.X != region.X || rv.Render_region.Y != region.Y || rv.Render_region.Dx != region.Dx || rv.Render_region.Dy != region.Dy {
+    rv.Render_region = region
+    rv.makeMat()
+  }
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.mat[0])
+  defer gl.PopMatrix()
+
+  gl.Disable(gl.DEPTH_TEST)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+  gl.Color3d(1, 0, 0)
+  gl.Enable(gl.BLEND)
+  gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+  // Draw a simple border around the viewer
+  gl.Color4d(0.1, 0.3, 0.8, 1)
+  gl.Begin(gl.QUADS)
+  gl.Vertex2i(-1, -1)
+  gl.Vertex2i(-1, rv.room.Size.Dy+1)
+  gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
+  gl.Vertex2i(rv.room.Size.Dx+1, -1)
+  gl.End()
+
+  rv.drawWall()
+  rv.drawFloor()
 
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
@@ -656,6 +747,9 @@ func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
 }
 
 func (rv *RoomViewer) Think(*gui.Gui, int64) {
+  if rv.Temp.WallTexture != nil {
+    println("pos: ", rv.Temp.WallTexture.X, " ", rv.Temp.WallTexture.Y)
+  }
   mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   rv.mx = int(mx)
   rv.my = int(my)
