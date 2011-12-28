@@ -3,6 +3,7 @@ package base
 import (
   "glop/gin"
   "strings"
+  "fmt"
 )
 
 type KeyBinds map[string]string
@@ -28,6 +29,13 @@ func getKeysFromString(str string) []gin.KeyId {
 
     case part == "gui":
       kid = gin.EitherGui
+
+    default:
+      key := gin.In().GetKeyByName(part)
+      if key == nil {
+        panic(fmt.Sprintf("Unknown key '%s'", part))
+      }
+      kid = key.Id()
     }
     kids = append(kids, kid)
   }

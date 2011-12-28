@@ -1,7 +1,6 @@
 package house
 
 import (
-  "fmt"
   "glop/gui"
   "glop/gin"
   "glop/sprite"
@@ -248,6 +247,22 @@ func (rv *RoomViewer) AdjAngle(ang float32) {
   rv.makeMat()
 }
 
+func (rv *RoomViewer) GetAnchor() (x,y float32) {
+  return rv.fx, rv.fy
+}
+
+func (rv *RoomViewer) SetAnchor(ax,ay float32, dx,dy int) {
+  x,y,_ := rv.boardToModelview(ax, ay)
+  x += float32(dx)
+  y += float32(dy)
+  rv.fx, rv.fy, _ = rv.modelviewToBoard(x, y)
+  rv.fx = clamp(rv.fx, 0, float32(rv.room.Size.Dx))
+  rv.fy = clamp(rv.fy, 0, float32(rv.room.Size.Dy))
+  rv.makeMat()
+}
+
+
+
 func (rv *RoomViewer) makeMat() {
   var m mathgl.Mat4
   rv.mat.Translation(float32(rv.Render_region.Dx/2+rv.Render_region.X), float32(rv.Render_region.Dy/2+rv.Render_region.Y), 0)
@@ -472,7 +487,6 @@ func (rv *RoomViewer) drawWall() {
     texs = append(texs, *rv.Temp.WallTexture)
   }
   for _,tex := range texs {
-    fmt.Printf("Starting at %f %f\n", tex.X, tex.Y)
     dx, dy := float32(rv.room.Size.Dx), float32(rv.room.Size.Dy)
     if tex.Y > dy {
       tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
@@ -481,7 +495,6 @@ func (rv *RoomViewer) drawWall() {
       tex.Rot -= 3.1415926535 / 2
     }
     tex.X -= dx
-    fmt.Printf("Rendering at %f %f\n", tex.X, tex.Y)
     tex.Render()
   }
   gl.PopMatrix()

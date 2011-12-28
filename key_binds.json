@@ -1,10 +1,6 @@
 {
-  "zoom in"   : "r",
-  "zoom out"  : "f",
-  "pan left"  : "a",
-  "pan right" : "d",
-  "pan up"    : "w",
-  "pan down"  : "s",
-  "load"      : "l",
-  "quit"      : "gui+q"
+  "zoom"           : "r",
+  "drag"           : "g",
+  "load"           : "l",
+  "quit"           : "gui+q"
 }

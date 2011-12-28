@@ -93,6 +93,10 @@ func main() {
   var anchor *gui.AnchorBox
   var chooser *gui.FileChooser
   var angle float32 = 65
+  var anch_x,anch_y float32
+  zooming := false
+  dragging := false
+  hiding := false
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
@@ -100,6 +104,11 @@ func main() {
       ui.Draw()
     })
     render.Purge()
+    if ui.FocusWidget() != nil {
+      dragging = false
+      zooming = false
+      sys.HideCursor(false)
+    }
     if ui.FocusWidget() == nil {
       pang := angle
       pang += float32(gin.In().GetKey(gin.Up).FramePressCount() - gin.In().GetKey(gin.Down).FramePressCount())
@@ -108,10 +117,32 @@ func main() {
         fmt.Printf("angle: %f\n", angle)
         viewer.AdjAngle(angle)
       }
-      zoom := key_map["zoom in"].FramePressSum() - key_map["zoom out"].FramePressSum()
-      viewer.Zoom(zoom / 500)
-      pan_x := key_map["pan right"].FramePressSum() - key_map["pan left"].FramePressSum()
-      pan_y := key_map["pan up"].FramePressSum() - key_map["pan down"].FramePressSum()
+
+      if key_map["zoom"].IsDown() != zooming {
+        zooming = !zooming
+      }
+      if zooming {
+        zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
+        viewer.Zoom(zoom / 100)
+      }
+
+      if key_map["drag"].IsDown() != dragging {
+        dragging = !dragging
+      }
+      if dragging {
+        mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
+        my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
+        if mx != 0 || my != 0 {
+          viewer.SetAnchor(anch_x, anch_y, -int(mx), int(my))
+        }
+        anch_x,anch_y = viewer.GetAnchor()
+      }
+
+      if (dragging || zooming) != hiding {
+        hiding = (dragging || zooming)
+        sys.HideCursor(hiding)
+      }
+
       if key_map["load"].FramePressCount() > 0 && chooser == nil {
         callback := func(path string, err error) {
           if err != nil && filepath.Ext(path) == ".room" {
@@ -145,7 +176,6 @@ func main() {
         }
       }
 
-      viewer.Move(pan_x, pan_y)
     }
   }
 }
