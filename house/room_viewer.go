@@ -680,6 +680,7 @@ func (rv *RoomViewer) drawFloor() {
     gl.End()
   }
 
+  gl.Disable(gl.STENCIL_TEST)
   if rv.edit_mode == editCells {
     for i := range rv.room.Cell_data {
       for j := range rv.room.Cell_data[i] {
