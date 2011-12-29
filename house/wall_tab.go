@@ -4,7 +4,6 @@ import (
   "glop/util/algorithm"
   "glop/gui"
   "glop/gin"
-  "fmt"
 )
 
 type WallPanel struct {
@@ -15,7 +14,6 @@ type WallPanel struct {
   wall_texture *WallTexture
   prev_wall_texture *WallTexture
   drag_anchor struct{ X,Y float32 }
-  drop_on_release bool
   selected_walls map[int]bool
 }
 
@@ -37,7 +35,6 @@ func MakeWallPanel(room *Room, viewer *RoomViewer) *WallPanel {
       wp.viewer.Temp.WallTexture.Y = 5
       wp.drag_anchor.X = 0
       wp.drag_anchor.Y = 0
-      wp.drop_on_release = false
     }))
   }
 
@@ -71,14 +68,17 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
     return true
   }
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    if w.viewer.Temp.WallTexture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
+  if found,event := group.FindEvent(gin.MouseWheelVertical); found {
+    if w.viewer.Temp.WallTexture != nil {
+      w.viewer.Temp.WallTexture.Rot += float32(event.Key.CurPressAmt() / 100)
+    }
+  }
+  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    if w.viewer.Temp.WallTexture != nil {
       w.room.WallTextures = append(w.room.WallTextures, w.viewer.Temp.WallTexture)
       w.viewer.Temp.WallTexture = nil
-    } else if w.viewer.Temp.WallTexture == nil && event.Type == gin.Press {
+    } else if w.viewer.Temp.WallTexture == nil {
       w.viewer.Temp.WallTexture = w.textureNear(event.Key.Cursor().Point())
-      fmt.Printf("Tex: %v\n", w.viewer.Temp.WallTexture)
-      // w.viewer.Temp.WallTexture = w.viewer.SelectWallTextureAt(event.Key.Cursor().Point())
       if w.viewer.Temp.WallTexture != nil {
         w.prev_wall_texture = new(WallTexture)
         *w.prev_wall_texture = *w.viewer.Temp.WallTexture
@@ -86,7 +86,6 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       w.room.WallTextures = algorithm.Choose(w.room.WallTextures, func(a interface{}) bool {
         return a.(*WallTexture) != w.viewer.Temp.WallTexture
       }).([]*WallTexture)
-      w.drop_on_release = true
       if w.viewer.Temp.WallTexture != nil {
         wx,wy := w.viewer.BoardToWindow(float32(w.viewer.Temp.WallTexture.X), float32(w.viewer.Temp.WallTexture.Y))
         px,py := event.Key.Cursor().Point()

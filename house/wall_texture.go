@@ -105,7 +105,6 @@ func (wt *WallTexture) Render() {
   ur.Transform(&rot)
   lr.Transform(&rot)
 
-  gl.Color4f(1, 1, 1, 1)
   gl.Begin(gl.QUADS)
   gl.TexCoord2i(0, 0)
   gl.Vertex2f(wt.X + ll.X, wt.Y + ll.Y)

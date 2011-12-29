@@ -493,13 +493,13 @@ func (rv *RoomViewer) drawWall() {
   gl.LoadIdentity()
   gl.MultMatrixf(&rv.right_wall_mat[0])
   var texs []WallTexture
-  for _,tex := range rv.room.WallTextures {
-    texs = append(texs, *tex)
-  }
   if rv.Temp.WallTexture != nil {
     texs = append(texs, *rv.Temp.WallTexture)
   }
-  for _,tex := range texs {
+  for _,tex := range rv.room.WallTextures {
+    texs = append(texs, *tex)
+  }
+  for i,tex := range texs {
     dx, dy := float32(rv.room.Size.Dx), float32(rv.room.Size.Dy)
     if tex.Y > dy {
       tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
@@ -508,6 +508,11 @@ func (rv *RoomViewer) drawWall() {
       tex.Rot -= 3.1415926535 / 2
     }
     tex.X -= dx
+    if rv.Temp.WallTexture != nil && i == 0 {
+      gl.Color4f(1, 0.7, 0.7, 0.7)
+    } else {
+      gl.Color4f(1, 1, 1, 1)
+    }
     tex.Render()
   }
   gl.PopMatrix()
@@ -544,12 +549,17 @@ func (rv *RoomViewer) drawWall() {
   gl.PushMatrix()
   gl.LoadIdentity()
   gl.MultMatrixf(&rv.left_wall_mat[0])
-  for _,tex := range texs {
+  for i,tex := range texs {
     dx, dy := float32(rv.room.Size.Dx), float32(rv.room.Size.Dy)
     if tex.X > dx {
       tex.X, tex.Y = dx + dy - tex.Y, dy + tex.X - dx
     }
     tex.Y -= dy
+    if rv.Temp.WallTexture != nil && i == 0 {
+      gl.Color4f(1, 0.7, 0.7, 0.7)
+    } else {
+      gl.Color4f(1, 1, 1, 1)
+    }
     tex.Render()
   }
   gl.PopMatrix()
@@ -591,21 +601,23 @@ func (rv *RoomViewer) drawFloor() {
   {
 //    clip := gui.Region{ gui.Point{0, 0}, gui.Dims{rv.room.Size.Dx, rv.room.Size.Dy} }
 //    clip.PushClipPlanes()
-    var texs []*WallTexture
-    for _,tex := range rv.room.WallTextures {
-      texs = append(texs, tex)
-    }
+    var texs []WallTexture
     if rv.Temp.WallTexture != nil {
-      texs = append(texs, rv.Temp.WallTexture)
+      texs = append(texs, *rv.Temp.WallTexture)
     }
-    for _,tex := range texs {
+    for _,tex := range rv.room.WallTextures {
+      texs = append(texs, *tex)
+    }
+    for i,tex := range texs {
       if tex.X >= float32(rv.room.Size.Dx) {
         tex.Rot -= 3.1415926535 / 2
       }
-      tex.Render()
-      if tex.X >= float32(rv.room.Size.Dx) {
-        tex.Rot += 3.1415926535 / 2
+      if rv.Temp.WallTexture != nil && i == 0 {
+        gl.Color4f(1, 0.7, 0.7, 0.7)
+      } else {
+        gl.Color4f(1, 1, 1, 1)
       }
+      tex.Render()
     }
 //    clip.PopClipPlanes()
   }
