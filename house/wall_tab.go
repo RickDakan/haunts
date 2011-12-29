@@ -4,6 +4,7 @@ import (
   "glop/util/algorithm"
   "glop/gui"
   "glop/gin"
+  "fmt"
 )
 
 type WallPanel struct {
@@ -15,7 +16,6 @@ type WallPanel struct {
   prev_wall_texture *WallTexture
   drag_anchor struct{ X,Y float32 }
   drop_on_release bool
-  select_mode selectMode
   selected_walls map[int]bool
 }
 
@@ -44,6 +44,23 @@ func MakeWallPanel(room *Room, viewer *RoomViewer) *WallPanel {
   return &wp
 }
 
+func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
+  for _,tex := range w.room.WallTextures {
+    ax,ay,_ := w.viewer.modelviewToBoard(float32(wx), float32(wy))
+    bx,by,_ := w.viewer.modelviewToLeftWall(float32(wx), float32(wy))
+    cx,cy,_ := w.viewer.modelviewToRightWall(float32(wx), float32(wy))
+    dx := float32(tex.texture_data.Dx) / 100
+    dy := float32(tex.texture_data.Dy) / 100
+    for _,p := range [][2]float32{ {ax,ay}, {bx,by}, {cx,cy} } {
+      // fmt.Printf("Checking %v against %f %f\n", p, tex.X, tex.Y)
+      if p[0] > tex.X - dx && p[0] < tex.X + dx && p[1] > tex.Y - dy && p[1] < tex.Y + dy {
+        return tex
+      }
+    }
+  }
+  return nil
+}
+
 func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
@@ -59,9 +76,9 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       w.room.WallTextures = append(w.room.WallTextures, w.viewer.Temp.WallTexture)
       w.viewer.Temp.WallTexture = nil
     } else if w.viewer.Temp.WallTexture == nil && event.Type == gin.Press {
-      x,y := w.viewer.WindowToBoard(event.Key.Cursor().Point())
+      w.viewer.Temp.WallTexture = w.textureNear(event.Key.Cursor().Point())
+      fmt.Printf("Tex: %v\n", w.viewer.Temp.WallTexture)
       // w.viewer.Temp.WallTexture = w.viewer.SelectWallTextureAt(event.Key.Cursor().Point())
-      w.viewer.Temp.WallTexture = nil
       if w.viewer.Temp.WallTexture != nil {
         w.prev_wall_texture = new(WallTexture)
         *w.prev_wall_texture = *w.viewer.Temp.WallTexture
@@ -71,11 +88,11 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }).([]*WallTexture)
       w.drop_on_release = true
       if w.viewer.Temp.WallTexture != nil {
-        w.drag_anchor.X = x - w.viewer.Temp.WallTexture.X
-        w.drag_anchor.Y = y - w.viewer.Temp.WallTexture.Y
+        wx,wy := w.viewer.BoardToWindow(float32(w.viewer.Temp.WallTexture.X), float32(w.viewer.Temp.WallTexture.Y))
+        px,py := event.Key.Cursor().Point()
+        w.drag_anchor.X = float32(px) - wx
+        w.drag_anchor.Y = float32(py) - wy
       }
-    } else if event.Type == gin.Release {
-      w.select_mode = modeNoSelect
     }
     return true
   }
@@ -84,10 +101,12 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
 func (w *WallPanel) Think(ui *gui.Gui, t int64) {
   if w.viewer.Temp.WallTexture != nil {
-    mx,my := gin.In().GetCursor("Mouse").Point()
-    x,y := w.viewer.WindowToBoard(mx, my)
-    w.viewer.Temp.WallTexture.X = x - w.drag_anchor.X
-    w.viewer.Temp.WallTexture.Y = y - w.drag_anchor.Y
+    px,py := gin.In().GetCursor("Mouse").Point()
+    tx := float32(px) - w.drag_anchor.X
+    ty := float32(py) - w.drag_anchor.Y
+    bx,by := w.viewer.WindowToBoard(int(tx), int(ty))
+    w.viewer.Temp.WallTexture.X = bx
+    w.viewer.Temp.WallTexture.Y = by
   }
   w.VerticalTable.Think(ui, t)
 }
@@ -98,7 +117,6 @@ func (w *WallPanel) Collapse() {
   }
   w.prev_wall_texture = nil
   w.viewer.Temp.WallTexture = nil
-  w.select_mode = modeNoSelect
 }
 
 func (w *WallPanel) Expand() {

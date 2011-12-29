@@ -332,39 +332,52 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
     return fx, fy
   }
   if ldist < rdist {
-    if lbx > float32(rv.room.Size.Dx) {
-      lbx = float32(rv.room.Size.Dx)
-    }
-    return lbx, lby + float32(rv.room.Size.Dy)
+    return lbx, lby
   }
-    if rby > float32(rv.room.Size.Dy) {
-      rby = float32(rv.room.Size.Dy)
-    }
-  return rbx + float32(rv.room.Size.Dx), rby
+  return rbx, rby
+}
+
+func (rv *RoomViewer) BoardToWindow(bx,by float32) (float32, float32) {
+  fx,fy,fz := rv.boardToModelview(float32(bx), float32(by))
+  lbx,lby,lz := rv.leftWallToModelview(float32(bx), float32(by))
+  rbx,rby,rz := rv.rightWallToModelview(float32(bx), float32(by))
+  if fz < lz && fz < rz {
+    return fx, fy
+  }
+  if lz < rz {
+    return lbx, lby
+  }
+  return rbx, rby
 }
 
 func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {
   mz := d2p(rv.left_wall_mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&rv.left_wall_imat)
-  return v.X, v.Y, mz
+  if v.X > float32(rv.room.Size.Dx) {
+    v.X = float32(rv.room.Size.Dx)
+  }
+  return v.X, v.Y + float32(rv.room.Size.Dy), mz
 }
 
 func (rv *RoomViewer) modelviewToRightWall(mx, my float32) (x,y,dist float32) {
   mz := d2p(rv.right_wall_mat, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&rv.right_wall_imat)
-  return v.X, v.Y, mz
+  if v.Y > float32(rv.room.Size.Dy) {
+    v.Y = float32(rv.room.Size.Dy)
+  }
+  return v.X + float32(rv.room.Size.Dx), v.Y, mz
 }
 
 func (rv *RoomViewer) leftWallToModelview(bx,by float32) (x, y, z float32) {
-  v := mathgl.Vec4{X: bx, Y: by, W: 1}
+  v := mathgl.Vec4{X: bx, Y: by - float32(rv.room.Size.Dy), W: 1}
   v.Transform(&rv.left_wall_mat)
   return v.X, v.Y, v.Z
 }
 
 func (rv *RoomViewer) rightWallToModelview(bx,by float32) (x, y, z float32) {
-  v := mathgl.Vec4{X: bx, Y: by, W: 1}
+  v := mathgl.Vec4{X: bx - float32(rv.room.Size.Dx), Y: by, W: 1}
   v.Transform(&rv.right_wall_mat)
   return v.X, v.Y, v.Z
 }
@@ -760,9 +773,6 @@ func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
 }
 
 func (rv *RoomViewer) Think(*gui.Gui, int64) {
-  if rv.Temp.WallTexture != nil {
-    println("pos: ", rv.Temp.WallTexture.X, " ", rv.Temp.WallTexture.Y)
-  }
   mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   rv.mx = int(mx)
   rv.my = int(my)
