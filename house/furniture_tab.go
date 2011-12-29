@@ -176,13 +176,6 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
   w.Room.Name = w.name.GetText()
 
   w.Room.Resize(tags.RoomSizes[w.room_size.GetComboedIndex()])
-  if w.Room.Size.Dx + w.Room.Size.Dy != len(w.Room.WallData) {
-    wall_data := make([]WallData, w.Room.Size.Dx + w.Room.Size.Dy)
-    for i := 0; i < len(wall_data) && i < len(w.Room.WallData); i++ {
-      wall_data[i] = w.Room.WallData[i]
-    }
-    w.Room.WallData = wall_data
-  }
 
   w.Room.Floor_path = w.floor_path.GetPath()
   w.Room.Wall_path = w.wall_path.GetPath()

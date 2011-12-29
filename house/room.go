@@ -48,10 +48,6 @@ type Tags struct {
 }
 
 
-type WallData struct {
-  Door_allowed bool
-}
-
 type Room struct {
   Name string
   Size RoomSize
@@ -59,7 +55,6 @@ type Room struct {
   Furniture []*Furniture
 
   WallTextures []*WallTexture
-  WallData []WallData // TODO: GET RID OF THIS
 
   // Paths to the floor and wall textures, relative to some basic datadir
   Floor_path string
@@ -257,8 +252,8 @@ type RoomEditorPanel struct {
   tab *gui.TabFrame
   widgets []tabWidget
 
-  Room       *Room
-  RoomViewer *RoomViewer
+  room   *Room
+  viewer *RoomViewer
 }
 
 
@@ -273,43 +268,60 @@ func (w *RoomEditorPanel) SelectTab(n int) {
   if n != w.tab.SelectedTab() {
     w.widgets[w.tab.SelectedTab()].Collapse()
     w.tab.SelectTab(n)
-    w.RoomViewer.SetEditMode(editNothing)
+    w.viewer.SetEditMode(editNothing)
     w.widgets[n].Expand()
   }
 }
 
-func MakeRoomEditorPanel(room *Room, datadir string) *RoomEditorPanel {
+func (w *RoomEditorPanel) GetViewer() Viewer {
+  return w.viewer
+}
+
+type Viewer interface {
+  Zoom(float64)
+  Drag(float64,float64)
+}
+
+type Editor interface {
+  gui.Widget
+  GetViewer() Viewer
+
+  // TODO: Deprecate when tabs handle the switching themselves
+  SelectTab(int)
+}
+
+func MakeRoomEditorPanel(room *Room, datadir string) Editor {
   var rep RoomEditorPanel
 
-  rep.Room = room
+  rep.room = room
   rep.HorizontalTable = gui.MakeHorizontalTable()
-  rep.RoomViewer = MakeRoomViewer(room, 65)
+  rep.viewer = MakeRoomViewer(room, 65)
   for _,wt := range room.WallTextures {
-    rep.Room.WallTextures = append(rep.Room.WallTextures, wt)
+    rep.room.WallTextures = append(rep.room.WallTextures, wt)
   }
-  rep.RoomViewer.ReloadFloor(room.Floor_path)
-  rep.RoomViewer.ReloadWall(room.Wall_path)
+  rep.viewer.ReloadFloor(room.Floor_path)
+  rep.viewer.ReloadWall(room.Wall_path)
 
-  rep.AddChild(rep.RoomViewer)
+  rep.AddChild(rep.viewer)
 
 
   var tabs []gui.Widget
 
-  furniture := makeFurniturePanel(room, rep.RoomViewer, datadir)
+  furniture := makeFurniturePanel(room, rep.viewer, datadir)
   tabs = append(tabs, furniture)
   rep.widgets = append(rep.widgets, furniture)
 
-  wall := MakeWallPanel(rep.Room, rep.RoomViewer)
+  wall := MakeWallPanel(rep.room, rep.viewer)
   tabs = append(tabs, wall)
   rep.widgets = append(rep.widgets, wall)
 
-  cells := MakeCellPanel(rep.Room, rep.RoomViewer)
+  cells := MakeCellPanel(rep.room, rep.viewer)
   tabs = append(tabs, cells)
   rep.widgets = append(rep.widgets, cells)
 
   rep.tab = gui.MakeTabFrame(tabs)
   rep.AddChild(rep.tab)
-  rep.RoomViewer.SetEditMode(editFurniture)
+  rep.viewer.SetEditMode(editFurniture)
 
   return &rep
 }

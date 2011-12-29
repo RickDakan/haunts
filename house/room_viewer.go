@@ -251,21 +251,15 @@ func (rv *RoomViewer) AdjAngle(ang float32) {
   rv.makeMat()
 }
 
-func (rv *RoomViewer) GetAnchor() (x,y float32) {
-  return rv.fx, rv.fy
-}
-
-func (rv *RoomViewer) SetAnchor(ax,ay float32, dx,dy int) {
-  x,y,_ := rv.boardToModelview(ax, ay)
+func (rv *RoomViewer) Drag(dx,dy float64) {
+  x,y,_ := rv.boardToModelview(rv.fx, rv.fy)
   x += float32(dx)
   y += float32(dy)
   rv.fx, rv.fy, _ = rv.modelviewToBoard(x, y)
-  rv.fx = clamp(rv.fx, 0, float32(rv.room.Size.Dx))
-  rv.fy = clamp(rv.fy, 0, float32(rv.room.Size.Dy))
+  rv.fx = clamp(rv.fx, -2, float32(rv.room.Size.Dx) + 2)
+  rv.fy = clamp(rv.fy, -2, float32(rv.room.Size.Dy) + 2)
   rv.makeMat()
 }
-
-
 
 func (rv *RoomViewer) makeMat() {
   var m mathgl.Mat4
@@ -442,8 +436,8 @@ func (rv *RoomViewer) Move(dx, dy float64) {
   dx, dy = dy+dx, dy-dx
   rv.fx += float32(dx) / rv.zoom
   rv.fy += float32(dy) / rv.zoom
-  rv.fx = clamp(rv.fx, 0, float32(rv.room.Size.Dx))
-  rv.fy = clamp(rv.fy, 0, float32(rv.room.Size.Dy))
+  rv.fx = clamp(rv.fx, -2, float32(rv.room.Size.Dx) + 2)
+  rv.fy = clamp(rv.fy, -2, float32(rv.room.Size.Dy) + 2)
   rv.makeMat()
 }
 

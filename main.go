@@ -80,7 +80,7 @@ func main() {
   }
   // anch.AddChild(house.MakeRoomEditorPanel(room), gui.Anchor{ 0.5, 0.5, 0.5, 0.5})
   editor := house.MakeRoomEditorPanel(room, datadir)
-  viewer := editor.RoomViewer
+  viewer := editor.GetViewer()
   ui.AddChild(editor)
   // ui.AddChild(anch)
 
@@ -92,8 +92,6 @@ func main() {
   runtime.GOMAXPROCS(8)
   var anchor *gui.AnchorBox
   var chooser *gui.FileChooser
-  var angle float32 = 65
-  var anch_x,anch_y float32
   zooming := false
   dragging := false
   hiding := false
@@ -110,14 +108,6 @@ func main() {
       sys.HideCursor(false)
     }
     if ui.FocusWidget() == nil {
-      pang := angle
-      pang += float32(gin.In().GetKey(gin.Up).FramePressCount() - gin.In().GetKey(gin.Down).FramePressCount())
-      if pang != angle {
-        angle = pang
-        fmt.Printf("angle: %f\n", angle)
-        viewer.AdjAngle(angle)
-      }
-
       if key_map["zoom"].IsDown() != zooming {
         zooming = !zooming
       }
@@ -132,10 +122,7 @@ func main() {
       if dragging {
         mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
         my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
-        if mx != 0 || my != 0 {
-          viewer.SetAnchor(anch_x, anch_y, -int(mx), int(my))
-        }
-        anch_x,anch_y = viewer.GetAnchor()
+        viewer.Drag(-mx, my)
       }
 
       if (dragging || zooming) != hiding {
@@ -159,7 +146,7 @@ func main() {
             ui.RemoveChild(editor)
             room = new_room
             editor = house.MakeRoomEditorPanel(room, datadir)
-            viewer = editor.RoomViewer
+            viewer = editor.GetViewer()
             ui.AddChild(editor)
           }
         }

@@ -1,6 +1,7 @@
 {
   "zoom"           : "r",
   "drag"           : "g",
-  "load"           : "l",
-  "quit"           : "gui+q"
+  "load"           : "gui+l",
+  "quit"           : "gui+q",
+  "change editor"  : "gui+e"
 }
