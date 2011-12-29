@@ -43,16 +43,18 @@ func MakeWallPanel(room *Room, viewer *RoomViewer) *WallPanel {
 
 func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
   for _,tex := range w.room.WallTextures {
-    ax,ay,_ := w.viewer.modelviewToBoard(float32(wx), float32(wy))
-    bx,by,_ := w.viewer.modelviewToLeftWall(float32(wx), float32(wy))
-    cx,cy,_ := w.viewer.modelviewToRightWall(float32(wx), float32(wy))
-    dx := float32(tex.texture_data.Dx) / 100
-    dy := float32(tex.texture_data.Dy) / 100
-    for _,p := range [][2]float32{ {ax,ay}, {bx,by}, {cx,cy} } {
-      // fmt.Printf("Checking %v against %f %f\n", p, tex.X, tex.Y)
-      if p[0] > tex.X - dx && p[0] < tex.X + dx && p[1] > tex.Y - dy && p[1] < tex.Y + dy {
-        return tex
-      }
+    var xx,yy float32
+    if tex.X > float32(w.room.Size.Dx) {
+      xx,yy,_ = w.viewer.modelviewToRightWall(float32(wx), float32(wy))
+    } else if tex.Y > float32(w.room.Size.Dy) {
+      xx,yy,_ = w.viewer.modelviewToLeftWall(float32(wx), float32(wy))
+    } else {
+      xx,yy,_ = w.viewer.modelviewToBoard(float32(wx), float32(wy))
+    }
+    dx := float32(tex.texture_data.Dx) / 100 / 2
+    dy := float32(tex.texture_data.Dy) / 100 / 2
+    if xx > tex.X - dx && xx < tex.X + dx && yy > tex.Y - dy && yy < tex.Y + dy {
+      return tex
     }
   }
   return nil
