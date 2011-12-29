@@ -143,6 +143,9 @@ type RoomViewer struct {
 
   room *Room
 
+  // In case the size of the room changes we will need to update the matrices
+  size RoomSize
+
   // All events received by the viewer are passed to the handler
   handler gin.EventHandler
 
@@ -231,6 +234,7 @@ func MakeRoomViewer(room *Room, angle float32) *RoomViewer {
   rv.fx = float32(rv.room.Size.Dx / 2)
   rv.fy = float32(rv.room.Size.Dy / 2)
   rv.Zoom(1)
+  rv.size = rv.room.Size
   rv.makeMat()
   rv.Request_dims.Dx = 100
   rv.Request_dims.Dy = 100
@@ -785,6 +789,10 @@ func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
 }
 
 func (rv *RoomViewer) Think(*gui.Gui, int64) {
+  if rv.size != rv.room.Size {
+    rv.size = rv.room.Size
+    rv.makeMat()
+  }
   mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   rv.mx = int(mx)
   rv.my = int(my)
