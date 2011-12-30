@@ -19,7 +19,7 @@ type FurniturePanel struct {
   sizes      *gui.CheckBoxes
   decor      *gui.CheckBoxes
 
-  Room       *Room
+  Room       *roomDef
   RoomViewer *RoomViewer
 
   // If we're in the middle of moving an object and this widget gets collapsed
@@ -46,7 +46,7 @@ func (w *FurniturePanel) Expand() {
   w.RoomViewer.SetEditMode(editFurniture)
 }
 
-func makeFurniturePanel(room *Room, viewer *RoomViewer, datadir string) *FurniturePanel {
+func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *FurniturePanel {
   var fp FurniturePanel
   fp.Room = room
   fp.RoomViewer = viewer

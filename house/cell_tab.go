@@ -91,14 +91,14 @@ func (cd CellData) Render(x,y,dx,dy int) {
 
 type CellPanel struct {
   *gui.VerticalTable
-  room *Room
+  room *roomDef
   viewer *RoomViewer
 
   select_mode selectMode
   data map[string]bool
 }
 
-func MakeCellPanel(room *Room, viewer *RoomViewer) *CellPanel {
+func MakeCellPanel(room *roomDef, viewer *RoomViewer) *CellPanel {
   var cp CellPanel
   cp.room = room
   cp.viewer = viewer

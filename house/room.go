@@ -48,7 +48,7 @@ type Tags struct {
 }
 
 
-type Room struct {
+type roomDef struct {
   Name string
   Size RoomSize
 
@@ -72,15 +72,15 @@ type Room struct {
   Decor map[string]bool
 }
 
-func MakeRoom() *Room {
-  var r Room
+func MakeRoom() *roomDef {
+  var r roomDef
   r.Themes = make(map[string]bool)
   r.Sizes = make(map[string]bool)
   r.Decor = make(map[string]bool)
   return &r
 }
 
-func (r *Room) Resize(size RoomSize) {
+func (r *roomDef) Resize(size RoomSize) {
   if len(r.Cell_data) > size.Dx {
     r.Cell_data = r.Cell_data[0 : size.Dx]
   }
@@ -117,7 +117,7 @@ func (re *roomError) Error() string {
 // Otherwise copies the file at image_path to inside prefix, possibly renaming
 // it in the process by appending the value t to the name, then returns the
 // path of the new file relative to prefix.
-func (room *Room) ensureRelative(prefix, image_path string, t int64) (string, error) {
+func (room *roomDef) ensureRelative(prefix, image_path string, t int64) (string, error) {
   if filepath.HasPrefix(image_path, prefix) {
     image_path = image_path[len(prefix) : ]
     if filepath.IsAbs(image_path) {
@@ -165,7 +165,7 @@ func (room *Room) ensureRelative(prefix, image_path string, t int64) (string, er
 // 1. Gob the file to datadir/rooms/<name>.room
 // 2. If the wall path is not prefixed by datadir/rooms/walls, copy to datadir/rooms/walls/<name.wall - then fix the wall path
 // 3. Same for floor path
-func (room *Room) Save(datadir string, t int64) string {
+func (room *roomDef) Save(datadir string, t int64) string {
   failed := func(err error) bool {
     // TODO: Log an error
     // TODO: Also save things *somewhere* so data isn't completely lost
@@ -223,8 +223,8 @@ func (room *Room) Save(datadir string, t int64) string {
   return target_path
 }
 
-func LoadRoom(path string) *Room {
-  var room Room
+func LoadRoom(path string) *roomDef {
+  var room roomDef
   err := base.LoadJson(path, &room)
   if err != nil {
     return nil
@@ -252,7 +252,7 @@ type RoomEditorPanel struct {
   tab *gui.TabFrame
   widgets []tabWidget
 
-  room   *Room
+  room   *roomDef
   viewer *RoomViewer
 }
 
@@ -290,7 +290,7 @@ type Editor interface {
   SelectTab(int)
 }
 
-func MakeRoomEditorPanel(room *Room, datadir string) Editor {
+func MakeRoomEditorPanel(room *roomDef, datadir string) Editor {
   var rep RoomEditorPanel
 
   rep.room = room

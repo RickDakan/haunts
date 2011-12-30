@@ -70,19 +70,15 @@ func main() {
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
 
-  // anch := gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-  var room *house.Room
+  var editor house.Editor
   path := base.GetStoreVal("last room path")
   if path != "" {
-    room = house.LoadRoom(path)
+    editor = house.MakeRoomEditorPanel(house.LoadRoom(path), datadir)
   } else {
-    room = house.MakeRoom()
+    editor = house.MakeRoomEditorPanel(house.MakeRoom(), datadir)
   }
-  // anch.AddChild(house.MakeRoomEditorPanel(room), gui.Anchor{ 0.5, 0.5, 0.5, 0.5})
-  editor := house.MakeRoomEditorPanel(room, datadir)
   viewer := editor.GetViewer()
   ui.AddChild(editor)
-  // ui.AddChild(anch)
 
   sys.Think()
   render.Queue(func() {
@@ -95,6 +91,10 @@ func main() {
   zooming := false
   dragging := false
   hiding := false
+
+  // cancel is used to remove a modal gui widget
+  var cancel func()
+
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
     sys.Think()
@@ -106,6 +106,10 @@ func main() {
       dragging = false
       zooming = false
       sys.HideCursor(false)
+      if gin.In().GetKey(gin.Escape).FramePressCount() > 0 && cancel != nil {
+        cancel()
+        cancel = nil
+      }
     }
     if ui.FocusWidget() == nil {
       if key_map["zoom"].IsDown() != zooming {
@@ -122,12 +126,50 @@ func main() {
       if dragging {
         mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
         my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
-        viewer.Drag(-mx, my)
+        if mx != 0 || my != 0 {
+          viewer.Drag(-mx, my)
+        }
       }
 
       if (dragging || zooming) != hiding {
         hiding = (dragging || zooming)
         sys.HideCursor(hiding)
+      }
+
+      if key_map["editor"].FramePressCount() > 0 && ui.FocusWidget() == nil {
+        vtable := gui.MakeVerticalTable()
+        funcs := []struct{ text string; f func() house.Editor } {
+          {
+            "Room Editor",
+            func() house.Editor {
+              room := house.MakeRoom()
+              return house.MakeRoomEditorPanel(room, datadir)
+            },
+          },
+          {
+            "House Editor",
+            func() house.Editor {
+              room := house.MakeRoom()
+              return house.MakeRoomEditorPanel(room, datadir)
+            },
+          },
+        }
+        for _,f := range funcs {
+          vtable.AddChild(gui.MakeButton("standard", f.text, 300, 1, 1, 1, 1, func(int64) {
+            ui.RemoveChild(vtable)
+            ui.DropFocus()
+            ui.RemoveChild(editor)
+            editor = f.f()
+            viewer = editor.GetViewer()
+            ui.AddChild(editor)
+          }))
+        }
+        ui.AddChild(vtable)
+        ui.TakeFocus(vtable)
+        cancel = func() {
+          ui.RemoveChild(vtable)
+          ui.DropFocus()
+        }
       }
 
       if key_map["load"].FramePressCount() > 0 && chooser == nil {
@@ -144,8 +186,7 @@ func main() {
           if new_room != nil {
             base.SetStoreVal("last room path", path)
             ui.RemoveChild(editor)
-            room = new_room
-            editor = house.MakeRoomEditorPanel(room, datadir)
+            editor = house.MakeRoomEditorPanel(new_room, datadir)
             viewer = editor.GetViewer()
             ui.AddChild(editor)
           }

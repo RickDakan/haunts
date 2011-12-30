@@ -141,7 +141,7 @@ type RoomViewer struct {
   gui.NonResponder
   gui.NonThinker
 
-  room *Room
+  room *roomDef
 
   // In case the size of the room changes we will need to update the matrices
   size RoomSize
@@ -226,7 +226,7 @@ func (rv *RoomViewer) AddFlattenedDrawable(x, y float32, zd sprite.ZDrawable) {
   rv.flattened_positions = append(rv.flattened_positions, mathgl.Vec3{x, y, 0})
 }
 
-func MakeRoomViewer(room *Room, angle float32) *RoomViewer {
+func MakeRoomViewer(room *roomDef, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
   rv.room = room
