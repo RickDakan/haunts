@@ -73,9 +73,9 @@ func main() {
   var editor house.Editor
   path := base.GetStoreVal("last room path")
   if path != "" {
-    editor = house.MakeRoomEditorPanel(house.LoadRoom(path), datadir)
+    editor = house.MakeRoomEditorPanel(house.LoadRoomDef(path), datadir)
   } else {
-    editor = house.MakeRoomEditorPanel(house.MakeRoom(), datadir)
+    editor = house.MakeRoomEditorPanel(house.MakeRoomDef(), datadir)
   }
   viewer := editor.GetViewer()
   ui.AddChild(editor)
@@ -142,14 +142,14 @@ func main() {
           {
             "Room Editor",
             func() house.Editor {
-              room := house.MakeRoom()
+              room := house.MakeRoomDef()
               return house.MakeRoomEditorPanel(room, datadir)
             },
           },
           {
             "House Editor",
             func() house.Editor {
-              room := house.MakeRoom()
+              room := house.MakeRoomDef()
               return house.MakeRoomEditorPanel(room, datadir)
             },
           },
@@ -182,7 +182,7 @@ func main() {
           chooser = nil
           anchor = nil
 
-          new_room := house.LoadRoom(path)
+          new_room := house.LoadRoomDef(path)
           if new_room != nil {
             base.SetStoreVal("last room path", path)
             ui.RemoveChild(editor)

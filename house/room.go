@@ -7,7 +7,41 @@ import (
   "os"
   "io"
   "haunts/base"
+  "sort"
 )
+
+var (
+  room_registry map[string]*roomDef
+)
+
+func init() {
+  room_registry = make(map[string]*roomDef)
+}
+
+func GetAllRoomNames() []string {
+  var names []string
+  for name := range room_registry {
+    names = append(names, name)
+  }
+  sort.Strings(names)
+  return names
+}
+
+func LoadAllRoomsInDir(dir string) {
+  filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+    if !info.IsDir() {
+      if len(info.Name()) >= 5 && info.Name()[len(info.Name()) - 5 : ] == ".room" {
+        var r roomDef
+        err := base.LoadJson(path, &r)
+        if err == nil {
+          // f.abs_texture_path = filepath.Clean(filepath.Join(path, f.Texture_path))
+          room_registry[r.Name] = &r
+        }
+      }
+    }
+    return nil
+  })
+}
 
 var (
   datadir string
@@ -72,7 +106,7 @@ type roomDef struct {
   Decor map[string]bool
 }
 
-func MakeRoom() *roomDef {
+func MakeRoomDef() *roomDef {
   var r roomDef
   r.Themes = make(map[string]bool)
   r.Sizes = make(map[string]bool)
@@ -223,7 +257,7 @@ func (room *roomDef) Save(datadir string, t int64) string {
   return target_path
 }
 
-func LoadRoom(path string) *roomDef {
+func LoadRoomDef(path string) *roomDef {
   var room roomDef
   err := base.LoadJson(path, &room)
   if err != nil {
@@ -234,7 +268,6 @@ func LoadRoom(path string) *roomDef {
   for i := range room.Furniture {
     room.Furniture[i].Load()
   }
-
   for i := range room.WallTextures {
     room.WallTextures[i].Load()
   }
