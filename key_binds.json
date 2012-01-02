@@ -3,5 +3,5 @@
   "drag"           : "g",
   "load"           : "gui+l",
   "quit"           : "gui+q",
-  "change editor"  : "gui+e"
+  "editor"  : "gui+e"
 }
