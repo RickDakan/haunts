@@ -34,7 +34,6 @@ func LoadAllRoomsInDir(dir string) {
         var r roomDef
         err := base.LoadJson(path, &r)
         if err == nil {
-          // f.abs_texture_path = filepath.Clean(filepath.Join(path, f.Texture_path))
           room_registry[r.Name] = &r
         }
       }

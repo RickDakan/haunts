@@ -33,6 +33,8 @@ type FurniturePanel struct {
   // released.  If false this object will be placed when the mouse button is
   // clicked.
   drop_on_release bool
+
+  key_map base.KeyMap
 }
 
 func (w *FurniturePanel) Collapse() {
@@ -50,6 +52,7 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *Furn
   var fp FurniturePanel
   fp.Room = room
   fp.RoomViewer = viewer
+  fp.key_map = base.GetDefaultKeyMap()
   if room.Name == "" {
     room.Name = "name"
   }
@@ -128,6 +131,16 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       w.RoomViewer.Temp.Furniture = nil
     }
     return true
+  }
+  if found,event := group.FindEvent(w.key_map["rotate left"].Id()); found && event.Type == gin.Press {
+    if w.RoomViewer.Temp.Furniture != nil {
+      w.RoomViewer.Temp.Furniture.RotateLeft()
+    }
+  }
+  if found,event := group.FindEvent(w.key_map["rotate right"].Id()); found && event.Type == gin.Press {
+    if w.RoomViewer.Temp.Furniture != nil {
+      w.RoomViewer.Temp.Furniture.RotateRight()
+    }
   }
   if found,event := group.FindEvent(gin.MouseLButton); found {
     if w.RoomViewer.Temp.Furniture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {

@@ -31,6 +31,7 @@ func init() {
   var key_binds base.KeyBinds
   base.LoadJson("/Users/runningwild/code/haunts/key_binds.json", &key_binds)
   key_map = key_binds.MakeKeyMap()
+  base.SetDefaultKeyMap(key_map)
 
   quit = gin.In().BindDerivedKey("quit", gin.In().MakeBinding('q', []gin.KeyId{ gin.EitherShift }, []bool{ true }))
   // TODO: This should not be OS-specific

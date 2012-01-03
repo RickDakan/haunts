@@ -144,6 +144,46 @@ func GetAllNamesInRegistry(registry_name string) []string {
   return names
 }
 
+// Recursively decends through a value's type hierarchy and applies processing
+// according to any tags that have been set on those types
+func processObject(dir string, val reflect.Value, tag string) {
+  switch val.Type().Kind() {
+  case reflect.Ptr:
+    if !val.IsNil() {
+      processObject(dir, val.Elem(), tag)
+    }
+
+  case reflect.Struct:
+    for i := 0; i < val.NumField(); i++ {
+      processObject(dir, val.Field(i), val.Type().Field(i).Tag.Get("registry"))
+    }
+
+  case reflect.Array:
+    fallthrough
+  case reflect.Slice:
+    for i := 0; i < val.Len(); i++ {
+      processObject(dir, val.Index(i), tag)
+    }
+
+  case reflect.String:
+    if tag == "path" {
+      val.Set(reflect.ValueOf(filepath.Clean(filepath.Join(dir, val.String()))))
+    }
+  }
+
+  // Anything that is tagged with autoload has its Load() method called if it
+  // exists and has zero inputs and outputs
+  if tag == "autoload" {
+    load := val.MethodByName("Load")
+    if !load.IsValid() && val.CanAddr() {
+      load = val.Addr().MethodByName("Load")
+    }
+    if load.IsValid() && load.Type().NumIn() == 0 && load.Type().NumOut() == 0 {
+      load.Call(nil)
+    }
+  }
+}
+
 // Walks recursively through the specified directory and loads all files with
 // the specified suffix and loads them into the specified registry using
 // RegisterObject().  format should either be "json" or "gob"
@@ -169,14 +209,7 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
         }
         if err == nil {
           RegisterObject(registry_name, target.Interface())
-          for i := 0; i < target.Elem().NumField(); i++ {
-            tag := target.Elem().Type().Field(i).Tag.Get("registry")
-            if tag == "path" && target.Elem().Type().Field(i).Type.Kind() == reflect.String {
-              rel_path := target.Elem().Field(i).String()
-              abs_path := filepath.Clean(filepath.Join(path, rel_path))
-              target.Elem().Field(i).Set(reflect.ValueOf(abs_path))
-            }
-          }
+          processObject(path, target, "")
         }
       }
     }

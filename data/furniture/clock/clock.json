@@ -1,6 +1,10 @@
 {
   "Name": "Clock",
-  "Dx": 1,
-  "Dy": 1,
-  "Texture_path": "../clock.png"
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture_path": "../clock.png"
+    }
+  ]
 }

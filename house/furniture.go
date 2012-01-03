@@ -33,19 +33,17 @@ type Furniture struct {
 
 func (f *Furniture) Load() {
   base.LoadObject("furniture", f)
-  if f.furnitureDef.texture_data == nil {
-    f.furnitureDef.texture_data = texture.LoadFromPath(f.furnitureDef.Texture_path)
-  }
 }
 
 // Changes the position of this object such that it fits within the specified
 // dimensions, if possible
 func (f *Furniture) Constrain(dx,dy int) {
-  if f.X + f.Dx > dx {
-    f.X += dx - f.X + f.Dx
+  cdx,cdy := f.Dims()
+  if f.X + cdx > dx {
+    f.X += dx - f.X + cdx
   }
-  if f.Y + f.Dy > dy {
-    f.Y += dy - f.Y + f.Dy
+  if f.Y + cdy > dy {
+    f.Y += dy - f.Y + cdy
   }
 }
 
@@ -54,10 +52,31 @@ func (f *Furniture) Constrain(dx,dy int) {
 type FurnitureInst struct {
   // Position of this object in board coordinates.
   X,Y int
+
+  // Index into furnitureDef.Texture_paths
+  Rotation int
 }
 
 func (f *FurnitureInst) Pos() (int, int) {
   return f.X, f.Y
+}
+
+func (f *Furniture) RotateLeft() {
+  f.Rotation = (f.Rotation + 1) % len(f.Orientations)
+}
+
+func (f *Furniture) RotateRight() {
+  f.Rotation = (f.Rotation - 1 + len(f.Orientations)) % len(f.Orientations)
+}
+
+type furnitureOrientation struct {
+  Dx,Dy int
+  Texture_path string `registry:"path"`
+  texture_data *texture.Data
+}
+
+func (fo *furnitureOrientation) Load() {
+  fo.texture_data = texture.LoadFromPath(fo.Texture_path)
 }
 
 // All instances of the same piece of furniture have this data in common
@@ -65,24 +84,18 @@ type furnitureDef struct {
   // Name of the object - should be unique among all furniture
   Name string
 
-  // Dimensions of the object in cells
-  Dx,Dy int
-
-  // Path to the texture - on disk this is stored as a path that is relative
-  // to the location of the file that this def is stored in.  When it is loaded
-  // it is converted to an absolute path
-  Texture_path string `registry:"path"`
-
-  // The texture itself
-  texture_data *texture.Data
+  // All available orientations for this piece of furniture
+  Orientations []furnitureOrientation `registry:"autoload"`
 }
 
-func (f *furnitureDef) Dims() (int, int) {
-  return f.Dx, f.Dy
+func (f *Furniture) Dims() (int, int) {
+  orientation := f.Orientations[f.Rotation]
+  return orientation.Dx, orientation.Dy
 }
 
-func (f *furnitureDef) RenderDims(pos mathgl.Vec2, width float32) {
-  dy := width * float32(f.texture_data.Dy) / float32(f.texture_data.Dx)
+func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
+  orientation := f.Orientations[f.Rotation]
+  dy := width * float32(orientation.texture_data.Dy) / float32(orientation.texture_data.Dx)
 
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 1)
@@ -96,10 +109,11 @@ func (f *furnitureDef) RenderDims(pos mathgl.Vec2, width float32) {
   gl.End()
 }
 
-func (f *furnitureDef) Render(pos mathgl.Vec2, width float32) {
-  dy := width * float32(f.texture_data.Dy) / float32(f.texture_data.Dx)
+func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
+  orientation := f.Orientations[f.Rotation]
+  dy := width * float32(orientation.texture_data.Dy) / float32(orientation.texture_data.Dx)
   gl.Enable(gl.TEXTURE_2D)
-  f.texture_data.Bind()
+  orientation.texture_data.Bind()
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 1)
   gl.Vertex2f(pos.X, pos.Y)

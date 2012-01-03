@@ -1,6 +1,8 @@
 {
   "zoom"           : "r",
   "drag"           : "g",
+  "rotate left"    : "w",
+  "rotate right"   : "e",
   "load"           : "gui+l",
   "quit"           : "gui+q",
   "editor"  : "gui+e"

@@ -9,6 +9,16 @@ import (
 type KeyBinds map[string]string
 type KeyMap map[string]gin.Key
 
+var (
+  default_map KeyMap
+)
+func SetDefaultKeyMap(km KeyMap) {
+  default_map = km
+}
+func GetDefaultKeyMap() KeyMap {
+  return default_map
+}
+
 func getKeysFromString(str string) []gin.KeyId {
   parts := strings.Split(str, "+")
   var kids []gin.KeyId
