@@ -5,17 +5,10 @@ import (
   "haunts/texture"
   "github.com/arbaal/mathgl"
   "gl"
-  "path/filepath"
-  "os"
-  "sort"
-)
-
-var (
-  wall_texture_registry map[string]*wallTextureDef
 )
 
 func init() {
-  wall_texture_registry = make(map[string]*wallTextureDef)
+  base.RegisterRegistry("wall textures", make(map[string]*wallTextureDef))
 }
 
 func MakeWallTexture(name string) *WallTexture {
@@ -25,34 +18,17 @@ func MakeWallTexture(name string) *WallTexture {
 }
 
 func GetAllWallTextureNames() []string {
-  var names []string
-  for name := range wall_texture_registry {
-    names = append(names, name)
-  }
-  sort.Strings(names)
-  return names
+  return base.GetAllNamesInRegistry("wall textures")
 }
 
 func LoadAllWallTexturesInDir(dir string) {
-  filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-    if !info.IsDir() {
-      if len(info.Name()) >= 5 && info.Name()[len(info.Name()) - 5 : ] == ".json" {
-        var wt wallTextureDef
-        err := base.LoadJson(path, &wt)
-        if err == nil {
-          wt.abs_texture_path = filepath.Clean(filepath.Join(path, wt.Texture_path))
-          wall_texture_registry[wt.Name] = &wt
-        }
-      }
-    }
-    return nil
-  })
+  base.RegisterAllObjectsInDir("wall textures", dir, ".json", "json")
 }
 
 func (wt *WallTexture) Load() {
-  wt.wallTextureDef = wall_texture_registry[wt.Defname]
+  base.LoadObject("wall textures", wt)
   if wt.wallTextureDef.texture_data == nil {
-    wt.wallTextureDef.texture_data = texture.LoadFromPath(wt.wallTextureDef.abs_texture_path)
+    wt.wallTextureDef.texture_data = texture.LoadFromPath(wt.wallTextureDef.Texture_path)
   }
 }
 
@@ -67,11 +43,9 @@ type wallTextureDef struct {
   // all WallTextures
   Name string
 
-  // Path to the texture - relative to the location of this file
-  Texture_path string
-
-  // Absolute path to texture
-  abs_texture_path string
+  // Path to the texture - stored as a relative path but converted to an
+  // absolute path when loaded
+  Texture_path string `registry:"path"`
 
   // The texture itself
   texture_data *texture.Data

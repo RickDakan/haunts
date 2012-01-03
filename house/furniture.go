@@ -5,17 +5,10 @@ import (
   "haunts/texture"
   "github.com/arbaal/mathgl"
   "gl"
-  "path/filepath"
-  "os"
-  "sort"
-)
-
-var (
-  furniture_registry map[string]*furnitureDef
 )
 
 func init() {
-  furniture_registry = make(map[string]*furnitureDef)
+  base.RegisterRegistry("furniture", make(map[string]*furnitureDef))
 }
 
 func MakeFurniture(name string) *Furniture {
@@ -25,28 +18,11 @@ func MakeFurniture(name string) *Furniture {
 }
 
 func GetAllFurnitureNames() []string {
-  var names []string
-  for name := range furniture_registry {
-    names = append(names, name)
-  }
-  sort.Strings(names)
-  return names
+  return base.GetAllNamesInRegistry("furniture")
 }
 
 func LoadAllFurnitureInDir(dir string) {
-  filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-    if !info.IsDir() {
-      if len(info.Name()) >= 5 && info.Name()[len(info.Name()) - 5 : ] == ".json" {
-        var f furnitureDef
-        err := base.LoadJson(path, &f)
-        if err == nil {
-          f.abs_texture_path = filepath.Clean(filepath.Join(path, f.Texture_path))
-          furniture_registry[f.Name] = &f
-        }
-      }
-    }
-    return nil
-  })
+  base.RegisterAllObjectsInDir("furniture", dir, ".json", "json")
 }
 
 type Furniture struct {
@@ -56,9 +32,9 @@ type Furniture struct {
 }
 
 func (f *Furniture) Load() {
-  f.furnitureDef = furniture_registry[f.Defname]
+  base.LoadObject("furniture", f)
   if f.furnitureDef.texture_data == nil {
-    f.furnitureDef.texture_data = texture.LoadFromPath(f.furnitureDef.abs_texture_path)
+    f.furnitureDef.texture_data = texture.LoadFromPath(f.furnitureDef.Texture_path)
   }
 }
 
@@ -92,11 +68,10 @@ type furnitureDef struct {
   // Dimensions of the object in cells
   Dx,Dy int
 
-  // Path to the texture - relative to the location of this file
-  Texture_path string
-
-  // Absolute path to texture
-  abs_texture_path string
+  // Path to the texture - on disk this is stored as a path that is relative
+  // to the location of the file that this def is stored in.  When it is loaded
+  // it is converted to an absolute path
+  Texture_path string `registry:"path"`
 
   // The texture itself
   texture_data *texture.Data
