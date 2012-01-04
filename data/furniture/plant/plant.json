@@ -1,0 +1,15 @@
+{
+  "Name": "Plant",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture_path": "../plant_left.png"
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture_path": "../plant_right.png"
+    }
+  ]
+}
