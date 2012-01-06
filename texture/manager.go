@@ -11,6 +11,19 @@ import (
   "glop/render"
 )
 
+
+// Convenient way to take advantage of autoloading with the registry
+type Object struct {
+  Path string `registry:"path"`
+  data *Data
+}
+func (o *Object) Load() {
+  o.data = LoadFromPath(o.Path)
+}
+func (o *Object) Data() *Data {
+  return o.data
+}
+
 type Data struct {
   Dx,Dy int
   texture gl.Texture

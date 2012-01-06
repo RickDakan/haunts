@@ -4,7 +4,9 @@
     {
       "Dx": 1,
       "Dy": 1,
-      "Texture_path": "../clock.png"
+      "Texture": {
+        "Path": "../clock.png"
+      }
     }
   ]
 }

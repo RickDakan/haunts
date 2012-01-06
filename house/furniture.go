@@ -71,12 +71,7 @@ func (f *Furniture) RotateRight() {
 
 type furnitureOrientation struct {
   Dx,Dy int
-  Texture_path string `registry:"path"`
-  texture_data *texture.Data
-}
-
-func (fo *furnitureOrientation) Load() {
-  fo.texture_data = texture.LoadFromPath(fo.Texture_path)
+  Texture texture.Object `registry:"autoload"`
 }
 
 // All instances of the same piece of furniture have this data in common
@@ -85,7 +80,7 @@ type furnitureDef struct {
   Name string
 
   // All available orientations for this piece of furniture
-  Orientations []furnitureOrientation `registry:"autoload"`
+  Orientations []furnitureOrientation
 }
 
 func (f *Furniture) Dims() (int, int) {
@@ -95,7 +90,7 @@ func (f *Furniture) Dims() (int, int) {
 
 func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
-  dy := width * float32(orientation.texture_data.Dy) / float32(orientation.texture_data.Dx)
+  dy := width * float32(orientation.Texture.Data().Dy) / float32(orientation.Texture.Data().Dx)
 
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 1)
@@ -111,9 +106,9 @@ func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
 
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
-  dy := width * float32(orientation.texture_data.Dy) / float32(orientation.texture_data.Dx)
+  dy := width * float32(orientation.Texture.Data().Dy) / float32(orientation.Texture.Data().Dx)
   gl.Enable(gl.TEXTURE_2D)
-  orientation.texture_data.Bind()
+  orientation.Texture.Data().Bind()
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 1)
   gl.Vertex2f(pos.X, pos.Y)

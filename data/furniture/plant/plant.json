@@ -4,12 +4,16 @@
     {
       "Dx": 1,
       "Dy": 1,
-      "Texture_path": "../plant_left.png"
+      "Texture": {
+        "Path": "../plant_left.png"
+      }
     },
     {
       "Dx": 1,
       "Dy": 1,
-      "Texture_path": "../plant_right.png"
+      "Texture": {
+        "Path": "../plant_right.png"
+      }
     }
   ]
 }

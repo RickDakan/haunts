@@ -6,7 +6,9 @@
     {
       "Dx": 5,
       "Dy": 3,
-      "Texture_path": "../table.png"
+      "Texture": {
+        "Path": "../table.png"
+      }
     }
   ]
 }

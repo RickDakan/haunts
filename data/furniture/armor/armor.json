@@ -4,12 +4,16 @@
     {
       "Dx": 1,
       "Dy": 1,
-      "Texture_path": "../armor_left.png"
+      "Texture": {
+        "Path": "../armor_left.png"
+      }
     },
     {
       "Dx": 1,
       "Dy": 1,
-      "Texture_path": "../armor_right.png"
+      "Texture": {
+        "Path": "../armor_right.png"
+      }
     }
   ]
 }
