@@ -150,12 +150,12 @@ func main() {
           {
             "House Editor",
             func() house.Editor {
-              room := house.MakeRoomDef()
-              return house.MakeRoomEditorPanel(room, datadir)
+              return house.MakeHouseEditorPanel(house.MakeHouseDef(), datadir)
             },
           },
         }
-        for _,f := range funcs {
+        for _,temp_f := range funcs {
+          f := temp_f
           vtable.AddChild(gui.MakeButton("standard", f.text, 300, 1, 1, 1, 1, func(int64) {
             ui.RemoveChild(vtable)
             ui.DropFocus()

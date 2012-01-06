@@ -310,6 +310,7 @@ func (w *RoomEditorPanel) GetViewer() Viewer {
 }
 
 type Viewer interface {
+  gui.Widget
   Zoom(float64)
   Drag(float64,float64)
 }

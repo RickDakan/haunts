@@ -49,6 +49,10 @@ func init() {
   registry_registry = make(map[string]reflect.Value)
 }
 
+func RemoveRegistry(name string) {
+  delete(registry_registry, name)
+}
+
 // Registers a registry which must be a map from string to pointers to something
 func RegisterRegistry(name string, registry interface{}) {
   mr := reflect.ValueOf(registry)
