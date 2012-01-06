@@ -1,4 +1,6 @@
 {
   "Name": "Frame01",
-  "Texture_path": "../frame_01.png"
+  "Texture":  {
+    "Path": "../frame_01.png"
+  }
 }

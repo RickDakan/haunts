@@ -51,8 +51,8 @@ func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
     } else {
       xx,yy,_ = w.viewer.modelviewToBoard(float32(wx), float32(wy))
     }
-    dx := float32(tex.texture_data.Dx) / 100 / 2
-    dy := float32(tex.texture_data.Dy) / 100 / 2
+    dx := float32(tex.Texture.Data().Dx) / 100 / 2
+    dy := float32(tex.Texture.Data().Dy) / 100 / 2
     if xx > tex.X - dx && xx < tex.X + dx && yy > tex.Y - dy && yy < tex.Y + dy {
       return tex
     }

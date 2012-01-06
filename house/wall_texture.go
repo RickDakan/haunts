@@ -27,9 +27,6 @@ func LoadAllWallTexturesInDir(dir string) {
 
 func (wt *WallTexture) Load() {
   base.LoadObject("wall textures", wt)
-  if wt.wallTextureDef.texture_data == nil {
-    wt.wallTextureDef.texture_data = texture.LoadFromPath(wt.wallTextureDef.Texture_path)
-  }
 }
 
 type WallTexture struct {
@@ -43,12 +40,7 @@ type wallTextureDef struct {
   // all WallTextures
   Name string
 
-  // Path to the texture - stored as a relative path but converted to an
-  // absolute path when loaded
-  Texture_path string `registry:"path"`
-
-  // The texture itself
-  texture_data *texture.Data
+  Texture texture.Object `registry:"autoload"`
 }
 
 type WallTextureInst struct {
@@ -61,10 +53,10 @@ type WallTextureInst struct {
 }
 
 func (wt *WallTexture) Render() {
-  dx2 := float32(wt.texture_data.Dx) / 100 / 2
-  dy2 := float32(wt.texture_data.Dy) / 100 / 2
+  dx2 := float32(wt.Texture.Data().Dx) / 100 / 2
+  dy2 := float32(wt.Texture.Data().Dy) / 100 / 2
   gl.Enable(gl.TEXTURE_2D)
-  wt.texture_data.Bind()
+  wt.Texture.Data().Bind()
 
   var rot mathgl.Mat3
   rot.RotationZ(wt.Rot)
