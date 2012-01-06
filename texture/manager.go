@@ -12,15 +12,20 @@ import (
 )
 
 
-// Convenient way to take advantage of autoloading with the registry
+// Convenient way to take advantage of autoloading with the registry.
 type Object struct {
   Path string `registry:"path"`
+
+  // this path is the last one that was loaded, so that if we change Path then
+  // we know to reload the texture.
+  path string
   data *Data
 }
-func (o *Object) Load() {
-  o.data = LoadFromPath(o.Path)
-}
 func (o *Object) Data() *Data {
+  if o.data == nil || o.path != o.Path {
+    o.data = LoadFromPath(o.Path)
+    o.path = o.Path
+  }
   return o.data
 }
 
@@ -34,7 +39,7 @@ type Data struct {
 
 func (d *Data) Bind() {
   if d.Err != nil {
-    println("ERror: ", d.Err.Error())
+    println("Texture Error: ", d.Err.Error())
   }
   d.texture.Bind(gl.TEXTURE_2D)
 }

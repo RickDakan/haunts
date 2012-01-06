@@ -7,7 +7,6 @@ import (
   "gl"
   "math"
   "github.com/arbaal/mathgl"
-  "haunts/texture"
 )
 
 type RectObject interface {
@@ -190,23 +189,12 @@ type RoomViewer struct {
     Cells map[CellPos]bool
   }
 
-  floor *texture.Data
-  wall *texture.Data
-
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
 }
 
 func (rv *RoomViewer) SetEditMode(mode editMode) {
   rv.edit_mode = mode
-}
-
-func (rv *RoomViewer) ReloadFloor(path string) {
-  rv.floor = texture.LoadFromPath(path)
-}
-
-func (rv *RoomViewer) ReloadWall(path string) {
-  rv.wall = texture.LoadFromPath(path)
 }
 
 func (rv *RoomViewer) String() string {
@@ -463,7 +451,7 @@ func (rv *RoomViewer) Zoom(dz float64) {
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *roomDef, wall *texture.Data, left,right mathgl.Mat4, temp *WallTexture) {
+func drawWall(room *roomDef, left,right mathgl.Mat4, temp *WallTexture) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -484,7 +472,7 @@ func drawWall(room *roomDef, wall *texture.Data, left,right mathgl.Mat4, temp *W
   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
   gl.Enable(gl.TEXTURE_2D)
-  wall.Bind()
+  room.Wall.Data().Bind()
   gl.Color4f(1, 1, 1, 1)
   corner := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
   gl.Begin(gl.QUADS)
@@ -541,7 +529,7 @@ func drawWall(room *roomDef, wall *texture.Data, left,right mathgl.Mat4, temp *W
   gl.StencilFunc(gl.EQUAL, 1, 1)
   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
-  wall.Bind()
+  room.Wall.Data().Bind()
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4f(1, 1, 1, 1)
   gl.Begin(gl.QUADS)
@@ -574,7 +562,7 @@ func drawWall(room *roomDef, wall *texture.Data, left,right mathgl.Mat4, temp *W
   gl.PopMatrix()
 }
 
-func drawFloor(room *roomDef, floor *texture.Data, temp *WallTexture) {
+func drawFloor(room *roomDef, temp *WallTexture) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -594,7 +582,7 @@ func drawFloor(room *roomDef, floor *texture.Data, temp *WallTexture) {
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
-  floor.Bind()
+  room.Floor.Data().Bind()
   gl.Color4d(1.0, 1.0, 1.0, 1.0)
   gl.Begin(gl.QUADS)
     gl.TexCoord2i(0, 0)
@@ -762,8 +750,8 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.Vertex2i(rv.room.Size.Dx+1, -1)
   gl.End()
 
-  drawWall(rv.room, rv.wall, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
-  drawFloor(rv.room, rv.floor, rv.Temp.WallTexture)
+  drawWall(rv.room, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
+  drawFloor(rv.room, rv.Temp.WallTexture)
   rv.drawFloor()
   rv.drawFurniture()
 

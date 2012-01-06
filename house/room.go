@@ -8,6 +8,7 @@ import (
   "io"
   "haunts/base"
   "sort"
+  "haunts/texture"
 )
 
 var (
@@ -89,9 +90,8 @@ type roomDef struct {
 
   WallTextures []*WallTexture
 
-  // Paths to the floor and wall textures, relative to some basic datadir
-  Floor_path string
-  Wall_path  string
+  Floor texture.Object  `registry:"autoload"`
+  Wall  texture.Object  `registry:"autoload"`
 
   Cell_data [][]CellData
 
@@ -227,7 +227,7 @@ func (room *roomDef) Save(datadir string, t int64) string {
 
   putInDir := func(target_dir, source string, final *string) error {
     if !filepath.IsAbs(source) {
-      room.Wall_path = filepath.Clean(filepath.Join(target_dir, source))
+      room.Wall.Path = filepath.Clean(filepath.Join(target_dir, source))
     }
     path, err := room.ensureRelative(target_dir, source, t)
     if err != nil {
@@ -239,8 +239,8 @@ func (room *roomDef) Save(datadir string, t int64) string {
     return nil
   }
 
-  putInDir(floors_dir, room.Floor_path, &room.Floor_path)
-  putInDir(walls_dir, room.Wall_path, &room.Wall_path)
+  putInDir(floors_dir, room.Floor.Path, &room.Floor.Path)
+  putInDir(walls_dir, room.Wall.Path, &room.Wall.Path)
 
   err = base.SaveJson(target_path, room)
   if failed(err) { return "" }
@@ -262,8 +262,8 @@ func LoadRoomDef(path string) *roomDef {
   if err != nil {
     return nil
   }
-  room.Floor_path = filepath.Clean(filepath.Join(path, room.Floor_path))
-  room.Wall_path = filepath.Clean(filepath.Join(path, room.Wall_path))
+  room.Floor.Path = filepath.Clean(filepath.Join(path, room.Floor.Path))
+  room.Wall.Path = filepath.Clean(filepath.Join(path, room.Wall.Path))
   for i := range room.Furniture {
     room.Furniture[i].Load()
   }
@@ -332,8 +332,6 @@ func MakeRoomEditorPanel(room *roomDef, datadir string) Editor {
   for _,wt := range room.WallTextures {
     rep.room.WallTextures = append(rep.room.WallTextures, wt)
   }
-  rep.viewer.ReloadFloor(room.Floor_path)
-  rep.viewer.ReloadWall(room.Wall_path)
 
   rep.AddChild(rep.viewer)
 

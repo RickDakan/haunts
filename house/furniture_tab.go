@@ -58,15 +58,15 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *Furn
   }
   fp.name = gui.MakeTextEditLine("standard", room.Name, 300, 1, 1, 1, 1)  
 
-  if room.Floor_path == "" {
-    room.Floor_path = datadir
+  if room.Floor.Path == "" {
+    room.Floor.Path = datadir
   }
-  fp.floor_path = gui.MakeFileWidget(room.Floor_path, imagePathFilter)
+  fp.floor_path = gui.MakeFileWidget(room.Floor.Path, imagePathFilter)
 
-  if room.Wall_path == "" {
-    room.Wall_path = datadir
+  if room.Wall.Path == "" {
+    room.Wall.Path = datadir
   }
-  fp.wall_path = gui.MakeFileWidget(room.Wall_path, imagePathFilter)
+  fp.wall_path = gui.MakeFileWidget(room.Wall.Path, imagePathFilter)
 
   fp.room_size = gui.MakeComboTextBox(algorithm.Map(tags.RoomSizes, []string{}, func(a interface{}) interface{} { return a.(RoomSize).String() }).([]string), 300)
   for i := range tags.RoomSizes {
@@ -108,13 +108,13 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *Furn
     if target_path != "" {
       base.SetStoreVal("last room path", target_path)
       // The paths can change when we save them so we should update the widgets
-      if !filepath.IsAbs(room.Floor_path) {
-        room.Floor_path = filepath.Join(target_path, room.Floor_path)
-        fp.floor_path.SetPath(room.Floor_path)
+      if !filepath.IsAbs(room.Floor.Path) {
+        room.Floor.Path = filepath.Join(target_path, room.Floor.Path)
+        fp.floor_path.SetPath(room.Floor.Path)
       }
-      if !filepath.IsAbs(room.Wall_path) {
-        room.Wall_path = filepath.Join(target_path, room.Wall_path)
-        fp.wall_path.SetPath(room.Wall_path)
+      if !filepath.IsAbs(room.Wall.Path) {
+        room.Wall.Path = filepath.Join(target_path, room.Wall.Path)
+        fp.wall_path.SetPath(room.Wall.Path)
       }
     }
   }))
@@ -190,12 +190,8 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
 
   w.Room.Resize(tags.RoomSizes[w.room_size.GetComboedIndex()])
 
-  w.Room.Floor_path = w.floor_path.GetPath()
-  w.Room.Wall_path = w.wall_path.GetPath()
-
-  w.RoomViewer.ReloadFloor(w.Room.Floor_path)
-  w.RoomViewer.ReloadWall(w.Room.Wall_path)
-
+  w.Room.Floor.Path = w.floor_path.GetPath()
+  w.Room.Wall.Path = w.wall_path.GetPath()
 
   for i := range tags.Themes {
     selected := false
