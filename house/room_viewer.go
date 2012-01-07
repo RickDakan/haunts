@@ -681,39 +681,38 @@ func (rv *RoomViewer) drawFloor() {
   }
 }
 
-func (rv *RoomViewer) drawFurniture() {
+func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furniture, alpha float64) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
   gl.LoadIdentity()
   var furn rectObjectArray
-  for _,f := range rv.room.Furniture {
+  for _,f := range furniture {
     furn = append(furn, f)
   }
-  if rv.Temp.Furniture != nil {
-    furn = append(furn, rv.Temp.Furniture)
+  if temp_furniture != nil {
+    furn = append(furn, temp_furniture)
   }
   furn = furn.Order()
-  var furn_over *Furniture
+
+  board_to_window := func(mx,my int) (x,y float32) {
+    v := mathgl.Vec4{X: float32(mx), Y: float32(my), W: 1}
+    v.Transform(&mat)
+    x, y = v.X, v.Y
+    return
+  }
+
   for i := len(furn) - 1; i >= 0; i-- {
     f := furn[i]
     near_x,near_y := f.Pos()
     furn_dx,furn_dy := f.Dims()
-    leftx,_,_ := rv.boardToModelview(float32(near_x), float32(near_y + furn_dy))
-    rightx,_,_ := rv.boardToModelview(float32(near_x + furn_dx), float32(near_y))
-    _,boty,_ := rv.boardToModelview(float32(near_x), float32(near_y))
-    if f == rv.Temp.Furniture {
+    leftx,_ := board_to_window(near_x, near_y + furn_dy)
+    rightx,_ := board_to_window(near_x + furn_dx, near_y)
+    _,boty := board_to_window(near_x, near_y)
+    if f == temp_furniture {
       gl.Color4d(1, 1, 1, 0.5)
     } else {
-      if rv.edit_mode == editFurniture {
-        if f == furn_over {
-          gl.Color4d(0.5, 1, 0.5, 1)
-        } else {
-          gl.Color4d(1, 1, 1, 1)
-        }
-      } else {
-        gl.Color4d(1, 1, 1, 0.4)
-      }
+      gl.Color4d(1, 1, 1, alpha)
     }
     f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
@@ -753,7 +752,11 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   drawWall(rv.room, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
   drawFloor(rv.room, rv.Temp.WallTexture)
   rv.drawFloor()
-  rv.drawFurniture()
+  alpha := 1.0
+  if rv.edit_mode == editCells {
+    alpha = 0.1
+  }
+  drawFurniture(rv.mat, rv.room.Furniture, rv.Temp.Furniture, alpha)
 
   for i := range rv.flattened_positions {
     v := rv.flattened_positions[i]

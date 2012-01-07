@@ -47,9 +47,11 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
+      fmt.Printf("Panic: %v\n", r)
       fmt.Printf("%s\n", string(data))
       out,err := os.Open("crash.txt")
       if err == nil {
+        out.Write([]byte(fmt.Sprintf("Panic: %v\n", r)))
         out.Write(data)
         out.Close()
       }
@@ -68,6 +70,7 @@ func main() {
   if err != nil {
     panic(err.Error())
   }
+  house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
 
@@ -143,8 +146,7 @@ func main() {
           {
             "Room Editor",
             func() house.Editor {
-              room := house.MakeRoomDef()
-              return house.MakeRoomEditorPanel(room, datadir)
+              return house.MakeRoomEditorPanel(house.MakeRoomDef(), datadir)
             },
           },
           {

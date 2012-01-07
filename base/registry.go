@@ -170,7 +170,7 @@ func processObject(dir string, val reflect.Value, tag string) {
     }
 
   case reflect.String:
-    if tag == "path" {
+    if tag == "path" && !filepath.IsAbs(val.String()) {
       val.Set(reflect.ValueOf(filepath.Clean(filepath.Join(dir, val.String()))))
     }
   }
@@ -186,6 +186,13 @@ func processObject(dir string, val reflect.Value, tag string) {
       load.Call(nil)
     }
   }
+
+  // // Any object marked with this tag should be loaded from another registry, so
+  // // we look for the first registry that has the appropriate type and load the
+  // // object from that registry.
+  // if tag == "loadfromregistry" {
+    
+  // }
 }
 
 // Walks recursively through the specified directory and loads all files with

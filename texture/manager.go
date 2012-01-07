@@ -39,13 +39,27 @@ type Data struct {
 
 func (d *Data) Bind() {
   if d.Err != nil {
-    println("Texture Error: ", d.Err.Error())
+    if error_texture == 0 {
+      gl.Enable(gl.TEXTURE_2D)
+      error_texture = gl.GenTexture()
+      error_texture.Bind(gl.TEXTURE_2D)
+      gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+      pink := []byte{ 255, 0, 255, 255 }
+      glu.Build2DMipmaps(gl.TEXTURE_2D, 4, 1, 1, gl.RGBA, pink)
+    }
+    error_texture.Bind(gl.TEXTURE_2D)
+  } else {
+    d.texture.Bind(gl.TEXTURE_2D)
   }
-  d.texture.Bind(gl.TEXTURE_2D)
 }
 
 var (
   manager Manager
+  error_texture gl.Texture
 )
 
 func init() {
@@ -76,12 +90,14 @@ func (m *Manager) LoadFromPath(path string) *Data {
     f,err := os.Open(path)
     if err != nil {
       data.Err = err
+      println("Error loading ", path, " ", data.Err.Error())
       return
     }
     im,_,err := image.Decode(f)
     f.Close()
     if err != nil {
       data.Err = err
+      println("Error loading ", path, " ", data.Err.Error())
       return
     }
 

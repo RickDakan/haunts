@@ -2,10 +2,11 @@ package house
 
 import (
   "glop/gui"
+  "fmt"
 )
 
 type Room struct {
-  Def string
+  Defname string
   *roomDef
   RoomInst
 }
@@ -35,11 +36,11 @@ type RoomInst struct {
 }
 
 type Floor struct {
-  Rooms []Room
+  Rooms []*Room
 }
 
 type houseDef struct {
-  Floors []Floor
+  Floors []*Floor
 
   // The floor that the explorers start on
   Starting_floor int
@@ -101,7 +102,7 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
   num_floors := hdt.num_floors.GetComboedIndex() + 1
   if len(hdt.house.Floors) != num_floors {
     for len(hdt.house.Floors) < num_floors {
-      hdt.house.Floors = append(hdt.house.Floors, Floor{})
+      hdt.house.Floors = append(hdt.house.Floors, &Floor{})
     }
     if len(hdt.house.Floors) > num_floors {
       hdt.house.Floors = hdt.house.Floors[0 : num_floors]
@@ -114,8 +115,14 @@ func (hdt *houseDataTab) Expand() {}
 func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   var he HouseEditor
   he.HorizontalTable = gui.MakeHorizontalTable()
-  he.viewer = &HouseViewer{}
+  he.viewer = MakeHouseViewer(house, 62)
+  he.HorizontalTable.AddChild(he.viewer)
 
+  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ MakeRoom("name")}})
+fmt.Printf("Wall textures: %v\n", house.Floors[0].Rooms[0].WallTextures)
+for _,f := range house.Floors[0].Rooms[0].WallTextures {
+  fmt.Printf("Furn: %s\n", f.Texture.Path)
+}
   he.widgets = append(he.widgets, makeHouseDataTab(house, he.viewer))
   var tabs []gui.Widget
   for _,w := range he.widgets {

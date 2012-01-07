@@ -5,6 +5,7 @@ import (
   "haunts/texture"
   "github.com/arbaal/mathgl"
   "gl"
+  "fmt"
 )
 
 func init() {
@@ -32,7 +33,12 @@ type Furniture struct {
 }
 
 func (f *Furniture) Load() {
+  fmt.Printf("Furn load (%s)\n", f.Defname)
+  if f.furnitureDef != nil {
+    fmt.Printf("Pre path: %s\n", f.Orientations[0].Texture.Path)
+  }
   base.LoadObject("furniture", f)
+  fmt.Printf("Post path: %s\n", f.Orientations[0].Texture.Path)
 }
 
 // Changes the position of this object such that it fits within the specified

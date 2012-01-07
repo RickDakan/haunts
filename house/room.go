@@ -7,40 +7,25 @@ import (
   "os"
   "io"
   "haunts/base"
-  "sort"
   "haunts/texture"
 )
 
-var (
-  room_registry map[string]*roomDef
-)
-
 func init() {
-  room_registry = make(map[string]*roomDef)
+  base.RegisterRegistry("rooms", make(map[string]*roomDef))
 }
 
 func GetAllRoomNames() []string {
-  var names []string
-  for name := range room_registry {
-    names = append(names, name)
-  }
-  sort.Strings(names)
-  return names
+  return base.GetAllNamesInRegistry("rooms")
 }
 
 func LoadAllRoomsInDir(dir string) {
-  filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-    if !info.IsDir() {
-      if len(info.Name()) >= 5 && info.Name()[len(info.Name()) - 5 : ] == ".room" {
-        var r roomDef
-        err := base.LoadJson(path, &r)
-        if err == nil {
-          room_registry[r.Name] = &r
-        }
-      }
-    }
-    return nil
-  })
+  base.RegisterAllObjectsInDir("rooms", dir, ".room", "json")
+}
+
+func MakeRoom(name string) *Room {
+  r := Room{ Defname: name }
+  base.LoadObject("rooms", &r)
+  return &r
 }
 
 var (
@@ -86,9 +71,9 @@ type roomDef struct {
   Name string
   Size RoomSize
 
-  Furniture []*Furniture
+  Furniture []*Furniture  `registry:"loadfromregistry"`
 
-  WallTextures []*WallTexture
+  WallTextures []*WallTexture  `registry:"loadfromregistry"`
 
   Floor texture.Object  `registry:"autoload"`
   Wall  texture.Object  `registry:"autoload"`
