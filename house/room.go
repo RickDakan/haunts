@@ -71,9 +71,9 @@ type roomDef struct {
   Name string
   Size RoomSize
 
-  Furniture []*Furniture  `registry:"loadfromregistry"`
+  Furniture []*Furniture  `registry:"loadfrom-furniture"`
 
-  WallTextures []*WallTexture  `registry:"loadfromregistry"`
+  WallTextures []*WallTexture  `registry:"loadfrom-wall_textures"`
 
   Floor texture.Object  `registry:"autoload"`
   Wall  texture.Object  `registry:"autoload"`

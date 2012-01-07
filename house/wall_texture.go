@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-  base.RegisterRegistry("wall textures", make(map[string]*wallTextureDef))
+  base.RegisterRegistry("wall_textures", make(map[string]*wallTextureDef))
 }
 
 func MakeWallTexture(name string) *WallTexture {
@@ -18,15 +18,15 @@ func MakeWallTexture(name string) *WallTexture {
 }
 
 func GetAllWallTextureNames() []string {
-  return base.GetAllNamesInRegistry("wall textures")
+  return base.GetAllNamesInRegistry("wall_textures")
 }
 
 func LoadAllWallTexturesInDir(dir string) {
-  base.RegisterAllObjectsInDir("wall textures", dir, ".json", "json")
+  base.RegisterAllObjectsInDir("wall_textures", dir, ".json", "json")
 }
 
 func (wt *WallTexture) Load() {
-  base.LoadObject("wall textures", wt)
+  base.LoadObject("wall_textures", wt)
 }
 
 type WallTexture struct {

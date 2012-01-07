@@ -55,6 +55,9 @@ func RemoveRegistry(name string) {
 
 // Registers a registry which must be a map from string to pointers to something
 func RegisterRegistry(name string, registry interface{}) {
+  if strings.Contains(name, " ") {
+    panic(fmt.Sprintf("Registry name, '%s', cannot contain spaces", name))
+  }
   mr := reflect.ValueOf(registry)
   if mr.Kind() != reflect.Map {
     panic(fmt.Sprintf("Registries must be map[string]*struct, not %v", mr.Kind()))
@@ -154,6 +157,16 @@ func processObject(dir string, val reflect.Value, tag string) {
   switch val.Type().Kind() {
   case reflect.Ptr:
     if !val.IsNil() {
+      // Any object marked with a tag of the form `registry:"loadfrom-foo"` will be
+      // loaded from the specified registry ("foo", in this example) as long as a
+      // Defname field of type string was in the same struct.  If it was then the
+      // value of that field will be used as the key when loading this object from
+      // the registry.
+      loadfrom_tag := "loadfrom-"
+      if strings.HasPrefix(tag, loadfrom_tag) {
+        source := tag[len(loadfrom_tag) : ]
+        LoadObject(source, val.Interface())
+      }
       processObject(dir, val.Elem(), tag)
     }
 
@@ -186,13 +199,6 @@ func processObject(dir string, val reflect.Value, tag string) {
       load.Call(nil)
     }
   }
-
-  // // Any object marked with this tag should be loaded from another registry, so
-  // // we look for the first registry that has the appropriate type and load the
-  // // object from that registry.
-  // if tag == "loadfromregistry" {
-    
-  // }
 }
 
 // Walks recursively through the specified directory and loads all files with

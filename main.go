@@ -70,9 +70,9 @@ func main() {
   if err != nil {
     panic(err.Error())
   }
-  house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
+  house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
 
   var editor house.Editor
   path := base.GetStoreVal("last room path")
