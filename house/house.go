@@ -2,7 +2,6 @@ package house
 
 import (
   "glop/gui"
-  "fmt"
 )
 
 type Room struct {
@@ -33,6 +32,10 @@ type RoomInst struct {
 
   // The offset of this room on this floor
   X,Y int
+}
+
+func (ri *RoomInst) Pos() (x,y int) {
+  return ri.X, ri.Y
 }
 
 type Floor struct {
@@ -118,11 +121,15 @@ func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   he.viewer = MakeHouseViewer(house, 62)
   he.HorizontalTable.AddChild(he.viewer)
 
-  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ MakeRoom("name")}})
-fmt.Printf("Wall textures: %v\n", house.Floors[0].Rooms[0].WallTextures)
-for _,f := range house.Floors[0].Rooms[0].WallTextures {
-  fmt.Printf("Furn: %s\n", f.Texture.Path)
-}
+  r1 := MakeRoom("name")
+  r2 := MakeRoom("name")
+  r3 := MakeRoom("name")
+  r4 := MakeRoom("name")
+  r1.X,r1.Y = 0,0
+  r2.X,r2.Y = 20,0
+  r3.X,r3.Y = 0,15
+  r4.X,r4.Y = 20,15
+  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ r4, r2, r1, r3 }})
   he.widgets = append(he.widgets, makeHouseDataTab(house, he.viewer))
   var tabs []gui.Widget
   for _,w := range he.widgets {

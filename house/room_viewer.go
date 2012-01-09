@@ -15,9 +15,6 @@ type RectObject interface {
 
   // Dimensions in board coordinates
   Dims() (int, int)
-
-  Render(pos mathgl.Vec2, width float32)
-  RenderDims(pos mathgl.Vec2, width float32)
 }
 
 
@@ -446,15 +443,29 @@ func (rv *RoomViewer) Zoom(dz float64) {
   rv.makeMat()
 }
 
+func drawPrep() {
+  gl.Disable(gl.DEPTH_TEST)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+  gl.Enable(gl.BLEND)
+  gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+}
+
 // room: the wall to draw
 // wall: the texture to render on the wall
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *roomDef, left,right mathgl.Mat4, temp *WallTexture) {
+func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  defer gl.PopMatrix()
+
+  gl.LoadIdentity()
+  gl.MultMatrixf(&floor[0])
   // Right wall
   gl.ClearStencil(0)
   gl.Clear(gl.STENCIL_BUFFER_BIT)
@@ -514,6 +525,9 @@ func drawWall(room *roomDef, left,right mathgl.Mat4, temp *WallTexture) {
   }
   gl.PopMatrix()
 
+
+  gl.LoadIdentity()
+  gl.MultMatrixf(&floor[0])
   // Left wall
   gl.ClearStencil(0)
   gl.Clear(gl.STENCIL_BUFFER_BIT)
@@ -543,7 +557,6 @@ func drawWall(room *roomDef, left,right mathgl.Mat4, temp *WallTexture) {
     gl.Vertex3i(0, room.Size.Dy, 0)
   gl.End()
 
-  gl.PushMatrix()
   gl.LoadIdentity()
   gl.MultMatrixf(&left[0])
   for i,tex := range texs {
@@ -559,10 +572,15 @@ func drawWall(room *roomDef, left,right mathgl.Mat4, temp *WallTexture) {
     }
     tex.Render()
   }
-  gl.PopMatrix()
 }
 
-func drawFloor(room *roomDef, temp *WallTexture) {
+func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&floor[0])
+  defer gl.PopMatrix()
+
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -617,6 +635,11 @@ func drawFloor(room *roomDef, temp *WallTexture) {
 }
 
 func (rv *RoomViewer) drawFloor() {
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.mat[0])
+  defer gl.PopMatrix()
   if rv.edit_mode == editCells {
     gl.Disable(gl.TEXTURE_2D)
     gl.Color4d(0.3, 1, 0.3, 0.7)
@@ -714,7 +737,7 @@ func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furn
     } else {
       gl.Color4d(1, 1, 1, alpha)
     }
-    f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    f.(*Furniture).Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
   gl.PopMatrix()
 }
@@ -727,30 +750,19 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.Render_region = region
     rv.makeMat()
   }
-  gl.MatrixMode(gl.MODELVIEW)
-  gl.PushMatrix()
-  gl.LoadIdentity()
-  gl.MultMatrixf(&rv.mat[0])
-  defer gl.PopMatrix()
 
-  gl.Disable(gl.DEPTH_TEST)
-  gl.Disable(gl.TEXTURE_2D)
-  gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-  gl.Color3d(1, 0, 0)
-  gl.Enable(gl.BLEND)
-  gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  // // Draw a simple border around the viewer
+  // gl.Color4d(0.1, 0.3, 0.8, 1)
+  // gl.Begin(gl.QUADS)
+  // gl.Vertex2i(-1, -1)
+  // gl.Vertex2i(-1, rv.room.Size.Dy+1)
+  // gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
+  // gl.Vertex2i(rv.room.Size.Dx+1, -1)
+  // gl.End()
 
-  // Draw a simple border around the viewer
-  gl.Color4d(0.1, 0.3, 0.8, 1)
-  gl.Begin(gl.QUADS)
-  gl.Vertex2i(-1, -1)
-  gl.Vertex2i(-1, rv.room.Size.Dy+1)
-  gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
-  gl.Vertex2i(rv.room.Size.Dx+1, -1)
-  gl.End()
-
-  drawWall(rv.room, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
-  drawFloor(rv.room, rv.Temp.WallTexture)
+  drawPrep()
+  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
+  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture)
   rv.drawFloor()
   alpha := 1.0
   if rv.edit_mode == editCells {
@@ -758,28 +770,28 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   }
   drawFurniture(rv.mat, rv.room.Furniture, rv.Temp.Furniture, alpha)
 
-  for i := range rv.flattened_positions {
-    v := rv.flattened_positions[i]
-    rv.flattened_drawables[i].Render(v.X, v.Y, 0, 1.0)
-  }
-  rv.flattened_positions = rv.flattened_positions[0:0]
-  rv.flattened_drawables = rv.flattened_drawables[0:0]
+  // for i := range rv.flattened_positions {
+  //   v := rv.flattened_positions[i]
+  //   rv.flattened_drawables[i].Render(v.X, v.Y, 0, 1.0)
+  // }
+  // rv.flattened_positions = rv.flattened_positions[0:0]
+  // rv.flattened_drawables = rv.flattened_drawables[0:0]
 
-  for i := range rv.upright_positions {
-    vx, vy, vz := rv.boardToModelview(rv.upright_positions[i].X, rv.upright_positions[i].Y)
-    rv.upright_positions[i] = mathgl.Vec3{vx, vy, vz}
-  }
-  sprite.ZSort(rv.upright_positions, rv.upright_drawables)
-  gl.Disable(gl.TEXTURE_2D)
-  gl.PushMatrix()
-  gl.LoadIdentity()
-  for i := range rv.upright_positions {
-    v := rv.upright_positions[i]
-    rv.upright_drawables[i].Render(v.X, v.Y, v.Z, float32(rv.zoom))
-  }
-  rv.upright_positions = rv.upright_positions[0:0]
-  rv.upright_drawables = rv.upright_drawables[0:0]
-  gl.PopMatrix()
+  // for i := range rv.upright_positions {
+  //   vx, vy, vz := rv.boardToModelview(rv.upright_positions[i].X, rv.upright_positions[i].Y)
+  //   rv.upright_positions[i] = mathgl.Vec3{vx, vy, vz}
+  // }
+  // sprite.ZSort(rv.upright_positions, rv.upright_drawables)
+  // gl.Disable(gl.TEXTURE_2D)
+  // gl.PushMatrix()
+  // gl.LoadIdentity()
+  // for i := range rv.upright_positions {
+  //   v := rv.upright_positions[i]
+  //   rv.upright_drawables[i].Render(v.X, v.Y, v.Z, float32(rv.zoom))
+  // }
+  // rv.upright_positions = rv.upright_positions[0:0]
+  // rv.upright_drawables = rv.upright_drawables[0:0]
+  // gl.PopMatrix()
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {

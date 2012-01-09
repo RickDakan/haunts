@@ -90,6 +90,10 @@ type roomDef struct {
   Decor map[string]bool
 }
 
+func (room *roomDef) Dims() (dx,dy int) {
+  return room.Size.Dx, room.Size.Dy
+}
+
 func MakeRoomDef() *roomDef {
   var r roomDef
   r.Themes = make(map[string]bool)

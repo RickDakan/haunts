@@ -3,7 +3,6 @@ package house
 import (
   "glop/gui"
   "github.com/arbaal/mathgl"
-  "gl"
   "math"
 )
 
@@ -53,24 +52,24 @@ func (hv *HouseViewer) String() string {
 }
 
 func (hv *HouseViewer) Draw(region gui.Region) {
-  room := hv.house.Floors[0].Rooms[0]
-
-  // TODO: Would be better to be able to just get the floor mats alone
-  m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, 0, 0, hv.angle, hv.zoom)
-
   region.PushClipPlanes()
   defer region.PopClipPlanes()
+  
+  var rooms rectObjectArray
+  for _,room := range hv.house.Floors[0].Rooms {
+    rooms = append(rooms, room)
+  }
+  rooms = rooms.Order()
+  for i := range rooms {
+    room := rooms[i].(*Room)
+    // TODO: Would be better to be able to just get the floor mats alone
+    m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, float32(room.X), float32(room.Y), hv.angle, hv.zoom)
 
-  gl.MatrixMode(gl.MODELVIEW)
-  gl.PushMatrix()
-  gl.LoadIdentity()
-  gl.MultMatrixf(&m_floor[0])
-  defer gl.PopMatrix()
-
-  drawFloor(room.roomDef, nil)
-  drawWall(room.roomDef, m_left, m_right, nil)
-  drawFurniture(m_floor, room.roomDef.Furniture, nil, 1)
-  // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
+    drawFloor(room.roomDef, m_floor, nil)
+    drawWall(room.roomDef, m_floor, m_left, m_right, nil)
+    drawFurniture(m_floor, room.roomDef.Furniture, nil, 1)
+    // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
+  }
 }
 
 
