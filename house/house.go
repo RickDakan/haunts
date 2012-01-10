@@ -2,6 +2,7 @@ package house
 
 import (
   "glop/gui"
+  "glop/gin"
 )
 
 type Room struct {
@@ -85,6 +86,12 @@ type houseDataTab struct {
 
   house  *houseDef
   viewer *HouseViewer
+
+  // Distance from the mouse to the center of the object, in board coordinates
+  drag_anchor struct{ x,y float32 }
+
+  // Which floor we are viewing and editing
+  current_floor int
 }
 func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
   var hdt houseDataTab
@@ -101,6 +108,12 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
   return &hdt
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
+  if hdt.viewer.Temp.Room != nil {
+    mx,my := gin.In().GetCursor("Mouse").Point()
+    bx,by := hdt.viewer.WindowToBoard(mx, my)
+    hdt.viewer.Temp.Room.X = int(bx - hdt.drag_anchor.x)
+    hdt.viewer.Temp.Room.Y = int(by - hdt.drag_anchor.y)
+  }
   hdt.VerticalTable.Think(ui, t)
   num_floors := hdt.num_floors.GetComboedIndex() + 1
   if len(hdt.house.Floors) != num_floors {
@@ -111,6 +124,44 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
       hdt.house.Floors = hdt.house.Floors[0 : num_floors]
     }
   }
+}
+func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if hdt.VerticalTable.Respond(ui, group) {
+    return true
+  }
+
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    hdt.viewer.Temp.Room = nil
+    return true
+  }
+
+  floor := hdt.house.Floors[hdt.current_floor]
+  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    if hdt.viewer.Temp.Room != nil {
+      floor.Rooms = append(floor.Rooms, hdt.viewer.Temp.Room)
+      hdt.viewer.Temp.Room = nil
+    } else {
+      bx,by := hdt.viewer.WindowToBoard(event.Key.Cursor().Point())
+      for i := range floor.Rooms {
+        x,y := floor.Rooms[i].Pos()
+        dx,dy := floor.Rooms[i].Dims()
+        if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
+          hdt.viewer.Temp.Room = floor.Rooms[i]
+          floor.Rooms[i] = floor.Rooms[len(floor.Rooms) - 1]
+          floor.Rooms = floor.Rooms[0 : len(floor.Rooms) - 1]
+          break
+        }
+      }
+      if hdt.viewer.Temp.Room != nil {
+        px,py := hdt.viewer.Temp.Room.Pos()
+        hdt.drag_anchor.x = bx - float32(px) - 0.5
+        hdt.drag_anchor.y = by - float32(py) - 0.5
+      }
+    }
+    return true
+  }
+
+  return false
 }
 func (hdt *houseDataTab) Collapse() {}
 func (hdt *houseDataTab) Expand() {}
@@ -137,4 +188,10 @@ func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   he.HorizontalTable.AddChild(he.tab)
 
   return &he
+}
+
+// Manually pass all events to the tabs, regardless of location, since the tabs
+// need to know where the user clicks.
+func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  return he.widgets[he.tab.SelectedTab()].Respond(ui, group)
 }

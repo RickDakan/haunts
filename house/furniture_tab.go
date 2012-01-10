@@ -126,10 +126,7 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.RoomViewer.Temp.Furniture != nil {
-      w.RoomViewer.Temp.Furniture = nil
-      w.RoomViewer.Temp.Furniture = nil
-    }
+    w.RoomViewer.Temp.Furniture = nil
     return true
   }
   if found,event := group.FindEvent(w.key_map["rotate left"].Id()); found && event.Type == gin.Press {

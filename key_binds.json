@@ -1,6 +1,6 @@
 {
   "zoom"           : "r",
-  "drag"           : "g",
+  "drag"           : "r",
   "rotate left"    : "w",
   "rotate right"   : "e",
   "load"           : "gui+l",

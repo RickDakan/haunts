@@ -302,6 +302,7 @@ type Viewer interface {
   gui.Widget
   Zoom(float64)
   Drag(float64,float64)
+  WindowToBoard(int,int) (float32,float32)
 }
 
 type Editor interface {
