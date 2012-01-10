@@ -449,6 +449,8 @@ func drawPrep() {
   gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  gl.ClearStencil(0)
+  gl.Clear(gl.STENCIL_BUFFER_BIT)
 }
 
 // room: the wall to draw
@@ -464,42 +466,11 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
   gl.PushMatrix()
   defer gl.PopMatrix()
 
+  dz := 7
+  corner := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
   gl.LoadIdentity()
   gl.MultMatrixf(&floor[0])
-  // Right wall
-  gl.ClearStencil(0)
-  gl.Clear(gl.STENCIL_BUFFER_BIT)
-  gl.StencilFunc(gl.ALWAYS, 1, 1)
-  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-  gl.Disable(gl.TEXTURE_2D)
-  dz := 7
-  gl.Begin(gl.QUADS)
-    gl.Vertex3i(room.Size.Dx, 0, 0)
-    gl.Vertex3i(room.Size.Dx, 0, -dz)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
-  gl.End()
-  gl.StencilFunc(gl.EQUAL, 1, 1)
-  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
-  gl.Enable(gl.TEXTURE_2D)
-  room.Wall.Data().Bind()
-  gl.Color4f(1, 1, 1, 1)
-  corner := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2f(1, 0)
-    gl.Vertex3i(room.Size.Dx, 0, 0)
-    gl.TexCoord2f(1, -1)
-    gl.Vertex3i(room.Size.Dx, 0, -dz)
-    gl.TexCoord2f(corner, -1)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
-    gl.TexCoord2f(corner, 0)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
-  gl.End()
-
-  gl.PushMatrix()
-  gl.LoadIdentity()
-  gl.MultMatrixf(&right[0])
   var texs []WallTexture
   if temp != nil {
     texs = append(texs, *temp)
@@ -507,71 +478,120 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
   for _,tex := range room.WallTextures {
     texs = append(texs, *tex)
   }
-  for i,tex := range texs {
-    dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
-    if tex.Y > dy {
-      tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
-    }
-    if tex.X > dx {
-      tex.Rot -= 3.1415926535 / 2
-    }
-    tex.X -= dx
-    if temp != nil && i == 0 {
-      gl.Color4f(1, 0.7, 0.7, 0.7)
-    } else {
-      gl.Color4f(1, 1, 1, 1)
-    }
-    tex.Render()
+
+  do_right_wall := func() {
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2f(1, 0)
+      gl.Vertex3i(room.Size.Dx, 0, 0)
+      gl.TexCoord2f(1, -1)
+      gl.Vertex3i(room.Size.Dx, 0, -dz)
+      gl.TexCoord2f(corner, -1)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
+      gl.TexCoord2f(corner, 0)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
+    gl.End()
   }
-  gl.PopMatrix()
 
+  alpha := 0.3
 
-  gl.LoadIdentity()
-  gl.MultMatrixf(&floor[0])
-  // Left wall
-  gl.ClearStencil(0)
-  gl.Clear(gl.STENCIL_BUFFER_BIT)
+  // Right wall
+  gl.StencilFunc(gl.NOTEQUAL, 8, 7)
+  gl.StencilOp(gl.DECR_WRAP, gl.REPLACE, gl.REPLACE)
+  gl.Color4d(0, 0, 0, 0)
+  do_right_wall()
+  gl.Enable(gl.TEXTURE_2D)
+  for _,alpha := range []float64{ alpha, 1.0 } {
+    if alpha == 1.0 {
+      gl.StencilFunc(gl.EQUAL, 15, 15)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    } else {
+      gl.StencilFunc(gl.EQUAL, 8, 15)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    }
+    room.Wall.Data().Bind()
+    gl.Color4d(1, 1, 1, alpha)
+    do_right_wall()
+
+    gl.PushMatrix()
+    gl.LoadIdentity()
+    gl.MultMatrixf(&right[0])
+    for i,tex := range texs {
+      dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
+      if tex.Y > dy {
+        tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
+      }
+      if tex.X > dx {
+        tex.Rot -= 3.1415926535 / 2
+      }
+      tex.X -= dx
+      if temp != nil && i == 0 {
+        gl.Color4d(1, 0.7, 0.7, alpha * 0.7)
+      } else {
+        gl.Color4d(1, 1, 1, alpha)
+      }
+      tex.Render()
+    }
+    gl.PopMatrix()
+  }
+  // Go back over the area we just drew on and replace it with all b0001
   gl.StencilFunc(gl.ALWAYS, 1, 1)
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.QUADS)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
-    gl.Vertex3i(0, room.Size.Dy, -dz)
-    gl.Vertex3i(0, room.Size.Dy, 0)
-  gl.End()
-  gl.StencilFunc(gl.EQUAL, 1, 1)
-  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+  gl.Color4d(0, 0, 0, 0)
+  do_right_wall()
 
-  room.Wall.Data().Bind()
-  gl.Enable(gl.TEXTURE_2D)
-  gl.Color4f(1, 1, 1, 1)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2f(corner, 0)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
-    gl.TexCoord2f(corner, -1)
-    gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
-    gl.TexCoord2f(0, -1)
-    gl.Vertex3i(0, room.Size.Dy, -dz)
-    gl.TexCoord2f(0, 0)
-    gl.Vertex3i(0, room.Size.Dy, 0)
-  gl.End()
 
-  gl.LoadIdentity()
-  gl.MultMatrixf(&left[0])
-  for i,tex := range texs {
-    dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
-    if tex.X > dx {
-      tex.X, tex.Y = dx + dy - tex.Y, dy + tex.X - dx
-    }
-    tex.Y -= dy
-    if temp != nil && i == 0 {
-      gl.Color4f(1, 0.7, 0.7, 0.7)
-    } else {
-      gl.Color4f(1, 1, 1, 1)
-    }
-    tex.Render()
+  do_left_wall := func() {
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2f(corner, 0)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
+      gl.TexCoord2f(corner, -1)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
+      gl.TexCoord2f(0, -1)
+      gl.Vertex3i(0, room.Size.Dy, -dz)
+      gl.TexCoord2f(0, 0)
+      gl.Vertex3i(0, room.Size.Dy, 0)
+    gl.End()
   }
+  gl.StencilFunc(gl.NOTEQUAL, 8, 7)
+  gl.StencilOp(gl.DECR_WRAP, gl.REPLACE, gl.REPLACE)
+  gl.Color4d(0, 0, 0, 0)
+  do_left_wall()
+  gl.Enable(gl.TEXTURE_2D)
+  for _,alpha := range []float64{ alpha, 1.0 } {
+    if alpha == 1.0 {
+      gl.StencilFunc(gl.EQUAL, 15, 15)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    } else {
+      gl.StencilFunc(gl.EQUAL, 8, 15)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    }
+    room.Wall.Data().Bind()
+    gl.Color4d(1, 1, 1, alpha)
+    do_left_wall()
+
+    gl.PushMatrix()
+    gl.LoadIdentity()
+    gl.MultMatrixf(&left[0])
+    for i,tex := range texs {
+      dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
+      if tex.X > dx {
+        tex.X, tex.Y = dx + dy - tex.Y, dy + tex.X - dx
+      }
+      tex.Y -= dy
+      if temp != nil && i == 0 {
+        gl.Color4d(1, 0.7, 0.7, 0.7 * alpha)
+      } else {
+        gl.Color4d(1, 1, 1, alpha)
+      }
+      tex.Render()
+    }
+    gl.PopMatrix()
+  }
+  // Go back over the area we just drew on and replace it with all b0010
+  gl.StencilFunc(gl.ALWAYS, 2, 2)
+  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
+  gl.Color4d(0, 0, 0, 0)
+  do_left_wall()
 }
 
 func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
@@ -584,9 +604,7 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
-  gl.ClearStencil(0)
-  gl.Clear(gl.STENCIL_BUFFER_BIT)
-  gl.StencilFunc(gl.ALWAYS, 1, 1)
+  gl.StencilFunc(gl.ALWAYS, 4, 4)
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
@@ -595,7 +613,7 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
     gl.Vertex2i(room.Size.Dx, room.Size.Dy)
     gl.Vertex2i(room.Size.Dx, 0)
   gl.End()
-  gl.StencilFunc(gl.EQUAL, 1, 1)
+  gl.StencilFunc(gl.EQUAL, 4, 15)
   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
   // Draw the floor

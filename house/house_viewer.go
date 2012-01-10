@@ -44,7 +44,6 @@ func (hv *HouseViewer) Zoom(dz float64) {
 }
 
 func (hv *HouseViewer) Drag(float64,float64) {
-  
 }
 
 func (hv *HouseViewer) String() string {
@@ -60,13 +59,14 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     rooms = append(rooms, room)
   }
   rooms = rooms.Order()
-  for i := range rooms {
+  drawPrep()
+  for i := len(rooms) - 1; i >= 0; i-- {
     room := rooms[i].(*Room)
     // TODO: Would be better to be able to just get the floor mats alone
-    m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, float32(room.X), float32(room.Y), hv.angle, hv.zoom)
+    m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, 20-float32(room.X), 20-float32(room.Y), hv.angle, hv.zoom)
 
-    drawFloor(room.roomDef, m_floor, nil)
     drawWall(room.roomDef, m_floor, m_left, m_right, nil)
+    drawFloor(room.roomDef, m_floor, nil)
     drawFurniture(m_floor, room.roomDef.Furniture, nil, 1)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }

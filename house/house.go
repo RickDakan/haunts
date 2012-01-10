@@ -124,12 +124,10 @@ func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   r1 := MakeRoom("name")
   r2 := MakeRoom("name")
   r3 := MakeRoom("name")
-  r4 := MakeRoom("name")
   r1.X,r1.Y = 0,0
-  r2.X,r2.Y = 20,0
+  r2.X,r2.Y = 20,5
   r3.X,r3.Y = 0,15
-  r4.X,r4.Y = 20,15
-  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ r4, r2, r1, r3 }})
+  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ r1, r2, r3 }})
   he.widgets = append(he.widgets, makeHouseDataTab(house, he.viewer))
   var tabs []gui.Widget
   for _,w := range he.widgets {
