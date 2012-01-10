@@ -154,8 +154,8 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }
       if hdt.viewer.Temp.Room != nil {
         px,py := hdt.viewer.Temp.Room.Pos()
-        hdt.drag_anchor.x = bx - float32(px) - 0.5
-        hdt.drag_anchor.y = by - float32(py) - 0.5
+        hdt.drag_anchor.x = bx - float32(px)
+        hdt.drag_anchor.y = by - float32(py)
       }
     }
     return true
