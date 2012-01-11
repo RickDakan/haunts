@@ -89,10 +89,10 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         return a.(*WallTexture) != w.viewer.Temp.WallTexture
       }).([]*WallTexture)
       if w.viewer.Temp.WallTexture != nil {
-        wx,wy := w.viewer.BoardToWindow(float32(w.viewer.Temp.WallTexture.X), float32(w.viewer.Temp.WallTexture.Y))
+        wx,wy := w.viewer.BoardToWindow(w.viewer.Temp.WallTexture.X, w.viewer.Temp.WallTexture.Y)
         px,py := event.Key.Cursor().Point()
-        w.drag_anchor.X = float32(px) - wx
-        w.drag_anchor.Y = float32(py) - wy
+        w.drag_anchor.X = float32(px) - wx - 0.5
+        w.drag_anchor.Y = float32(py) - wy - 0.5
       }
     }
     return true
