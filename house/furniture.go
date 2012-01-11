@@ -8,10 +8,6 @@ import (
   "fmt"
 )
 
-func init() {
-  base.RegisterRegistry("furniture", make(map[string]*furnitureDef))
-}
-
 func MakeFurniture(name string) *Furniture {
   f := Furniture{ Defname: name }
   f.Load()
@@ -23,6 +19,8 @@ func GetAllFurnitureNames() []string {
 }
 
 func LoadAllFurnitureInDir(dir string) {
+  base.RemoveRegistry("furniture")
+  base.RegisterRegistry("furniture", make(map[string]*furnitureDef))
   base.RegisterAllObjectsInDir("furniture", dir, ".json", "json")
 }
 

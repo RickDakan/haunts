@@ -23,6 +23,11 @@ var (
   quit gin.Key
 )
 
+func loadAllRegistries() {
+  house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
+  house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
+  house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
+}
 
 func init() {
   runtime.LockOSThread()
@@ -70,9 +75,7 @@ func main() {
   if err != nil {
     panic(err.Error())
   }
-  house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
-  house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
-  house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
+  loadAllRegistries()
 
   var editor house.Editor
   path := base.GetStoreVal("last room path")
@@ -146,6 +149,10 @@ func main() {
           {
             "Room Editor",
             func() house.Editor {
+              path := base.GetStoreVal("last room path")
+              if path != "" {
+                return house.MakeRoomEditorPanel(house.LoadRoomDef(path), datadir)
+              }
               return house.MakeRoomEditorPanel(house.MakeRoomDef(), datadir)
             },
           },
@@ -162,6 +169,7 @@ func main() {
             ui.RemoveChild(vtable)
             ui.DropFocus()
             ui.RemoveChild(editor)
+            loadAllRegistries()
             editor = f.f()
             viewer = editor.GetViewer()
             ui.AddChild(editor)

@@ -10,15 +10,13 @@ import (
   "haunts/texture"
 )
 
-func init() {
-  base.RegisterRegistry("rooms", make(map[string]*roomDef))
-}
-
 func GetAllRoomNames() []string {
   return base.GetAllNamesInRegistry("rooms")
 }
 
 func LoadAllRoomsInDir(dir string) {
+  base.RemoveRegistry("rooms")
+  base.RegisterRegistry("rooms", make(map[string]*roomDef))
   base.RegisterAllObjectsInDir("rooms", dir, ".room", "json")
 }
 

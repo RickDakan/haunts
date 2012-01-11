@@ -7,10 +7,6 @@ import (
   "gl"
 )
 
-func init() {
-  base.RegisterRegistry("wall_textures", make(map[string]*wallTextureDef))
-}
-
 func MakeWallTexture(name string) *WallTexture {
   wt := WallTexture{ Defname: name }
   wt.Load()
@@ -22,6 +18,8 @@ func GetAllWallTextureNames() []string {
 }
 
 func LoadAllWallTexturesInDir(dir string) {
+  base.RemoveRegistry("wall_textures")
+  base.RegisterRegistry("wall_textures", make(map[string]*wallTextureDef))
   base.RegisterAllObjectsInDir("wall_textures", dir, ".json", "json")
 }
 
