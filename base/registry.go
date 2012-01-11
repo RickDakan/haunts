@@ -204,12 +204,20 @@ func processObject(dir string, val reflect.Value, tag string) {
 // Walks recursively through the specified directory and loads all files with
 // the specified suffix and loads them into the specified registry using
 // RegisterObject().  format should either be "json" or "gob"
+// Files begining with '.' are ignored in this process
 func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
   reg,ok := registry_registry[registry_name]
   if !ok {
     panic(fmt.Sprintf("Tried to load objects into an unknown registry '%s'", registry_name))
   }
   filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+    _,filename := filepath.Split(path)
+    if strings.HasPrefix(filename, ".") {
+      if info.IsDir() {
+        return filepath.SkipDir
+      }
+      return nil
+    }
     if !info.IsDir() {
       if strings.HasSuffix(info.Name(), suffix) {
         var err error
