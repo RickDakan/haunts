@@ -4,6 +4,7 @@ import (
   "glop/gui"
   "github.com/arbaal/mathgl"
   "math"
+  "haunts/base"
 )
 
 type HouseViewer struct {
@@ -98,9 +99,15 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     // TODO: Would be better to be able to just get the floor mats alone
     m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, hv.fx - float32(room.X), hv.fy - float32(room.Y), hv.angle, hv.zoom)
 
-    drawWall(room.roomDef, m_floor, m_left, m_right, nil)
-    drawFloor(room.roomDef, m_floor, nil)
-    drawFurniture(m_floor, room.roomDef.Furniture, nil, 1)
+    var cstack base.ColorStack
+    if room == hv.Temp.Room {
+      cstack.Push(0.5, 0.5, 1, 0.75)
+    } else {
+      cstack.Push(1, 1, 1, 1)
+    }
+    drawWall(room.roomDef, m_floor, m_left, m_right, nil, cstack)
+    drawFloor(room.roomDef, m_floor, nil, cstack)
+    drawFurniture(m_floor, room.roomDef.Furniture, nil, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }

@@ -7,6 +7,8 @@ import (
   "io/ioutil"
   "strings"
   "path/filepath"
+  "image/color"
+  "gl"
 )
 
 // Opens the file named by path, reads it all, decodes it as json into target,
@@ -107,3 +109,34 @@ func SetStoreVal(key,val string) {
   store[key] = val
   SaveJson(path, store)
 }
+
+type ColorStack struct {
+  colors []color.NRGBA
+}
+func (cs *ColorStack) Push(r,g,b,a float64) {
+  c := color.NRGBA{ byte(255 * r), byte(255 * g), byte(255 * b), byte(255 * a) }
+  cs.colors = append(cs.colors, c)
+}
+func (cs *ColorStack) Pop() {
+  cs.colors = cs.colors[0 : len(cs.colors) - 1]
+}
+func (cs *ColorStack) subApply(n int) (r,g,b,a float64) {
+  if n < 0 {
+    return 1, 1, 1, 0
+  }
+  dr, dg, db, da := cs.subApply(n - 1)
+  a = float64(cs.colors[n].A) / 255
+  r = float64(cs.colors[n].R) / 255 * a + dr * (1 - a)
+  g = float64(cs.colors[n].G) / 255 * a + dg * (1 - a)
+  b = float64(cs.colors[n].B) / 255 * a + db * (1 - a)
+  a = a + (1 - a) * da
+  return
+}
+func (cs *ColorStack) Apply() {
+  gl.Color4d(cs.subApply(len(cs.colors) - 1))
+}
+func (cs *ColorStack) ApplyWithAlpha(alpha float64) {
+  r,g,b,a := cs.subApply(len(cs.colors) - 1)
+  gl.Color4d(r, g, b, a * alpha)
+}
+

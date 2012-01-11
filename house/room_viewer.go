@@ -1,6 +1,7 @@
 package house
 
 import (
+  "haunts/base"
   "glop/gui"
   "glop/gin"
   "glop/sprite"
@@ -458,7 +459,7 @@ func drawPrep() {
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
+func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cstack base.ColorStack) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -509,7 +510,8 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     }
     room.Wall.Data().Bind()
-    gl.Color4d(1, 1, 1, alpha)
+
+    cstack.ApplyWithAlpha(alpha)
     do_right_wall()
 
     gl.PushMatrix()
@@ -525,11 +527,13 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
       }
       tex.X -= dx
       if temp != nil && i == 0 {
-        gl.Color4d(1, 0.7, 0.7, alpha * 0.7)
-      } else {
-        gl.Color4d(1, 1, 1, alpha)
+        cstack.Push(1, 0.7, 0.7, 0.7)
       }
+      cstack.ApplyWithAlpha(alpha)
       tex.Render()
+      if temp != nil && i == 0 {
+        cstack.Pop()
+      }
     }
     gl.PopMatrix()
   }
@@ -566,7 +570,7 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     }
     room.Wall.Data().Bind()
-    gl.Color4d(1, 1, 1, alpha)
+    cstack.ApplyWithAlpha(alpha)
     do_left_wall()
 
     gl.PushMatrix()
@@ -579,11 +583,13 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
       }
       tex.Y -= dy
       if temp != nil && i == 0 {
-        gl.Color4d(1, 0.7, 0.7, 0.7 * alpha)
-      } else {
-        gl.Color4d(1, 1, 1, alpha)
+        cstack.Push(1, 0.7, 0.7, 0.7)
       }
+      cstack.ApplyWithAlpha(alpha)
       tex.Render()
+      if temp != nil && i == 0 {
+        cstack.Pop()
+      }
     }
     gl.PopMatrix()
   }
@@ -594,7 +600,7 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture) {
   do_left_wall()
 }
 
-func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
+func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -619,7 +625,7 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
   room.Floor.Data().Bind()
-  gl.Color4d(1.0, 1.0, 1.0, 1.0)
+  cstack.Apply()
   gl.Begin(gl.QUADS)
     gl.TexCoord2i(0, 0)
     gl.Vertex2i(0, 0)
@@ -643,12 +649,14 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture) {
         tex.Rot -= 3.1415926535 / 2
       }
       if temp != nil && i == 0 {
-        gl.Color4f(1, 0.7, 0.7, 0.7)
-      } else {
-        gl.Color4f(1, 1, 1, 1)
+        cstack.Push(1, 0.7, 0.7, 0.7)
       }
+      cstack.Apply()
       tex.Render()
-    }
+      if temp != nil && i == 0 {
+        cstack.Pop()
+      }
+      }
   }
 }
 
@@ -722,7 +730,7 @@ func (rv *RoomViewer) drawFloor() {
   }
 }
 
-func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furniture, alpha float64) {
+func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furniture, cstack base.ColorStack) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
@@ -751,9 +759,11 @@ func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furn
     rightx,_ := board_to_window(near_x + furn_dx, near_y)
     _,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
-      gl.Color4d(1, 1, 1, 0.5)
-    } else {
-      gl.Color4d(1, 1, 1, alpha)
+      cstack.Push(1, 0, 0, 0.4)
+    }
+    cstack.Apply()
+    if f == temp_furniture {
+      cstack.Pop()
     }
     f.(*Furniture).Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
@@ -778,15 +788,19 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   // gl.Vertex2i(rv.room.Size.Dx+1, -1)
   // gl.End()
 
+  var cstack base.ColorStack
+  cstack.Push(1, 1, 1, 1)
   drawPrep()
-  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture)
-  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture)
+  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, cstack)
+  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture, cstack)
   rv.drawFloor()
-  alpha := 1.0
   if rv.edit_mode == editCells {
-    alpha = 0.1
+    cstack.Pop()
+    cstack.Push(1, 1, 1, 0.1)
+  } else {
+    cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(rv.mat, rv.room.Furniture, rv.Temp.Furniture, alpha)
+  drawFurniture(rv.mat, rv.room.Furniture, rv.Temp.Furniture, cstack)
 
   // for i := range rv.flattened_positions {
   //   v := rv.flattened_positions[i]

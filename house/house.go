@@ -105,6 +105,14 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
 
   hdt.VerticalTable.AddChild(hdt.num_floors)
   hdt.VerticalTable.AddChild(hdt.theme)
+
+  names := GetAllRoomNames()
+  for _,name := range names {
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+      hdt.viewer.Temp.Room = MakeRoom(name)
+    }))
+  }
+
   return &hdt
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
