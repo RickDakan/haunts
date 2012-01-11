@@ -79,13 +79,34 @@ func (hv *HouseViewer) String() string {
   return "house viewer"
 }
 
+func roomOverlapOnce(a,b *Room) bool {
+  x1in := a.X + a.Size.Dx > b.X && a.X + a.Size.Dx <= b.X + b.Size.Dx
+  x2in := b.X + b.Size.Dx > a.X && b.X + b.Size.Dx <= a.X + a.Size.Dx
+  y1in := a.Y + a.Size.Dy > b.Y && a.Y + a.Size.Dy <= b.Y + b.Size.Dy
+  y2in := b.Y + b.Size.Dy > a.Y && b.Y + b.Size.Dy <= a.Y + a.Size.Dy
+  return (x1in || x2in) && (y1in || y2in)
+}
+
+func roomOverlap(a,b *Room) bool {
+  return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
+}
+
+func (f *Floor) canAddRoom(add *Room) bool {
+  for _,room := range f.Rooms {
+    if roomOverlap(room, add) { return false }
+  }
+  return true
+}
+
 func (hv *HouseViewer) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
   hv.Render_region = region
 
+  current_floor := 0
+
   var rooms rectObjectArray
-  for _,room := range hv.house.Floors[0].Rooms {
+  for _,room := range hv.house.Floors[current_floor].Rooms {
     rooms = append(rooms, room)
   }
   if hv.Temp.Room != nil {
@@ -101,7 +122,18 @@ func (hv *HouseViewer) Draw(region gui.Region) {
 
     var cstack base.ColorStack
     if room == hv.Temp.Room {
-      cstack.Push(0.5, 0.5, 1, 0.75)
+      valid := true
+      for _,room := range hv.house.Floors[current_floor].Rooms {
+        if roomOverlap(room, hv.Temp.Room) {
+          valid = false
+          break
+        }
+      }
+      if valid {
+        cstack.Push(0.5, 0.5, 1, 0.75)
+      } else {
+        cstack.Push(1.0, 0.2, 0.2, 0.9)
+      }
     } else {
       cstack.Push(1, 1, 1, 1)
     }

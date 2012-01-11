@@ -146,8 +146,10 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.viewer.Temp.Room != nil {
-      floor.Rooms = append(floor.Rooms, hdt.viewer.Temp.Room)
-      hdt.viewer.Temp.Room = nil
+      if floor.canAddRoom(hdt.viewer.Temp.Room) {
+        floor.Rooms = append(floor.Rooms, hdt.viewer.Temp.Room)
+        hdt.viewer.Temp.Room = nil
+      }
     } else {
       bx,by := hdt.viewer.WindowToBoard(event.Key.Cursor().Point())
       for i := range floor.Rooms {
