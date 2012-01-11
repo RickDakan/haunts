@@ -3,6 +3,8 @@ package house
 import (
   "glop/gui"
   "glop/gin"
+  "haunts/texture"
+  "haunts/base"
 )
 
 type Room struct {
@@ -19,17 +21,65 @@ const (
   FarRight
 )
 
+func MakeDoor(name string) *Door {
+  d := Door{ Defname: name }
+  base.LoadObject("doors", &d)
+  return &d
+}
+
+func GetAllDoorNames() []string {
+  return base.GetAllNamesInRegistry("doors")
+}
+
+func LoadAllDoorsInDir(dir string) {
+  base.RemoveRegistry("doors")
+  base.RegisterRegistry("doors", make(map[string]*doorDef))
+  base.RegisterAllObjectsInDir("doors", dir, ".json", "json")
+}
+
+func (d *Door) Load() {
+  base.LoadObject("doors", d)
+}
+
+type doorDef struct {
+  // Name of this texture as it appears in the editor, should be unique among
+  // all Doors
+  Name string
+
+  // Number of cells wide the door is
+  Width int
+
+  Opened_texture texture.Object  `registry:"autoload"`  
+  Closed_texture texture.Object  `registry:"autoload"`  
+}
+
 type Door struct {
+  Defname string
+  *doorDef
+  DoorInst
+}
+
+func (d *Door) TextureData() *texture.Data {
+  if d.Opened {
+    return d.Opened_texture.Data()
+  }
+  return d.Closed_texture.Data()
+}
+
+type DoorInst struct {
   // Which wall the door is on
   Facing WallFacing
 
   // How far along this wall the door is located
   Pos int
+
+  // Whether or not the door is opened - determines what texture to use
+  Opened bool
 }
 
 type RoomInst struct {
   // The placement of doors in this room
-  Doors []Door
+  Doors []*Door  `registry:"loadfrom-doors"`
 
   // The offset of this room on this floor
   X,Y int
@@ -185,6 +235,24 @@ func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   r1 := MakeRoom("name")
   r2 := MakeRoom("name")
   r3 := MakeRoom("name")
+  door := MakeDoor("Test Door 1")
+  door.Facing = FarLeft
+  door.Pos = 1
+  r1.Doors = append(r1.Doors, door)
+  door = MakeDoor("Test Door 2")
+  door.Facing = FarLeft
+  door.Pos = 3
+  door.Opened = true
+  r1.Doors = append(r1.Doors, door)
+  door = MakeDoor("Test Door 1")
+  door.Facing = FarLeft
+  door.Pos = 6
+  door.Opened = true
+  r1.Doors = append(r1.Doors, door)
+  door = MakeDoor("Test Door 2")
+  door.Facing = FarLeft
+  door.Pos = 9
+  r1.Doors = append(r1.Doors, door)
   r1.X,r1.Y = 0,0
   r2.X,r2.Y = 20,5
   r3.X,r3.Y = 0,15

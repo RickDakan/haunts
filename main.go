@@ -27,6 +27,7 @@ func loadAllRegistries() {
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
+  house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
 }
 
 func init() {

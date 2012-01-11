@@ -137,7 +137,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       cstack.Push(1, 1, 1, 1)
     }
-    drawWall(room.roomDef, m_floor, m_left, m_right, nil, cstack)
+    drawWall(room, m_floor, m_left, m_right, nil, cstack)
     drawFloor(room.roomDef, m_floor, nil, cstack)
     drawFurniture(m_floor, room.roomDef.Furniture, nil, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)

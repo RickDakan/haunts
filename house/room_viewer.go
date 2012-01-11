@@ -459,7 +459,7 @@ func drawPrep() {
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cstack base.ColorStack) {
+func drawWall(room *Room, floor,left,right mathgl.Mat4, temp *WallTexture, cstack base.ColorStack) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -493,7 +493,26 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
     gl.End()
   }
 
-  alpha := 0.3
+  do_right_doors := func(opened bool) {
+    for _,door := range room.Doors {
+      if door.Facing != FarRight { continue }
+      if door.Opened != opened { continue }
+      door.TextureData().Bind()
+      gl.Begin(gl.QUADS)
+      height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
+      gl.TexCoord2f(1, 0)
+      gl.Vertex3d(float64(room.Size.Dx), float64(door.Pos), 0)
+      gl.TexCoord2f(1, -1)
+      gl.Vertex3d(float64(room.Size.Dx), float64(door.Pos), -height)
+      gl.TexCoord2f(0, -1)
+      gl.Vertex3d(float64(room.Size.Dx), float64(door.Pos + door.Width), -height)
+      gl.TexCoord2f(0, 0)
+      gl.Vertex3d(float64(room.Size.Dx), float64(door.Pos + door.Width), 0)
+      gl.End()
+    }
+  }
+
+  alpha := 0.8
 
   // Right wall
   gl.StencilFunc(gl.NOTEQUAL, 8, 7)
@@ -501,7 +520,16 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
   gl.Color4d(0, 0, 0, 0)
   do_right_wall()
   gl.Enable(gl.TEXTURE_2D)
+  cstack.ApplyWithAlpha(alpha)
+  gl.StencilFunc(gl.EQUAL, 8, 15)
+  gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
+  do_right_doors(true)
+  cstack.ApplyWithAlpha(1.0)
+  gl.StencilFunc(gl.EQUAL, 15, 15)
+  gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
+  do_right_doors(true)
   for _,alpha := range []float64{ alpha, 1.0 } {
+    cstack.ApplyWithAlpha(alpha)
     if alpha == 1.0 {
       gl.StencilFunc(gl.EQUAL, 15, 15)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
@@ -511,7 +539,6 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
     }
     room.Wall.Data().Bind()
 
-    cstack.ApplyWithAlpha(alpha)
     do_right_wall()
 
     gl.PushMatrix()
@@ -537,6 +564,12 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
     }
     gl.PopMatrix()
   }
+  cstack.ApplyWithAlpha(alpha)
+  gl.StencilFunc(gl.EQUAL, 8, 15)
+  do_right_doors(false)
+  cstack.ApplyWithAlpha(1.0)
+  gl.StencilFunc(gl.EQUAL, 15, 15)
+  do_right_doors(false)
   // Go back over the area we just drew on and replace it with all b0001
   gl.StencilFunc(gl.ALWAYS, 1, 1)
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
@@ -556,11 +589,39 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
       gl.Vertex3i(0, room.Size.Dy, 0)
     gl.End()
   }
+
+  do_left_doors := func(opened bool) {
+    for _,door := range room.Doors {
+      if door.Facing != FarLeft { continue }
+      if door.Opened != opened { continue }
+      door.TextureData().Bind()
+      gl.Begin(gl.QUADS)
+      height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
+      gl.TexCoord2f(1, 0)
+      gl.Vertex3d(float64(door.Pos), float64(room.Size.Dy), 0)
+      gl.TexCoord2f(1, -1)
+      gl.Vertex3d(float64(door.Pos), float64(room.Size.Dy), -height)
+      gl.TexCoord2f(0, -1)
+      gl.Vertex3d(float64(door.Pos + door.Width), float64(room.Size.Dy), -height)
+      gl.TexCoord2f(0, 0)
+      gl.Vertex3d(float64(door.Pos + door.Width), float64(room.Size.Dy), 0)
+      gl.End()
+    }
+  }
+
   gl.StencilFunc(gl.NOTEQUAL, 8, 7)
   gl.StencilOp(gl.DECR_WRAP, gl.REPLACE, gl.REPLACE)
   gl.Color4d(0, 0, 0, 0)
   do_left_wall()
   gl.Enable(gl.TEXTURE_2D)
+  cstack.ApplyWithAlpha(alpha)
+  gl.StencilFunc(gl.EQUAL, 8, 15)
+  gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
+  do_left_doors(true)
+  cstack.ApplyWithAlpha(1.0)
+  gl.StencilFunc(gl.EQUAL, 15, 15)
+  gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
+  do_left_doors(true)
   for _,alpha := range []float64{ alpha, 1.0 } {
     if alpha == 1.0 {
       gl.StencilFunc(gl.EQUAL, 15, 15)
@@ -593,6 +654,12 @@ func drawWall(room *roomDef, floor,left,right mathgl.Mat4, temp *WallTexture, cs
     }
     gl.PopMatrix()
   }
+  cstack.ApplyWithAlpha(alpha)
+  gl.StencilFunc(gl.EQUAL, 8, 15)
+  do_left_doors(false)
+  cstack.ApplyWithAlpha(1.0)
+  gl.StencilFunc(gl.EQUAL, 15, 15)
+  do_left_doors(false)
   // Go back over the area we just drew on and replace it with all b0010
   gl.StencilFunc(gl.ALWAYS, 2, 2)
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
@@ -791,7 +858,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   var cstack base.ColorStack
   cstack.Push(1, 1, 1, 1)
   drawPrep()
-  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, cstack)
+  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, cstack)
   drawFloor(rv.room, rv.mat, rv.Temp.WallTexture, cstack)
   rv.drawFloor()
   if rv.edit_mode == editCells {
