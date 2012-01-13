@@ -160,6 +160,10 @@ func main() {
           {
             "House Editor",
             func() house.Editor {
+              path := base.GetStoreVal("last house path")
+              if path != "" {
+                return house.MakeHouseEditorPanel(house.LoadHouseDef(path), datadir)
+              }
               return house.MakeHouseEditorPanel(house.MakeHouseDef(), datadir)
             },
           },

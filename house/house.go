@@ -6,6 +6,7 @@ import (
   "haunts/texture"
   "haunts/base"
   "glop/util/algorithm"
+  "path/filepath"
 )
 
 type Room struct {
@@ -217,6 +218,7 @@ type houseDef struct {
 
 func MakeHouseDef() *houseDef {
   var h houseDef
+  h.Floors = append(h.Floors, &Floor{})
   return &h
 }
 
@@ -275,8 +277,16 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
   for _,name := range names {
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
       hdt.viewer.Temp.Room = MakeRoom(name)
+      hdt.drag_anchor.x = float32(hdt.viewer.Temp.Room.Size.Dx / 2)
+      hdt.drag_anchor.y = float32(hdt.viewer.Temp.Room.Size.Dy / 2)
     }))
   }
+
+  hdt.VerticalTable.AddChild(gui.MakeButton("standard", "save", 300, 1, 1, 1, 1, func(int64) {
+    path := filepath.Join(datadir, "houses", "foo.house")
+    hdt.house.Save(path)
+    base.SetStoreVal("last house path", path)
+  }))
 
   return &hdt
 }
@@ -374,12 +384,6 @@ func makeHouseDoorTab(house *houseDef, viewer *HouseViewer) *houseDoorTab {
   return &hdt
 }
 func (hdt *houseDoorTab) Think(ui *gui.Gui, t int64) {
-  if hdt.viewer.Temp.Room != nil {
-    mx,my := gin.In().GetCursor("Mouse").Point()
-    bx,by := hdt.viewer.WindowToBoard(mx, my)
-    hdt.viewer.Temp.Room.X = int(bx - hdt.drag_anchor.x)
-    hdt.viewer.Temp.Room.Y = int(by - hdt.drag_anchor.y)
-  }
 }
 func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if hdt.VerticalTable.Respond(ui, group) {
@@ -412,12 +416,14 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     } else {
       bx,by := hdt.viewer.WindowToBoard(cursor.Point())
       r,d := hdt.viewer.FindClosestExistingDoor(bx, by)
-      r.Doors = algorithm.Choose(r.Doors, func(a interface{}) bool {
-        return a.(*Door) != d
-      }).([]*Door)
-      hdt.viewer.Temp.Door_room = r
-      hdt.viewer.Temp.Door_info.Door = d
-      floor.removeInvalidDoors()
+      if r != nil {
+        r.Doors = algorithm.Choose(r.Doors, func(a interface{}) bool {
+          return a.(*Door) != d
+        }).([]*Door)
+        hdt.viewer.Temp.Door_room = r
+        hdt.viewer.Temp.Door_info.Door = d
+        floor.removeInvalidDoors()
+      }
     }
     return true
       // if floor.canAddDoor(hdt.viewer.Temp.Door) {
@@ -448,19 +454,22 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 func (hdt *houseDoorTab) Collapse() {}
 func (hdt *houseDoorTab) Expand() {}
 
+func (h *houseDef) Save(path string) {
+  base.SaveJson(path, h)
+}
+
+func LoadHouseDef(path string) *houseDef {
+  var house houseDef
+  base.LoadJson(path, &house)
+  return &house
+}
+
 func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
   var he HouseEditor
   he.HorizontalTable = gui.MakeHorizontalTable()
   he.viewer = MakeHouseViewer(house, 62)
   he.HorizontalTable.AddChild(he.viewer)
 
-  r1 := MakeRoom("name")
-  r2 := MakeRoom("name")
-  r3 := MakeRoom("name")
-  r1.X,r1.Y = 0,0
-  r2.X,r2.Y = 20,5
-  r3.X,r3.Y = 0,15
-  house.Floors = append(house.Floors, &Floor{ Rooms: []*Room{ r1, r2, r3 }})
   he.widgets = append(he.widgets, makeHouseDataTab(house, he.viewer))
   he.widgets = append(he.widgets, makeHouseDoorTab(house, he.viewer))
   var tabs []gui.Widget
