@@ -1,9 +1,10 @@
 {
-  "zoom"           : "r",
-  "drag"           : "r",
-  "rotate left"    : "w",
-  "rotate right"   : "e",
-  "load"           : "gui+l",
-  "quit"           : "gui+q",
-  "editor"  : "gui+e"
+  "zoom"         : "r",
+  "drag"         : "r",
+  "rotate left"  : "w",
+  "rotate right" : "e",
+  "load"         : "gui+l",
+  "save"         : "gui+s",
+  "quit"         : "gui+q",
+  "editor"       : "gui+e"
 }

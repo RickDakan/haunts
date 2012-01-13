@@ -121,6 +121,8 @@ func (w *WallPanel) Collapse() {
 }
 
 func (w *WallPanel) Expand() {
+}
 
+func (w *WallPanel) Reload() {
 }
 

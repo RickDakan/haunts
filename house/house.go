@@ -25,7 +25,7 @@ const (
 
 func MakeDoor(name string) *Door {
   d := Door{ Defname: name }
-  base.LoadObject("doors", &d)
+  base.GetObject("doors", &d)
   return &d
 }
 
@@ -40,7 +40,7 @@ func LoadAllDoorsInDir(dir string) {
 }
 
 func (d *Door) Load() {
-  base.LoadObject("doors", d)
+  base.GetObject("doors", d)
 }
 
 type doorDef struct {
@@ -351,6 +351,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 func (hdt *houseDataTab) Collapse() {}
 func (hdt *houseDataTab) Expand() {}
+func (hdt *houseDataTab) Reload() {}
 
 type houseDoorTab struct {
   *gui.VerticalTable
@@ -453,6 +454,7 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 func (hdt *houseDoorTab) Collapse() {}
 func (hdt *houseDoorTab) Expand() {}
+func (hdt *houseDoorTab) Reload() {}
 
 func (h *houseDef) Save(path string) {
   base.SaveJson(path, h)
@@ -486,4 +488,12 @@ func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
 // need to know where the user clicks.
 func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return he.widgets[he.tab.SelectedTab()].Respond(ui, group)
+}
+
+func (he *HouseEditor) Load(path string) error {
+  return nil
+}
+
+func (he *HouseEditor) Save() (string, error) {
+  return "", nil
 }

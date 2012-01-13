@@ -22,7 +22,7 @@ func LoadAllRoomsInDir(dir string) {
 
 func MakeRoom(name string) *Room {
   r := Room{ Defname: name }
-  base.LoadObject("rooms", &r)
+  base.GetObject("rooms", &r)
   return &r
 }
 
@@ -90,14 +90,6 @@ type roomDef struct {
 
 func (room *roomDef) Dims() (dx,dy int) {
   return room.Size.Dx, room.Size.Dy
-}
-
-func MakeRoomDef() *roomDef {
-  var r roomDef
-  r.Themes = make(map[string]bool)
-  r.Sizes = make(map[string]bool)
-  r.Decor = make(map[string]bool)
-  return &r
 }
 
 func (r *roomDef) Resize(size RoomSize) {
@@ -185,7 +177,7 @@ func (room *roomDef) ensureRelative(prefix, image_path string, t int64) (string,
 // 1. Gob the file to datadir/rooms/<name>.room
 // 2. If the wall path is not prefixed by datadir/rooms/walls, copy to datadir/rooms/walls/<name.wall - then fix the wall path
 // 3. Same for floor path
-func (room *roomDef) Save(datadir string, t int64) string {
+func (room *roomDef) SaveOLD(t int64) string {
   failed := func(err error) bool {
     // TODO: Log an error
     // TODO: Also save things *somewhere* so data isn't completely lost
@@ -262,6 +254,7 @@ func LoadRoomDef(path string) *roomDef {
 
 type tabWidget interface {
   Respond(*gui.Gui, gui.EventGroup) bool
+  Reload()
   Collapse()
   Expand()
 }
@@ -271,7 +264,13 @@ type RoomEditorPanel struct {
   tab *gui.TabFrame
   widgets []tabWidget
 
-  room   *roomDef
+  panels struct {
+    furniture *FurniturePanel
+    wall      *WallPanel
+    cell      *CellPanel
+  }
+
+  room   roomDef
   viewer *RoomViewer
 }
 
@@ -305,44 +304,61 @@ type Viewer interface {
 
 type Editor interface {
   gui.Widget
+
+  Save() (string, error)
+  Load(path string) error
+
   GetViewer() Viewer
 
   // TODO: Deprecate when tabs handle the switching themselves
   SelectTab(int)
 }
 
-func MakeRoomEditorPanel(room *roomDef, datadir string) Editor {
+func MakeRoomEditorPanel() Editor {
   var rep RoomEditorPanel
 
-  rep.room = room
   rep.HorizontalTable = gui.MakeHorizontalTable()
-  rep.viewer = MakeRoomViewer(room, 65)
-  for _,wt := range room.WallTextures {
-    rep.room.WallTextures = append(rep.room.WallTextures, wt)
-  }
-
+  rep.viewer = MakeRoomViewer(&rep.room, 65)
   rep.AddChild(rep.viewer)
 
 
   var tabs []gui.Widget
 
-  furniture := makeFurniturePanel(room, rep.viewer, datadir)
-  tabs = append(tabs, furniture)
-  rep.widgets = append(rep.widgets, furniture)
+  rep.panels.furniture = makeFurniturePanel(&rep.room, rep.viewer)
+  tabs = append(tabs, rep.panels.furniture)
+  rep.widgets = append(rep.widgets, rep.panels.furniture)
 
-  wall := MakeWallPanel(rep.room, rep.viewer)
-  tabs = append(tabs, wall)
-  rep.widgets = append(rep.widgets, wall)
+  rep.panels.wall = MakeWallPanel(&rep.room, rep.viewer)
+  tabs = append(tabs, rep.panels.wall)
+  rep.widgets = append(rep.widgets, rep.panels.wall)
 
-  cells := MakeCellPanel(rep.room, rep.viewer)
-  tabs = append(tabs, cells)
-  rep.widgets = append(rep.widgets, cells)
+  rep.panels.cell = MakeCellPanel(&rep.room, rep.viewer)
+  tabs = append(tabs, rep.panels.cell)
+  rep.widgets = append(rep.widgets, rep.panels.cell)
 
   rep.tab = gui.MakeTabFrame(tabs)
   rep.AddChild(rep.tab)
   rep.viewer.SetEditMode(editFurniture)
 
   return &rep
+}
+
+func (rep *RoomEditorPanel) Load(path string) error {
+  var room roomDef
+  err := base.LoadAndProcessObject(path, "json", &room)
+  if err == nil {
+    rep.room = room
+    for _,tab := range rep.widgets {
+      tab.Reload()
+    }
+  }
+  return err
+}
+
+func (rep *RoomEditorPanel) Save() (string, error) {
+  path := filepath.Join(datadir, "rooms", rep.room.Name + ".room")
+  err := base.SaveJson(path, rep.room)
+  return path, err
 }
 
 type selectMode int

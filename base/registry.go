@@ -109,7 +109,7 @@ func RegisterObject(registry_name string, object interface{}) {
 // called Defname of type string.  This name will be used to find the def in the
 // registry.  The object should also embed a field of this type which the value
 // in the registry will be assigned to.
-func LoadObject(registry_name string, object interface{})  {
+func GetObject(registry_name string, object interface{})  {
   reg,ok := registry_registry[registry_name]
   if !ok {
     panic(fmt.Sprintf("Tried to load an object from an unknown registry '%s'", registry_name))
@@ -151,6 +151,28 @@ func GetAllNamesInRegistry(registry_name string) []string {
   return names
 }
 
+
+// Processes an object as it is normally processed when registered through
+// RegisterAllObjectsInDir().  Does NOT register the object in any registry.
+func LoadAndProcessObject(path,format string, target interface{}) error {
+  var err error
+  switch format {
+  case "json":
+    err = LoadJson(path, target)
+
+  case "gob":
+    err = LoadGob(path, target)
+
+  default:
+    panic(fmt.Sprintf("Can only load with format 'json' and 'gob', not '%s'", format))
+  }
+  if err != nil {
+    return err
+  }
+  processObject(path, reflect.ValueOf(target), "")
+  return  nil
+}
+
 // Recursively decends through a value's type hierarchy and applies processing
 // according to any tags that have been set on those types
 func processObject(dir string, val reflect.Value, tag string) {
@@ -165,7 +187,7 @@ func processObject(dir string, val reflect.Value, tag string) {
       loadfrom_tag := "loadfrom-"
       if strings.HasPrefix(tag, loadfrom_tag) {
         source := tag[len(loadfrom_tag) : ]
-        LoadObject(source, val.Interface())
+        GetObject(source, val.Interface())
       }
       processObject(dir, val.Elem(), tag)
     }
@@ -220,21 +242,10 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
     }
     if !info.IsDir() {
       if strings.HasSuffix(info.Name(), suffix) {
-        var err error
         target := reflect.New(reg.Type().Elem().Elem())
-        switch format {
-        case "json":
-          err = LoadJson(path, target.Interface())
-
-        case "gob":
-          err = LoadGob(path, target.Interface())
-
-        default:
-          panic(fmt.Sprintf("Can only load with format 'json' and 'gob', not '%s'", format))
-        }
+        err = LoadAndProcessObject(path, format, target.Interface())
         if err == nil {
           RegisterObject(registry_name, target.Interface())
-          processObject(path, target, "")
         }
       }
     }

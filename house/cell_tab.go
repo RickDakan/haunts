@@ -229,6 +229,9 @@ func (w *CellPanel) Think(ui *gui.Gui, t int64) {
   w.VerticalTable.Think(ui, t)
 }
 
+func (w *CellPanel) Reload() {
+}
+
 func (w *CellPanel) Collapse() {
   w.select_mode = modeNoSelect
 }

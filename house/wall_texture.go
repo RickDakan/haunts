@@ -24,7 +24,7 @@ func LoadAllWallTexturesInDir(dir string) {
 }
 
 func (wt *WallTexture) Load() {
-  base.LoadObject("wall_textures", wt)
+  base.GetObject("wall_textures", wt)
 }
 
 type WallTexture struct {

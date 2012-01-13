@@ -30,7 +30,7 @@ type Furniture struct {
 }
 
 func (f *Furniture) Load() {
-  base.LoadObject("furniture", f)
+  base.GetObject("furniture", f)
 }
 
 // Changes the position of this object such that it fits within the specified

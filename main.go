@@ -79,13 +79,11 @@ func main() {
   loadAllRegistries()
 
   var editor house.Editor
+  editor = house.MakeRoomEditorPanel()
   path := base.GetStoreVal("last room path")
   if path != "" {
-    editor = house.MakeRoomEditorPanel(house.LoadRoomDef(path), datadir)
-  } else {
-    editor = house.MakeRoomEditorPanel(house.MakeRoomDef(), datadir)
+    editor.Load(path)
   }
-  viewer := editor.GetViewer()
   ui.AddChild(editor)
 
   sys.Think()
@@ -125,7 +123,7 @@ func main() {
       }
       if zooming {
         zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
-        viewer.Zoom(zoom / 100)
+        editor.GetViewer().Zoom(zoom / 100)
       }
 
       if key_map["drag"].IsDown() != dragging {
@@ -135,7 +133,7 @@ func main() {
         mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
         my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
         if mx != 0 || my != 0 {
-          viewer.Drag(-mx, my)
+          editor.GetViewer().Drag(-mx, my)
         }
       }
 
@@ -152,9 +150,9 @@ func main() {
             func() house.Editor {
               path := base.GetStoreVal("last room path")
               if path != "" {
-                return house.MakeRoomEditorPanel(house.LoadRoomDef(path), datadir)
+                return house.MakeRoomEditorPanel()
               }
-              return house.MakeRoomEditorPanel(house.MakeRoomDef(), datadir)
+              return house.MakeRoomEditorPanel()
             },
           },
           {
@@ -176,7 +174,6 @@ func main() {
             ui.RemoveChild(editor)
             loadAllRegistries()
             editor = f.f()
-            viewer = editor.GetViewer()
             ui.AddChild(editor)
           }))
         }
@@ -188,23 +185,23 @@ func main() {
         }
       }
 
+      if key_map["save"].FramePressCount() > 0 && chooser == nil {
+        path,err := editor.Save()
+        if path != "" && err == nil {
+          base.SetStoreVal("last room path", path)
+        }
+      }
+
       if key_map["load"].FramePressCount() > 0 && chooser == nil {
         callback := func(path string, err error) {
-          if err != nil && filepath.Ext(path) == ".room" {
-            // Load room
-          }
           ui.DropFocus()
           ui.RemoveChild(anchor)
           chooser = nil
           anchor = nil
-
-          new_room := house.LoadRoomDef(path)
-          if new_room != nil {
+          err = editor.Load(path)
+          if err != nil {
+          } else {
             base.SetStoreVal("last room path", path)
-            ui.RemoveChild(editor)
-            editor = house.MakeRoomEditorPanel(new_room, datadir)
-            viewer = editor.GetViewer()
-            ui.AddChild(editor)
           }
         }
         chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(".room"))

@@ -4,8 +4,6 @@ import (
   "glop/util/algorithm"
   "glop/gui"
   "glop/gin"
-  "path/filepath"
-  "time"
   "haunts/base"
 )
 
@@ -48,7 +46,7 @@ func (w *FurniturePanel) Expand() {
   w.RoomViewer.SetEditMode(editFurniture)
 }
 
-func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *FurniturePanel {
+func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
   var fp FurniturePanel
   fp.Room = room
   fp.RoomViewer = viewer
@@ -103,21 +101,6 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer, datadir string) *Furn
       fp.drag_anchor.y = float32(dy - 1) / 2
     }))
   }
-  fp.VerticalTable.AddChild(gui.MakeButton("standard", "Save!", 300, 1, 1, 1, 1, func(t int64) {
-    target_path := room.Save(datadir, time.Now().UnixNano())
-    if target_path != "" {
-      base.SetStoreVal("last room path", target_path)
-      // The paths can change when we save them so we should update the widgets
-      if !filepath.IsAbs(room.Floor.Path) {
-        room.Floor.Path = filepath.Join(target_path, room.Floor.Path)
-        fp.floor_path.SetPath(room.Floor.Path)
-      }
-      if !filepath.IsAbs(room.Wall.Path) {
-        room.Wall.Path = filepath.Join(target_path, room.Wall.Path)
-        fp.wall_path.SetPath(room.Wall.Path)
-      }
-    }
-  }))
   return &fp
 }
 
@@ -175,6 +158,18 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 
+func (w *FurniturePanel) Reload() {
+  for i := range tags.RoomSizes {
+    if tags.RoomSizes[i].String() == w.Room.Size.String() {
+      w.room_size.SetSelectedIndex(i)
+      break
+    }
+  }
+  w.name.SetText(w.Room.Name)
+  w.floor_path.SetPath(w.Room.Floor.Path)
+  w.wall_path.SetPath(w.Room.Wall.Path)
+}
+
 func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
   if w.RoomViewer.Temp.Furniture != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
@@ -182,11 +177,10 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
     w.RoomViewer.Temp.Furniture.X = int(bx - w.drag_anchor.x)
     w.RoomViewer.Temp.Furniture.Y = int(by - w.drag_anchor.y)
   }
+
   w.VerticalTable.Think(ui, t)
-  w.Room.Name = w.name.GetText()
-
   w.Room.Resize(tags.RoomSizes[w.room_size.GetComboedIndex()])
-
+  w.Room.Name = w.name.GetText()
   w.Room.Floor.Path = w.floor_path.GetPath()
   w.Room.Wall.Path = w.wall_path.GetPath()
 
