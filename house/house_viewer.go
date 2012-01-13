@@ -7,6 +7,15 @@ import (
   "haunts/base"
 )
 
+
+// This structure is used for temporary doors (that are being dragged around in
+// the editor) since the normal Door struct only handles one door out of a pair
+// and doesn't know what rooms it connects.
+type doorInfo struct {
+  Door  *Door
+  Valid bool
+}
+
 type HouseViewer struct {
   gui.Childless
   gui.EmbeddedWidget
@@ -22,6 +31,10 @@ type HouseViewer struct {
 
   Temp struct {
     Room *Room
+
+    // If we have a temporary door then this is the room it is attached to
+    Door_room *Room
+    Door_info doorInfo
   }
 }
 
@@ -91,11 +104,70 @@ func roomOverlap(a,b *Room) bool {
   return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
 }
 
-func (f *Floor) canAddRoom(add *Room) bool {
-  for _,room := range f.Rooms {
-    if roomOverlap(room, add) { return false }
+func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, DoorInst) {
+  current_floor := 0
+  best := 1.0e9  // If this is unsafe then the house is larger than earth
+  var best_room *Room
+  var best_door DoorInst
+  clamp_int := func(n, min, max int) int {
+    if n < min { return min }
+    if n > max { return max }
+    return n
   }
-  return true
+  for _,room := range hv.house.Floors[current_floor].Rooms {
+    fl := math.Abs(float64(by) - float64(room.Y + room.Size.Dy))
+    fr := math.Abs(float64(bx) - float64(room.X + room.Size.Dx))
+    if bx < float32(room.X) {
+      fl += float64(room.X) - float64(bx)
+    }
+    if bx > float32(room.X + room.Size.Dx) {
+      fl += float64(bx) - float64(room.X + room.Size.Dx)
+    }
+    if by < float32(room.Y) {
+      fr += float64(room.Y) - float64(by)
+    }
+    if by > float32(room.Y + room.Size.Dy) {
+      fr += float64(by) - float64(room.Y + room.Size.Dy)
+    }
+    if best <= fl && best <= fr { continue }
+    best_room = room
+    switch {
+      case fl < fr:
+        best = fl
+        best_door.Facing = FarLeft
+        best_door.Pos = clamp_int(int(bx - float32(room.X) - float32(ddef.Width) / 2), 0, room.Size.Dx - ddef.Width)
+
+//      case fr < fl:  this case must be true, so we just call it default here
+      default:
+        best = fr
+        best_door.Facing = FarRight
+        best_door.Pos = clamp_int(int(by - float32(room.Y) - float32(ddef.Width) / 2), 0, room.Size.Dy - ddef.Width)
+    }
+  }
+  return best_room, best_door
+}
+
+func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {
+  current_floor := 0
+  for _,room := range hv.house.Floors[current_floor].Rooms {
+    for _,door := range room.Doors {
+      if door.Facing != FarLeft && door.Facing != FarRight { continue }
+      var vx,vy float32
+      if door.Facing == FarLeft {
+        vx = float32(room.X + door.Pos) + float32(door.Width) / 2
+        vy = float32(room.Y + room.Size.Dy)
+      } else {
+        // door.Facing == FarRight
+        vx = float32(room.X + room.Size.Dx)
+        vy = float32(room.Y + door.Pos) + float32(door.Width) / 2
+      }
+      dsq := (vx - bx) * (vx - bx) + (vy - by) * (vy - by)
+      if dsq <= float32(door.Width * door.Width) {
+        return room, door
+      }
+    }
+  }
+  return nil, nil
 }
 
 func (hv *HouseViewer) Draw(region gui.Region) {
@@ -137,7 +209,12 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       cstack.Push(1, 1, 1, 1)
     }
-    drawWall(room, m_floor, m_left, m_right, nil, cstack)
+    if room == hv.Temp.Door_room && hv.Temp.Door_info.Door != nil {
+      hv.Temp.Door_info.Valid = hv.house.Floors[current_floor].canAddDoor(room, hv.Temp.Door_info.Door)
+      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack)
+    } else {
+      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack)
+    }
     drawFloor(room.roomDef, m_floor, nil, cstack)
     drawFurniture(m_floor, room.roomDef.Furniture, nil, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
