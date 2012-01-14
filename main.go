@@ -78,14 +78,20 @@ func main() {
   }
   loadAllRegistries()
 
-  var editor house.Editor
-  editor = house.MakeRoomEditorPanel()
-  path := base.GetStoreVal("last room path")
-  if path != "" {
-    editor.Load(path)
+  editors := map[string]house.Editor {
+    "room" : house.MakeRoomEditorPanel(),
+    "house" : house.MakeHouseEditorPanel(),
   }
-  ui.AddChild(editor)
+  for name,editor := range editors {
+    path := base.GetStoreVal(fmt.Sprintf("last %s path", name))
+    if path != "" {
+      editor.Load(path)
+    }
+  }
 
+  editor := editors["room"]
+
+  ui.AddChild(editor)
   sys.Think()
   render.Queue(func() {
     ui.Draw()
@@ -142,46 +148,13 @@ func main() {
         sys.HideCursor(hiding)
       }
 
-      if key_map["editor"].FramePressCount() > 0 && ui.FocusWidget() == nil {
-        vtable := gui.MakeVerticalTable()
-        funcs := []struct{ text string; f func() house.Editor } {
-          {
-            "Room Editor",
-            func() house.Editor {
-              path := base.GetStoreVal("last room path")
-              if path != "" {
-                return house.MakeRoomEditorPanel()
-              }
-              return house.MakeRoomEditorPanel()
-            },
-          },
-          {
-            "House Editor",
-            func() house.Editor {
-              path := base.GetStoreVal("last house path")
-              if path != "" {
-                return house.MakeHouseEditorPanel(house.LoadHouseDef(path), datadir)
-              }
-              return house.MakeHouseEditorPanel(house.MakeHouseDef(), datadir)
-            },
-          },
-        }
-        for _,temp_f := range funcs {
-          f := temp_f
-          vtable.AddChild(gui.MakeButton("standard", f.text, 300, 1, 1, 1, 1, func(int64) {
-            ui.RemoveChild(vtable)
-            ui.DropFocus()
-            ui.RemoveChild(editor)
-            loadAllRegistries()
-            editor = f.f()
-            ui.AddChild(editor)
-          }))
-        }
-        ui.AddChild(vtable)
-        ui.TakeFocus(vtable)
-        cancel = func() {
-          ui.RemoveChild(vtable)
-          ui.DropFocus()
+      for name := range editors {
+        if key_map[fmt.Sprintf("%s editor", name)].FramePressCount() > 0 && ui.FocusWidget() == nil {
+          ui.RemoveChild(editor)
+          editor = editors[name]
+          loadAllRegistries()
+          editor.Reload()
+          ui.AddChild(editor)
         }
       }
 
@@ -211,12 +184,22 @@ func main() {
         ui.TakeFocus(chooser)
       }
 
-      for i := 1; i <= 9; i++ {
-        if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
-          editor.SelectTab(i - 1)
+
+      // Don't select tabs in an editor if we're doing some other sort of command
+      ok_to_select := true
+      for _,v := range key_map {
+        if v.FramePressCount() > 0 {
+          ok_to_select = false
+          break
         }
       }
-
+      if ok_to_select {
+        for i := 1; i <= 9; i++ {
+          if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
+            editor.SelectTab(i - 1)
+          }
+        }
+      }
     }
   }
 }

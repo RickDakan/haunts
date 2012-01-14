@@ -235,23 +235,6 @@ func (room *roomDef) SaveOLD(t int64) string {
   return target_path
 }
 
-func LoadRoomDef(path string) *roomDef {
-  var room roomDef
-  err := base.LoadJson(path, &room)
-  if err != nil {
-    return nil
-  }
-  room.Floor.Path = filepath.Clean(filepath.Join(path, room.Floor.Path))
-  room.Wall.Path = filepath.Clean(filepath.Join(path, room.Wall.Path))
-  for i := range room.Furniture {
-    room.Furniture[i].Load()
-  }
-  for i := range room.WallTextures {
-    room.WallTextures[i].Load()
-  }
-  return &room
-}
-
 type tabWidget interface {
   Respond(*gui.Gui, gui.EventGroup) bool
   Reload()
@@ -308,6 +291,11 @@ type Editor interface {
   Save() (string, error)
   Load(path string) error
 
+  // Called when we tab into the editor from another editor.  It's possible that
+  // a portion of what is being edited in the new editor was changed in another
+  // editor, so we reload everything so we can see the up-to-date version.
+  Reload()
+
   GetViewer() Viewer
 
   // TODO: Deprecate when tabs handle the switching themselves
@@ -359,6 +347,9 @@ func (rep *RoomEditorPanel) Save() (string, error) {
   path := filepath.Join(datadir, "rooms", rep.room.Name + ".room")
   err := base.SaveJson(path, rep.room)
   return path, err
+}
+
+func (rep *RoomEditorPanel) Reload() {
 }
 
 type selectMode int

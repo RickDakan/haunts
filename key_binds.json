@@ -6,5 +6,6 @@
   "load"         : "gui+l",
   "save"         : "gui+s",
   "quit"         : "gui+q",
-  "editor"       : "gui+e"
+  "room editor"  : "gui+1",
+  "house editor" : "gui+2"
 }

@@ -227,7 +227,7 @@ type HouseEditor struct {
   tab *gui.TabFrame
   widgets []tabWidget
 
-  house  *houseDef
+  house  houseDef
   viewer *HouseViewer
 }
 
@@ -275,8 +275,9 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
 
   names := GetAllRoomNames()
   for _,name := range names {
+    n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      hdt.viewer.Temp.Room = MakeRoom(name)
+      hdt.viewer.Temp.Room = MakeRoom(n)
       hdt.drag_anchor.x = float32(hdt.viewer.Temp.Room.Size.Dx / 2)
       hdt.drag_anchor.y = float32(hdt.viewer.Temp.Room.Size.Dy / 2)
     }))
@@ -318,6 +319,12 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
+  if hdt.current_floor != 0 {
+    println("Current floor: ", hdt.current_floor)
+  }
+  if len(hdt.house.Floors) == 0 {
+    println("NO FLOORS!")
+  }
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.viewer.Temp.Room != nil {
@@ -466,14 +473,14 @@ func LoadHouseDef(path string) *houseDef {
   return &house
 }
 
-func MakeHouseEditorPanel(house *houseDef, datadir string) Editor {
+func MakeHouseEditorPanel() Editor {
   var he HouseEditor
   he.HorizontalTable = gui.MakeHorizontalTable()
-  he.viewer = MakeHouseViewer(house, 62)
+  he.viewer = MakeHouseViewer(&he.house, 62)
   he.HorizontalTable.AddChild(he.viewer)
 
-  he.widgets = append(he.widgets, makeHouseDataTab(house, he.viewer))
-  he.widgets = append(he.widgets, makeHouseDoorTab(house, he.viewer))
+  he.widgets = append(he.widgets, makeHouseDataTab(&he.house, he.viewer))
+  he.widgets = append(he.widgets, makeHouseDoorTab(&he.house, he.viewer))
   var tabs []gui.Widget
   for _,w := range he.widgets {
     tabs = append(tabs, w.(gui.Widget))
@@ -496,4 +503,14 @@ func (he *HouseEditor) Load(path string) error {
 
 func (he *HouseEditor) Save() (string, error) {
   return "", nil
+}
+
+func (he *HouseEditor) Reload() {
+  for _,floor := range he.house.Floors {
+    for i := range floor.Rooms {
+      inst := floor.Rooms[i].RoomInst
+      floor.Rooms[i] = MakeRoom(floor.Rooms[i].Defname)
+      floor.Rooms[i].RoomInst = inst
+    }
+  }
 }
