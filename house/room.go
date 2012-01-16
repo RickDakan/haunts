@@ -73,8 +73,8 @@ type roomDef struct {
 
   WallTextures []*WallTexture  `registry:"loadfrom-wall_textures"`
 
-  Floor texture.Object  `registry:"autoload"`
-  Wall  texture.Object  `registry:"autoload"`
+  Floor texture.Object
+  Wall  texture.Object
 
   Cell_data [][]CellData
 

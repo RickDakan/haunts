@@ -52,8 +52,8 @@ type doorDef struct {
   // Number of cells wide the door is
   Width int
 
-  Opened_texture texture.Object  `registry:"autoload"`  
-  Closed_texture texture.Object  `registry:"autoload"`  
+  Opened_texture texture.Object
+  Closed_texture texture.Object
 }
 
 type Door struct {

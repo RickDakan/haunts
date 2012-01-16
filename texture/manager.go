@@ -11,8 +11,6 @@ import (
   "glop/render"
 )
 
-
-// Convenient way to take advantage of autoloading with the registry.
 type Object struct {
   Path string `registry:"path"`
 

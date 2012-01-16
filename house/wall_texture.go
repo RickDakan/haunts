@@ -38,7 +38,7 @@ type wallTextureDef struct {
   // all WallTextures
   Name string
 
-  Texture texture.Object `registry:"autoload"`
+  Texture texture.Object
 }
 
 type WallTextureInst struct {
