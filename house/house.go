@@ -210,6 +210,8 @@ func (f *Floor) removeInvalidDoors() {
 }
 
 type houseDef struct {
+  Name string
+
   Floors []*Floor
 
   // The floor that the explorers start on
@@ -218,6 +220,7 @@ type houseDef struct {
 
 func MakeHouseDef() *houseDef {
   var h houseDef
+  h.Name = "name"
   h.Floors = append(h.Floors, &Floor{})
   return &h
 }
@@ -248,6 +251,7 @@ func (w *HouseEditor) SelectTab(n int) {
 type houseDataTab struct {
   *gui.VerticalTable
 
+  name       *gui.TextEditLine
   num_floors *gui.ComboBox
   theme      *gui.ComboBox
 
@@ -266,10 +270,12 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
   hdt.house = house
   hdt.viewer = viewer
 
+  hdt.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)
   num_floors_options := []string{ "1 Floor", "2 Floors", "3 Floors", "4 Floors" }
   hdt.num_floors = gui.MakeComboTextBox(num_floors_options, 300)
   hdt.theme = gui.MakeComboTextBox(tags.Themes, 300)
 
+  hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
   hdt.VerticalTable.AddChild(hdt.theme)
 
@@ -282,13 +288,6 @@ func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
       hdt.drag_anchor.y = float32(hdt.viewer.Temp.Room.Size.Dy / 2)
     }))
   }
-
-  hdt.VerticalTable.AddChild(gui.MakeButton("standard", "save", 300, 1, 1, 1, 1, func(int64) {
-    path := filepath.Join(datadir, "houses", "foo.house")
-    hdt.house.Save(path)
-    base.SetStoreVal("last house path", path)
-  }))
-
   return &hdt
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
@@ -308,6 +307,7 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
       hdt.house.Floors = hdt.house.Floors[0 : num_floors]
     }
   }
+  hdt.house.Name = hdt.name.GetText()
 }
 func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if hdt.VerticalTable.Respond(ui, group) {
@@ -319,12 +319,6 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
-  if hdt.current_floor != 0 {
-    println("Current floor: ", hdt.current_floor)
-  }
-  if len(hdt.house.Floors) == 0 {
-    println("NO FLOORS!")
-  }
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.viewer.Temp.Room != nil {
@@ -434,27 +428,6 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }
     }
     return true
-      // if floor.canAddDoor(hdt.viewer.Temp.Door) {
-      //   floor.Doors = append(floor.Doors, hdt.viewer.Temp.Room)
-      //   hdt.viewer.Temp.Room = nil
-      // }
-  //   } else {
-  //     bx,by := hdt.viewer.WindowToBoard(event.Key.Cursor().Point())
-  //     for i := range floor.Rooms {
-  //       x,y := floor.Rooms[i].Pos()
-  //       dx,dy := floor.Rooms[i].Dims()
-  //       if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
-  //         hdt.viewer.Temp.Room = floor.Rooms[i]
-  //         floor.Rooms[i] = floor.Rooms[len(floor.Rooms) - 1]
-  //         floor.Rooms = floor.Rooms[0 : len(floor.Rooms) - 1]
-  //         break
-  //       }
-  //     }
-  //     if hdt.viewer.Temp.Room != nil {
-  //       px,py := hdt.viewer.Temp.Room.Pos()
-  //       hdt.drag_anchor.x = bx - float32(px)
-  //       hdt.drag_anchor.y = by - float32(py)
-  //     }
   }
 
   return false
@@ -475,6 +448,7 @@ func LoadHouseDef(path string) *houseDef {
 
 func MakeHouseEditorPanel() Editor {
   var he HouseEditor
+  he.house = *MakeHouseDef()
   he.HorizontalTable = gui.MakeHorizontalTable()
   he.viewer = MakeHouseViewer(&he.house, 62)
   he.HorizontalTable.AddChild(he.viewer)
@@ -498,11 +472,24 @@ func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (he *HouseEditor) Load(path string) error {
-  return nil
+  var house houseDef
+  err := base.LoadAndProcessObject(path, "json", &house)
+  if err == nil {
+    he.house = house
+    for _,tab := range he.widgets {
+      tab.Reload()
+    }
+  }
+  return err
 }
 
 func (he *HouseEditor) Save() (string, error) {
-  return "", nil
+  path := filepath.Join(datadir, "houses", he.house.Name + ".house")
+  err := base.SaveJson(path, he.house)
+  if err != nil {
+    println("Error: ", err.Error())
+  }
+  return path, err
 }
 
 func (he *HouseEditor) Reload() {

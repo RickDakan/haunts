@@ -89,7 +89,8 @@ func main() {
     }
   }
 
-  editor := editors["room"]
+  editor_name := "room"
+  editor := editors[editor_name]
 
   ui.AddChild(editor)
   sys.Think()
@@ -151,7 +152,8 @@ func main() {
       for name := range editors {
         if key_map[fmt.Sprintf("%s editor", name)].FramePressCount() > 0 && ui.FocusWidget() == nil {
           ui.RemoveChild(editor)
-          editor = editors[name]
+          editor_name = name
+          editor = editors[editor_name]
           loadAllRegistries()
           editor.Reload()
           ui.AddChild(editor)
@@ -161,7 +163,7 @@ func main() {
       if key_map["save"].FramePressCount() > 0 && chooser == nil {
         path,err := editor.Save()
         if path != "" && err == nil {
-          base.SetStoreVal("last room path", path)
+          base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
         }
       }
 
@@ -174,10 +176,10 @@ func main() {
           err = editor.Load(path)
           if err != nil {
           } else {
-            base.SetStoreVal("last room path", path)
+            base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
           }
         }
-        chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(".room"))
+        chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
         anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
         anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
         ui.AddChild(anchor)
