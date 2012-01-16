@@ -179,7 +179,7 @@ func main() {
             base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
           }
         }
-        chooser = gui.MakeFileChooser(datadir, callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
+        chooser = gui.MakeFileChooser(filepath.Join(datadir, fmt.Sprintf("%ss", editor_name)), callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
         anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
         anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
         ui.AddChild(anchor)
