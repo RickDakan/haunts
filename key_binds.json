@@ -7,5 +7,6 @@
   "save"         : "gui+s",
   "quit"         : "gui+q",
   "room editor"  : "gui+1",
-  "house editor" : "gui+2"
+  "house editor" : "gui+2",
+  "game mode"    : "gui+g"
 }

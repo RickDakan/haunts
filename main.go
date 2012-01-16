@@ -20,7 +20,15 @@ var (
   sys system.System
   datadir string
   key_map base.KeyMap
-  quit gin.Key
+  editors map[string]house.Editor
+  editor house.Editor
+  editor_name string
+  ui *gui.Gui
+  anchor *gui.AnchorBox
+  chooser *gui.FileChooser
+  game *house.GamePanel
+  wdx,wdy int
+  zooming,dragging,hiding bool
 )
 
 func loadAllRegistries() {
@@ -28,6 +36,7 @@ func loadAllRegistries() {
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
+  house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
 }
 
 func init() {
@@ -39,13 +48,117 @@ func init() {
   key_map = key_binds.MakeKeyMap()
   base.SetDefaultKeyMap(key_map)
 
-  quit = gin.In().BindDerivedKey("quit", gin.In().MakeBinding('q', []gin.KeyId{ gin.EitherShift }, []bool{ true }))
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
     panic(err.Error())
+  }
+
+  factor := 1.0
+  wdx = int(1200 * factor)
+  wdy = int(675 * factor)
+}
+
+type draggerZoomer interface {
+  Drag(float64, float64)
+  Zoom(float64)
+}
+
+func draggingAndZooming(dz draggerZoomer) {
+  if ui.FocusWidget() != nil {
+    dragging = false
+    zooming = false
+    sys.HideCursor(false)
+    return
+  }
+
+  if key_map["zoom"].IsDown() != zooming {
+    zooming = !zooming
+  }
+  if zooming {
+    zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
+    dz.Zoom(zoom / 100)
+  }
+
+  if key_map["drag"].IsDown() != dragging {
+    dragging = !dragging
+  }
+  if dragging {
+    mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
+    my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
+    if mx != 0 || my != 0 {
+      dz.Drag(-mx, my)
+    }
+  }
+
+  if (dragging || zooming) != hiding {
+    hiding = (dragging || zooming)
+    sys.HideCursor(hiding)
+  }
+}
+
+func gameMode() {
+  draggingAndZooming(game.GetViewer())
+}
+
+func editMode() {
+  draggingAndZooming(editor.GetViewer())
+  if ui.FocusWidget() == nil {
+    for name := range editors {
+      if key_map[fmt.Sprintf("%s editor", name)].FramePressCount() > 0 && ui.FocusWidget() == nil {
+        ui.RemoveChild(editor)
+        editor_name = name
+        editor = editors[editor_name]
+        loadAllRegistries()
+        editor.Reload()
+        ui.AddChild(editor)
+      }
+    }
+
+    if key_map["save"].FramePressCount() > 0 && chooser == nil {
+      path,err := editor.Save()
+      if path != "" && err == nil {
+        base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
+      }
+    }
+
+    if key_map["load"].FramePressCount() > 0 && chooser == nil {
+      callback := func(path string, err error) {
+        ui.DropFocus()
+        ui.RemoveChild(anchor)
+        chooser = nil
+        anchor = nil
+        err = editor.Load(path)
+        if err != nil {
+        } else {
+          base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
+        }
+      }
+      chooser = gui.MakeFileChooser(filepath.Join(datadir, fmt.Sprintf("%ss", editor_name)), callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
+      anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+      anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+      ui.AddChild(anchor)
+      ui.TakeFocus(chooser)
+    }
+
+
+    // Don't select tabs in an editor if we're doing some other sort of command
+    ok_to_select := true
+    for _,v := range key_map {
+      if v.FramePressCount() > 0 {
+        ok_to_select = false
+        break
+      }
+    }
+    if ok_to_select {
+      for i := 1; i <= 9; i++ {
+        if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
+          editor.SelectTab(i - 1)
+        }
+      }
+    }
   }
 }
 
@@ -64,21 +177,20 @@ func main() {
     }
   } ()
   sys.Startup()
-  factor := 1.0
-  wdx := int(1200 * factor)
-  wdy := int(675 * factor)
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
   })
-  ui,err := gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
+  var err error
+  ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
   }
   loadAllRegistries()
 
-  editors := map[string]house.Editor {
+  // Set up editors
+  editors = map[string]house.Editor {
     "room" : house.MakeRoomEditorPanel(),
     "house" : house.MakeHouseEditorPanel(),
   }
@@ -88,9 +200,10 @@ func main() {
       editor.Load(path)
     }
   }
-
-  editor_name := "room"
-  editor := editors[editor_name]
+  editor_name = "room"
+  editor = editors[editor_name]
+  game = house.MakeGamePanel()
+  game.LoadHouse("name")
 
   ui.AddChild(editor)
   sys.Think()
@@ -99,14 +212,8 @@ func main() {
   })
   render.Purge()
   runtime.GOMAXPROCS(8)
-  var anchor *gui.AnchorBox
-  var chooser *gui.FileChooser
-  zooming := false
-  dragging := false
-  hiding := false
 
-  // cancel is used to remove a modal gui widget
-  var cancel func()
+  edit_mode := true
 
   for key_map["quit"].FramePressCount() == 0 {
     sys.SwapBuffers()
@@ -115,93 +222,22 @@ func main() {
       ui.Draw()
     })
     render.Purge()
-    if ui.FocusWidget() != nil {
-      dragging = false
-      zooming = false
-      sys.HideCursor(false)
-      if gin.In().GetKey(gin.Escape).FramePressCount() > 0 && cancel != nil {
-        cancel()
-        cancel = nil
+
+    if key_map["game mode"].FramePressCount() % 2 == 1 {
+      if edit_mode {
+        ui.RemoveChild(editor)
+        ui.AddChild(game)
+      } else {
+        ui.RemoveChild(game)
+        ui.AddChild(editor)
       }
+      edit_mode = !edit_mode
     }
-    if ui.FocusWidget() == nil {
-      if key_map["zoom"].IsDown() != zooming {
-        zooming = !zooming
-      }
-      if zooming {
-        zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
-        editor.GetViewer().Zoom(zoom / 100)
-      }
 
-      if key_map["drag"].IsDown() != dragging {
-        dragging = !dragging
-      }
-      if dragging {
-        mx := gin.In().GetKey(gin.MouseXAxis).FramePressAmt()
-        my := gin.In().GetKey(gin.MouseYAxis).FramePressAmt()
-        if mx != 0 || my != 0 {
-          editor.GetViewer().Drag(-mx, my)
-        }
-      }
-
-      if (dragging || zooming) != hiding {
-        hiding = (dragging || zooming)
-        sys.HideCursor(hiding)
-      }
-
-      for name := range editors {
-        if key_map[fmt.Sprintf("%s editor", name)].FramePressCount() > 0 && ui.FocusWidget() == nil {
-          ui.RemoveChild(editor)
-          editor_name = name
-          editor = editors[editor_name]
-          loadAllRegistries()
-          editor.Reload()
-          ui.AddChild(editor)
-        }
-      }
-
-      if key_map["save"].FramePressCount() > 0 && chooser == nil {
-        path,err := editor.Save()
-        if path != "" && err == nil {
-          base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
-        }
-      }
-
-      if key_map["load"].FramePressCount() > 0 && chooser == nil {
-        callback := func(path string, err error) {
-          ui.DropFocus()
-          ui.RemoveChild(anchor)
-          chooser = nil
-          anchor = nil
-          err = editor.Load(path)
-          if err != nil {
-          } else {
-            base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
-          }
-        }
-        chooser = gui.MakeFileChooser(filepath.Join(datadir, fmt.Sprintf("%ss", editor_name)), callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
-        anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-        anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
-        ui.AddChild(anchor)
-        ui.TakeFocus(chooser)
-      }
-
-
-      // Don't select tabs in an editor if we're doing some other sort of command
-      ok_to_select := true
-      for _,v := range key_map {
-        if v.FramePressCount() > 0 {
-          ok_to_select = false
-          break
-        }
-      }
-      if ok_to_select {
-        for i := 1; i <= 9; i++ {
-          if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
-            editor.SelectTab(i - 1)
-          }
-        }
-      }
+    if edit_mode {
+      editMode()
+    } else {
+      gameMode()
     }
   }
 }

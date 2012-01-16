@@ -38,14 +38,14 @@ type HouseViewer struct {
   }
 }
 
-func MakeHouseViewer(house *houseDef, angle float32) *HouseViewer {
+func MakeHouseViewer(house *House, angle float32) *HouseViewer {
   var hv HouseViewer
   hv.EmbeddedWidget = &gui.BasicWidget{ CoreWidget: &hv }
   hv.Request_dims.Dx = 100
   hv.Request_dims.Dy = 100
   hv.Ex = true
   hv.Ey = true
-  hv.house = house
+  hv.house = house.houseDef
   hv.angle = angle
   hv.Zoom(1)
   return &hv

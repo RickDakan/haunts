@@ -3,6 +3,7 @@ package house
 import (
   "glop/gui"
   "glop/gin"
+  "glop/sprite"
   "haunts/texture"
   "haunts/base"
   "glop/util/algorithm"
@@ -216,6 +217,22 @@ type houseDef struct {
 
   // The floor that the explorers start on
   Starting_floor int
+}
+
+type House struct {
+  Defname string
+  *houseDef
+  HouseInst
+}
+
+type HouseInst struct {
+  sprites []*sprite.Sprite
+}
+
+func (h *HouseInst) Think(dt int64) {
+  for _,s := range h.sprites {
+    s.Think(dt)
+  }
 }
 
 func MakeHouseDef() *houseDef {
@@ -446,11 +463,23 @@ func LoadHouseDef(path string) *houseDef {
   return &house
 }
 
+func LoadAllHousesInDir(dir string) {
+  base.RemoveRegistry("houses")
+  base.RegisterRegistry("houses", make(map[string]*houseDef))
+  base.RegisterAllObjectsInDir("houses", dir, ".house", "json")
+}
+
+func MakeHouse(name string) *House {
+  h := House{ Defname: name }
+  base.GetObject("houses", &h)
+  return &h
+}
+
 func MakeHouseEditorPanel() Editor {
   var he HouseEditor
   he.house = *MakeHouseDef()
   he.HorizontalTable = gui.MakeHorizontalTable()
-  he.viewer = MakeHouseViewer(&he.house, 62)
+  he.viewer = MakeHouseViewer(&House{houseDef: &he.house}, 62)
   he.HorizontalTable.AddChild(he.viewer)
 
   he.widgets = append(he.widgets, makeHouseDataTab(&he.house, he.viewer))
