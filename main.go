@@ -11,9 +11,9 @@ import (
   "os"
   "fmt"
   "runtime/debug"
-
   "haunts/house"
   "haunts/base"
+  "haunts/game"
 )
 
 var (
@@ -26,8 +26,8 @@ var (
   ui *gui.Gui
   anchor *gui.AnchorBox
   chooser *gui.FileChooser
-  game *house.GamePanel
   wdx,wdy int
+  game_panel *game.GamePanel
   zooming,dragging,hiding bool
 )
 
@@ -100,7 +100,7 @@ func draggingAndZooming(dz draggerZoomer) {
 }
 
 func gameMode() {
-  draggingAndZooming(game.GetViewer())
+  draggingAndZooming(game_panel.GetViewer())
 }
 
 func editMode() {
@@ -202,8 +202,8 @@ func main() {
   }
   editor_name = "room"
   editor = editors[editor_name]
-  game = house.MakeGamePanel()
-  game.LoadHouse("name")
+  game_panel = game.MakeGamePanel()
+  game_panel.LoadHouse("name")
 
   ui.AddChild(editor)
   sys.Think()
@@ -226,9 +226,9 @@ func main() {
     if key_map["game mode"].FramePressCount() % 2 == 1 {
       if edit_mode {
         ui.RemoveChild(editor)
-        ui.AddChild(game)
+        ui.AddChild(game_panel)
       } else {
-        ui.RemoveChild(game)
+        ui.RemoveChild(game_panel)
         ui.AddChild(editor)
       }
       edit_mode = !edit_mode

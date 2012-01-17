@@ -24,7 +24,7 @@ type HouseViewer struct {
   gui.NonResponder
   gui.NonThinker
 
-  house *houseDef
+  house *HouseDef
 
   zoom,angle,fx,fy float32
   floor,ifloor mathgl.Mat4
@@ -38,14 +38,15 @@ type HouseViewer struct {
   }
 }
 
-func MakeHouseViewer(house *House, angle float32) *HouseViewer {
+func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   var hv HouseViewer
   hv.EmbeddedWidget = &gui.BasicWidget{ CoreWidget: &hv }
   hv.Request_dims.Dx = 100
   hv.Request_dims.Dy = 100
   hv.Ex = true
   hv.Ey = true
-  hv.house = house.houseDef
+  hv.house = house
+  println("n create: ", len(hv.house.Floors))
   hv.angle = angle
   hv.Zoom(1)
   return &hv

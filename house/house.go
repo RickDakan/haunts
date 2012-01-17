@@ -210,7 +210,7 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
-type houseDef struct {
+type HouseDef struct {
   Name string
 
   Floors []*Floor
@@ -219,9 +219,9 @@ type houseDef struct {
   Starting_floor int
 }
 
-type House struct {
+type House2 struct {
   Defname string
-  *houseDef
+  *HouseDef
   HouseInst
 }
 
@@ -235,8 +235,8 @@ func (h *HouseInst) Think(dt int64) {
   }
 }
 
-func MakeHouseDef() *houseDef {
-  var h houseDef
+func MakeHouseDef() *HouseDef {
+  var h HouseDef
   h.Name = "name"
   h.Floors = append(h.Floors, &Floor{})
   return &h
@@ -247,7 +247,7 @@ type HouseEditor struct {
   tab *gui.TabFrame
   widgets []tabWidget
 
-  house  houseDef
+  house  HouseDef
   viewer *HouseViewer
 }
 
@@ -272,7 +272,7 @@ type houseDataTab struct {
   num_floors *gui.ComboBox
   theme      *gui.ComboBox
 
-  house  *houseDef
+  house  *HouseDef
   viewer *HouseViewer
 
   // Distance from the mouse to the center of the object, in board coordinates
@@ -281,7 +281,7 @@ type houseDataTab struct {
   // Which floor we are viewing and editing
   current_floor int
 }
-func makeHouseDataTab(house *houseDef, viewer *HouseViewer) *houseDataTab {
+func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   var hdt houseDataTab
   hdt.VerticalTable = gui.MakeVerticalTable()
   hdt.house = house
@@ -377,7 +377,7 @@ type houseDoorTab struct {
   num_floors *gui.ComboBox
   theme      *gui.ComboBox
 
-  house  *houseDef
+  house  *HouseDef
   viewer *HouseViewer
 
   // Distance from the mouse to the center of the object, in board coordinates
@@ -386,7 +386,7 @@ type houseDoorTab struct {
   // Which floor we are viewing and editing
   current_floor int
 }
-func makeHouseDoorTab(house *houseDef, viewer *HouseViewer) *houseDoorTab {
+func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   var hdt houseDoorTab
   hdt.VerticalTable = gui.MakeVerticalTable()
   hdt.house = house
@@ -453,33 +453,33 @@ func (hdt *houseDoorTab) Collapse() {}
 func (hdt *houseDoorTab) Expand() {}
 func (hdt *houseDoorTab) Reload() {}
 
-func (h *houseDef) Save(path string) {
+func (h *HouseDef) Save(path string) {
   base.SaveJson(path, h)
 }
 
-func LoadHouseDef(path string) *houseDef {
-  var house houseDef
+func LoadHouseDef(path string) *HouseDef {
+  var house HouseDef
   base.LoadJson(path, &house)
   return &house
 }
 
 func LoadAllHousesInDir(dir string) {
   base.RemoveRegistry("houses")
-  base.RegisterRegistry("houses", make(map[string]*houseDef))
+  base.RegisterRegistry("houses", make(map[string]*HouseDef))
   base.RegisterAllObjectsInDir("houses", dir, ".house", "json")
 }
 
-func MakeHouse(name string) *House {
-  h := House{ Defname: name }
-  base.GetObject("houses", &h)
-  return &h
+func MakeHouse(name string) *HouseDef {
+  var house HouseDef
+  base.LoadAndProcessObject(filepath.Join(datadir, "houses", name + ".house"), "json", &house)
+  return &house
 }
 
 func MakeHouseEditorPanel() Editor {
   var he HouseEditor
   he.house = *MakeHouseDef()
   he.HorizontalTable = gui.MakeHorizontalTable()
-  he.viewer = MakeHouseViewer(&House{houseDef: &he.house}, 62)
+  he.viewer = MakeHouseViewer(&he.house, 62)
   he.HorizontalTable.AddChild(he.viewer)
 
   he.widgets = append(he.widgets, makeHouseDataTab(&he.house, he.viewer))
@@ -501,7 +501,7 @@ func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (he *HouseEditor) Load(path string) error {
-  var house houseDef
+  var house HouseDef
   err := base.LoadAndProcessObject(path, "json", &house)
   if err == nil {
     he.house = house
