@@ -339,6 +339,7 @@ func (rep *RoomEditorPanel) Load(path string) error {
     for _,tab := range rep.widgets {
       tab.Reload()
     }
+    rep.viewer.MakeDirty()
   }
   return err
 }

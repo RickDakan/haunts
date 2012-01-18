@@ -1,1 +1,502 @@
-{"Name":"entrance","Size":{"Name":"Small","Dx":10,"Dy":10},"Furniture":[{"Defname":"Plant","furnitureDef":{"Name":"Plant","Orientations":[{"Dx":1,"Dy":1,"Texture":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/furniture/plant/plant_left.png"}},{"Dx":1,"Dy":1,"Texture":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/furniture/plant/plant_right.png"}}]},"FurnitureInst":{"X":4,"Y":1,"Rotation":0}},{"Defname":"Plant","furnitureDef":{"Name":"Plant","Orientations":[{"Dx":1,"Dy":1,"Texture":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/furniture/plant/plant_left.png"}},{"Dx":1,"Dy":1,"Texture":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/furniture/plant/plant_right.png"}}]},"FurnitureInst":{"X":5,"Y":8,"Rotation":0}}],"WallTextures":[],"Floor":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/rooms/floors/floor_01.png"},"Wall":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/rooms/walls/wall_01.png"},"Cell_data":[[{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}]],"Themes":{},"Sizes":{},"Decor":{}}
+{"Name":"entrance","Size":{"Name":"Small","Dx":10,"Dy":10},"Furniture":[
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":0,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":1,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":2,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":3,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":4,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":5,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":6,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":7,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":8,"Y":9,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":0,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":1,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":2,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":3,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":4,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":5,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":6,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":7,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":8,"Rotation":0}
+},
+{
+  "Defname":"Plant",
+  "FurnitureInst":
+  { "X":9,"Y":9,"Rotation":0}
+}
+],"WallTextures":[],"Floor":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/rooms/floors/floor_01.png"},"Wall":{"Path":"/Users/runningwild/code/haunts/haunts.app/Contents/rooms/walls/wall_01.png"},"Cell_data":[[{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":true,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}],[{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":true,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false},{"CanHaveDoor":false,"CanSpawnExplorers":false,"CanSpawnOthers":false,"CanBeGoal":false}]],"Themes":{},"Sizes":{},"Decor":{}}

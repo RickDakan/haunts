@@ -63,6 +63,15 @@ func (a adag) Successors(n int) []int {
   return a[n]
 }
 
+func OrderRectObjects(ra []RectObject) []RectObject {
+  p := order(ra)
+  r := make([]RectObject, len(ra))
+  for i := range p {
+    r[i] = ra[p[i]]
+  }
+  return r
+}
+
 func order(ra []RectObject) []int {
   mapping := make(map[RectObject]int)
   for i := range ra {
@@ -118,14 +127,3 @@ type arog struct {
 }
 func (a arog) Pos() (int,int) { return a.x, a.y }
 func (a arog) Dims() (int,int) { return a.dx, a.dy }
-
-// func main() {
-//   r := []RectObject{}
-//   for i := 0; i < 160; i++ {
-//     for j := 0; j < 160; j++ {
-//       r = append(r, arog{i, j, 1, 1})
-//     }
-//   }
-//   order(r)
-//   fmt.Printf("\n")
-// }

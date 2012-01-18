@@ -4,7 +4,6 @@ import (
   "haunts/base"
   "glop/gui"
   "glop/gin"
-  "glop/sprite"
   "gl"
   "math"
   "github.com/arbaal/mathgl"
@@ -21,110 +20,6 @@ type RectObject interface {
 type Drawable interface {
   RectObject
   Render(pos mathgl.Vec2, width float32)
-}
-
-
-type rectObjectArray []RectObject
-func (r rectObjectArray) Order() rectObjectArray {
-  var nr rectObjectArray
-  if len(r) == 0 {
-    return nil
-  }
-  if len(r) == 1 {
-    nr = append(nr, r[0])
-    return nr
-  }
-
-  minx,miny := r[0].Pos()
-  maxx,maxy := r[0].Pos()
-  for i := range r {
-    x,y := r[i].Pos()
-    if x < minx { minx = x }
-    if y < miny { miny = y }
-    if x > maxx { maxx = x }
-    if y > maxy { maxy = y }
-  }
-
-  // check for an x-divide
-  var low,high rectObjectArray
-  for divx := minx; divx <= maxx; divx++ {
-    low = low[0:0]
-    high = high[0:0]
-    for i := range r {
-      x,_ := r[i].Pos()
-      dx,_ := r[i].Dims()
-      if x >= divx {
-        high = append(high, r[i])
-      }
-      if x + dx - 1 < divx {
-        low = append(low, r[i])
-      }
-    }
-    if len(low) + len(high) == len(r) && len(low) >= 1 && len(high) >= 1 {
-      low = low.Order()
-      for i := range low {
-        nr = append(nr, low[i])
-      }
-      high = high.Order()
-      for i := range high {
-        nr = append(nr, high[i])
-      }
-      return nr
-    }
-  }
-
-  // check for a y-divide
-  for divy := miny; divy <= maxy; divy++ {
-    low = low[0:0]
-    high = high[0:0]
-    for i := range r {
-      _,y := r[i].Pos()
-      _,dy := r[i].Dims()
-      if y >= divy {
-        high = append(high, r[i])
-      }
-      if y + dy - 1 < divy {
-        low = append(low, r[i])
-      }
-    }
-    if len(low) + len(high) == len(r) && len(low) >= 1 && len(high) >= 1 {
-      low = low.Order()
-      for i := range low {
-        nr = append(nr, low[i])
-      }
-      high = high.Order()
-      for i := range high {
-        nr = append(nr, high[i])
-      }
-      return nr
-    }
-  }
-  for i := range r {
-    nr = append(nr, r[i])
-  }
-  return nr
-}
-func (r rectObjectArray) Less(i,j int) bool {
-  ix,iy := r[i].Pos()
-  jdx,jdy := r[j].Dims()
-  jx,jy := r[j].Pos()
-  jx2 := jx + jdx - 1
-  jy2 := jy + jdy - 1
-  return jx2 < ix || (!(jx2 < ix) && jy2 < iy)
-}
-func (r rectObjectArray) LessX(i,j int) bool {
-  ix,_ := r[i].Pos()
-  jdx,_ := r[j].Dims()
-  jx,_ := r[j].Pos()
-  jx2 := jx + jdx - 1
-  return jx2 < ix
-}
-func (r rectObjectArray) LessY(i,j int) bool {
-  _,iy := r[i].Pos()
-  _,jdy := r[j].Dims()
-  _,jy := r[j].Pos()
-  jy2 := jy + jdy - 1
-  return jy2 < iy
 }
 
 type editMode int
@@ -175,14 +70,6 @@ type RoomViewer struct {
   left_wall_imat mathgl.Mat4
   right_wall_imat mathgl.Mat4
 
-  // All drawables that will be drawn parallel to the window
-  upright_drawables []sprite.ZDrawable
-  upright_positions []mathgl.Vec3
-
-  // All drawables that will be drawn on the surface of the viewer
-  flattened_drawables []sprite.ZDrawable
-  flattened_positions []mathgl.Vec3
-
   Temp struct {
     Furniture *Furniture
     WallTexture *WallTexture
@@ -191,6 +78,14 @@ type RoomViewer struct {
   Selected struct {
     Cells map[CellPos]bool
   }
+
+  // Keep track of the order that furniture should be displayed in.  We need to
+  // keep track of Temp.Furniture as well because when someone changes that we
+  // need to update this.
+  cur_temp_furniture *Furniture
+  cur_room           *roomDef
+  furniture_order    []*Furniture
+  dirty              bool
 
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
@@ -202,19 +97,6 @@ func (rv *RoomViewer) SetEditMode(mode editMode) {
 
 func (rv *RoomViewer) String() string {
   return "viewer"
-}
-
-func (rv *RoomViewer) AddUprightDrawable(x, y float32, zd sprite.ZDrawable) {
-  rv.upright_drawables = append(rv.upright_drawables, zd)
-  rv.upright_positions = append(rv.upright_positions, mathgl.Vec3{x, y, 0})
-}
-
-// x,y: board coordinates that the drawable should be drawn arv.
-// zd: drawable that will be rendered after the viewer has been rendered, it will be rendered
-//     with the same modelview matrix as the rest of the viewer
-func (rv *RoomViewer) AddFlattenedDrawable(x, y float32, zd sprite.ZDrawable) {
-  rv.flattened_drawables = append(rv.flattened_drawables, zd)
-  rv.flattened_positions = append(rv.flattened_positions, mathgl.Vec3{x, y, 0})
 }
 
 func MakeRoomViewer(room *roomDef, angle float32) *RoomViewer {
@@ -837,21 +719,6 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
   gl.LoadIdentity()
-  var furns rectObjectArray
-  for _,f := range furniture {
-    furns = append(furns, f)
-  }
-  if temp_furniture != nil {
-    furns = append(furns, temp_furniture)
-  }
-  for _,extra := range extras {
-    furns = append(furns, extra)
-  }
-  furn_order := order(furns)
-  furn := make([]RectObject, len(furns))
-  for i := range furn_order {
-    furn[i] = furns[furn_order[i]]
-  }
 
   board_to_window := func(mx,my int) (x,y float32) {
     v := mathgl.Vec4{X: float32(mx), Y: float32(my), W: 1}
@@ -860,13 +727,13 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
     return
   }
 
-  for i := len(furn) - 1; i >= 0; i-- {
-    f := furn[i]
+  for i := len(furniture) - 1; i >= 0; i-- {
+    f := furniture[i]
     near_x,near_y := f.Pos()
     furn_dx,furn_dy := f.Dims()
     leftx,_ := board_to_window(near_x, near_y + furn_dy)
     rightx,_ := board_to_window(near_x + furn_dx, near_y)
-    botx,boty := board_to_window(near_x, near_y)
+    _,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     }
@@ -874,14 +741,15 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
     if f == temp_furniture {
       cstack.Pop()
     }
-    switch d := f.(type) {
-      case *Furniture:
-      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    // switch d := f.(type) {
+    //   case *Furniture:
+    //   d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
 
-      case Drawable:
-        println("rl: ", rightx, " " , leftx)
-      d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
-    }
+    //   case Drawable:
+    //     println("rl: ", rightx, " " , leftx)
+    //   d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
+    // }
   }
   gl.PopMatrix()
 }
@@ -895,15 +763,6 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.makeMat()
   }
 
-  // // Draw a simple border around the viewer
-  // gl.Color4d(0.1, 0.3, 0.8, 1)
-  // gl.Begin(gl.QUADS)
-  // gl.Vertex2i(-1, -1)
-  // gl.Vertex2i(-1, rv.room.Size.Dy+1)
-  // gl.Vertex2i(rv.room.Size.Dx+1, rv.room.Size.Dy+1)
-  // gl.Vertex2i(rv.room.Size.Dx+1, -1)
-  // gl.End()
-
   var cstack base.ColorStack
   cstack.Push(1, 1, 1, 1)
   drawPrep()
@@ -916,34 +775,15 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   } else {
     cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack)
-
-  // for i := range rv.flattened_positions {
-  //   v := rv.flattened_positions[i]
-  //   rv.flattened_drawables[i].Render(v.X, v.Y, 0, 1.0)
-  // }
-  // rv.flattened_positions = rv.flattened_positions[0:0]
-  // rv.flattened_drawables = rv.flattened_drawables[0:0]
-
-  // for i := range rv.upright_positions {
-  //   vx, vy, vz := rv.boardToModelview(rv.upright_positions[i].X, rv.upright_positions[i].Y)
-  //   rv.upright_positions[i] = mathgl.Vec3{vx, vy, vz}
-  // }
-  // sprite.ZSort(rv.upright_positions, rv.upright_drawables)
-  // gl.Disable(gl.TEXTURE_2D)
-  // gl.PushMatrix()
-  // gl.LoadIdentity()
-  // for i := range rv.upright_positions {
-  //   v := rv.upright_positions[i]
-  //   rv.upright_drawables[i].Render(v.X, v.Y, v.Z, float32(rv.zoom))
-  // }
-  // rv.upright_positions = rv.upright_positions[0:0]
-  // rv.upright_drawables = rv.upright_drawables[0:0]
-  // gl.PopMatrix()
+  drawFurniture(rv.mat, rv.zoom, rv.furniture_order, rv.Temp.Furniture, nil, cstack)
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
   rv.handler = handler
+}
+
+func (rv *RoomViewer) MakeDirty() {
+  rv.dirty = true
 }
 
 func (rv *RoomViewer) Think(*gui.Gui, int64) {
@@ -954,4 +794,25 @@ func (rv *RoomViewer) Think(*gui.Gui, int64) {
   mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   rv.mx = int(mx)
   rv.my = int(my)
+
+  if rv.Temp.Furniture != rv.cur_temp_furniture || rv.furniture_order == nil || rv.cur_room != rv.room || rv.dirty {
+    var ro []RectObject
+    for _,f := range rv.room.Furniture {
+      ro = append(ro, f)
+    }
+    rv.cur_room = rv.room
+
+    if rv.Temp.Furniture != nil {
+      ro = append(ro, rv.Temp.Furniture)
+    }
+    rv.cur_temp_furniture = rv.Temp.Furniture
+
+    ro = OrderRectObjects(ro)
+    rv.furniture_order = rv.furniture_order[0:0]
+    for _,r := range ro {
+      rv.furniture_order = append(rv.furniture_order, r.(*Furniture))
+    }
+  }
+
+  rv.dirty = false
 }

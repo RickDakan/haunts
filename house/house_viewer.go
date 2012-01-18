@@ -190,14 +190,14 @@ func (hv *HouseViewer) Draw(region gui.Region) {
 
   current_floor := 0
 
-  var rooms rectObjectArray
+  var rooms []RectObject
   for _,room := range hv.house.Floors[current_floor].Rooms {
     rooms = append(rooms, room)
   }
   if hv.Temp.Room != nil {
     rooms = append(rooms, hv.Temp.Room)
   }
-  rooms = rooms.Order()
+  rooms = OrderRectObjects(rooms)
 
   drawPrep()
   for i := len(rooms) - 1; i >= 0; i-- {
