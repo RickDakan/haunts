@@ -832,14 +832,21 @@ func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furn
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
   gl.LoadIdentity()
-  var furn rectObjectArray
+  var furns rectObjectArray
   for _,f := range furniture {
-    furn = append(furn, f)
+    furns = append(furns, f)
   }
   if temp_furniture != nil {
-    furn = append(furn, temp_furniture)
+    furns = append(furns, temp_furniture)
   }
-  furn = furn.Order()
+  for _,extra := range extras {
+    furns = append(furns, extra)
+  }
+  furn_order := order(furns)
+  furn := make([]RectObject, len(furns))
+  for i := range furn_order {
+    furn[i] = furns[furn_order[i]]
+  }
 
   board_to_window := func(mx,my int) (x,y float32) {
     v := mathgl.Vec4{X: float32(mx), Y: float32(my), W: 1}
