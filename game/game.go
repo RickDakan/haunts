@@ -10,6 +10,8 @@ type GamePanel struct {
 
   house  *house.HouseDef
   viewer *house.HouseViewer
+
+  ent *Entity
 }
 
 func MakeGamePanel() *GamePanel {
@@ -18,6 +20,8 @@ func MakeGamePanel() *GamePanel {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.HorizontalTable = gui.MakeHorizontalTable()
   gp.HorizontalTable.AddChild(gp.viewer)
+  gp.ent = MakeEntity("Master of the Manse")
+  gp.viewer.AddDrawable(gp.ent)
   return &gp
 }
 
@@ -28,6 +32,7 @@ func (gp *GamePanel) LoadHouse(name string) {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
+  gp.viewer.AddDrawable(gp.ent)
   gp.HorizontalTable.AddChild(gp.viewer)
 }
 

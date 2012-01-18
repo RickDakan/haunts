@@ -2,6 +2,7 @@ package house
 
 import (
   "glop/gui"
+  "glop/util/algorithm"
   "github.com/arbaal/mathgl"
   "math"
   "haunts/base"
@@ -29,6 +30,8 @@ type HouseViewer struct {
   zoom,angle,fx,fy float32
   floor,ifloor mathgl.Mat4
 
+  drawables []Drawable
+
   Temp struct {
     Room *Room
 
@@ -50,6 +53,15 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.angle = angle
   hv.Zoom(1)
   return &hv
+}
+
+func (hv *HouseViewer) AddDrawable(d Drawable) {
+  hv.drawables = append(hv.drawables, d)
+}
+func (hv *HouseViewer) RemoveDrawable(d Drawable) {
+  hv.drawables = algorithm.Choose(hv.drawables, func(a interface{}) bool {
+    return a.(Drawable) != d
+  }).([]Drawable)
 }
 
 func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
@@ -217,7 +229,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack)
     }
     drawFloor(room.roomDef, m_floor, nil, cstack)
-    drawFurniture(m_floor, room.roomDef.Furniture, nil, cstack)
+    drawFurniture(m_floor, hv.zoom, room.roomDef.Furniture, nil, hv.drawables, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }

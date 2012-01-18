@@ -189,6 +189,11 @@ func main() {
   }
   loadAllRegistries()
 
+  // TODO: Might want to be able to reload stuff, but this is sensitive because it
+  // is loading textures.  We should probably redo the sprite system so that this
+  // is easier to safely handle.
+  game.LoadAllEntitiesInDir(filepath.Join(datadir, "entities"))
+
   // Set up editors
   editors = map[string]house.Editor {
     "room" : house.MakeRoomEditorPanel(),

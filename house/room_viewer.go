@@ -18,6 +18,11 @@ type RectObject interface {
   Dims() (int, int)
 }
 
+type Drawable interface {
+  RectObject
+  Render(pos mathgl.Vec2, width float32)
+}
+
 
 type rectObjectArray []RectObject
 func (r rectObjectArray) Order() rectObjectArray {
@@ -827,7 +832,7 @@ func (rv *RoomViewer) drawFloor() {
   }
 }
 
-func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furniture, cstack base.ColorStack) {
+func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
@@ -861,7 +866,7 @@ func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furn
     furn_dx,furn_dy := f.Dims()
     leftx,_ := board_to_window(near_x, near_y + furn_dy)
     rightx,_ := board_to_window(near_x + furn_dx, near_y)
-    _,boty := board_to_window(near_x, near_y)
+    botx,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     }
@@ -869,7 +874,14 @@ func drawFurniture(mat mathgl.Mat4, furniture []*Furniture, temp_furniture *Furn
     if f == temp_furniture {
       cstack.Pop()
     }
-    f.(*Furniture).Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    switch d := f.(type) {
+      case *Furniture:
+      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+
+      case Drawable:
+        println("rl: ", rightx, " " , leftx)
+      d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
+    }
   }
   gl.PopMatrix()
 }
@@ -904,7 +916,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   } else {
     cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(rv.mat, rv.room.Furniture, rv.Temp.Furniture, cstack)
+  drawFurniture(rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack)
 
   // for i := range rv.flattened_positions {
   //   v := rv.flattened_positions[i]
