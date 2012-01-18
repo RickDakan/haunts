@@ -79,14 +79,6 @@ type RoomViewer struct {
     Cells map[CellPos]bool
   }
 
-  // Keep track of the order that furniture should be displayed in.  We need to
-  // keep track of Temp.Furniture as well because when someone changes that we
-  // need to update this.
-  cur_temp_furniture *Furniture
-  cur_room           *roomDef
-  furniture_order    []*Furniture
-  dirty              bool
-
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
 }
@@ -727,13 +719,25 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
     return
   }
 
-  for i := len(furniture) - 1; i >= 0; i-- {
-    f := furniture[i]
+  var stuff []RectObject
+  for i := range furniture {
+    stuff = append(stuff, furniture[i])
+  }
+  if temp_furniture != nil {
+    stuff = append(stuff, temp_furniture)
+  }
+  for i := range extras {
+    stuff = append(stuff, extras[i])
+  }
+  stuff = OrderRectObjects(stuff)
+
+  for i := len(stuff) - 1; i >= 0; i-- {
+    f := stuff[i]
     near_x,near_y := f.Pos()
     furn_dx,furn_dy := f.Dims()
     leftx,_ := board_to_window(near_x, near_y + furn_dy)
     rightx,_ := board_to_window(near_x + furn_dx, near_y)
-    _,boty := board_to_window(near_x, near_y)
+    botx,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     }
@@ -741,15 +745,13 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
     if f == temp_furniture {
       cstack.Pop()
     }
-    f.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
-    // switch d := f.(type) {
-    //   case *Furniture:
-    //   d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    switch d := f.(type) {
+      case *Furniture:
+      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
 
-    //   case Drawable:
-    //     println("rl: ", rightx, " " , leftx)
-    //   d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
-    // }
+      case Drawable:
+      d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
+    }
   }
   gl.PopMatrix()
 }
@@ -775,15 +777,11 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   } else {
     cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(rv.mat, rv.zoom, rv.furniture_order, rv.Temp.Furniture, nil, cstack)
+  drawFurniture(rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack)
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
   rv.handler = handler
-}
-
-func (rv *RoomViewer) MakeDirty() {
-  rv.dirty = true
 }
 
 func (rv *RoomViewer) Think(*gui.Gui, int64) {
@@ -794,25 +792,4 @@ func (rv *RoomViewer) Think(*gui.Gui, int64) {
   mx,my := rv.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   rv.mx = int(mx)
   rv.my = int(my)
-
-  if rv.Temp.Furniture != rv.cur_temp_furniture || rv.furniture_order == nil || rv.cur_room != rv.room || rv.dirty {
-    var ro []RectObject
-    for _,f := range rv.room.Furniture {
-      ro = append(ro, f)
-    }
-    rv.cur_room = rv.room
-
-    if rv.Temp.Furniture != nil {
-      ro = append(ro, rv.Temp.Furniture)
-    }
-    rv.cur_temp_furniture = rv.Temp.Furniture
-
-    ro = OrderRectObjects(ro)
-    rv.furniture_order = rv.furniture_order[0:0]
-    for _,r := range ro {
-      rv.furniture_order = append(rv.furniture_order, r.(*Furniture))
-    }
-  }
-
-  rv.dirty = false
 }

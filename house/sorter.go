@@ -20,6 +20,11 @@ func lastPoint(r RectObject) (int,int) {
   dx,_ := r.Dims()
   return x + dx, y
 }
+func firstAndLastPoints(r RectObject) (x1,y1,x2,y2 int) {
+  x,y := r.Pos()
+  dx,dy := r.Dims()
+  return x, y+dy, x + dx, y
+}
 type endpointArray []endpoint
 func (e endpointArray) Len() int {
   return len(e)
@@ -72,8 +77,22 @@ func OrderRectObjects(ra []RectObject) []RectObject {
   return r
 }
 
-func order(ra []RectObject) []int {
-  mapping := make(map[RectObject]int)
+func order(input []RectObject) []int {
+  var minx,miny int
+  for _,r := range input {
+    x,y := r.Pos()
+    if x < minx { minx = x }
+    if y < miny { miny = y }
+  }
+
+  ra := make([]RectObject, len(input))
+  for i,r := range input {
+    x,y := r.Pos()
+    dx,dy := r.Dims()
+    ra[i] = arog{ x - minx + 1, y - miny + 1, dx, dy }
+  }
+
+  mapping := make(map[RectObject]int, len(ra))
   for i := range ra {
     mapping[ra[i]] = i
   }
@@ -87,14 +106,16 @@ func order(ra []RectObject) []int {
   less_func := func(_a,_b interface{}) bool {
     a := _a.(RectObject)
     b := _b.(RectObject)
-    ax,ay := firstPoint(a)
-    ax2,ay2 := lastPoint(a)
+    ax,ay,ax2,ay2 := firstAndLastPoints(a)
+    da := ax*ax + ay*ay
+    da2 := ax2*ax2 + ay2*ay2
     w_a := width(a.Dims())
-    bx,by := firstPoint(b)
-    bx2,by2 := lastPoint(b)
+    bx,by,bx2,by2 := firstAndLastPoints(b)
+    db := bx*bx + by*by
+    db2 := bx2*bx2 + by2*by2
     w_b := width(b.Dims())
-    va := w_b * (w_a * dist(ax,ay) + (dist(ax2,ay2) - dist(ax,ay)) * (sweep_pos - pos(ax,ay)) )
-    vb := w_a * (w_b * dist(bx,by) + (dist(bx2,by2) - dist(bx,by)) * (sweep_pos - pos(bx,by)) )
+    va := w_b * (w_a * da + (da2 - da) * (sweep_pos - pos(ax,ay)) )
+    vb := w_a * (w_b * db + (db2 - db) * (sweep_pos - pos(bx,by)) )
     return va < vb
   }
   l := llrb.New(less_func)
