@@ -19,6 +19,7 @@ type RectObject interface {
 
 type Drawable interface {
   RectObject
+  FPos() (float64,float64)
   Render(pos mathgl.Vec2, width float32)
 }
 
@@ -712,8 +713,8 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
   gl.PushMatrix()
   gl.LoadIdentity()
 
-  board_to_window := func(mx,my int) (x,y float32) {
-    v := mathgl.Vec4{X: float32(mx), Y: float32(my), W: 1}
+  board_to_window := func(mx,my float32) (x,y float32) {
+    v := mathgl.Vec4{X: mx, Y: my, W: 1}
     v.Transform(&mat)
     x, y = v.X, v.Y
     return
@@ -733,10 +734,24 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
 
   for i := len(stuff) - 1; i >= 0; i-- {
     f := stuff[i]
-    near_x,near_y := f.Pos()
-    furn_dx,furn_dy := f.Dims()
-    leftx,_ := board_to_window(near_x, near_y + furn_dy)
-    rightx,_ := board_to_window(near_x + furn_dx, near_y)
+    var near_x,near_y,dx,dy float32
+    idx,idy := f.Dims()
+    dx = float32(idx)
+    dy = float32(idy)
+    switch d := f.(type) {
+      case *Furniture:
+      ix,iy := d.Pos()
+      near_x = float32(ix)
+      near_y = float32(iy)
+
+      case Drawable:
+      fx,fy := d.FPos()
+      near_x = float32(fx)
+      near_y = float32(fy)
+    }
+
+    leftx,_ := board_to_window(near_x, near_y + dy)
+    rightx,_ := board_to_window(near_x + dx, near_y)
     botx,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
@@ -750,7 +765,7 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
       d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
 
       case Drawable:
-      d.Render(mathgl.Vec2{ botx, boty}, rightx - leftx)
+      d.Render(mathgl.Vec2{botx, boty}, rightx - leftx)
     }
   }
   gl.PopMatrix()

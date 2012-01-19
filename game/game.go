@@ -21,6 +21,7 @@ func MakeGamePanel() *GamePanel {
   gp.HorizontalTable = gui.MakeHorizontalTable()
   gp.HorizontalTable.AddChild(gp.viewer)
   gp.ent = MakeEntity("Master of the Manse")
+  gp.ent.X = -3
   gp.viewer.AddDrawable(gp.ent)
   return &gp
 }

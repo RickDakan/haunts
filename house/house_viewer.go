@@ -183,6 +183,19 @@ func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {
   return nil, nil
 }
 
+type offsetDrawable struct {
+  Drawable
+  dx,dy int
+}
+func (o offsetDrawable) FPos() (float64, float64) {
+  x,y := o.Drawable.FPos()
+  return x + float64(o.dx), y + float64(o.dy)
+}
+func (o offsetDrawable) Pos() (int, int) {
+  x,y := o.Drawable.Pos()
+  return x + o.dx, y + o.dy
+}
+
 func (hv *HouseViewer) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
@@ -229,7 +242,18 @@ func (hv *HouseViewer) Draw(region gui.Region) {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack)
     }
     drawFloor(room.roomDef, m_floor, nil, cstack)
-    drawFurniture(m_floor, hv.zoom, room.roomDef.Furniture, nil, hv.drawables, cstack)
+
+    var drawables []Drawable
+    for _,d := range hv.drawables {
+      x,y := d.Pos()
+      rx,ry := room.Pos()
+      rdx,rdy := room.Dims()
+      if x >= rx && y >= ry && x < rx + rdx && y < ry + rdy {
+        drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
+      }
+    }
+
+    drawFurniture(m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }
