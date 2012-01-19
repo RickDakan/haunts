@@ -205,7 +205,7 @@ func main() {
       editor.Load(path)
     }
   }
-  editor_name = "room"
+  editor_name = "house"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
   game_panel.LoadHouse("name")
