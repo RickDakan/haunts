@@ -43,11 +43,6 @@ func init() {
   runtime.LockOSThread()
   sys = system.Make(gos.GetSystemInterface())
 
-  var key_binds base.KeyBinds
-  base.LoadJson("/Users/runningwild/code/haunts/key_binds.json", &key_binds)
-  key_map = key_binds.MakeKeyMap()
-  base.SetDefaultKeyMap(key_map)
-
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)
@@ -55,6 +50,11 @@ func init() {
   if err != nil {
     panic(err.Error())
   }
+
+  var key_binds base.KeyBinds
+  base.LoadJson(filepath.Join(datadir, "key_binds.json"), &key_binds)
+  key_map = key_binds.MakeKeyMap()
+  base.SetDefaultKeyMap(key_map)
 
   factor := 1.0
   wdx = int(1200 * factor)
