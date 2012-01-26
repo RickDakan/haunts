@@ -633,7 +633,7 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture, cstack base.
       if temp != nil && i == 0 {
         cstack.Pop()
       }
-      }
+    }
   }
 }
 
