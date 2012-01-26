@@ -93,7 +93,7 @@ func (ri *RoomInst) Pos() (x,y int) {
 }
 
 type Floor struct {
-  Rooms []*Room
+  Rooms []*Room  `registry:"loadfrom-rooms"`
 }
 
 func (f *Floor) canAddRoom(add *Room) bool {

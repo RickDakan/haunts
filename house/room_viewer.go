@@ -765,6 +765,20 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
       d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
 
       case Drawable:
+      gl.Disable(gl.TEXTURE_2D)
+      gl.Color4f(1, 0, 0, 0.4)
+      gl.Begin(gl.QUADS)
+      x,y := d.Pos()
+      fx,fy := board_to_window(float32(x), float32(y))
+      gl.Vertex2f(fx, fy)
+      fx,fy = board_to_window(float32(x), float32(y)+1)
+      gl.Vertex2f(fx, fy)
+      fx,fy = board_to_window(float32(x)+1, float32(y)+1)
+      gl.Vertex2f(fx, fy)
+      fx,fy = board_to_window(float32(x)+1, float32(y))
+      gl.Vertex2f(fx, fy)
+      gl.End()
+      gl.Enable(gl.TEXTURE_2D)
       d.Render(mathgl.Vec2{botx, boty}, rightx - leftx)
     }
   }

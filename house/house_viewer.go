@@ -57,6 +57,7 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
 
 func (hv *HouseViewer) AddDrawable(d Drawable) {
   hv.drawables = append(hv.drawables, d)
+  println("added drawable")
 }
 func (hv *HouseViewer) RemoveDrawable(d Drawable) {
   hv.drawables = algorithm.Choose(hv.drawables, func(a interface{}) bool {
@@ -244,15 +245,14 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     drawFloor(room.roomDef, m_floor, nil, cstack)
 
     var drawables []Drawable
+    rx,ry := room.Pos()
+    rdx,rdy := room.Dims()
     for _,d := range hv.drawables {
       x,y := d.Pos()
-      rx,ry := room.Pos()
-      rdx,rdy := room.Dims()
       if x >= rx && y >= ry && x < rx + rdx && y < ry + rdy {
         drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-
     drawFurniture(m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }

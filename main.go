@@ -221,9 +221,9 @@ func main() {
   edit_mode := true
 
   for key_map["quit"].FramePressCount() == 0 {
-    sys.SwapBuffers()
     sys.Think()
     render.Queue(func() {
+      sys.SwapBuffers()
       ui.Draw()
     })
     render.Purge()
