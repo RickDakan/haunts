@@ -1,0 +1,6 @@
+{
+  "Name": "Angry Shade",
+  "Sprite" : {
+    "Path" : "../shade"
+  }
+}
