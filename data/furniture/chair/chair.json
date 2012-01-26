@@ -5,7 +5,7 @@
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "../chair.png"
+        "Path": "furniture/chair/chair.png"
       }
     }
   ],

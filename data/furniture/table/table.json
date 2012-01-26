@@ -7,7 +7,7 @@
       "Dx": 5,
       "Dy": 3,
       "Texture": {
-        "Path": "../table.png"
+        "Path": "furniture/table/table.png"
       }
     }
   ],

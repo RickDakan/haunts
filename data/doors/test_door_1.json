@@ -2,9 +2,9 @@
   "Name": "Test Door 1",
   "Width": 1,
   "Opened_texture": {
-    "Path": "../test_door_opened.png"
+    "Path": "doors/test_door_opened.png"
   },
   "Closed_texture": {
-    "Path": "../test_door_closed.png"
+    "Path": "doors/test_door_closed.png"
   }
 }

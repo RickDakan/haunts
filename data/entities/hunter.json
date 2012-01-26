@@ -1,6 +1,6 @@
 {
   "Name": "Ghost Hunter",
   "Sprite" : {
-    "Path" : "../hunter"
+    "Path" : "entities/hunter"
   }
 }

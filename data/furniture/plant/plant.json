@@ -5,14 +5,14 @@
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "../plant_left.png"
+        "Path": "furniture/plant/plant_left.png"
       }
     },
     {
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "../plant_right.png"
+        "Path": "furniture/plant/plant_right.png"
       }
     }
   ],

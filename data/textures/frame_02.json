@@ -1,6 +1,6 @@
 {
   "Name": "Frame02",
   "Texture":  {
-    "Path": "../frame_02.png"
+    "Path": "textures/frame_02.png"
   }
 }

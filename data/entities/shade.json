@@ -1,6 +1,6 @@
 {
   "Name": "Angry Shade",
   "Sprite" : {
-    "Path" : "../shade"
+    "Path" : "entities/shade"
   }
 }

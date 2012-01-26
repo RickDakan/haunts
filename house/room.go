@@ -204,9 +204,9 @@ func (room *roomDef) SaveOLD(t int64) string {
     if failed(err) { return "" }
   }
 
-  putInDir := func(target_dir, source string, final *string) error {
+  putInDir := func(target_dir, source string, final *base.Path) error {
     if !filepath.IsAbs(source) {
-      room.Wall.Path = filepath.Clean(filepath.Join(target_dir, source))
+      room.Wall.Path = base.Path(filepath.Clean(filepath.Join(target_dir, source)))
     }
     path, err := room.ensureRelative(target_dir, source, t)
     if err != nil {
@@ -214,12 +214,12 @@ func (room *roomDef) SaveOLD(t int64) string {
       return err
     }
     rel := filepath.Clean(filepath.Join(target_dir, path))
-    *final = base.RelativePath(target_path, rel)
+    *final = base.Path(base.TryRelative(target_path, rel))
     return nil
   }
 
-  putInDir(floors_dir, room.Floor.Path, &room.Floor.Path)
-  putInDir(walls_dir, room.Wall.Path, &room.Wall.Path)
+  putInDir(floors_dir, room.Floor.Path.String(), &room.Floor.Path)
+  putInDir(walls_dir, room.Wall.Path.String(), &room.Wall.Path)
 
   err = base.SaveJson(target_path, room)
   if failed(err) { return "" }

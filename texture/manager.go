@@ -9,19 +9,20 @@ import (
   _ "image/jpeg"
   "image/draw"
   "glop/render"
+  "haunts/base"
 )
 
 type Object struct {
-  Path string `registry:"path"`
+  Path base.Path
 
   // this path is the last one that was loaded, so that if we change Path then
   // we know to reload the texture.
-  path string
+  path base.Path
   data *Data
 }
 func (o *Object) Data() *Data {
   if o.data == nil || o.path != o.Path {
-    o.data = LoadFromPath(o.Path)
+    o.data = LoadFromPath(string(o.Path))
     o.path = o.Path
   }
   return o.data

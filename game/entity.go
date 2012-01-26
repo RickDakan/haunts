@@ -1,7 +1,6 @@
 package game
 
 import (
-  // "fmt"
   "glop/sprite"
   "haunts/base"
   "github.com/arbaal/mathgl"
@@ -21,14 +20,14 @@ func MakeEntity(name string) *Entity {
 }
 
 type spriteContainer struct {
-  Path string          `registry:"path"`
+  Path base.Path
   sp   *sprite.Sprite
 
   // If there is an error when loading the sprite it will be stored here
   err  error
 }
 func (sc *spriteContainer) Load() {
-  sc.sp, sc.err = sprite.LoadSprite(sc.Path)
+  sc.sp, sc.err = sprite.LoadSprite(sc.Path.String())
 }
 
 type entityDef struct {

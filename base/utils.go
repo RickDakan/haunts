@@ -5,11 +5,49 @@ import (
   "encoding/json"
   "encoding/gob"
   "io/ioutil"
-  "strings"
   "path/filepath"
   "image/color"
   "gl"
 )
+
+var datadir string
+func SetDatadir(_datadir string) {
+  datadir = _datadir
+}
+func GetStoreVal(key string) string {
+  var store map[string]string
+  LoadJson(filepath.Join(datadir, "store"), &store)
+  if store == nil {
+    store = make(map[string]string)
+  }
+  val := store[key]
+  return val
+}
+
+// A Path is a string that is intended to store a path.  When it is encoded
+// with gob or json it will convert itself to a relative path relative to
+// datadir.  When it is decoded from gob or json it will convert itself to an
+// absolute path based on datadir.
+type Path string
+func (p Path) String() string {
+  return string(p)
+}
+func (p Path) GobEncode() ([]byte, error) {
+  return []byte(TryRelative(datadir, string(p))), nil
+}
+func (p *Path) GobDecode(data []byte) error {
+  *p = Path(filepath.Join(datadir, string(data)))
+  return nil
+}
+func (p Path) MarshalJSON() ([]byte, error) {
+  val := TryRelative(datadir, string(p))
+  return []byte("\"" + val + "\""), nil
+}
+func (p *Path) UnmarshalJSON(data []byte) error {
+  rel := string(data[1 : len(data) - 1])
+  *p = Path(filepath.Join(datadir, rel))
+  return nil
+}
 
 // Opens the file named by path, reads it all, decodes it as json into target,
 // then closes the file.  Returns the first error found while doing this or nil.
@@ -68,35 +106,12 @@ func SaveGob(path string, source interface{}) error {
 // Returns a path rel such that filepath.Join(a, rel) and b refer to the same
 // file.  a and b must both be relative paths or both be absolute paths.  If
 // they are not then b will be returned in either case.
-func RelativePath(a,b string) string {
-  if filepath.IsAbs(a) != filepath.IsAbs(b) {
-    return b
+func TryRelative(base,target string) string {
+  rel,err := filepath.Rel(base, target)
+  if err == nil {
+    return rel
   }
-  aparts := strings.Split(filepath.ToSlash(filepath.Clean(a)), "/")
-  bparts := strings.Split(filepath.ToSlash(filepath.Clean(b)), "/")
-  for len(aparts) > 0 && len(bparts) > 0 && aparts[0] == bparts[0] {
-    aparts = aparts[1:]
-    bparts = bparts[1:]
-  }
-  for i := range aparts {
-    aparts[i] = ".."
-  }
-  ret := filepath.Join(filepath.Join(aparts...), filepath.Join(bparts...))
-  return filepath.Clean(ret)
-}
-
-var datadir string
-func SetDatadir(_datadir string) {
-  datadir = _datadir
-}
-func GetStoreVal(key string) string {
-  var store map[string]string
-  LoadJson(filepath.Join(datadir, "store"), &store)
-  if store == nil {
-    store = make(map[string]string)
-  }
-  val := store[key]
-  return val
+  return target
 }
 
 func SetStoreVal(key,val string) {

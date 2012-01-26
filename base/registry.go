@@ -36,10 +36,9 @@ import (
 // The following tags can be used which will apply special processing to the
 // objects when registered:
 // 
-// `registry:"path"` - If this object is registered with RegisterAllObjectsInDir
-// and the field with this tag is a string, then the string will be joined to
-// the current file's path and the resulting absolute path will replace the
-// value of this field.  
+// `registry:"autoload"` - If an object is tagged with this and it has a
+// method named Load() that takes zero inputs and zero outputs then its Load
+// method will be called after all of its data has been loaded.
 
 var (
   registry_registry map[string]reflect.Value
@@ -202,11 +201,6 @@ func processObject(dir string, val reflect.Value, tag string) {
   case reflect.Slice:
     for i := 0; i < val.Len(); i++ {
       processObject(dir, val.Index(i), tag)
-    }
-
-  case reflect.String:
-    if tag == "path" && !filepath.IsAbs(val.String()) {
-      val.Set(reflect.ValueOf(filepath.Clean(filepath.Join(dir, val.String()))))
     }
   }
 

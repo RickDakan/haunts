@@ -5,14 +5,14 @@
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "../armor_left.png"
+        "Path": "furniture/armor/armor_left.png"
       }
     },
     {
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "../armor_right.png"
+        "Path": "furniture/armor/armor_right.png"
       }
     }
   ],
