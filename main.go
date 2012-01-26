@@ -31,6 +31,15 @@ var (
   zooming,dragging,hiding bool
 )
 
+// attempt to make a relative path, otherwise leaves it alone
+func tryRelPath(base,path string) string {
+  rel,err := filepath.Rel(base, path)
+  if err == nil {
+    return rel
+  }
+  return path
+}
+
 func loadAllRegistries() {
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
@@ -120,7 +129,7 @@ func editMode() {
     if key_map["save"].FramePressCount() > 0 && chooser == nil {
       path,err := editor.Save()
       if path != "" && err == nil {
-        base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
+        base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), tryRelPath(datadir, path))
       }
     }
 
@@ -133,7 +142,7 @@ func editMode() {
         err = editor.Load(path)
         if err != nil {
         } else {
-          base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), path)
+          base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), tryRelPath(datadir, path))
         }
       }
       chooser = gui.MakeFileChooser(filepath.Join(datadir, fmt.Sprintf("%ss", editor_name)), callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
@@ -201,6 +210,7 @@ func main() {
   }
   for name,editor := range editors {
     path := base.GetStoreVal(fmt.Sprintf("last %s path", name))
+    path = filepath.Join(datadir, path)
     if path != "" {
       editor.Load(path)
     }
