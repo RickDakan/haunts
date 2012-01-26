@@ -8,5 +8,6 @@
         "Path": "../chair.png"
       }
     }
-  ]
+  ],
+  "Blocks_los" : false
 }

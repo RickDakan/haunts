@@ -79,6 +79,11 @@ type furnitureDef struct {
 
   // All available orientations for this piece of furniture
   Orientations []furnitureOrientation
+
+  // Whether or not this piece of furniture blocks line-of-sight.  If a piece
+  // of furniture blocks los, then the entire piece blocks los, regardless of
+  // orientation.
+  Blocks_los bool
 }
 
 func (f *Furniture) Dims() (int, int) {

@@ -15,5 +15,6 @@
         "Path": "../plant_right.png"
       }
     }
-  ]
+  ],
+  "Blocks_los" : false
 }

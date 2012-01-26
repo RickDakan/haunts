@@ -15,5 +15,6 @@
         "Path": "../armor_right.png"
       }
     }
-  ]
+  ],
+  "Blocks_los" : false
 }

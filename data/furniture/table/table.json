@@ -10,5 +10,6 @@
         "Path": "../table.png"
       }
     }
-  ]
+  ],
+  "Blocks_los" : false
 }
