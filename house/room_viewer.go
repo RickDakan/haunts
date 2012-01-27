@@ -381,7 +381,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     doors = append(doors, temp_door.Door)
   }
 
-  alpha := 0.4
+  alpha := 0.2
 
   do_right_doors := func(opened bool) {
     for _,door := range doors {
@@ -635,6 +635,17 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture, cstack base.
       }
     }
   }
+
+  gl.StencilFunc(gl.ALWAYS, 5, 5)
+  gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Color4d(0, 0, 0, 0)
+  gl.Begin(gl.QUADS)
+    gl.Vertex2i(0, 0)
+    gl.Vertex2i(0, room.Size.Dy)
+    gl.Vertex2i(room.Size.Dx, room.Size.Dy)
+    gl.Vertex2i(room.Size.Dx, 0)
+  gl.End()
 }
 
 func (rv *RoomViewer) drawFloor() {
