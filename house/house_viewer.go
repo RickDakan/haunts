@@ -31,6 +31,7 @@ type HouseViewer struct {
   floor,ifloor mathgl.Mat4
 
   drawables []Drawable
+  Los_tex *LosTexture
 
   Temp struct {
     Room *Room
@@ -49,7 +50,6 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.Ex = true
   hv.Ey = true
   hv.house = house
-  println("n create: ", len(hv.house.Floors))
   hv.angle = angle
   hv.Zoom(1)
   return &hv
@@ -57,7 +57,6 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
 
 func (hv *HouseViewer) AddDrawable(d Drawable) {
   hv.drawables = append(hv.drawables, d)
-  println("added drawable")
 }
 func (hv *HouseViewer) RemoveDrawable(d Drawable) {
   hv.drawables = algorithm.Choose(hv.drawables, func(a interface{}) bool {
@@ -242,7 +241,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack)
     }
-    drawFloor(room.roomDef, m_floor, nil, cstack)
+    drawFloor(room, m_floor, nil, cstack, hv.Los_tex)
 
     var drawables []Drawable
     rx,ry := room.Pos()

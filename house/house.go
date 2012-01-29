@@ -3,7 +3,6 @@ package house
 import (
   "glop/gui"
   "glop/gin"
-  "glop/sprite"
   "haunts/texture"
   "haunts/base"
   "glop/util/algorithm"
@@ -217,22 +216,6 @@ type HouseDef struct {
 
   // The floor that the explorers start on
   Starting_floor int
-}
-
-type House2 struct {
-  Defname string
-  *HouseDef
-  HouseInst
-}
-
-type HouseInst struct {
-  sprites []*sprite.Sprite
-}
-
-func (h *HouseInst) Think(dt int64) {
-  for _,s := range h.sprites {
-    s.Think(dt)
-  }
 }
 
 func MakeHouseDef() *HouseDef {

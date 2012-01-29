@@ -7,6 +7,9 @@ import (
   "gl"
 )
 
+const losMinVisibility = 64
+const losVisibilityThreshold = 200
+
 func LoadAllEntitiesInDir(dir string) {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
@@ -33,6 +36,7 @@ func (sc *spriteContainer) Load() {
 type entityDef struct {
   Name string
   Sprite spriteContainer  `registry:"autoload"`
+  Los_dist int
 }
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
@@ -44,10 +48,20 @@ type EntityInst struct {
   // If the entity is currently moving along a path it will be stored here.
   // Path[0] is the cell that the entity is currently moving directly towards.
   Path [][2]int
+
+  // All positions that can be seen by this entity are stored here.
+  los map[[2]int]bool
+
+  // Floor coordinates of the last position los was determined from, so that
+  // we don't need to recalculate it more than we need to as an ent is moving.
+  losx,losy int
 }
-func (ei *EntityInst) Pos() (int,int) {
-  x := ei.X + 0.5
-  y := ei.Y + 0.5
+func DiscretizePoint32(x,y float32) (int,int) {
+  return DiscretizePoint64(float64(x), float64(y))
+}
+func DiscretizePoint64(x,y float64) (int,int) {
+  x += 0.5
+  y += 0.5
   if x < 0 {
     x -= 1
   }
@@ -55,6 +69,9 @@ func (ei *EntityInst) Pos() (int,int) {
     y -= 1
   }
   return int(x), int(y)
+}
+func (ei *EntityInst) Pos() (int,int) {
+  return DiscretizePoint64(ei.X, ei.Y)
 }
 func (ei *EntityInst) FPos() (float64,float64) {
   return ei.X, ei.Y

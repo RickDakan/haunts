@@ -2,5 +2,6 @@
   "Name": "Angry Shade",
   "Sprite" : {
     "Path" : "entities/shade"
-  }
+  },
+  "Los_dist" : 25
 }

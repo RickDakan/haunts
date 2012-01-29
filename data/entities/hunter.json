@@ -2,5 +2,6 @@
   "Name": "Ghost Hunter",
   "Sprite" : {
     "Path" : "entities/hunter"
-  }
+  },
+  "Los_dist" : 25
 }

@@ -577,7 +577,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   do_left_wall()
 }
 
-func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -613,6 +613,29 @@ func drawFloor(room *roomDef, floor mathgl.Mat4, temp *WallTexture, cstack base.
     gl.TexCoord2i(1, 0)
     gl.Vertex2i(room.Size.Dx, 0)
   gl.End()
+
+  if los_tex != nil {
+    los_tex.Bind()
+    gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
+    gl.Color4d(0, 0, 0, 1)
+    x,y,x2,y2 := los_tex.Region()
+    x -= room.X
+    y -= room.Y
+    x2 -= room.X
+    y2 -= room.Y
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2i(0, 0)
+      gl.Vertex2i(x, y)
+      gl.TexCoord2i(0, 1)
+      gl.Vertex2i(x, y2)
+      gl.TexCoord2i(1, 1)
+      gl.Vertex2i(x2, y2)
+      gl.TexCoord2i(1, 0)
+      gl.Vertex2i(x2, y)
+    gl.End()
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  }
+  cstack.Apply()
   {
     var texs []WallTexture
     if temp != nil {
@@ -809,7 +832,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   cstack.Push(1, 1, 1, 1)
   drawPrep()
   drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack)
-  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture, cstack)
+  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
     cstack.Pop()
