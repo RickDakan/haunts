@@ -232,13 +232,13 @@ func (g *Game) Think(dt int64) {
   for i := range pix {
     for j := range pix[i] {
       v := int64(pix[i][j])
-      if v < losVisibilityThreshold {
+      if v < house.LosVisibilityThreshold {
         v -= amt
       } else {
         v += amt
       }
-      if v < losMinVisibility {
-        v = losMinVisibility
+      if v < house.LosMinVisibility {
+        v = house.LosMinVisibility
       }
       if v < 0 { v = 0 }
       if v > 255 { v = 255 }
@@ -305,14 +305,14 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   for i := ltx; i <= ltx2; i++ {
     for j := lty; j <= lty2; j++ {
       if ent.los[[2]int{i,j}] { continue }
-      if g.los_tex.Get(i, j) >= losVisibilityThreshold {
-        g.los_tex.Set(i, j, losVisibilityThreshold - 1)
+      if g.los_tex.Get(i, j) >= house.LosVisibilityThreshold {
+        g.los_tex.Set(i, j, house.LosVisibilityThreshold - 1)
       }
     }
   }
   for p := range ent.los {
-    if g.los_tex.Get(p[0], p[1]) < losVisibilityThreshold {
-      g.los_tex.Set(p[0], p[1], losVisibilityThreshold)
+    if g.los_tex.Get(p[0], p[1]) < house.LosVisibilityThreshold {
+      g.los_tex.Set(p[0], p[1], house.LosVisibilityThreshold)
     }
   }
 }

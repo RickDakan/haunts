@@ -741,7 +741,7 @@ func (rv *RoomViewer) drawFloor() {
   }
 }
 
-func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack) {
+func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack, los_tex *LosTexture) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 1)
   gl.PushMatrix()
@@ -769,6 +769,8 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
   for i := len(stuff) - 1; i >= 0; i-- {
     f := stuff[i]
     var near_x,near_y,dx,dy float32
+
+
     idx,idy := f.Dims()
     dx = float32(idx)
     dy = float32(idy)
@@ -784,16 +786,59 @@ func drawFurniture(mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_f
       near_y = float32(fy)
     }
 
+    vis_tot := 1.0
+    if los_tex != nil {
+      vis_tot = 0.0
+
+      // If we're looking at a piece of furniture that blocks Los then we
+      // can't expect to have Los to all of it, so we will check the squares
+      // around it.  Full visibility will mean that half of the surrounding
+      // cells are visible.
+      blocks_los := false
+      // Also need to check if it is an enemy unit
+      if _,ok := f.(*Furniture); ok {
+        blocks_los = true
+      }
+
+      if blocks_los {
+        for x := near_x - 1; x < near_x + dx + 1; x++ {
+          vis_tot += float64(los_tex.Get(int(x) + roomx, int(near_y - 1) + roomy))
+          vis_tot += float64(los_tex.Get(int(x) + roomx, int(near_y + dy + 1) + roomy))
+        }
+        for y := near_y; y < near_y + dy; y++ {
+          vis_tot += float64(los_tex.Get(int(near_x - 1) + roomx, int(y) + roomy))
+          vis_tot += float64(los_tex.Get(int(near_x + dx + 1) + roomx, int(y) + roomy))
+        }
+        vis_tot /= float64((dx*2 + dy*2 + 4) * 255 / 2)
+        if vis_tot > 1 {
+          vis_tot = 1
+        }
+      } else {
+        for x := near_x; x < near_x + dx; x++ {
+          for y := near_y; y < near_y + dy; y++ {
+            vis_tot += float64(los_tex.Get(int(x) + roomx, int(y) + roomy))
+          }
+        }
+  //    println("stuff(", i, "): ", near_x, " + ", roomx)
+        vis_tot /= float64(dx * dy * 255)
+      }
+    }
+
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
     botx,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
+    } else {
+      bot := (LosMinVisibility / 255.0)
+      vis := (vis_tot - bot) / (1 - bot)
+      vis = vis*vis
+      vis = vis * (1 - bot) + bot
+      vis = vis*vis
+      cstack.Push(vis, vis, vis, 1)
     }
     cstack.Apply()
-    if f == temp_furniture {
-      cstack.Pop()
-    }
+    cstack.Pop()
     switch d := f.(type) {
       case *Furniture:
       d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
@@ -840,7 +885,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   } else {
     cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack)
+  drawFurniture(0, 0, rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack, nil)
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {

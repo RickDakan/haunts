@@ -252,7 +252,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
         drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-    drawFurniture(m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack)
+    drawFurniture(rx, ry, m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack, hv.Los_tex)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }

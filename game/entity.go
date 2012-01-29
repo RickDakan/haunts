@@ -7,9 +7,6 @@ import (
   "gl"
 )
 
-const losMinVisibility = 64
-const losVisibilityThreshold = 200
-
 func LoadAllEntitiesInDir(dir string) {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
