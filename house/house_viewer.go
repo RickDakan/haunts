@@ -237,9 +237,9 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     }
     if room == hv.Temp.Door_room && hv.Temp.Door_info.Door != nil {
       hv.Temp.Door_info.Valid = hv.house.Floors[current_floor].canAddDoor(room, hv.Temp.Door_info.Door)
-      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack)
+      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack, hv.Los_tex)
     } else {
-      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack)
+      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex)
     }
     drawFloor(room, m_floor, nil, cstack, hv.Los_tex)
 

@@ -339,7 +339,7 @@ func drawPrep() {
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, temp_door doorInfo, cstack base.ColorStack) {
+func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, temp_door doorInfo, cstack base.ColorStack, los_tex *LosTexture) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -475,6 +475,30 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.Color4d(0, 0, 0, 0)
   do_right_wall()
 
+  // Now that the entire wall has been draw we can cast shadows on it if we've
+  // got a los texture
+  if los_tex != nil {
+    los_tex.Bind()
+    gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
+    gl.Color4d(0, 0, 0, 1)
+    x,y,_,_ := los_tex.Region()
+    tx := float64(room.X + room.Size.Dx - 1 - x) / float64(los_tex.Size())
+    tx2 := float64(room.X + room.Size.Dx - x) / float64(los_tex.Size())
+    ty := float64(room.Y - y) / float64(los_tex.Size())
+    ty2 := float64(room.Y + room.Size.Dy - 1 - y) / float64(los_tex.Size())
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2d(tx2, ty)
+      gl.Vertex3i(room.Size.Dx, 0, 0)
+      gl.TexCoord2d(tx, ty)
+      gl.Vertex3i(room.Size.Dx, 0, -dz)
+      gl.TexCoord2d(tx, ty2)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
+      gl.TexCoord2d(tx2, ty2)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
+    gl.End()
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  }
+
 
   do_left_wall := func() {
     gl.Begin(gl.QUADS)
@@ -575,6 +599,30 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
   gl.Color4d(0, 0, 0, 0)
   do_left_wall()
+
+  // Now that the entire wall has been draw we can cast shadows on it if we've
+  // got a los texture
+  if los_tex != nil {
+    los_tex.Bind()
+    gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
+    gl.Color4d(0, 0, 0, 1)
+    x,y,_,_ := los_tex.Region()
+    tx := float64(room.X - x) / float64(los_tex.Size())
+    tx2 := float64(room.X + room.Size.Dx - 1 - x) / float64(los_tex.Size())
+    ty := float64(room.Y + room.Size.Dy - 1 - y) / float64(los_tex.Size())
+    ty2 := float64(room.Y + room.Size.Dy - y) / float64(los_tex.Size())
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2d(tx2, ty2)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, 0)
+      gl.TexCoord2d(tx2, ty)
+      gl.Vertex3i(room.Size.Dx, room.Size.Dy, -dz)
+      gl.TexCoord2d(tx, ty)
+      gl.Vertex3i(0, room.Size.Dy, -dz)
+      gl.TexCoord2d(tx, ty2)
+      gl.Vertex3i(0, room.Size.Dy, 0)
+    gl.End()
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  }
 }
 
 func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture) {
@@ -876,7 +924,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   var cstack base.ColorStack
   cstack.Push(1, 1, 1, 1)
   drawPrep()
-  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack)
+  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack, nil)
   drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
