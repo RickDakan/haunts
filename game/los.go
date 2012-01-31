@@ -227,7 +227,7 @@ func (g *Game) Think(dt int64) {
     g.DetermineLos(g.Ents[i], false)
   }
   pix,_,_ := g.los_tex.Pix()
-  amt := dt / 3
+  amt := dt / 5
   mod := false
   for i := range pix {
     for j := range pix[i] {

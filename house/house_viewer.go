@@ -235,13 +235,29 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       cstack.Push(1, 1, 1, 1)
     }
+    los_alpha := 1.0
+    if hv.Los_tex != nil {
+      max := hv.Los_tex.Get(room.X, room.Y)
+      for x := room.X; x < room.X + room.Size.Dx; x++ {
+        for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+          v := hv.Los_tex.Get(x, y)
+          if v > max {
+            max = v
+          }
+        }
+      }
+      if max < LosVisibilityThreshold {
+        los_alpha = float64(max - LosMinVisibility) / float64(LosVisibilityThreshold - LosMinVisibility)
+      }
+    }
+    if los_alpha == 0 { continue }
     if room == hv.Temp.Door_room && hv.Temp.Door_info.Door != nil {
       hv.Temp.Door_info.Valid = hv.house.Floors[current_floor].canAddDoor(room, hv.Temp.Door_info.Door)
-      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack, hv.Los_tex)
+      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack, hv.Los_tex, los_alpha)
     } else {
-      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex)
+      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex, los_alpha)
     }
-    drawFloor(room, m_floor, nil, cstack, hv.Los_tex)
+    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha)
 
     var drawables []Drawable
     rx,ry := room.Pos()
@@ -252,7 +268,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
         drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-    drawFurniture(rx, ry, m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack, hv.Los_tex)
+    drawFurniture(rx, ry, m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack, hv.Los_tex, los_alpha)
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }

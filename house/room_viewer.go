@@ -339,7 +339,7 @@ func drawPrep() {
 // temp: an additional texture to render along with the other detail textures
 // specified in room
 // left,right: the xy planes of the left and right walls
-func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, temp_door doorInfo, cstack base.ColorStack, los_tex *LosTexture) {
+func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, temp_door doorInfo, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64) {
   gl.Enable(gl.STENCIL_TEST)
   defer gl.Disable(gl.STENCIL_TEST)
 
@@ -395,7 +395,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
           cstack.Push(1, 0, 0, alpha)
         }
       }
-      cstack.ApplyWithAlpha(alpha)
+      cstack.ApplyWithAlpha(alpha * los_alpha)
       gl.Begin(gl.QUADS)
       height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
       gl.TexCoord2f(1, 0)
@@ -419,16 +419,16 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.Color4d(0, 0, 0, 0)
   do_right_wall()
   gl.Enable(gl.TEXTURE_2D)
-  cstack.ApplyWithAlpha(alpha)
+  cstack.ApplyWithAlpha(alpha * los_alpha)
   gl.StencilFunc(gl.EQUAL, 8, 15)
   gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
   do_right_doors(true)
-  cstack.ApplyWithAlpha(1.0)
+  cstack.ApplyWithAlpha(1.0 * los_alpha)
   gl.StencilFunc(gl.EQUAL, 15, 15)
   gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
   do_right_doors(true)
   for _,alpha := range []float64{ alpha, 1.0 } {
-    cstack.ApplyWithAlpha(alpha)
+    cstack.ApplyWithAlpha(alpha * los_alpha)
     if alpha == 1.0 {
       gl.StencilFunc(gl.EQUAL, 15, 15)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
@@ -455,7 +455,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
       if temp_tex != nil && i == 0 {
         cstack.Push(1, 0.7, 0.7, 0.7)
       }
-      cstack.ApplyWithAlpha(alpha)
+      cstack.ApplyWithAlpha(alpha * los_alpha)
       tex.Render()
       if temp_tex != nil && i == 0 {
         cstack.Pop()
@@ -463,10 +463,10 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     }
     gl.PopMatrix()
   }
-  cstack.ApplyWithAlpha(alpha)
+  cstack.ApplyWithAlpha(alpha * los_alpha)
   gl.StencilFunc(gl.EQUAL, 8, 15)
   do_right_doors(false)
-  cstack.ApplyWithAlpha(1.0)
+  cstack.ApplyWithAlpha(1.0 * los_alpha)
   gl.StencilFunc(gl.EQUAL, 15, 15)
   do_right_doors(false)
   // Go back over the area we just drew on and replace it with all b0001
@@ -525,7 +525,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
           cstack.Push(1, 0, 0, alpha)
         }
       }
-      cstack.ApplyWithAlpha(alpha)
+      cstack.ApplyWithAlpha(alpha * los_alpha)
       gl.Begin(gl.QUADS)
       height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
       gl.TexCoord2f(0, 0)
@@ -548,11 +548,11 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.Color4d(0, 0, 0, 0)
   do_left_wall()
   gl.Enable(gl.TEXTURE_2D)
-  cstack.ApplyWithAlpha(alpha)
+  cstack.ApplyWithAlpha(alpha * los_alpha)
   gl.StencilFunc(gl.EQUAL, 8, 15)
   gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
   do_left_doors(true)
-  cstack.ApplyWithAlpha(1.0)
+  cstack.ApplyWithAlpha(1.0 * los_alpha)
   gl.StencilFunc(gl.EQUAL, 15, 15)
   gl.StencilOp(gl.KEEP, gl.ZERO, gl.ZERO)
   do_left_doors(true)
@@ -565,7 +565,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     }
     room.Wall.Data().Bind()
-    cstack.ApplyWithAlpha(alpha)
+    cstack.ApplyWithAlpha(alpha * los_alpha)
     do_left_wall()
 
     gl.PushMatrix()
@@ -580,7 +580,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
       if temp_tex != nil && i == 0 {
         cstack.Push(1, 0.7, 0.7, 0.7)
       }
-      cstack.ApplyWithAlpha(alpha)
+      cstack.ApplyWithAlpha(alpha * los_alpha)
       tex.Render()
       if temp_tex != nil && i == 0 {
         cstack.Pop()
@@ -588,10 +588,10 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     }
     gl.PopMatrix()
   }
-  cstack.ApplyWithAlpha(alpha)
+  cstack.ApplyWithAlpha(alpha * los_alpha)
   gl.StencilFunc(gl.EQUAL, 8, 15)
   do_left_doors(false)
-  cstack.ApplyWithAlpha(1.0)
+  cstack.ApplyWithAlpha(1.0 * los_alpha)
   gl.StencilFunc(gl.EQUAL, 15, 15)
   do_left_doors(false)
   // Go back over the area we just drew on and replace it with all b0010
@@ -607,8 +607,10 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
     gl.Color4d(0, 0, 0, 1)
     x,y,_,_ := los_tex.Region()
-    tx := float64(room.X - x) / float64(los_tex.Size())
-    tx2 := float64(room.X + room.Size.Dx - 1 - x) / float64(los_tex.Size())
+    // TODO: Why on earth are the coordinates off by one from the y coordinates
+    // for the other wall!?
+    tx := float64(room.X - x + 1) / float64(los_tex.Size())
+    tx2 := float64(room.X + room.Size.Dx - x) / float64(los_tex.Size())
     ty := float64(room.Y + room.Size.Dy - 1 - y) / float64(los_tex.Size())
     ty2 := float64(room.Y + room.Size.Dy - y) / float64(los_tex.Size())
     gl.Begin(gl.QUADS)
@@ -625,7 +627,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 }
 
-func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -650,7 +652,7 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
   room.Floor.Data().Bind()
-  cstack.Apply()
+  cstack.ApplyWithAlpha(los_alpha)
   gl.Begin(gl.QUADS)
     gl.TexCoord2i(0, 0)
     gl.Vertex2i(0, 0)
@@ -683,7 +685,7 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
     gl.End()
     gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   }
-  cstack.Apply()
+  cstack.ApplyWithAlpha(los_alpha)
   {
     var texs []WallTexture
     if temp != nil {
@@ -699,7 +701,7 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
       if temp != nil && i == 0 {
         cstack.Push(1, 0.7, 0.7, 0.7)
       }
-      cstack.Apply()
+      cstack.ApplyWithAlpha(los_alpha)
       tex.Render()
       if temp != nil && i == 0 {
         cstack.Pop()
@@ -789,9 +791,9 @@ func (rv *RoomViewer) drawFloor() {
   }
 }
 
-func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack, los_tex *LosTexture) {
+func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64) {
   gl.Enable(gl.TEXTURE_2D)
-  gl.Color4d(1, 1, 1, 1)
+  gl.Color4d(1, 1, 1, los_alpha)
   gl.PushMatrix()
   gl.LoadIdentity()
 
@@ -885,7 +887,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
       vis = vis*vis
       cstack.Push(vis, vis, vis, 1)
     }
-    cstack.Apply()
+    cstack.ApplyWithAlpha(los_alpha)
     cstack.Pop()
     switch d := f.(type) {
       case *Furniture:
@@ -924,8 +926,8 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   var cstack base.ColorStack
   cstack.Push(1, 1, 1, 1)
   drawPrep()
-  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack, nil)
-  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil)
+  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack, nil, 1.0)
+  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil, 1.0)
   rv.drawFloor()
   if rv.edit_mode == editCells {
     cstack.Pop()
@@ -933,7 +935,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   } else {
     cstack.Push(1, 1, 1, 1)
   }
-  drawFurniture(0, 0, rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack, nil)
+  drawFurniture(0, 0, rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack, nil, 1.0)
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {
