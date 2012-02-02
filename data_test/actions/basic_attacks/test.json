@@ -1,0 +1,7 @@
+{
+  "Name"    : "Basic Test",
+  "Kind"    : "Fire",
+  "Ap"      : 3,
+  "Strength": 4,
+  "Range"   : 3
+}
