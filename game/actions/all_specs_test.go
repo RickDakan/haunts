@@ -1,4 +1,4 @@
-package action_test
+package actions_test
 
 import (
   "gospec"

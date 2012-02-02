@@ -1,8 +1,9 @@
-package action
+package actions
 
 import (
   "encoding/gob"
   "haunts/game/status"
+  "haunts/game"
 )
 
 // Basic Attacks are single target and instant, they are also readyable
@@ -38,9 +39,9 @@ func (a *ActionBasicAttack) HandleOutput() {
 }
 func (a *ActionBasicAttack) Cancel() {
 }
-func (a *ActionBasicAttack) Maintain(dt int64) MaintenanceStatus {
+func (a *ActionBasicAttack) Maintain(dt int64) game.MaintenanceStatus {
   // Do stuff
-  return Complete
+  return game.Complete
 }
 func (a *ActionBasicAttack) Interrupt() bool {
   return true

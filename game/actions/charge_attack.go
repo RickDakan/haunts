@@ -1,8 +1,9 @@
-package action
+package actions
 
 import (
   "encoding/gob"
   "haunts/game/status"
+  "haunts/game"
 )
 
 type ActionChargeAttack struct {
@@ -37,9 +38,9 @@ func (a *ActionChargeAttack) HandleOutput() {
 }
 func (a *ActionChargeAttack) Cancel() {
 }
-func (a *ActionChargeAttack) Maintain(dt int64) MaintenanceStatus {
+func (a *ActionChargeAttack) Maintain(dt int64) game.MaintenanceStatus {
   // Do stuff
-  return Complete
+  return game.Complete
 }
 func (a *ActionChargeAttack) Interrupt() bool {
   return true

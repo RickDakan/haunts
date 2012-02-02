@@ -14,6 +14,10 @@ var datadir string
 func SetDatadir(_datadir string) {
   datadir = _datadir
 }
+func GetDataDir() string {
+  return datadir
+}
+
 func GetStoreVal(key string) string {
   var store map[string]string
   LoadJson(filepath.Join(datadir, "store"), &store)
