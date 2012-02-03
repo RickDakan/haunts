@@ -26,7 +26,7 @@ func registerMoves() map[string]func() game.Action {
 
 func init() {
   game.RegisterActionMakers(registerMoves)
-  gob.Register(Move{})
+  gob.Register(&Move{})
 }
 
 type Move struct {
@@ -41,7 +41,7 @@ func (a *Move) Readyable() bool {
   return true
 }
 func (a *Move) Cost() int {
-  return 3
+  return 2
 }
 func (a *Move) Prep(*game.Entity) bool {
   return true

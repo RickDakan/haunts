@@ -20,28 +20,44 @@ func init() {
 
 func ActionSpec(c gospec.Context) {
   game.RegisterActions()
-  // c.Specify("Actions are loaded properly.", func() {
-  //   basic := actions.MakeAction("Basic Test")
-  //   c.Expect(basic.Cost(), Equals, 3)
-  //   charge := actions.MakeAction("Charge Test")
-  //   c.Expect(charge.Cost(), Equals, 4)
-  // })
+  c.Specify("Actions are loaded properly.", func() {
+    basic := game.MakeAction("Basic Test")
+    c.Expect(basic.Cost(), Equals, 3)
+    charge := game.MakeAction("Charge Test")
+    c.Expect(charge.Cost(), Equals, 4)
+  })
 
   c.Specify("Actions can be gobbed without loss of type.", func() {
     buf := bytes.NewBuffer(nil)
     enc := gob.NewEncoder(buf)
 
-    var basic game.Action
-    basic = game.MakeAction("Move")
-    c.Expect(basic.Cost(), Equals, 3)
+    var as []game.Action
+    as = append(as, game.MakeAction("Move Test"))
+    as = append(as, game.MakeAction("Basic Test"))
+    as = append(as, game.MakeAction("Charge Test"))
+    c.Expect(as[0].Cost(), Equals, 2)
+    c.Expect(as[1].Cost(), Equals, 3)
+    c.Expect(as[2].Cost(), Equals, 4)
 
-    err := enc.Encode(basic)
-    c.Expect(err, Equals, nil)
+    err := enc.Encode(as)
+    c.Assume(err, Equals, nil)
 
     dec := gob.NewDecoder(buf)
-    var basic2 actions.Move
-    err = dec.Decode(&basic2)
-    c.Expect(err, Equals, nil)
-    c.Expect(basic2.Cost(), Equals, 3)
+    var as2 []game.Action
+    err = dec.Decode(&as2)
+    c.Assume(err, Equals, nil)
+
+    c.Expect(as2[0].Cost(), Equals, 2)
+    _,ok := as2[0].(*actions.Move)
+    c.Expect(ok, Equals, true)
+
+    c.Expect(as2[1].Cost(), Equals, 3)
+    _,ok = as2[1].(*actions.BasicAttack)
+    c.Expect(ok, Equals, true)
+
+    c.Expect(as2[2].Cost(), Equals, 4)
+    _,ok = as2[2].(*actions.ChargeAttack)
+    c.Expect(ok, Equals, true)
+
   })
 }
