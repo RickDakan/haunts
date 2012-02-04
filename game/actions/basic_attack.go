@@ -1,10 +1,11 @@
 package actions
 
 import (
-  "encoding/gob"
+  "glop/gui"
   "haunts/base"
   "haunts/game/status"
   "haunts/game"
+  "encoding/gob"
   "path/filepath"
 )
 
@@ -46,14 +47,11 @@ type BasicAttackDef struct {
 func (a *BasicAttack) Readyable() bool {
   return true
 }
-func (a *BasicAttack) Cost() int {
-  return a.Ap
-}
 func (a *BasicAttack) Prep(*game.Entity) bool {
   return true
 }
-func (a *BasicAttack) HandleInput() bool {
-  return true
+func (a *BasicAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
+  return game.NotConsumed
 }
 func (a *BasicAttack) HandleOutput() {
 }

@@ -3,5 +3,8 @@
   "Sprite" : {
     "Path" : "entities/shade"
   },
-  "Los_dist" : 25
+  "Los_dist" : 25,
+  "Action_names": [
+    "Move Test"
+  ]
 }

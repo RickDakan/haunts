@@ -2,13 +2,7 @@ package game
 
 import (
   "fmt"
-)
-
-type MaintenanceStatus int
-const (
-  InProgress         MaintenanceStatus = iota
-  CheckForInterrupts
-  Complete
+  "glop/gui"
 )
 
 var action_map map[string]func() Action
@@ -40,29 +34,53 @@ func RegisterActions() {
   }
 }
 
+// Acceptable values to be returned from Action.Maintain()
+type MaintenanceStatus int
+const (
+  // The Action is in progress and should not be interrupted.
+  InProgress         MaintenanceStatus = iota
+
+  // The Action is interrupted and can be interrupted immediately.
+  CheckForInterrupts
+
+  // The Action has been completed.
+  Complete
+)
+
+// Acceptable values to be returned from Action.HandleInput()
+type InputStatus int
+const (
+  // The input was not consumed.
+  NotConsumed InputStatus = iota
+
+  // The input was consumed but the action has not begun.
+  Consumed
+
+  // The input was consumed and the action has begun.
+  ConsumedAndBegin
+)
+
 type Action interface {
   // Returns true iff this action can be used as an interrupt
   Readyable() bool
 
-  // Cost, in Ap, that must be paid to use this action.
-  Cost() int
-
-  // Called when the user first selects this action
-  // Returns true if the action can be performed
-  // Returns false if the action cannot be performed
+  // Called when the user attempts to select the action.  Returns true if the
+  // actions can be performed at least minimally, false if the action cannot
+  // be performed at all.
   Prep(*Entity) bool
 
   // Got to have some way for the user to interact with the action.  Returns
   // true if the action has been comitted.  If this action is not being
   // readied then it will take effect immediately.
-  HandleInput() bool
+  HandleInput(gui.EventGroup, *Game) InputStatus
 
   // Got to have some way for the user to see what is going on
   HandleOutput()
 
   // Called if the user cancels the action - done this way so that all actions
   // can be cancelled in the same way instead of each action deciding how to
-  // cancel itself.
+  // cancel itself.  This method is only called before Maintain() is called
+  // the first time, or after Maintain() returns CheckForInterrupts.
   Cancel()
 
   // Actually executes the action.  Returns a value after every call

@@ -38,6 +38,20 @@ type Game struct {
   los_tex *house.LosTexture
 
   Ents []*Entity  `registry:"loadfrom-entities"`
+
+  action_state actionState
+  current_action Action
+}
+
+type actionState int
+const (
+  noAction       actionState = iota
+  preppingAction
+  doingAction
+)
+
+func (g *Game) GetViewer() *house.HouseViewer {
+  return g.viewer
 }
 
 func (g *Game) NumVertex() int {
@@ -47,7 +61,7 @@ func (g *Game) NumVertex() int {
   }
   return total
 }
-func (g *Game) fromVertex(v int) (room *house.Room, x,y int) {
+func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
   for _,room := range g.house.Floors[0].Rooms {
     size := room.Size.Dx * room.Size.Dy
     if v >= size {
@@ -58,7 +72,7 @@ func (g *Game) fromVertex(v int) (room *house.Room, x,y int) {
   }
   return nil, 0, 0
 }
-func (g *Game) toVertex(x, y int) int {
+func (g *Game) ToVertex(x, y int) int {
   v := 0
   for _,room := range g.house.Floors[0].Rooms {
     if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
@@ -138,7 +152,7 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
 }
 
 func (g *Game) Adjacent(v int) ([]int, []float64) {
-  room,x,y := g.fromVertex(v)
+  room,x,y := g.FromVertex(v)
   var adj []int
   var weight []float64
   var moves [3][3]float64
@@ -155,11 +169,11 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
       // TODO: This is obviously inefficient
-      troom,_,_ := g.fromVertex(g.toVertex(tx, ty))
+      troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
       if furnitureAt(troom, tx - troom.X, ty - troom.Y) != nil { continue }
       if !connected(room, troom, x, y, tx, ty) { continue }
-      adj = append(adj, g.toVertex(tx, ty))
+      adj = append(adj, g.ToVertex(tx, ty))
       moves[dx+1][dy+1] = 1
       weight = append(weight, 1)
     }
@@ -172,13 +186,13 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
       // TODO: This is obviously inefficient
-      troom,_,_ := g.fromVertex(g.toVertex(tx, ty))
+      troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
       if furnitureAt(troom, tx - troom.X, ty - troom.Y) != nil { continue }
       if !connected(room, troom, x, y, tx, ty) { continue }
       if !connected(troom, room, tx, ty, x, y) { continue }
       if moves[dx+1][1] == 0 || moves[1][dy+1] == 0 { continue }
-      adj = append(adj, g.toVertex(tx, ty))
+      adj = append(adj, g.ToVertex(tx, ty))
       w := (moves[dx+1][1] + moves[1][dy+1]) / 2
       moves[dx+1][dy+1] = w
       weight = append(weight, w)
@@ -209,11 +223,12 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 
 // x and y are given in floor coordinates
 func (g *Game) TargetPathAt(x,y int) {
-  _,res := algorithm.Dijkstra(g, []int{ g.toVertex(g.Ents[0].Pos()) }, []int{ g.toVertex(int(x), int(y)) })
+  _,res := algorithm.Dijkstra(g, []int{ g.ToVertex(g.Ents[0].Pos()) }, []int{ g.ToVertex(int(x), int(y)) })
   g.Ents[0].Path = algorithm.Map(res, [][2]int{}, func(a interface{}) interface{} {
-    _,x,y := g.fromVertex(a.(int))
+    _,x,y := g.FromVertex(a.(int))
     return [2]int{ int(x), int(y) }
   }).([][2]int)
+
   if len(g.Ents[0].Path) > 0 {
     g.Ents[0].Path = g.Ents[0].Path[1:]
   }

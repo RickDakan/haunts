@@ -16,6 +16,9 @@ func LoadAllEntitiesInDir(dir string) {
 func MakeEntity(name string) *Entity {
   ent := Entity{ Defname: name }
   base.GetObject("entities", &ent)
+  for _,action_name := range ent.Action_names {
+    ent.Actions = append(ent.Actions, MakeAction(action_name))
+  }
   return &ent
 }
 
@@ -34,6 +37,9 @@ type entityDef struct {
   Name string
   Sprite spriteContainer  `registry:"autoload"`
   Los_dist int
+
+  // List of actions that this entity defaults to having
+  Action_names []string
 }
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
@@ -52,6 +58,10 @@ type EntityInst struct {
   // Floor coordinates of the last position los was determined from, so that
   // we don't need to recalculate it more than we need to as an ent is moving.
   losx,losy int
+
+  // Actions that this entity currently has available to it for use.  This
+  // may not be a bijection of Actions mentioned in entityDef.Action_names.
+  Actions []Action
 }
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))
@@ -165,9 +175,57 @@ func (e *Entity) advance(dist float32) {
   e.advance(dist - traveled)
 }
 
+// Advances ent up to dist towards the target cell.  Returns the distance
+// traveled.
+func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
+  if dist <= 0 {
+    println("Stopping")
+    e.Sprite.sp.Command("stop")
+    println(e.Sprite.sp.State())
+    return 0
+  }
+  e.Sprite.sp.Command("move")
+
+  target := mathgl.Vec2{ float32(x), float32(y) }
+  source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
+  var seg mathgl.Vec2
+  seg.Assign(&target)
+  seg.Subtract(&source)
+  target_facing := facing(seg)
+  f_diff := target_facing - e.Sprite.sp.Facing()
+  if f_diff != 0 {
+    f_diff = (f_diff + 6) % 6
+    if f_diff > 3 {
+      f_diff -= 6
+    }
+    for f_diff < 0 {
+      e.Sprite.sp.Command("turn_left")
+      println("left")
+      f_diff++
+    }
+    for f_diff > 0 {
+      e.Sprite.sp.Command("turn_right")
+      f_diff--
+      println("right")
+    }
+  }
+  var traveled float32
+  if seg.Length() > dist {
+    seg.Scale(dist / seg.Length())
+    traveled = dist
+  } else {
+    traveled = seg.Length()
+  }
+  seg.Add(&source)
+  e.X = float64(seg.X)
+  e.Y = float64(seg.Y)
+
+  return dist - traveled
+}
+
 func (e *Entity) Think(dt int64) {
   if e.Sprite.sp != nil {
     e.Sprite.sp.Think(dt)
-    e.advance(float32(dt) / 200)
+    // e.advance(float32(dt) / 200)
   }
 }

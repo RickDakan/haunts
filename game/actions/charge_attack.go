@@ -1,11 +1,12 @@
 package actions
 
 import (
-  "encoding/gob"
-  "path/filepath"
+  "glop/gui"
   "haunts/base"
   "haunts/game/status"
   "haunts/game"
+  "encoding/gob"
+  "path/filepath"
 )
 
 func registerCharges() map[string]func() game.Action {
@@ -45,14 +46,11 @@ type ChargeAttackDef struct {
 func (a *ChargeAttack) Readyable() bool {
   return true
 }
-func (a *ChargeAttack) Cost() int {
-  return a.Ap
-}
 func (a *ChargeAttack) Prep(*game.Entity) bool {
   return true
 }
-func (a *ChargeAttack) HandleInput() bool {
-  return true
+func (a *ChargeAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
+  return game.NotConsumed
 }
 func (a *ChargeAttack) HandleOutput() {
 }

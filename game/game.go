@@ -2,7 +2,6 @@ package game
 
 import (
   "glop/gui"
-  "glop/gin"
   "haunts/house"
 )
 
@@ -33,17 +32,48 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   }
   dt := t - gp.last_think
   gp.last_think = t
+
+  if gp.game.action_state == doingAction {
+    res := gp.game.current_action.Maintain(dt)
+    switch res {
+      case Complete:
+        gp.game.current_action = nil
+        gp.game.action_state = noAction
+
+      case InProgress:
+      case CheckForInterrupts:
+    }
+  }
   gp.game.Think(dt)
 }
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.HorizontalTable.Respond(ui, group) {
     return true
   }
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    x,y := gp.viewer.WindowToBoard(event.Key.Cursor().Point())
-    if x < 0 { x-- }
-    if y < 0 { y-- }
-    gp.game.TargetPathAt(int(x), int(y))
+
+  if gp.game.action_state == preppingAction {
+    res := gp.game.current_action.HandleInput(group, gp.game)
+    switch res {
+      case ConsumedAndBegin:
+      gp.game.action_state = doingAction
+      fallthrough
+
+      case Consumed:
+      return true
+    }
+  }
+
+  if gp.game.action_state == noAction {
+    if len(group.Events) == 1 && group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
+      index := int('1' - group.Events[0].Key.Id())
+      if index >= 0 && index < len(gp.game.Ents[0].Actions) {
+        action := gp.game.Ents[0].Actions[index]
+        if action.Prep(gp.game.Ents[0]) {
+          gp.game.current_action = action
+          gp.game.action_state = preppingAction
+        }
+      }
+    }
   }
   return false
 }
