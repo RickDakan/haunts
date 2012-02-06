@@ -8,6 +8,7 @@ import (
   "haunts/game"
   "encoding/gob"
   "path/filepath"
+  "gl"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -37,6 +38,16 @@ type Move struct {
   *MoveDef
 
   ent *game.Entity
+
+  // Destination that was used to generate path
+  dst int
+
+  // Whether or not we've trid to calculate a path to the currest dst vertex.
+  // Since it's possible to not find a path we might end up with a nil path
+  // even if we already tried that dst, and we don't want to have to keep
+  // pathing if we don't need to.
+  calculated bool
+
   path [][2]int
 }
 type MoveDef struct {
@@ -51,26 +62,44 @@ func (a *Move) Prep(ent *game.Entity) bool {
   return true
 }
 func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    src := g.ToVertex(a.ent.Pos())
-    bx,by := game.DiscretizePoint32(g.GetViewer().WindowToBoard(event.Key.Cursor().Point()))
+  cursor := group.Events[0].Key.Cursor()
+  if cursor != nil {
+    bx,by := game.DiscretizePoint32(g.GetViewer().WindowToBoard(cursor.Point()))
     dst := g.ToVertex(int(bx), int(by))
-    _,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
-    if len(path) <= 1 {
-      return game.Consumed
+
+    if dst != a.dst || !a.calculated {
+      a.dst = dst
+      a.calculated = true
+      src := g.ToVertex(a.ent.Pos())
+      _,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
+      if len(path) <= 1 {
+        return game.Consumed
+      }
+      a.path = algorithm.Map(path, [][2]int{}, func(a interface{}) interface{} {
+        _,x,y := g.FromVertex(a.(int))
+        return [2]int{ int(x), int(y) }
+      }).([][2]int)
     }
-    a.path = algorithm.Map(path, [][2]int{}, func(a interface{}) interface{} {
-      _,x,y := g.FromVertex(a.(int))
-      return [2]int{ int(x), int(y) }
-    }).([][2]int)
+  }
+  if found,_ := group.FindEvent(gin.MouseLButton); found {
     return game.ConsumedAndBegin
   }
   return game.NotConsumed
 }
-func (a *Move) HandleOutput() {
+func (a *Move) RenderOnFloor() {
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Begin(gl.LINES)
+  gl.Color4d(0.2, 0.5, 0.9, 0.8)
+  for i := 1; i < len(a.path); i++ {
+    gl.Vertex2d(float64(a.path[i-1][0]) + 0.5, float64(a.path[i-1][1]) + 0.5)
+    gl.Vertex2d(float64(a.path[i][0]) + 0.5, float64(a.path[i][1]) + 0.5)
+  }
+  gl.End()
 }
 func (a *Move) Cancel() {
   a.ent = nil
+  a.path = nil
+  a.calculated = false
 }
 func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
   // Do stuff

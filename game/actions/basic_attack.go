@@ -53,7 +53,7 @@ func (a *BasicAttack) Prep(*game.Entity) bool {
 func (a *BasicAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
   return game.NotConsumed
 }
-func (a *BasicAttack) HandleOutput() {
+func (a *BasicAttack) RenderOnFloor() {
 }
 func (a *BasicAttack) Cancel() {
 }

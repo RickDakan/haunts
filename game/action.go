@@ -75,7 +75,7 @@ type Action interface {
   HandleInput(gui.EventGroup, *Game) InputStatus
 
   // Got to have some way for the user to see what is going on
-  HandleOutput()
+  RenderOnFloor()
 
   // Called if the user cancels the action - done this way so that all actions
   // can be cancelled in the same way instead of each action deciding how to

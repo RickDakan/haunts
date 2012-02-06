@@ -30,8 +30,9 @@ type HouseViewer struct {
   zoom,angle,fx,fy float32
   floor,ifloor mathgl.Mat4
 
-  drawables []Drawable
-  Los_tex *LosTexture
+  drawables    []Drawable
+  Los_tex      *LosTexture
+  Floor_drawer FloorDrawer
 
   Temp struct {
     Room *Room
@@ -257,7 +258,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex, los_alpha)
     }
-    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha)
+    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, hv.Floor_drawer)
 
     var drawables []Drawable
     rx,ry := room.Pos()

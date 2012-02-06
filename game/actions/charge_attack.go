@@ -52,7 +52,7 @@ func (a *ChargeAttack) Prep(*game.Entity) bool {
 func (a *ChargeAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
   return game.NotConsumed
 }
-func (a *ChargeAttack) HandleOutput() {
+func (a *ChargeAttack) RenderOnFloor() {
 }
 func (a *ChargeAttack) Cancel() {
 }

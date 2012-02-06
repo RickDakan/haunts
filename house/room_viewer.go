@@ -17,6 +17,12 @@ type RectObject interface {
   Dims() (int, int)
 }
 
+type FloorDrawer interface {
+  // Draws stuff on the floor.  This will be called after the floor and all
+  // textures on it have been drawn, but before furniture has been drawn.
+  RenderOnFloor()
+}
+
 type Drawable interface {
   RectObject
   FPos() (float64,float64)
@@ -627,7 +633,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 }
 
-func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer FloorDrawer) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -708,6 +714,17 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
       }
     }
   }
+
+  gl.PushMatrix()
+  gl.Translated(-float64(room.X), -float64(room.Y), 0)
+  if floor_drawer != nil {
+    floor_drawer.RenderOnFloor()
+  }
+  gl.PopMatrix()
+
+  // Re-enable textures because floor_drawer.RenderOnFloor() might have
+  // disabled them
+  gl.Enable(gl.TEXTURE_2D)
 
   gl.StencilFunc(gl.ALWAYS, 5, 5)
   gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
@@ -927,7 +944,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   cstack.Push(1, 1, 1, 1)
   drawPrep()
   drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack, nil, 1.0)
-  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil, 1.0)
+  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil, 1.0, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
     cstack.Pop()

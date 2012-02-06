@@ -221,6 +221,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 }
 
 func (g *Game) Think(dt int64) {
+  g.viewer.Floor_drawer = g.current_action
   for i := range g.Ents {
     g.Ents[i].Think(dt)
   }
