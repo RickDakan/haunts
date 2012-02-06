@@ -53,7 +53,7 @@ func (a *Move) Prep(ent *game.Entity) bool {
 func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
   if found,event := group.FindEvent(gin.MouseLButton); found {
     src := g.ToVertex(a.ent.Pos())
-    bx,by := g.GetViewer().WindowToBoard(event.Key.Cursor().Point())
+    bx,by := game.DiscretizePoint32(g.GetViewer().WindowToBoard(event.Key.Cursor().Point()))
     dst := g.ToVertex(int(bx), int(by))
     _,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
     if len(path) <= 1 {

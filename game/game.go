@@ -63,12 +63,15 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if gp.game.action_state == noAction {
+  if gp.game.action_state == noAction || gp.game.action_state == preppingAction {
     if len(group.Events) == 1 && group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
       index := int('1' - group.Events[0].Key.Id())
       if index >= 0 && index < len(gp.game.Ents[0].Actions) {
         action := gp.game.Ents[0].Actions[index]
-        if action.Prep(gp.game.Ents[0]) {
+        if action != gp.game.current_action && action.Prep(gp.game.Ents[0]) {
+          if gp.game.current_action != nil {
+            gp.game.current_action.Cancel()
+          }
           gp.game.current_action = action
           gp.game.action_state = preppingAction
         }
