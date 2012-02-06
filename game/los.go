@@ -2,7 +2,6 @@ package game
 
 import (
   "haunts/house"
-  "glop/util/algorithm"
   "github.com/arbaal/mathgl"
 )
 
@@ -219,19 +218,6 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   }
   g.viewer.AddDrawable(g.Ents[1])
   return &g
-}
-
-// x and y are given in floor coordinates
-func (g *Game) TargetPathAt(x,y int) {
-  _,res := algorithm.Dijkstra(g, []int{ g.ToVertex(g.Ents[0].Pos()) }, []int{ g.ToVertex(int(x), int(y)) })
-  g.Ents[0].Path = algorithm.Map(res, [][2]int{}, func(a interface{}) interface{} {
-    _,x,y := g.FromVertex(a.(int))
-    return [2]int{ int(x), int(y) }
-  }).([][2]int)
-
-  if len(g.Ents[0].Path) > 0 {
-    g.Ents[0].Path = g.Ents[0].Path[1:]
-  }
 }
 
 func (g *Game) Think(dt int64) {

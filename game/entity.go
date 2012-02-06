@@ -48,10 +48,6 @@ func (ei *entityDef) Dims() (int,int) {
 type EntityInst struct {
   X,Y float64
 
-  // If the entity is currently moving along a path it will be stored here.
-  // Path[0] is the cell that the entity is currently moving directly towards.
-  Path [][2]int
-
   // All positions that can be seen by this entity are stored here.
   los map[[2]int]bool
 
@@ -128,51 +124,6 @@ func facing(v mathgl.Vec2) int {
     }
   }
   return ret
-}
-
-func (e *Entity) advance(dist float32) {
-  if len(e.Path) == 0 {
-    e.Sprite.sp.Command("stop")
-    return
-  } else {
-    e.Sprite.sp.Command("move")
-  }
-  if dist <= 0 { return }
-  target := mathgl.Vec2{ float32(e.Path[0][0]), float32(e.Path[0][1]) }
-  source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
-  var seg mathgl.Vec2
-  seg.Assign(&target)
-  seg.Subtract(&source)
-  target_facing := facing(seg)
-  f_diff := target_facing - e.Sprite.sp.Facing()
-  if f_diff != 0 {
-    f_diff = (f_diff + 6) % 6
-    if f_diff > 3 {
-      f_diff -= 6
-    }
-    for f_diff < 0 {
-      e.Sprite.sp.Command("turn_left")
-      println("left")
-      f_diff++
-    }
-    for f_diff > 0 {
-      e.Sprite.sp.Command("turn_right")
-      f_diff--
-      println("right")
-    }
-  }
-  var traveled float32
-  if seg.Length() > dist {
-    seg.Scale(dist / seg.Length())
-    traveled = dist
-  } else {
-    traveled = seg.Length()
-    e.Path = e.Path[1:]
-  }
-  seg.Add(&source)
-  e.X = float64(seg.X)
-  e.Y = float64(seg.Y)
-  e.advance(dist - traveled)
 }
 
 // Advances ent up to dist towards the target cell.  Returns the distance
