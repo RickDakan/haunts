@@ -46,7 +46,7 @@ type ChargeAttackDef struct {
 func (a *ChargeAttack) Readyable() bool {
   return true
 }
-func (a *ChargeAttack) Prep(*game.Entity) bool {
+func (a *ChargeAttack) Prep(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *ChargeAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {

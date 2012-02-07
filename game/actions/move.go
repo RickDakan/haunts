@@ -55,9 +55,9 @@ type MoveDef struct {
 }
 
 func (a *Move) Readyable() bool {
-  return true
+  return false
 }
-func (a *Move) Prep(ent *game.Entity) bool {
+func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   return true
 }

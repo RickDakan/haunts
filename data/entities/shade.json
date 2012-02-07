@@ -3,8 +3,17 @@
   "Sprite" : {
     "Path" : "entities/shade"
   },
-  "Los_dist" : 25,
   "Action_names": [
-    "Move Test"
-  ]
+    "Move Test",
+    "Basic Test"
+  ],
+  "Stats": {
+    "Base": {
+      "Ap_max": 10,
+      "Hp_max": 12,
+      "Corpus": 5,
+      "Ego": 3,
+      "Sight": 25
+    }
+  }
 }

@@ -209,8 +209,8 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.Ents[0].Y = 3
   g.viewer.AddDrawable(g.Ents[0])
   g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
-  g.Ents[0].X = 2
-  g.Ents[0].Y = 1
+  g.Ents[1].X = 2
+  g.Ents[1].Y = 3
   g.los_tex = house.MakeLosTexture(256)
   g.los_tex.Remap(-20, -20)
   for i := range g.Ents[:1] {
@@ -291,17 +291,17 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   ent.losx = ex
   ent.losy = ey
 
-  minx := ex - ent.Los_dist
-  miny := ey - ent.Los_dist
-  maxx := ex + ent.Los_dist
-  maxy := ey + ent.Los_dist
+  minx := ex - ent.Stats.Sight()
+  miny := ey - ent.Stats.Sight()
+  maxx := ex + ent.Stats.Sight()
+  maxy := ey + ent.Stats.Sight()
   for x := minx; x <= maxx; x++ {
-    g.doLos(ent.Los_dist, bresenham(ex, ey, x, miny), ent.los)
-    g.doLos(ent.Los_dist, bresenham(ex, ey, x, maxy), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los)
   }
   for y := miny; y <= maxy; y++ {
-    g.doLos(ent.Los_dist, bresenham(ex, ey, minx, y), ent.los)
-    g.doLos(ent.Los_dist, bresenham(ex, ey, maxx, y), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los)
   }
   ltx,lty,ltx2,lty2 := g.los_tex.Region()
   for i := ltx; i <= ltx2; i++ {

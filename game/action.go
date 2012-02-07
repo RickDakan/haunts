@@ -67,7 +67,7 @@ type Action interface {
   // Called when the user attempts to select the action.  Returns true if the
   // actions can be performed at least minimally, false if the action cannot
   // be performed at all.
-  Prep(*Entity) bool
+  Prep(*Entity, *Game) bool
 
   // Got to have some way for the user to interact with the action.  Returns
   // true if the action has been comitted.  If this action is not being

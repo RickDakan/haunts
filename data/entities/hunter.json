@@ -3,8 +3,16 @@
   "Sprite" : {
     "Path" : "entities/hunter"
   },
-  "Los_dist" : 25,
   "Action_names": [
     "Move Test"
-  ]
+  ],
+  "Stats": {
+    "Base": {
+      "Ap_max": 15,
+      "Hp_max": 10,
+      "Corpus": 4,
+      "Ego": 6,
+      "Sight": 30
+    }
+  }
 }

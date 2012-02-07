@@ -3,6 +3,7 @@ package game
 import (
   "glop/sprite"
   "haunts/base"
+  "haunts/game/status"
   "github.com/arbaal/mathgl"
   "gl"
 )
@@ -29,6 +30,9 @@ type spriteContainer struct {
   // If there is an error when loading the sprite it will be stored here
   err  error
 }
+func (sc *spriteContainer) Sprite() *sprite.Sprite {
+  return sc.sp
+}
 func (sc *spriteContainer) Load() {
   sc.sp, sc.err = sprite.LoadSprite(sc.Path.String())
 }
@@ -36,10 +40,12 @@ func (sc *spriteContainer) Load() {
 type entityDef struct {
   Name string
   Sprite spriteContainer  `registry:"autoload"`
-  Los_dist int
 
   // List of actions that this entity defaults to having
   Action_names []string
+
+  // Contains both base and current stats
+  Stats status.Inst
 }
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1

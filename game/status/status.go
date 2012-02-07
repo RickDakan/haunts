@@ -86,23 +86,23 @@ type Inst struct {
   // This prevents external code from modifying any data without goin through
   // the appropriate methods, but also allows us to provide accurate json and
   // gob methods.
-  inst
+  inst inst
 }
 
 func (s Inst) modifiedBase() Base {
-  b := s.Base
-  for _,e := range s.Conditions {
+  b := s.inst.Base
+  for _,e := range s.inst.Conditions {
     b = e.ModifyBase(b)
   }
   return b
 }
 
 func (s Inst) HpCur() int {
-  return s.Dynamic.Hp
+  return s.inst.Dynamic.Hp
 }
 
 func (s Inst) ApCur() int {
-  return s.Dynamic.Ap
+  return s.inst.Dynamic.Ap
 }
 
 func (s Inst) HpMax() int {
@@ -136,24 +136,24 @@ func (s Inst) Sight() int {
 }
 
 func (s *Inst) ApplyEffect(e Condition) {
-  s.Conditions = append(s.Conditions, e)
+  s.inst.Conditions = append(s.inst.Conditions, e)
   // s.Dynamic = e.ModifyDynamic(s.Dynamic)
 }
 
 func (s *Inst) Think() {
   complete := 0
-  for i := 0; i < len(s.Conditions); i++ {
-    if s.Conditions[i].Think() {
+  for i := 0; i < len(s.inst.Conditions); i++ {
+    if s.inst.Conditions[i].Think() {
       complete++
     } else {
-      s.Conditions[i - complete] = s.Conditions[i]
+      s.inst.Conditions[i - complete] = s.inst.Conditions[i]
     }
   }
-  s.Conditions = s.Conditions[0 : len(s.Conditions) - complete]
+  s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions) - complete]
 
   // Now that we've removed completed Conditions we can set our dynamic stats
   // accordingly
-  s.Ap = s.ApMax()
+  s.inst.Ap = s.ApMax()
 
   // for _,e := range s.Conditions {
   //   s.Dynamic = e.ModifyDynamic(s.Dynamic)
@@ -161,18 +161,18 @@ func (s *Inst) Think() {
 
   // And now that we've modified our dynamic stats we can make sure they lie
   // within the appropriate range.
-  if s.Ap < 0 {
-    s.Ap = 0
+  if s.inst.Ap < 0 {
+    s.inst.Ap = 0
   }
-  if s.Ap > s.ApMax() {
-    s.Ap = s.ApMax()
+  if s.inst.Ap > s.ApMax() {
+    s.inst.Ap = s.ApMax()
   }
 
-  if s.Hp < 0 {
-    s.Hp = 0
+  if s.inst.Hp < 0 {
+    s.inst.Hp = 0
   }
-  if s.Hp > s.HpMax() {
-    s.Hp = s.HpMax()
+  if s.inst.Hp > s.HpMax() {
+    s.inst.Hp = s.HpMax()
   }
 }
 
@@ -183,6 +183,7 @@ func (si Inst) MarshalJSON() ([]byte, error) {
 }
 
 func (si *Inst) UnmarshalJSON(data []byte) error {
+  println("Unmarshaling ", string(data))
   return json.Unmarshal(data, &si.inst)
 }
 
