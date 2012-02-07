@@ -1,6 +1,7 @@
 package status
 
 import (
+  "fmt"
   "bytes"
   "encoding/json"
   "encoding/gob"
@@ -12,6 +13,7 @@ const (
   Terror      = "Terror"
   Fire        = "Fire"
   Poison      = "Poison"
+  Unspecified = "Unspecified"
 )
 type Primary int
 const (
@@ -56,7 +58,7 @@ func (r *RoundTimer) Think() bool {
 // Every round the Condition can 
 type Condition interface {
   // Called any time a Base stat is queried
-  ModifyBase(Base) Base
+  ModifyBase(Base, Kind) Base
 
   // Called at the beginning of each round.  May return a damage object to
   // deal damage, and must return a bool indicating whether this effect has
@@ -74,6 +76,7 @@ type Base struct {
   Corpus int
   Ego    int
   Sight  int
+  Attack int
 }
 
 type inst struct {
@@ -89,10 +92,10 @@ type Inst struct {
   inst inst
 }
 
-func (s Inst) modifiedBase() Base {
+func (s Inst) modifiedBase(kind Kind) Base {
   b := s.inst.Base
   for _,e := range s.inst.Conditions {
-    b = e.ModifyBase(b)
+    b = e.ModifyBase(b, kind)
   }
   return b
 }
@@ -106,31 +109,61 @@ func (s Inst) ApCur() int {
 }
 
 func (s Inst) HpMax() int {
-  hp_max := s.modifiedBase().Hp_max
+  hp_max := s.modifiedBase(Unspecified).Hp_max
   if hp_max < 0 { return 0 }
   return hp_max
 }
 
 func (s Inst) ApMax() int {
-  ap_max := s.modifiedBase().Ap_max
+  ap_max := s.modifiedBase(Unspecified).Ap_max
   if ap_max < 0 { return 0 }
   return ap_max
 }
 
 func (s Inst) Corpus() int {
-  corpus := s.modifiedBase().Corpus
+  corpus := s.modifiedBase(Unspecified).Corpus
+  if corpus < 0 { return 0 }
+  return corpus
+}
+
+func (s Inst) CorpusVs(kind Kind) int {
+  corpus := s.modifiedBase(kind).Corpus
   if corpus < 0 { return 0 }
   return corpus
 }
 
 func (s Inst) Ego() int {
-  ego := s.modifiedBase().Ego
+  ego := s.modifiedBase(Unspecified).Ego
   if ego < 0 { return 0 }
   return ego
 }
 
+func (s Inst) EgoVs(kind Kind) int {
+  ego := s.modifiedBase(kind).Ego
+  if ego < 0 { return 0 }
+  return ego
+}
+
+// Calls either EgoVs or CorpusVs, depending on what Kind is specified.
+// This function panics if neither corpus nor ego is specified.
+func (s Inst) DefenseVs(kind Kind) int {
+  switch kind.Primary() {
+    case Corpus:
+      return s.CorpusVs(kind)
+    case Ego:
+      return s.EgoVs(kind)
+  }
+  panic(fmt.Sprintf("Cannot call DefenseVs on kind '%v'", kind))
+}
+
+func (s Inst) AttackBonusWith(kind Kind) int {
+  attack := s.modifiedBase(kind).Attack
+  if attack < 0 { return 0 }
+  return attack
+}
+
 func (s Inst) Sight() int {
-  sight := s.modifiedBase().Sight
+  sight := s.modifiedBase(Unspecified).Sight
   if sight < 0 { return 0 }
   return sight
 }
@@ -183,7 +216,6 @@ func (si Inst) MarshalJSON() ([]byte, error) {
 }
 
 func (si *Inst) UnmarshalJSON(data []byte) error {
-  println("Unmarshaling ", string(data))
   return json.Unmarshal(data, &si.inst)
 }
 

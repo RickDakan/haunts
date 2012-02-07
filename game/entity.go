@@ -136,9 +136,7 @@ func facing(v mathgl.Vec2) int {
 // traveled.
 func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
   if dist <= 0 {
-    println("Stopping")
     e.Sprite.sp.Command("stop")
-    println(e.Sprite.sp.State())
     return 0
   }
   e.Sprite.sp.Command("move")
@@ -157,13 +155,11 @@ func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
     }
     for f_diff < 0 {
       e.Sprite.sp.Command("turn_left")
-      println("left")
       f_diff++
     }
     for f_diff > 0 {
       e.Sprite.sp.Command("turn_right")
       f_diff--
-      println("right")
     }
   }
   var traveled float32

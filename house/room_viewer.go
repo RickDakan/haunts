@@ -886,7 +886,6 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
             vis_tot += float64(los_tex.Get(int(x) + roomx, int(y) + roomy))
           }
         }
-  //    println("stuff(", i, "): ", near_x, " + ", roomx)
         vis_tot /= float64(dx * dy * 255)
       }
     }

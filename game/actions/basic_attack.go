@@ -87,7 +87,7 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
-  if found,event := group.FindEvent(gin.MouseLButton); found {
+  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     cursor := event.Key.Cursor()
     bx,by := game.DiscretizePoint32(g.GetViewer().WindowToBoard(cursor.Point()))
     for _,target := range a.targets {
@@ -120,10 +120,14 @@ func (a *BasicAttack) Cancel() {
   a.basicAttackInst = basicAttackInst{}
 }
 func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
-  if a.ent.Sprite.Sprite().State() == "ready" {
+  if a.ent.Sprite.Sprite().State() == "ready" && a.target.Sprite.Sprite().State() == "ready" {
     a.ent.Sprite.Sprite().Command("melee")
     a.target.Sprite.Sprite().Command("defend")
-    a.target.Sprite.Sprite().Command("damaged")
+    if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
+      a.target.Sprite.Sprite().Command("damaged")
+    } else {
+      a.target.Sprite.Sprite().Command("undamaged")
+    }
     return game.Complete
   }
   return game.InProgress

@@ -2,6 +2,6 @@
   "Name"    : "Basic Test",
   "Kind"    : "Fire",
   "Ap"      : 3,
-  "Strength": 4,
+  "Strength": 5,
   "Range"   : 3
 }
