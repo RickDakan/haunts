@@ -18,6 +18,8 @@ type Condition interface {
   // others.
   Strength() int
 
+  ModifyDamage(Damage) Damage
+
   // Called any time a Base stat is queried
   ModifyBase(Base, Kind) Base
 
@@ -107,6 +109,10 @@ func (bc *BasicCondition) Kind() Kind {
   return bc.basicConditionDef.Kind
 }
 
+func (bc *basicConditionDef) ModifyDamage(dmg Damage) Damage {
+  return dmg
+}
+
 func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
   base.Ap_max += bc.Ap_max
   base.Hp_max += bc.Hp_max
@@ -122,7 +128,7 @@ func (bc *BasicCondition) Think() (dmg *Damage, complete bool) {
   if bc.Dynamic != d {
     dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
   }
-  complete = bc.time == 0
-  bc.time--
+  bc.time++
+  complete = (bc.time == bc.Time)
   return
 }

@@ -163,8 +163,11 @@ func (s *Inst) ApplyCondition(c Condition) {
     if s.inst.Conditions[i].Kind() == c.Kind() {
       if s.inst.Conditions[i].Strength() <= c.Strength() {
         s.inst.Conditions[i] = c
-        return
       }
+
+      // Regardless of whether it was displaced or not we don't need to keep
+      // checking Conditions.  We can only have one condition of each type and
+      // this one is it.
       return
     }
   }
@@ -175,23 +178,39 @@ func (s *Inst) ApplyCondition(c Condition) {
 }
 
 func (s *Inst) Think() {
-  complete := 0
+  completed := make(map[Condition]bool)
+  var dmgs []Damage
   for i := 0; i < len(s.inst.Conditions); i++ {
-    if _,done := s.inst.Conditions[i].Think(); done {
-      complete++
-    } else {
-      s.inst.Conditions[i - complete] = s.inst.Conditions[i]
+    dmg,done := s.inst.Conditions[i].Think()
+    if dmg != nil {
+      dmgs = append(dmgs, *dmg)
+    }
+    if done {
+      completed[s.inst.Conditions[i]] = true
     }
   }
-  s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions) - complete]
+
+  for _,dmg := range dmgs {
+    for _,c := range s.inst.Conditions {
+      dmg = c.ModifyDamage(dmg)
+    }
+    s.inst.Ap += dmg.Ap
+    s.inst.Hp += dmg.Hp
+  }
+
+  num_complete := 0
+  for i := 0; i < len(s.inst.Conditions); i++ {
+    if completed[s.inst.Conditions[i]] {
+      num_complete++
+    } else {
+      s.inst.Conditions[i - num_complete] = s.inst.Conditions[i]
+    }
+  }
+  s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions) - num_complete]
 
   // Now that we've removed completed Conditions we can set our dynamic stats
   // accordingly
   s.inst.Ap = s.ApMax()
-
-  // for _,e := range s.Conditions {
-  //   s.Dynamic = e.ModifyDynamic(s.Dynamic)
-  // }
 
   // And now that we've modified our dynamic stats we can make sure they lie
   // within the appropriate range.

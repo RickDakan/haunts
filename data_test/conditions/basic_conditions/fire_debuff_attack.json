@@ -2,6 +2,10 @@
   "Name": "Fire Debuff Attack",
   "Strength": 3,
   "Kind": "Fire",
+  "Time": 3,
+  "Dynamic": {
+    "Hp": -1
+  },
   "Base": {
     "Attack": -1
   }

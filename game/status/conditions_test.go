@@ -65,4 +65,80 @@ func ConditionsSpec(c gospec.Context) {
     s.ApplyCondition(pd2)
     c.Expect(s.AttackBonusWith(status.Unspecified), Equals, -3)
   })
+
+  c.Specify("Basic conditions last the appropriate amount of time", func() {
+    var s status.Inst
+    s.UnmarshalJSON([]byte(`
+      {
+        "Base": {
+          "Hp_max": 100
+        },
+        "Dynamic": {
+          "Hp": 100
+        }
+      }`))
+    pd := status.MakeCondition("Poison Debuff Attack")
+    pd2 := status.MakeCondition("Poison Debuff Attack 2")
+    pd.Strength()
+    pd2.Strength()
+    c.Expect(s.HpCur(), Equals, 100)
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    c.Expect(s.HpCur(), Equals, 100)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 99)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 98)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 97)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 97)
+
+  
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 96)
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 95)
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 94)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 93)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 92)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 92)
+
+
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.ApplyCondition(status.MakeCondition("Poison Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 90)
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 88)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 86)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 85)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 85)
+
+
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.ApplyCondition(status.MakeCondition("Poison Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 83)
+    s.ApplyCondition(status.MakeCondition("Poison Debuff Attack 2"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 80)
+    s.ApplyCondition(status.MakeCondition("Poison Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 77)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 75)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 75)
+  })
 }
