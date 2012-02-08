@@ -33,6 +33,14 @@ func (k Kind) Primary() Primary {
   panic("Unknown status.Kind")
 }
 
+// Damage is something that affects a unit's current Ap or Hp.  A unit's Ap
+// and Hp is affected through this mechanism so that Conditions have a chance
+// to modify it before it actually gets applied.
+type Damage struct {
+  Dynamic
+  Kind Kind
+}
+
 type DoesntModifyBase struct {}
 func (DoesntModifyBase) ModifyBase(b Base) Base {
   return b
@@ -51,19 +59,6 @@ type RoundTimer struct {
 func (r *RoundTimer) Think() bool {
   r.Num_rounds--
   return r.Num_rounds < 0
-}
-
-
-// Conditions represent instantaneous or ongoing Conditions on an entity.
-// Every round the Condition can 
-type Condition interface {
-  // Called any time a Base stat is queried
-  ModifyBase(Base, Kind) Base
-
-  // Called at the beginning of each round.  May return a damage object to
-  // deal damage, and must return a bool indicating whether this effect has
-  // completed or not.
-  Think() (complete bool)
 }
 
 type Dynamic struct {
@@ -176,7 +171,7 @@ func (s *Inst) ApplyEffect(e Condition) {
 func (s *Inst) Think() {
   complete := 0
   for i := 0; i < len(s.inst.Conditions); i++ {
-    if s.inst.Conditions[i].Think() {
+    if _,done := s.inst.Conditions[i].Think(); done {
       complete++
     } else {
       s.inst.Conditions[i - complete] = s.inst.Conditions[i]
