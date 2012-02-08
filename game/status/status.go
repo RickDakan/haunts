@@ -9,11 +9,11 @@ import (
 
 type Kind string
 const (
-  Panic  Kind = "Panic"
-  Terror      = "Terror"
-  Fire        = "Fire"
-  Poison      = "Poison"
-  Unspecified = "Unspecified"
+  Panic       Kind = "Panic"
+  Terror      Kind = "Terror"
+  Fire        Kind = "Fire"
+  Poison      Kind = "Poison"
+  Unspecified Kind = "Unspecified"
 )
 type Primary int
 const (
@@ -117,25 +117,21 @@ func (s Inst) ApMax() int {
 
 func (s Inst) Corpus() int {
   corpus := s.modifiedBase(Unspecified).Corpus
-  if corpus < 0 { return 0 }
   return corpus
 }
 
 func (s Inst) CorpusVs(kind Kind) int {
   corpus := s.modifiedBase(kind).Corpus
-  if corpus < 0 { return 0 }
   return corpus
 }
 
 func (s Inst) Ego() int {
   ego := s.modifiedBase(Unspecified).Ego
-  if ego < 0 { return 0 }
   return ego
 }
 
 func (s Inst) EgoVs(kind Kind) int {
   ego := s.modifiedBase(kind).Ego
-  if ego < 0 { return 0 }
   return ego
 }
 
@@ -153,7 +149,6 @@ func (s Inst) DefenseVs(kind Kind) int {
 
 func (s Inst) AttackBonusWith(kind Kind) int {
   attack := s.modifiedBase(kind).Attack
-  if attack < 0 { return 0 }
   return attack
 }
 
@@ -163,9 +158,20 @@ func (s Inst) Sight() int {
   return sight
 }
 
-func (s *Inst) ApplyEffect(e Condition) {
-  s.inst.Conditions = append(s.inst.Conditions, e)
-  // s.Dynamic = e.ModifyDynamic(s.Dynamic)
+func (s *Inst) ApplyCondition(c Condition) {
+  for i := range s.inst.Conditions {
+    if s.inst.Conditions[i].Kind() == c.Kind() {
+      if s.inst.Conditions[i].Strength() <= c.Strength() {
+        s.inst.Conditions[i] = c
+        return
+      }
+      return
+    }
+  }
+
+  // If we didn't find an existing condition of this kind then we can safely
+  // add it.
+  s.inst.Conditions = append(s.inst.Conditions, c)
 }
 
 func (s *Inst) Think() {

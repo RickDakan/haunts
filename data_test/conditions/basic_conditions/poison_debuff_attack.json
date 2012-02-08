@@ -1,0 +1,8 @@
+{
+  "Name": "Poison Debuff Attack",
+  "Strength": 3,
+  "Kind": "Poison",
+  "Base": {
+    "Attack": -1
+  }
+}

@@ -10,6 +10,14 @@ import (
 // Conditions represent instantaneous or ongoing Conditions on an entity.
 // Every round the Condition can 
 type Condition interface {
+  // Returns this condition's Kind
+  Kind() Kind
+
+  // Returns the strength of this condition relative to other conditions of
+  // the same Kind.  This is used to determine which conditions will displace
+  // others.
+  Strength() int
+
   // Called any time a Base stat is queried
   ModifyBase(Base, Kind) Base
 
@@ -78,11 +86,25 @@ type basicConditionDef struct {
   // to the unit's Base stats
   Base
 
+  // Use Type here instead of Kind so it doesn't overlap with the required
+  // method name Kind.  Also Type will be used in the json files so it should
+  // be no less obvious what it is.
   Kind Kind
+
+  // The strength of this condition
+  Strength int
 
   // This Condition will Think() exactly Time + 1 times.  If Time < 0 then
   // it will Think() forever.
   Time int
+}
+
+func (bc *BasicCondition) Strength() int {
+  return bc.basicConditionDef.Strength
+}
+
+func (bc *BasicCondition) Kind() Kind {
+  return bc.basicConditionDef.Kind
 }
 
 func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
@@ -98,7 +120,7 @@ func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
 func (bc *BasicCondition) Think() (dmg *Damage, complete bool) {
   var d Dynamic
   if bc.Dynamic != d {
-    dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind }
+    dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
   }
   complete = bc.time == 0
   bc.time--

@@ -1,0 +1,8 @@
+{
+  "Name": "Fire Debuff Attack",
+  "Strength": 3,
+  "Kind": "Fire",
+  "Base": {
+    "Attack": -1
+  }
+}

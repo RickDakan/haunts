@@ -1,3 +1,8 @@
 {
-  "Name": "Basic Test"
+  "Name": "Basic Test",
+  "Strength": 5,
+  "Kind": "Fire",
+  "Base": {
+    "Attack": 3
+  }
 }
