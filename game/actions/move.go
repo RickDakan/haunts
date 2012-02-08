@@ -57,32 +57,42 @@ type MoveDef struct {
 func (a *Move) Readyable() bool {
   return false
 }
+
+func (a *Move) findPath(g *game.Game, x,y int) {
+  dst := g.ToVertex(x, y)
+  if dst != a.dst || !a.calculated {
+    a.dst = dst
+    a.calculated = true
+    src := g.ToVertex(a.ent.Pos())
+    _,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
+    if len(path) <= 1 {
+      return
+    }
+    a.path = algorithm.Map(path, [][2]int{}, func(a interface{}) interface{} {
+      _,x,y := g.FromVertex(a.(int))
+      return [2]int{ int(x), int(y) }
+    }).([][2]int)
+  }
+}
+
 func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
+  fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
+  a.findPath(g, int(fx), int(fy))
   return true
 }
 func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
-    bx,by := game.DiscretizePoint32(g.GetViewer().WindowToBoard(cursor.Point()))
-    dst := g.ToVertex(int(bx), int(by))
-
-    if dst != a.dst || !a.calculated {
-      a.dst = dst
-      a.calculated = true
-      src := g.ToVertex(a.ent.Pos())
-      _,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
-      if len(path) <= 1 {
-        return game.Consumed
-      }
-      a.path = algorithm.Map(path, [][2]int{}, func(a interface{}) interface{} {
-        _,x,y := g.FromVertex(a.(int))
-        return [2]int{ int(x), int(y) }
-      }).([][2]int)
-    }
+    fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
+    a.findPath(g, int(fx), int(fy))
   }
   if found,_ := group.FindEvent(gin.MouseLButton); found {
-    return game.ConsumedAndBegin
+    if len(a.path) > 0 {
+      return game.ConsumedAndBegin
+    } else {
+      return game.NotConsumed
+    }
   }
   return game.NotConsumed
 }

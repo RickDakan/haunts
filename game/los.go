@@ -204,19 +204,27 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
   g.house = h
   g.viewer = viewer
+
   g.Ents = append(g.Ents, MakeEntity("Angry Shade"))
   g.Ents[0].X = 3
   g.Ents[0].Y = 3
   g.viewer.AddDrawable(g.Ents[0])
+
   g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
   g.Ents[1].X = 2
   g.Ents[1].Y = 3
+  g.viewer.AddDrawable(g.Ents[1])
+
+  g.Ents = append(g.Ents, MakeEntity("Master of the Manse"))
+  g.Ents[2].X = 1
+  g.Ents[2].Y = 1
+  g.viewer.AddDrawable(g.Ents[2])
+
   g.los_tex = house.MakeLosTexture(256)
   g.los_tex.Remap(-20, -20)
   for i := range g.Ents[:1] {
     g.DetermineLos(g.Ents[i], true)
   }
-  g.viewer.AddDrawable(g.Ents[1])
   return &g
 }
 

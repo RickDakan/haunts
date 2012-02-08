@@ -132,15 +132,7 @@ func facing(v mathgl.Vec2) int {
   return ret
 }
 
-// Advances ent up to dist towards the target cell.  Returns the distance
-// traveled.
-func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
-  if dist <= 0 {
-    e.Sprite.sp.Command("stop")
-    return 0
-  }
-  e.Sprite.sp.Command("move")
-
+func (e *Entity) TurnToFace(x,y int) {
   target := mathgl.Vec2{ float32(x), float32(y) }
   source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
   var seg mathgl.Vec2
@@ -162,6 +154,23 @@ func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
       f_diff--
     }
   }
+}
+
+// Advances ent up to dist towards the target cell.  Returns the distance
+// traveled.
+func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
+  if dist <= 0 {
+    e.Sprite.sp.Command("stop")
+    return 0
+  }
+  e.Sprite.sp.Command("move")
+
+  source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
+  target := mathgl.Vec2{ float32(x), float32(y) }
+  var seg mathgl.Vec2
+  seg.Assign(&target)
+  seg.Subtract(&source)
+  e.TurnToFace(x, y)
   var traveled float32
   if seg.Length() > dist {
     seg.Scale(dist / seg.Length())

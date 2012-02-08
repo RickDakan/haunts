@@ -2,6 +2,7 @@ package game
 
 import (
   "glop/gui"
+  "glop/gin"
   "haunts/house"
 )
 
@@ -37,6 +38,7 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
     res := gp.game.current_action.Maintain(dt)
     switch res {
       case Complete:
+        gp.game.current_action.Cancel()
         gp.game.current_action = nil
         gp.game.action_state = noAction
 
@@ -50,7 +52,9 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.HorizontalTable.Respond(ui, group) {
     return true
   }
-
+  if group.Events[0].Type == gin.Release {
+    return false
+  }
   if gp.game.action_state == preppingAction {
     res := gp.game.current_action.HandleInput(group, gp.game)
     switch res {
