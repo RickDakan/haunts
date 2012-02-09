@@ -201,6 +201,10 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.Ents[2].Y = 1
   g.viewer.AddDrawable(g.Ents[2])
 
+  for i := range g.Ents {
+    g.Ents[i].OnRound()
+  }
+
   g.los_tex = house.MakeLosTexture(256)
   g.los_tex.Remap(-20, -20)
   for i := range g.Ents[:1] {

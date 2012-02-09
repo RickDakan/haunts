@@ -74,6 +74,10 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   a.targets = nil
 
+  if a.ent.Stats.ApCur() < a.Ap {
+    return false
+  }
+
   x,y := a.ent.Pos()
   for _,ent := range g.Ents {
     if ent == a.ent { continue }
@@ -95,8 +99,9 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
     bx, by := int(fx), int(fy)
     for _,target := range a.targets {
       x,y := target.Pos()
-      if bx == x && by == y {
+      if bx == x && by == y && a.ent.Stats.ApCur() >= a.Ap {
         a.target = target
+        a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
         return game.ConsumedAndBegin
       }
     }

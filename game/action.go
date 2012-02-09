@@ -71,7 +71,8 @@ type Action interface {
 
   // Got to have some way for the user to interact with the action.  Returns
   // true if the action has been comitted.  If this action is not being
-  // readied then it will take effect immediately.
+  // readied then it will take effect immediately.  If this function returns
+  // ConsumedAndBegin it should charge the required Ap when it does so.
   HandleInput(gui.EventGroup, *Game) InputStatus
 
   // Got to have some way for the user to see what is going on
