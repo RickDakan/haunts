@@ -1,0 +1,14 @@
+{
+  "Name": "Fire Buff",
+  "Buff": true,
+  "Strength": 3,
+  "Kind": "Fire",
+  "Time": 5,
+  "Dynamic": {
+    "Hp": -1,
+    "Ap": 1
+  },
+  "Base": {
+    "Attack": 1
+  }
+}
