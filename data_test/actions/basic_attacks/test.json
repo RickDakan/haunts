@@ -3,5 +3,6 @@
   "Kind"    : "Fire",
   "Ap"      : 3,
   "Strength": 4,
+  "Damage"  : 5,
   "Range"   : 3
 }

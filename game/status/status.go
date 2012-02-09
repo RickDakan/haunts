@@ -157,6 +157,15 @@ func (s *Inst) ApplyCondition(c Condition) {
   s.inst.Conditions = append(s.inst.Conditions, c)
 }
 
+func (s *Inst) ApplyDamage(dap,dhp int, kind Kind) {
+  dmg := Damage{ Dynamic: Dynamic{ Ap: dap, Hp: dhp }, Kind: kind }
+  for _,c := range s.inst.Conditions {
+    dmg = c.ModifyDamage(dmg)
+  }
+  s.inst.Ap += dmg.Ap
+  s.inst.Hp += dmg.Hp
+}
+
 func (s *Inst) OnRound() {
   completed := make(map[Condition]bool)
   var dmgs []Damage
@@ -172,11 +181,7 @@ func (s *Inst) OnRound() {
 
   s.inst.Ap = s.ApMax()
   for _,dmg := range dmgs {
-    for _,c := range s.inst.Conditions {
-      dmg = c.ModifyDamage(dmg)
-    }
-    s.inst.Ap += dmg.Ap
-    s.inst.Hp += dmg.Hp
+    s.ApplyDamage(dmg.Ap, dmg.Hp, dmg.Kind)
   }
 
   // Negative Ap is as useless as zero, so just set it to zero for simplicity

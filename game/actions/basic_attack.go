@@ -45,6 +45,7 @@ type BasicAttackDef struct {
   Ap         int
   Strength   int
   Range      int
+  Damage     int
   Conditions []string
 }
 type basicAttackInst struct {

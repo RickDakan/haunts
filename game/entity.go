@@ -52,6 +52,12 @@ func (ei *entityDef) Dims() (int,int) {
   return 1, 1
 }
 
+type Side int
+const (
+  Explorers Side = iota
+  Haunt
+)
+
 type EntityInst struct {
   X,Y float64
 
@@ -71,6 +77,12 @@ type EntityInst struct {
   Actions []Action
 
   Status status.Inst
+
+  // The side that this entity is on.  This shouldn't change under normal
+  // circumstances, even if it is temporarily controlled by the other side.
+  // In the event that the entity is a betrayer this will change when they
+  // are revealed to be a betrayer.
+  Side Side
 }
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))
