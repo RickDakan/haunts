@@ -160,14 +160,14 @@ func (s Inst) Sight() int {
 
 func (s *Inst) ApplyCondition(c Condition) {
   for i := range s.inst.Conditions {
-    if s.inst.Conditions[i].Kind() == c.Kind() {
+    if s.inst.Conditions[i].Kind() == c.Kind() && s.inst.Conditions[i].Buff() == c.Buff() {
       if s.inst.Conditions[i].Strength() <= c.Strength() {
         s.inst.Conditions[i] = c
       }
 
       // Regardless of whether it was displaced or not we don't need to keep
-      // checking Conditions.  We can only have one condition of each type and
-      // this one is it.
+      // checking Conditions.  We can only have one condition of each type
+      // and buff pair, and this one is it.
       return
     }
   }
@@ -190,6 +190,7 @@ func (s *Inst) Think() {
     }
   }
 
+  s.inst.Ap = s.ApMax()
   for _,dmg := range dmgs {
     for _,c := range s.inst.Conditions {
       dmg = c.ModifyDamage(dmg)
@@ -198,6 +199,20 @@ func (s *Inst) Think() {
     s.inst.Hp += dmg.Hp
   }
 
+  // Negative Ap is as useless as zero, so just set it to zero for simplicity
+  if s.inst.Ap < 0 {
+    s.inst.Ap = 0
+  }
+
+  // Hp is capped at 0 as well, but also capped at its max
+  if s.inst.Hp < 0 {
+    s.inst.Hp = 0
+  }
+  if s.inst.Hp > s.HpMax() {
+    s.inst.Hp = s.HpMax()
+  }
+
+  // Now remove all of the Conditions that completed
   num_complete := 0
   for i := 0; i < len(s.inst.Conditions); i++ {
     if completed[s.inst.Conditions[i]] {
@@ -207,26 +222,6 @@ func (s *Inst) Think() {
     }
   }
   s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions) - num_complete]
-
-  // Now that we've removed completed Conditions we can set our dynamic stats
-  // accordingly
-  s.inst.Ap = s.ApMax()
-
-  // And now that we've modified our dynamic stats we can make sure they lie
-  // within the appropriate range.
-  if s.inst.Ap < 0 {
-    s.inst.Ap = 0
-  }
-  if s.inst.Ap > s.ApMax() {
-    s.inst.Ap = s.ApMax()
-  }
-
-  if s.inst.Hp < 0 {
-    s.inst.Hp = 0
-  }
-  if s.inst.Hp > s.HpMax() {
-    s.inst.Hp = s.HpMax()
-  }
 }
 
 // Encoding routines - only support json and gob right now

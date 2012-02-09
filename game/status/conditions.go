@@ -10,6 +10,9 @@ import (
 // Conditions represent instantaneous or ongoing Conditions on an entity.
 // Every round the Condition can 
 type Condition interface {
+  // Returns whether or not this condition is a buff
+  Buff() bool
+
   // Returns this condition's Kind
   Kind() Kind
 
@@ -93,12 +96,18 @@ type basicConditionDef struct {
   // be no less obvious what it is.
   Kind Kind
 
+  Buff bool
+
   // The strength of this condition
   Strength int
 
   // This Condition will Think() exactly Time + 1 times.  If Time < 0 then
   // it will Think() forever.
   Time int
+}
+
+func (bc *BasicCondition) Buff() bool {
+  return bc.basicConditionDef.Buff
 }
 
 func (bc *BasicCondition) Strength() int {

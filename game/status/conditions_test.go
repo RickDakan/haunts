@@ -71,7 +71,8 @@ func ConditionsSpec(c gospec.Context) {
     s.UnmarshalJSON([]byte(`
       {
         "Base": {
-          "Hp_max": 100
+          "Hp_max": 100,
+          "Ap_max": 10
         },
         "Dynamic": {
           "Hp": 100
@@ -140,5 +141,27 @@ func ConditionsSpec(c gospec.Context) {
     c.Expect(s.HpCur(), Equals, 75)
     s.Think()
     c.Expect(s.HpCur(), Equals, 75)
+
+
+    s.ApplyCondition(status.MakeCondition("Fire Buff"))
+    s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 73)
+    c.Expect(s.ApCur(), Equals, 11)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 71)
+    c.Expect(s.ApCur(), Equals, 11)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 69)
+    c.Expect(s.ApCur(), Equals, 11)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 68)
+    c.Expect(s.ApCur(), Equals, 11)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 67)
+    c.Expect(s.ApCur(), Equals, 11)
+    s.Think()
+    c.Expect(s.HpCur(), Equals, 67)
+    c.Expect(s.ApCur(), Equals, 10)
   })
 }
