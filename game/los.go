@@ -2,26 +2,7 @@ package game
 
 import (
   "haunts/house"
-  "github.com/arbaal/mathgl"
 )
-
-type stupid struct {
-  fx,fy float64
-}
-func makestupid(x,y int) stupid {
-  return stupid{float64(x), float64(y)}
-}
-func (s stupid) Pos() (int, int) {
-  return DiscretizePoint64(s.fx, s.fy)
-}
-func (s stupid) Dims() (int, int) {
-  return 1, 1
-}
-func (s stupid) FPos() (float64, float64) {
-  return s.fx, s.fy
-}
-func (s stupid) Render(pos mathgl.Vec2, width float32) {
-}
 
 type Game struct {
   Defname string
