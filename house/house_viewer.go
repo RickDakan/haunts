@@ -72,11 +72,25 @@ func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
   return v.X, v.Y, mz
 }
 
+func (hv *HouseViewer) boardToModelview(mx, my float32) (x, y, z float32) {
+  v := mathgl.Vec4{X: mx, Y: my, W: 1}
+  v.Transform(&hv.floor)
+  x, y, z = v.X, v.Y, v.Z
+  return
+}
+
 func (hv *HouseViewer) WindowToBoard(wx, wy int) (float32, float32) {
   hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
 
   fx,fy,_ := hv.modelviewToBoard(float32(wx), float32(wy))
   return fx, fy
+}
+
+func (hv *HouseViewer) BoardToWindow(bx, by float32) (int, int) {
+  hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
+
+  fx,fy,_ := hv.boardToModelview(bx, by)
+  return int(fx), int(fy)
 }
 
 // Changes the current zoom from e^(zoom) to e^(zoom+dz)

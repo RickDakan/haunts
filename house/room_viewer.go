@@ -213,17 +213,17 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
   return rbx, rby
 }
 
-func (rv *RoomViewer) BoardToWindow(bx,by float32) (float32, float32) {
+func (rv *RoomViewer) BoardToWindow(bx,by float32) (int, int) {
   fx,fy,fz := rv.boardToModelview(float32(bx), float32(by))
   lbx,lby,lz := rv.leftWallToModelview(float32(bx), float32(by))
   rbx,rby,rz := rv.rightWallToModelview(float32(bx), float32(by))
   if fz < lz && fz < rz {
-    return fx, fy
+    return int(fx), int(fy)
   }
   if lz < rz {
-    return lbx, lby
+    return int(lbx), int(lby)
   }
-  return rbx, rby
+  return int(rbx), int(rby)
 }
 
 func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {

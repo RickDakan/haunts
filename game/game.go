@@ -48,6 +48,18 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   }
   gp.game.Think(dt)
 }
+
+func (gp *GamePanel) Draw(region gui.Region) {
+  gp.HorizontalTable.Draw(region)
+
+  // Do heads-up stuff
+  region.PushClipPlanes()
+  defer region.PopClipPlanes()
+  for _,e := range gp.game.Ents {
+    e.DrawReticle(gp.viewer)
+  }
+}
+
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.HorizontalTable.Respond(ui, group) {
     return true

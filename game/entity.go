@@ -3,6 +3,7 @@ package game
 import (
   "glop/sprite"
   "haunts/base"
+  "haunts/house"
   "haunts/game/status"
   "github.com/arbaal/mathgl"
   "gl"
@@ -61,6 +62,10 @@ type EntityInst struct {
   // we don't need to recalculate it more than we need to as an ent is moving.
   losx,losy int
 
+  // The width that this entity's sprite was rendered at the last time it was
+  // drawn.  User to determine what entity the cursor is over.
+  last_render_width float32
+
   // Actions that this entity currently has available to it for use.  This
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
@@ -94,7 +99,25 @@ type Entity struct {
   EntityInst
 }
 
+func (e *Entity) DrawReticle(viewer house.Viewer) {
+  bx,by := e.FPos()
+  wx,wy := viewer.BoardToWindow(float32(bx), float32(by))
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Color4d(1, 0, 0, 0.8)
+  gl.Begin(gl.LINES)
+    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
+    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + 150 * e.last_render_width / 100)
+    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + 150 * e.last_render_width / 100)
+    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + 150 * e.last_render_width / 100)
+    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + 150 * e.last_render_width / 100)
+    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
+    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
+    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
+  gl.End()
+}
+
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
+  e.last_render_width = width
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
     gl.Color4d(1, 1, 1, 1)
