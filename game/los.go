@@ -19,8 +19,22 @@ type Game struct {
 
   Ents []*Entity  `registry:"loadfrom-entities"`
 
+  // Current player
+  Side Side
+
   action_state actionState
   current_action Action
+}
+
+func (g *Game) OnRound() {
+  for i := range g.Ents {
+    g.Ents[i].OnRound()
+  }
+  if g.Side == Explorers {
+    g.Side = Haunt
+  } else {
+    g.Side = Explorers
+  }
 }
 
 type actionState int

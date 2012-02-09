@@ -3,6 +3,7 @@ package game
 import (
   "glop/gui"
   "glop/gin"
+  "haunts/base"
   "haunts/house"
 )
 
@@ -66,6 +67,13 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
   if group.Events[0].Type == gin.Release {
     return false
+  }
+  if found,_ := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found {
+    gp.game.OnRound()
+    for i := range gp.game.Ents {
+      println("ent ", i, " ", gp.game.Ents[i].Stats.ApCur())
+    }
+    return true
   }
   if gp.game.action_state == preppingAction {
     res := gp.game.current_action.HandleInput(group, gp.game)

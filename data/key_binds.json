@@ -8,5 +8,6 @@
   "quit"         : "gui+q",
   "room editor"  : "gui+1",
   "house editor" : "gui+2",
-  "game mode"    : "gui+g"
+  "game mode"    : "gui+g",
+  "finish round" : "gui+t"
 }
