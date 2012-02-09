@@ -29,7 +29,7 @@ type Condition interface {
   // Called at the beginning of each round.  May return a damage object to
   // deal damage, and must return a bool indicating whether this effect has
   // completed or not.
-  Think() (dmg *Damage, complete bool)
+  OnRound() (dmg *Damage, complete bool)
 }
 
 var condition_registerers []func()
@@ -83,7 +83,7 @@ type BasicCondition struct {
 type basicConditionDef struct {
   Name string
 
-  // On Think() this Condition will create a Damage object with this Dynamic
+  // On OnRound() this Condition will create a Damage object with this Dynamic
   // object.
   Dynamic
 
@@ -101,8 +101,8 @@ type basicConditionDef struct {
   // The strength of this condition
   Strength int
 
-  // This Condition will Think() exactly Time + 1 times.  If Time < 0 then
-  // it will Think() forever.
+  // This Condition will OnRound() exactly Time + 1 times.  If Time < 0 then
+  // it will OnRound() forever.
   Time int
 }
 
@@ -132,7 +132,7 @@ func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
   return base
 }
 
-func (bc *BasicCondition) Think() (dmg *Damage, complete bool) {
+func (bc *BasicCondition) OnRound() (dmg *Damage, complete bool) {
   var d Dynamic
   if bc.Dynamic != d {
     dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }

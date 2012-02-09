@@ -64,6 +64,8 @@ type EntityInst struct {
   // Actions that this entity currently has available to it for use.  This
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
+
+  Status status.Inst
 }
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))
@@ -188,6 +190,9 @@ func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
 func (e *Entity) Think(dt int64) {
   if e.Sprite.sp != nil {
     e.Sprite.sp.Think(dt)
-    // e.advance(float32(dt) / 200)
   }
+}
+
+func (e *Entity) OnRound() {
+  e.Stats.OnRound()
 }

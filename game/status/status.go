@@ -41,26 +41,6 @@ type Damage struct {
   Kind Kind
 }
 
-type DoesntModifyBase struct {}
-func (DoesntModifyBase) ModifyBase(b Base) Base {
-  return b
-}
-
-type PermanentEffect struct {}
-func (PermanentEffect) Think() (bool) {
-  return false
-}
-
-// A RoundTimer will last for the specified number of rounds.  A RoundTimer of
-// 0 is equivalent to an Immediate effect.
-type RoundTimer struct {
-  Num_rounds int
-}
-func (r *RoundTimer) Think() bool {
-  r.Num_rounds--
-  return r.Num_rounds < 0
-}
-
 type Dynamic struct {
   Hp,Ap int
 }
@@ -177,11 +157,11 @@ func (s *Inst) ApplyCondition(c Condition) {
   s.inst.Conditions = append(s.inst.Conditions, c)
 }
 
-func (s *Inst) Think() {
+func (s *Inst) OnRound() {
   completed := make(map[Condition]bool)
   var dmgs []Damage
   for i := 0; i < len(s.inst.Conditions); i++ {
-    dmg,done := s.inst.Conditions[i].Think()
+    dmg,done := s.inst.Conditions[i].OnRound()
     if dmg != nil {
       dmgs = append(dmgs, *dmg)
     }

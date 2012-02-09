@@ -40,11 +40,12 @@ type BasicAttack struct {
   basicAttackInst
 }
 type BasicAttackDef struct {
-  Name     string
-  Kind     status.Kind
-  Ap       int
-  Strength int
-  Range    int
+  Name       string
+  Kind       status.Kind
+  Ap         int
+  Strength   int
+  Range      int
+  Conditions []string
 }
 type basicAttackInst struct {
   ent *game.Entity
@@ -128,6 +129,9 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
     a.target.Sprite.Sprite().Command("defend")
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       a.target.Sprite.Sprite().Command("damaged")
+      for _,name := range a.Conditions {
+        a.target.Stats.ApplyCondition(status.MakeCondition(name))
+      }
     } else {
       a.target.Sprite.Sprite().Command("undamaged")
     }
