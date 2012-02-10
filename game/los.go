@@ -203,17 +203,26 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.Ents = append(g.Ents, MakeEntity("Angry Shade"))
   g.Ents[0].X = 3
   g.Ents[0].Y = 3
+  g.Ents[0].Side = Haunt
   g.viewer.AddDrawable(g.Ents[0])
 
-  g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
-  g.Ents[1].X = 2
-  g.Ents[1].Y = 3
+  g.Ents = append(g.Ents, MakeEntity("Master of the Manse"))
+  g.Ents[1].X = 1
+  g.Ents[1].Y = 1
+  g.Ents[1].Side = Haunt
   g.viewer.AddDrawable(g.Ents[1])
 
-  g.Ents = append(g.Ents, MakeEntity("Master of the Manse"))
-  g.Ents[2].X = 1
-  g.Ents[2].Y = 1
+  g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
+  g.Ents[2].X = 2
+  g.Ents[2].Y = 3
+  g.Ents[2].Side = Explorers
   g.viewer.AddDrawable(g.Ents[2])
+
+  g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
+  g.Ents[3].X = 1
+  g.Ents[3].Y = 3
+  g.Ents[3].Side = Explorers
+  g.viewer.AddDrawable(g.Ents[3])
 
   for i := range g.Ents {
     g.Ents[i].OnRound()

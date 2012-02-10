@@ -1,8 +1,6 @@
 {
   "Name": "Master of the Manse",
-  "Sprite" : {
-    "Path" : "entities/master"
-  },
+  "Sprite_path" : "entities/master",
   "Action_names": [
     "Move Test"
   ],

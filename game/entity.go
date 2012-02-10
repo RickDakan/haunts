@@ -1,6 +1,7 @@
 package game
 
 import (
+  "fmt"
   "glop/sprite"
   "haunts/base"
   "haunts/house"
@@ -21,11 +22,13 @@ func MakeEntity(name string) *Entity {
   for _,action_name := range ent.Action_names {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
+  ent.Sprite.Load(ent.Sprite_path.String())
+  fmt.Printf("Sprite: %p\n", ent.Sprite.sp)
+  fmt.Printf("Sprite: %v\n", ent.Sprite.err)
   return &ent
 }
 
 type spriteContainer struct {
-  Path base.Path
   sp   *sprite.Sprite
 
   // If there is an error when loading the sprite it will be stored here
@@ -34,13 +37,14 @@ type spriteContainer struct {
 func (sc *spriteContainer) Sprite() *sprite.Sprite {
   return sc.sp
 }
-func (sc *spriteContainer) Load() {
-  sc.sp, sc.err = sprite.LoadSprite(sc.Path.String())
+func (sc *spriteContainer) Load(path string) {
+  sc.sp, sc.err = sprite.LoadSprite(path)
 }
 
 type entityDef struct {
   Name string
-  Sprite spriteContainer  `registry:"autoload"`
+
+  Sprite_path base.Path
 
   // List of actions that this entity defaults to having
   Action_names []string
@@ -60,6 +64,8 @@ const (
 
 type EntityInst struct {
   X,Y float64
+
+  Sprite spriteContainer
 
   // All positions that can be seen by this entity are stored here.
   los map[[2]int]bool

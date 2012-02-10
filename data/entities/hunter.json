@@ -1,8 +1,6 @@
 {
   "Name": "Ghost Hunter",
-  "Sprite" : {
-    "Path" : "entities/hunter"
-  },
+  "Sprite_path" : "entities/hunter",
   "Action_names": [
     "Move Test"
   ],

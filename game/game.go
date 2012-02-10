@@ -70,9 +70,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
   if found,_ := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found {
     gp.game.OnRound()
-    for i := range gp.game.Ents {
-      println("ent ", i, " ", gp.game.Ents[i].Stats.ApCur())
-    }
     return true
   }
   if gp.game.action_state == preppingAction {

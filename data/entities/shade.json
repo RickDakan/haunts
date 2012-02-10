@@ -1,8 +1,6 @@
 {
   "Name": "Angry Shade",
-  "Sprite" : {
-    "Path" : "entities/shade"
-  },
+  "Sprite_path" : "entities/shade",
   "Action_names": [
     "Move Test",
     "Basic Test"
