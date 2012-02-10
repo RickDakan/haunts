@@ -56,8 +56,11 @@ func (gp *GamePanel) Draw(region gui.Region) {
   // Do heads-up stuff
   region.PushClipPlanes()
   defer region.PopClipPlanes()
-  for _,e := range gp.game.Ents {
-    e.DrawReticle(gp.viewer)
+  if gp.game.selected_ent != nil {
+    gp.game.selected_ent.DrawReticle(gp.viewer)
+  }
+  if gp.game.hovered_ent != nil {
+    gp.game.hovered_ent.DrawReticle(gp.viewer)
   }
 }
 
@@ -72,6 +75,30 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     gp.game.OnRound()
     return true
   }
+
+  cursor := group.Events[0].Key.Cursor()
+  if cursor != nil {
+    gp.game.hovered_ent = nil
+    mx,my := cursor.Point()
+    for i := range gp.game.Ents {
+      fx,fy := gp.game.Ents[i].FPos()
+      wx,wy := gp.viewer.BoardToWindow(float32(fx), float32(fy))
+      x := wx - int(gp.game.Ents[i].last_render_width / 2)
+      y := wy
+      x2 := wx + int(gp.game.Ents[i].last_render_width / 2)
+      y2 := wy + int(150 * gp.game.Ents[i].last_render_width / 100)
+      if mx >= x && mx <= x2 && my >= y && my <= y2 {
+        gp.game.hovered_ent = gp.game.Ents[i]
+      }
+    }
+  }
+
+  if gp.game.action_state == noAction {
+    if found,_ := group.FindEvent(gin.MouseLButton); found {
+      gp.game.selected_ent = gp.game.hovered_ent
+    }
+  }
+
   if gp.game.action_state == preppingAction {
     res := gp.game.current_action.HandleInput(group, gp.game)
     switch res {
@@ -84,12 +111,15 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
+  // After this point all events that we check for require that we have a
+  // selected entity
+  if gp.game.selected_ent == nil { return false }
   if gp.game.action_state == noAction || gp.game.action_state == preppingAction {
     if len(group.Events) == 1 && group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
       index := int(group.Events[0].Key.Id() - '1')
-      if index >= 0 && index < len(gp.game.Ents[0].Actions) {
-        action := gp.game.Ents[0].Actions[index]
-        if action != gp.game.current_action && action.Prep(gp.game.Ents[0], gp.game) {
+      if index >= 0 && index < len(gp.game.selected_ent.Actions) {
+        action := gp.game.selected_ent.Actions[index]
+        if action != gp.game.current_action && action.Prep(gp.game.selected_ent, gp.game) {
           if gp.game.current_action != nil {
             gp.game.current_action.Cancel()
           }
@@ -99,6 +129,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }
     }
   }
+
   return false
 }
 

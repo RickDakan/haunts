@@ -2,7 +2,8 @@
   "Name": "Master of the Manse",
   "Sprite_path" : "entities/master",
   "Action_names": [
-    "Move Test"
+    "Move Test",
+    "Basic Test"
   ],
   "Stats": {
     "Base": {

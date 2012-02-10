@@ -19,6 +19,9 @@ type Game struct {
 
   Ents []*Entity  `registry:"loadfrom-entities"`
 
+  selected_ent *Entity
+  hovered_ent *Entity
+
   // Current player
   Side Side
 
@@ -237,6 +240,15 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 }
 
 func (g *Game) Think(dt int64) {
+  ros := make([]house.RectObject, len(g.Ents))
+  for i := range g.Ents {
+    ros[i] = g.Ents[i]
+  }
+  ros = house.OrderRectObjects(ros)
+  for i := range g.Ents {
+    g.Ents[i] = ros[len(ros) - i - 1].(*Entity)
+  }
+
   g.viewer.Floor_drawer = g.current_action
   for i := range g.Ents {
     g.Ents[i].Think(dt)

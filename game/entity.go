@@ -1,7 +1,6 @@
 package game
 
 import (
-  "fmt"
   "glop/sprite"
   "haunts/base"
   "haunts/house"
@@ -23,8 +22,6 @@ func MakeEntity(name string) *Entity {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
   ent.Sprite.Load(ent.Sprite_path.String())
-  fmt.Printf("Sprite: %p\n", ent.Sprite.sp)
-  fmt.Printf("Sprite: %v\n", ent.Sprite.err)
   return &ent
 }
 

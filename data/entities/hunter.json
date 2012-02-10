@@ -2,7 +2,8 @@
   "Name": "Ghost Hunter",
   "Sprite_path" : "entities/hunter",
   "Action_names": [
-    "Move Test"
+    "Move Test",
+    "Basic Test"
   ],
   "Stats": {
     "Base": {
