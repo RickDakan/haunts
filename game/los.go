@@ -227,6 +227,12 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.Ents[3].Side = Explorers
   g.viewer.AddDrawable(g.Ents[3])
 
+  g.Ents = append(g.Ents, MakeEntity("Occultist"))
+  g.Ents[4].X = 6
+  g.Ents[4].Y = 3
+  g.Ents[4].Side = Explorers
+  g.viewer.AddDrawable(g.Ents[4])
+
   for i := range g.Ents {
     g.Ents[i].OnRound()
   }
