@@ -57,10 +57,10 @@ func (gp *GamePanel) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
   if gp.game.selected_ent != nil {
-    gp.game.selected_ent.DrawReticle(gp.viewer)
+    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side == gp.game.Side, true)
   }
   if gp.game.hovered_ent != nil {
-    gp.game.hovered_ent.DrawReticle(gp.viewer)
+    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side == gp.game.Side, false)
   }
 }
 
@@ -93,9 +93,31 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
+  if found,_ := group.FindEvent(gin.Escape); found {
+    if gp.game.selected_ent != nil {
+      switch gp.game.action_state {
+      case noAction:
+        gp.game.selected_ent = nil
+        return true
+
+      case preppingAction:
+        gp.game.action_state = noAction
+        gp.game.current_action.Cancel()
+        gp.game.current_action = nil
+        return true
+
+      case doingAction:
+        // Do nothing - we don't cancel an action that's in progress
+      }
+    }
+  }
+
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
-      gp.game.selected_ent = gp.game.hovered_ent
+      if gp.game.hovered_ent.Side == gp.game.Side {
+        gp.game.selected_ent = gp.game.hovered_ent
+      }
+      return true
     }
   }
 

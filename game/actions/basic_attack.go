@@ -94,15 +94,13 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    cursor := event.Key.Cursor()
-    fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
-    bx, by := int(fx), int(fy)
     for _,target := range a.targets {
-      x,y := target.Pos()
-      if bx == x && by == y && a.ent.Stats.ApCur() >= a.Ap {
-        a.target = target
-        a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-        return game.ConsumedAndBegin
+      if target == g.HoveredEnt() {
+        if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 {
+          a.target = target
+          return game.ConsumedAndBegin
+        }
+        return game.Consumed
       }
     }
     return game.Consumed
@@ -134,9 +132,14 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
     a.ent.Sprite.Sprite().Command("melee")
     a.target.Sprite.Sprite().Command("defend")
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
-      a.target.Sprite.Sprite().Command("damaged")
       for _,name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
+      }
+      a.target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
+      if a.target.Stats.HpCur() <= 0 {
+        a.target.Sprite.Sprite().Command("killed")
+      } else {
+        a.target.Sprite.Sprite().Command("damaged")
       }
     } else {
       a.target.Sprite.Sprite().Command("undamaged")

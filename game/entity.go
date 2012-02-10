@@ -114,11 +114,25 @@ type Entity struct {
   EntityInst
 }
 
-func (e *Entity) DrawReticle(viewer house.Viewer) {
+func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
   bx,by := e.FPos()
   wx,wy := viewer.BoardToWindow(float32(bx), float32(by))
   gl.Disable(gl.TEXTURE_2D)
-  gl.Color4d(1, 0, 0, 0.8)
+
+  if ally {
+    if selected {
+      gl.Color4d(0, 1, 0, 0.8)
+    } else {
+      gl.Color4d(0, 1, 0, 0.3)
+    }
+  } else {
+    if selected {
+      gl.Color4d(1, 0, 0, 0.8)
+    } else {
+      gl.Color4d(1, 0, 0, 0.3)
+    }
+  }
+
   gl.Begin(gl.LINES)
     gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
     gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + 150 * e.last_render_width / 100)

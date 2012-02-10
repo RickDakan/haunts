@@ -166,6 +166,11 @@ func (s *Inst) ApplyDamage(dap,dhp int, kind Kind) {
   s.inst.Hp += dmg.Hp
 }
 
+func (s *Inst) OnBegin() {
+  s.inst.Hp = s.inst.Hp_max
+  s.OnRound()
+}
+
 func (s *Inst) OnRound() {
   completed := make(map[Condition]bool)
   var dmgs []Damage

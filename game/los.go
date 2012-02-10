@@ -29,7 +29,22 @@ type Game struct {
   current_action Action
 }
 
+func (g *Game) HoveredEnt() *Entity {
+  return g.hovered_ent
+}
+
+func (g *Game) SelectedEnt() *Entity {
+  return g.selected_ent
+}
+
+func (g *Game) OnBegin() {
+  for i := range g.Ents {
+    g.Ents[i].Stats.OnBegin()
+  }
+}
+
 func (g *Game) OnRound() {
+  if g.action_state != noAction { return }
   for i := range g.Ents {
     g.Ents[i].OnRound()
   }
@@ -38,6 +53,8 @@ func (g *Game) OnRound() {
   } else {
     g.Side = Explorers
   }
+  g.selected_ent = nil
+  g.hovered_ent = nil
 }
 
 type actionState int
@@ -242,6 +259,8 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   for i := range g.Ents[:1] {
     g.DetermineLos(g.Ents[i], true)
   }
+
+  g.OnBegin()
   return &g
 }
 
