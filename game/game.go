@@ -3,6 +3,7 @@ package game
 import (
   "glop/gui"
   "glop/gin"
+  "glop/util/algorithm"
   "haunts/base"
   "haunts/house"
 )
@@ -64,16 +65,62 @@ func (gp *GamePanel) Draw(region gui.Region) {
   }
 }
 
+func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
+  if group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
+    if group.Events[0].Type == gin.Press {
+      index := int(group.Events[0].Key.Id() - '1')
+      names := base.GetAllNamesInRegistry("entities")
+      ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
+        return MakeEntity(a.(string))
+      }).([]*Entity)
+      ents = algorithm.Choose(ents, func(a interface{}) bool {
+        return a.(*Entity).Side == g.Side
+      }).([]*Entity)
+      if index >= 0 && index < len(ents) {
+        g.viewer.RemoveDrawable(g.new_ent)
+        g.new_ent = ents[index]
+        g.viewer.AddDrawable(g.new_ent)
+      }
+    }
+  }
+  if g.new_ent != nil {
+    x,y := gin.In().GetCursor("Mouse").Point()
+    bx,by := g.viewer.WindowToBoard(x, y)
+    g.new_ent.X = float64(int(bx))
+    g.new_ent.Y = float64(int(by))
+    if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+      ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
+      r := roomAt(g.house.Floors[0], ix, iy)
+      if r == nil { return true }
+      f := furnitureAt(r, ix - r.X, iy - r.Y)
+      if f != nil { return true }
+      for _,e := range g.Ents {
+        x,y := e.Pos()
+        if x == ix && y == iy { return true }
+      }
+      g.Ents = append(g.Ents, g.new_ent)
+      g.new_ent = nil
+    }
+  }
+  return false
+}
+
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.HorizontalTable.Respond(ui, group) {
     return true
   }
-  if group.Events[0].Type == gin.Release {
-    return false
-  }
-  if found,_ := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found {
+
+  if found,event := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found && event.Type == gin.Press {
     gp.game.OnRound()
     return true
+  }
+
+  if gp.game.Turn <= 1 {
+    return gp.game.setupRespond(ui, group)
+  }
+
+  if group.Events[0].Type == gin.Release {
+    return false
   }
 
   cursor := group.Events[0].Key.Cursor()
@@ -114,7 +161,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
-      if gp.game.hovered_ent.Side == gp.game.Side {
+      if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side == gp.game.Side {
         gp.game.selected_ent = gp.game.hovered_ent
       }
       return true
@@ -156,7 +203,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (gp *GamePanel) LoadHouse(name string) {
-  gp.HorizontalTable.RemoveChild(gp.viewer)
+  gp.HorizontalTable = gui.MakeHorizontalTable()
   gp.house = house.MakeHouse(name)
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
@@ -164,6 +211,7 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
   gp.viewer.Los_tex = gp.game.los_tex
+  gp.HorizontalTable = gui.MakeHorizontalTable()
   gp.HorizontalTable.AddChild(gp.viewer)
 }
 

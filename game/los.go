@@ -1,6 +1,7 @@
 package game
 
 import (
+  "glop/gui"
   "haunts/house"
 )
 
@@ -13,6 +14,13 @@ type Game struct {
 
   viewer *house.HouseViewer
 
+  selection_tab      *gui.TabFrame
+  haunts_selection   *gui.VerticalTable
+  explorer_selection *gui.VerticalTable
+
+  // If the user is dragging around a new Entity to place, this is it
+  new_ent *Entity
+
   // Might want to keep several of them for different POVs, but one is
   // fine for now
   los_tex *house.LosTexture
@@ -24,6 +32,10 @@ type Game struct {
 
   // Current player
   Side Side
+
+  // Current turn number - incremented on each OnRound() so every two
+  // indicates that a complete round has happened.
+  Turn int
 
   action_state actionState
   current_action Action
@@ -45,6 +57,7 @@ func (g *Game) OnBegin() {
 
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
+  g.Turn++
   for i := range g.Ents {
     g.Ents[i].OnRound()
   }
@@ -250,10 +263,6 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.Ents[4].Side = Explorers
   g.viewer.AddDrawable(g.Ents[4])
 
-  for i := range g.Ents {
-    g.Ents[i].OnRound()
-  }
-
   g.los_tex = house.MakeLosTexture(256)
   g.los_tex.Remap(-20, -20)
   for i := range g.Ents[:1] {
@@ -261,6 +270,12 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   }
 
   g.OnBegin()
+
+  g.explorer_selection = gui.MakeVerticalTable()
+  g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))
+  g.haunts_selection = gui.MakeVerticalTable()
+  g.haunts_selection.AddChild(gui.MakeTextLine("standard", "bar", 300, 1, 1, 1, 1))
+  g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
   return &g
 }
 
