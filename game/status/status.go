@@ -54,6 +54,12 @@ type Base struct {
   Attack int
 }
 
+func MakeInst(b Base) Inst {
+  var i Inst
+  i.inst.Base = b
+  return i
+}
+
 type inst struct {
   Base
   Dynamic

@@ -22,6 +22,7 @@ func MakeEntity(name string) *Entity {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
   ent.Sprite.Load(ent.Sprite_path.String())
+  ent.Stats = status.MakeInst(ent.Base)
   return &ent
 }
 
@@ -46,8 +47,7 @@ type entityDef struct {
   // List of actions that this entity defaults to having
   Action_names []string
 
-  // Contains both base and current stats
-  Stats status.Inst
+  Base status.Base
 }
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
@@ -79,7 +79,7 @@ type EntityInst struct {
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
 
-  Status status.Inst
+  Stats status.Inst
 
   // The side that this entity is on.  This shouldn't change under normal
   // circumstances, even if it is temporarily controlled by the other side.
