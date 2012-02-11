@@ -210,7 +210,6 @@ func (gp *GamePanel) LoadHouse(name string) {
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
-  gp.viewer.Los_tex = gp.game.los_tex
   gp.HorizontalTable = gui.MakeHorizontalTable()
   gp.HorizontalTable.AddChild(gp.viewer)
 }

@@ -5,6 +5,7 @@
     "Move Test",
     "Basic Test"
   ],
+  "Side": 0,
   "Base": {
     "Ap_max": 15,
     "Hp_max": 10,

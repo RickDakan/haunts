@@ -57,6 +57,9 @@ func (g *Game) OnBegin() {
 
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
+  if g.Turn == 1 {
+    g.viewer.Los_tex = g.los_tex
+  }
   g.Turn++
   for i := range g.Ents {
     g.Ents[i].OnRound()
@@ -233,41 +236,14 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.house = h
   g.viewer = viewer
 
-  g.Ents = append(g.Ents, MakeEntity("Angry Shade"))
-  g.Ents[0].X = 3
-  g.Ents[0].Y = 3
-  g.Ents[0].Side = Haunt
-  g.viewer.AddDrawable(g.Ents[0])
-
-  g.Ents = append(g.Ents, MakeEntity("Master of the Manse"))
-  g.Ents[1].X = 1
-  g.Ents[1].Y = 1
-  g.Ents[1].Side = Haunt
-  g.viewer.AddDrawable(g.Ents[1])
-
-  g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
-  g.Ents[2].X = 2
-  g.Ents[2].Y = 3
-  g.Ents[2].Side = Explorers
-  g.viewer.AddDrawable(g.Ents[2])
-
-  g.Ents = append(g.Ents, MakeEntity("Ghost Hunter"))
-  g.Ents[3].X = 1
-  g.Ents[3].Y = 3
-  g.Ents[3].Side = Explorers
-  g.viewer.AddDrawable(g.Ents[3])
-
-  g.Ents = append(g.Ents, MakeEntity("Occultist"))
-  g.Ents[4].X = 6
-  g.Ents[4].Y = 3
-  g.Ents[4].Side = Explorers
-  g.viewer.AddDrawable(g.Ents[4])
-
   g.los_tex = house.MakeLosTexture(256)
   g.los_tex.Remap(-20, -20)
-  for i := range g.Ents[:1] {
-    g.DetermineLos(g.Ents[i], true)
+  for i := range g.Ents {
+    if g.Ents[i].Side == g.Side {
+      g.DetermineLos(g.Ents[i], true)
+    }
   }
+  g.MergeLos(g.Ents)
 
   g.OnBegin()
 
@@ -293,9 +269,14 @@ func (g *Game) Think(dt int64) {
   for i := range g.Ents {
     g.Ents[i].Think(dt)
   }
-  for i := range g.Ents[:1] {
-    g.DetermineLos(g.Ents[i], false)
+  var side_ents []*Entity
+  for i := range g.Ents {
+    if g.Ents[i].Side == g.Side {
+      g.DetermineLos(g.Ents[i], false)
+      side_ents = append(side_ents, g.Ents[i])
+    }
   }
+  g.MergeLos(side_ents)
   pix,_,_ := g.los_tex.Pix()
   amt := dt / 5
   mod := false
@@ -352,6 +333,29 @@ func (g *Game) doLos(dist int, line [][2]int, los map[[2]int]bool) {
   }
 }
 
+func (g *Game) MergeLos(ents []*Entity) {
+  merge := make(map[[2]int]bool)
+  for _,ent := range ents {
+    for p := range ent.los {
+      merge[p] = true
+    }
+  }
+  ltx,lty,ltx2,lty2 := g.los_tex.Region()
+  for i := ltx; i <= ltx2; i++ {
+    for j := lty; j <= lty2; j++ {
+      if merge[[2]int{i,j}] { continue }
+      if g.los_tex.Get(i, j) >= house.LosVisibilityThreshold {
+        g.los_tex.Set(i, j, house.LosVisibilityThreshold - 1)
+      }
+    }
+  }
+  for p := range merge {
+    if g.los_tex.Get(p[0], p[1]) < house.LosVisibilityThreshold {
+      g.los_tex.Set(p[0], p[1], house.LosVisibilityThreshold)
+    }
+  }
+}
+
 func (g *Game) DetermineLos(ent *Entity, force bool) {
   ex,ey := ent.Pos()
   if !force && ex == ent.losx && ey == ent.losy { return }
@@ -370,20 +374,6 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   for y := miny; y <= maxy; y++ {
     g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los)
     g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los)
-  }
-  ltx,lty,ltx2,lty2 := g.los_tex.Region()
-  for i := ltx; i <= ltx2; i++ {
-    for j := lty; j <= lty2; j++ {
-      if ent.los[[2]int{i,j}] { continue }
-      if g.los_tex.Get(i, j) >= house.LosVisibilityThreshold {
-        g.los_tex.Set(i, j, house.LosVisibilityThreshold - 1)
-      }
-    }
-  }
-  for p := range ent.los {
-    if g.los_tex.Get(p[0], p[1]) < house.LosVisibilityThreshold {
-      g.los_tex.Set(p[0], p[1], house.LosVisibilityThreshold)
-    }
   }
 }
 
