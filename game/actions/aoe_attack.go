@@ -135,7 +135,7 @@ func (a *AoeAttack) Cancel() {
 func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
   if a.ent.Sprite.Sprite().State() != "ready" { return game.InProgress }
   for _,target := range a.targets {
-    if target.Sprite.Sprite().State() != "ready" { return game.InProgress }
+    if target.Stats.HpCur() > 0 && target.Sprite.Sprite().State() != "ready" { return game.InProgress }
   }
   a.ent.TurnToFace(a.tx, a.ty)
   for _,target := range a.targets {
@@ -144,7 +144,19 @@ func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
   a.ent.Sprite.Sprite().Command("ranged")
   for _,target := range a.targets {
     target.Sprite.Sprite().Command("defend")
-    target.Sprite.Sprite().Command("damaged")
+    if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
+      for _,name := range a.Conditions {
+        target.Stats.ApplyCondition(status.MakeCondition(name))
+      }
+      target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
+      if target.Stats.HpCur() <= 0 {
+        target.Sprite.Sprite().Command("killed")
+      } else {
+        target.Sprite.Sprite().Command("damaged")
+      }
+    } else {
+      target.Sprite.Sprite().Command("undamaged")
+    }
   }
   
   //   if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {

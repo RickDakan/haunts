@@ -93,8 +93,9 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+  target := g.HoveredEnt()
+  if target == nil { return game.NotConsumed }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    target := g.HoveredEnt()
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(target.Pos()) {
       a.target = target
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
