@@ -106,6 +106,21 @@ func draggingAndZooming(dz draggerZoomer) {
 
 func gameMode() {
   draggingAndZooming(game_panel.GetViewer())
+  if key_map["load"].FramePressCount() > 0 && chooser == nil {
+    callback := func(path string, err error) {
+      ui.DropFocus()
+      ui.RemoveChild(anchor)
+      chooser = nil
+      anchor = nil
+      game_panel.LoadHouse("name")
+      // base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
+    }
+    chooser = gui.MakeFileChooser(filepath.Join(datadir, "houses"), callback, gui.MakeFileFilter(fmt.Sprintf(".house")))
+    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    ui.AddChild(anchor)
+    ui.TakeFocus(chooser)
+  }
 }
 
 func editMode() {
