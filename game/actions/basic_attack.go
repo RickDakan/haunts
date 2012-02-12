@@ -98,6 +98,7 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
       if target == g.HoveredEnt() {
         if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 {
           a.target = target
+          a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
           return game.ConsumedAndBegin
         }
         return game.Consumed

@@ -59,6 +59,8 @@ func (g *Game) OnRound() {
   if g.action_state != noAction { return }
   if g.Turn == 1 {
     g.viewer.Los_tex = g.los_tex
+    g.new_ent = nil
+    g.OnBegin()
   }
   g.Turn++
   for i := range g.Ents {
@@ -244,8 +246,6 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
     }
   }
   g.MergeLos(g.Ents)
-
-  g.OnBegin()
 
   g.explorer_selection = gui.MakeVerticalTable()
   g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))
