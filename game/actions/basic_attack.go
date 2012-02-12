@@ -11,7 +11,7 @@ import (
   "gl"
 )
 
-func registerAttacks() map[string]func() game.Action {
+func registerBasicAttacks() map[string]func() game.Action {
   attack_actions := make(map[string]*BasicAttackDef)
   base.RemoveRegistry("actions-attack_actions")
   base.RegisterRegistry("actions-attack_actions", attack_actions)
@@ -29,7 +29,7 @@ func registerAttacks() map[string]func() game.Action {
 }
 
 func init() {
-  game.RegisterActionMakers(registerAttacks)
+  game.RegisterActionMakers(registerBasicAttacks)
   gob.Register(&BasicAttack{})
 }
 
@@ -82,7 +82,7 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   for _,ent := range g.Ents {
     if ent == a.ent { continue }
     x2,y2 := ent.Pos()
-    if dist(x, y, x2, y2) <= a.Range {
+    if dist(x, y, x2, y2) <= a.Range && a.ent.HasLos(x2, y2) {
       a.targets = append(a.targets, ent)
     }
   }
@@ -94,15 +94,11 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    for _,target := range a.targets {
-      if target == g.HoveredEnt() {
-        if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 {
-          a.target = target
-          a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-          return game.ConsumedAndBegin
-        }
-        return game.Consumed
-      }
+    target := g.HoveredEnt()
+    if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(target.Pos()) {
+      a.target = target
+      a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+      return game.ConsumedAndBegin
     }
     return game.Consumed
   }

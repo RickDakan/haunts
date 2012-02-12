@@ -3,7 +3,8 @@
   "Sprite_path" : "entities/occultist",
   "Action_names": [
     "Move Test",
-    "Basic Test"
+    "Basic Test",
+    "Aoe Test"
   ],
   "Side": 0,
   "Base": {

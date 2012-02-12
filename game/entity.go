@@ -83,6 +83,9 @@ type EntityInst struct {
 
   Stats status.Inst
 }
+func (e *Entity) HasLos(x,y int) bool {
+  return e.los[[2]int{x,y}]
+}
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))
 }
