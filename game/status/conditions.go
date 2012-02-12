@@ -1,7 +1,6 @@
 package status
 
 import (
-  "fmt"
   "haunts/base"
   "path/filepath"
   "encoding/gob"
@@ -43,13 +42,6 @@ func RegisterAllConditions() {
 
 func MakeCondition(name string) Condition {
   return condition_makers[name]()
-}
-
-func registerConditionMaker(name string, maker func() Condition) {
-  if _,ok := condition_makers[name]; ok {
-    panic(fmt.Sprintf("Cannot register the condition maker '%s' more than once.", name))
-  }
-  condition_makers[name] = maker
 }
 
 func registerBasicConditions() {

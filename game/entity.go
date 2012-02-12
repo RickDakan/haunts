@@ -246,4 +246,8 @@ func (e *Entity) Think(dt int64) {
 
 func (e *Entity) OnRound() {
   e.Stats.OnRound()
+  if e.Stats.HpCur() <= 0 {
+    e.Sprite.Sprite().Command("defend")
+    e.Sprite.Sprite().Command("killed")
+  }
 }

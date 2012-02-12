@@ -1,0 +1,9 @@
+{
+  "Name": "Dot",
+  "Strength": 3,
+  "Kind": "Poison",
+  "Time": 30,
+  "Dynamic": {
+    "Hp": -1
+  }
+}

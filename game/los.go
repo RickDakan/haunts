@@ -3,6 +3,7 @@ package game
 import (
   "glop/gui"
   "haunts/house"
+  "glop/util/algorithm"
 )
 
 type Game struct {
@@ -57,19 +58,33 @@ func (g *Game) OnBegin() {
 
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
-  if g.Turn == 1 {
-    g.viewer.Los_tex = g.los_tex
-    g.new_ent = nil
-    g.OnBegin()
-  }
+
   g.Turn++
-  for i := range g.Ents {
-    g.Ents[i].OnRound()
-  }
   if g.Side == Explorers {
     g.Side = Haunt
   } else {
     g.Side = Explorers
+  }
+
+  if g.Turn < 2 { return }
+  if g.Turn == 2 {
+    g.viewer.Los_tex = g.los_tex
+    g.new_ent = nil
+    g.OnBegin()
+  }
+  for i := range g.Ents {
+    if g.Ents[i].Stats.HpCur() <= 0 {
+      g.viewer.RemoveDrawable(g.Ents[i])
+    }
+  }
+  g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
+    return a.(*Entity).Stats.HpCur() > 0
+  }).([]*Entity)
+
+  for i := range g.Ents {
+    if g.Ents[i].Side == g.Side {
+      g.Ents[i].OnRound()
+    }
   }
   g.selected_ent = nil
   g.hovered_ent = nil

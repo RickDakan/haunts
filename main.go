@@ -18,6 +18,7 @@ import (
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
   _ "haunts/game/actions"
+  "haunts/game/status"
 )
 
 var (
@@ -42,6 +43,7 @@ func loadAllRegistries() {
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
   game.RegisterActions()
+  status.RegisterAllConditions()
 }
 
 func init() {

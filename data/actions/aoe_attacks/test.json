@@ -5,5 +5,8 @@
   "Strength": 5,
   "Damage"  : 5,
   "Range"   : 8,
-  "Diameter": 3
+  "Diameter": 3,
+  "Conditions": [
+    "Dot"
+  ]
 }
