@@ -375,6 +375,15 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
     g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los)
     g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los)
   }
+
+  // TODO: THIS IS A KLUDGE - There is an off-by-one error somewhere and I'm
+  // taking care of it here, but this is stupid, need to find the real source
+  // of the bug.
+  elos := make(map[[2]int]bool, len(ent.los))
+  for p := range ent.los {
+    elos[[2]int{p[0]+1, p[1]+1}] = true
+  }
+  ent.los = elos
 }
 
 // Uses Bresenham's alogirthm to determine the points to rasterize a line from
