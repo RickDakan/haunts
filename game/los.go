@@ -1,6 +1,7 @@
 package game
 
 import (
+  "fmt"
   "glop/gui"
   "haunts/house"
   "glop/util/algorithm"
@@ -37,6 +38,9 @@ type Game struct {
   // Current turn number - incremented on each OnRound() so every two
   // indicates that a complete round has happened.
   Turn int
+
+  // Stores the current acting entity - if it is an Ai controlled entity
+  ai_ent *Entity
 
   action_state actionState
   current_action Action
@@ -80,6 +84,9 @@ func (g *Game) OnRound() {
   for i := range g.Ents {
     if g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
+    }
+    if g.Ents[i].Ai_path.String() != "" {
+      g.Ents[i].ai_status = aiReady
     }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
@@ -276,6 +283,21 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 }
 
 func (g *Game) Think(dt int64) {
+  // If there is an action that is currently executing we need to advance that
+  // action.
+  if g.action_state == doingAction {
+    res := g.current_action.Maintain(dt)
+    switch res {
+      case Complete:
+        g.current_action.Cancel()
+        g.current_action = nil
+        g.action_state = noAction
+
+      case InProgress:
+      case CheckForInterrupts:
+    }
+  }
+
   ros := make([]house.RectObject, len(g.Ents))
   for i := range g.Ents {
     ros[i] = g.Ents[i]
@@ -319,6 +341,37 @@ func (g *Game) Think(dt int64) {
   }
   if mod {
     g.los_tex.Remap(-20, -20)
+  }
+
+  // Do Ai - if there is any to do
+  fmt.Printf("action state: %d\n", g.action_state)
+  if g.action_state == noAction {
+    if g.ai_ent == nil {
+      for _,ent := range g.Ents {
+        if ent.Side != g.Side { continue }
+        fmt.Printf("ai satus: %d\n", ent.ai_status)
+        if ent.ai_status != aiReady { continue }
+        g.ai_ent = ent
+        println("started evaling, ", g.ai_ent.Name)
+        g.ai_ent.Ai.Eval()
+        g.ai_ent.ai_status = aiRunning
+        break
+      }
+    }
+    if g.ai_ent != nil {
+      select {
+      case act := <-g.ai_ent.Ai.Actions():
+        if act != nil {
+          g.current_action = act
+          g.action_state = doingAction
+        } else {
+          g.ai_ent.ai_status = aiDone
+          g.ai_ent = nil
+        }
+        fmt.Printf("Got action: %v\n", g.current_action)
+      default:
+      }
+    }
   }
 }
 

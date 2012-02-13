@@ -9,13 +9,24 @@ import (
   "gl"
 )
 
+type Ai interface {
+  Eval()
+  Actions() <-chan Action
+}
+
+var ai_maker func(path string, ent *Entity) Ai
+
+func SetAiMaker(f func(path string, ent *Entity) Ai) {
+  ai_maker = f
+}
+
 func LoadAllEntitiesInDir(dir string) {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
   base.RegisterAllObjectsInDir("entities", dir, ".json", "json")
 }
 
-func MakeEntity(name string) *Entity {
+func MakeEntity(name string, g *Game) *Entity {
   ent := Entity{ Defname: name }
   base.GetObject("entities", &ent)
   for _,action_name := range ent.Action_names {
@@ -23,6 +34,12 @@ func MakeEntity(name string) *Entity {
   }
   ent.Sprite.Load(ent.Sprite_path.String())
   ent.Stats = status.MakeInst(ent.Base)
+
+  if ent.Ai_path.String() != "" {
+    ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
+  }
+
+  ent.game = g
   return &ent
 }
 
@@ -39,6 +56,14 @@ func (sc *spriteContainer) Load(path string) {
   sc.sp, sc.err = sprite.LoadSprite(path)
 }
 
+// Allows the Ai system to signal to us under certain circumstance
+type AiEvalSignal int
+const (
+  AiEvalCont  AiEvalSignal = iota
+  AiEvalTerm
+  AiEvalPause
+)
+
 type entityDef struct {
   Name string
 
@@ -46,6 +71,9 @@ type entityDef struct {
 
   // List of actions that this entity defaults to having
   Action_names []string
+
+  // Path to the Ai that this entity should use if not player-controlled
+  Ai_path base.Path
 
   Base status.Base
 
@@ -77,11 +105,33 @@ type EntityInst struct {
   // drawn.  User to determine what entity the cursor is over.
   last_render_width float32
 
+  // Some methods may require being able to access other entities, so each
+  // entity has a pointer to the game itself.
+  game *Game
+
   // Actions that this entity currently has available to it for use.  This
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
 
   Stats status.Inst
+
+  // Ai stuff - the channels cannot be gobbed, so they need to be remade when
+  // loading an ent from a file
+  Ai Ai
+  // The ready flag is set to true at the start of every turn - this lets us
+  // keep easy track of whether or not an entity's Ai has executed yet, since
+  // an entity might not do anything else obvious, like run out of Ap.
+  ai_status aiStatus
+}
+type aiStatus int
+const (
+  aiNone    aiStatus = iota
+  aiReady
+  aiRunning
+  aiDone
+)
+func (e *Entity) Game() *Game {
+  return e.game
 }
 func (e *Entity) HasLos(x,y int) bool {
   return e.los[[2]int{x,y}]

@@ -18,6 +18,8 @@ import (
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
   _ "haunts/game/actions"
+  _ "haunts/game/ai"
+
   "haunts/game/status"
 )
 

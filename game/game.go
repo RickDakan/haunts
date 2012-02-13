@@ -36,18 +36,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   dt := t - gp.last_think
   gp.last_think = t
 
-  if gp.game.action_state == doingAction {
-    res := gp.game.current_action.Maintain(dt)
-    switch res {
-      case Complete:
-        gp.game.current_action.Cancel()
-        gp.game.current_action = nil
-        gp.game.action_state = noAction
-
-      case InProgress:
-      case CheckForInterrupts:
-    }
-  }
   gp.game.Think(dt)
 }
 
@@ -71,7 +59,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
       index := int(group.Events[0].Key.Id() - '1')
       names := base.GetAllNamesInRegistry("entities")
       ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
-        return MakeEntity(a.(string))
+        return MakeEntity(a.(string), g)
       }).([]*Entity)
       ents = algorithm.Choose(ents, func(a interface{}) bool {
         return a.(*Entity).Side == g.Side

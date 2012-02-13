@@ -60,6 +60,35 @@ func (a *Move) Readyable() bool {
   return false
 }
 
+// Usable by ais, tries to find a path that moves the entity to within dist of
+// the specified location.  Returns true if possible, false otherwise.  If it
+// returns true it also begins execution, so it should become the current
+// action.
+func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) bool {
+  a.ent = ent
+  var dsts []int
+  for x := tx - dist; x <= tx + dist; x++ {
+    for y := ty - dist; y <= ty + dist; y++ {
+      if x == tx && y == ty { continue }
+      dsts = append(dsts, a.ent.Game().ToVertex(x, y))
+    }
+  }
+  source_cell := []int{a.ent.Game().ToVertex(a.ent.Pos())}
+  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
+  if path == nil {
+    return false
+  }
+  if len(path) <= 1 { // || !canPayForMove(a.Ent, a.Level.MakeBoardPosFromVertex(path[1])) {
+    return false
+  }
+  vertex_to_boardpos := func(v interface{}) interface{} {
+    _,x,y := a.ent.Game().FromVertex(v.(int))
+    return [2]int{x,y}
+  }
+  a.path = algorithm.Map(path[1:], [][2]int{}, vertex_to_boardpos).([][2]int)
+  return true
+}
+
 func (a *Move) findPath(g *game.Game, x,y int) {
   dst := g.ToVertex(x, y)
   if dst != a.dst || !a.calculated {
