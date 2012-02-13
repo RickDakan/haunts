@@ -7,7 +7,7 @@
   ],
   "Side": 1,
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 5,
     "Hp_max": 12,
     "Corpus": 5,
     "Ego": 3,

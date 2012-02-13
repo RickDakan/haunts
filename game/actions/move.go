@@ -60,6 +60,24 @@ func (a *Move) Readyable() bool {
   return false
 }
 
+func limitPath(g *game.Game, start int, path []int, max int) []int {
+  total := 0
+  for last := 0; last < len(path); last++ {
+    adj,cost := g.Adjacent(start)
+    for index := range adj {
+      if adj[index] == path[last] {
+        total += int(cost[index])
+        if total > max {
+          return path[0 : last]
+        }
+        start = adj[index]
+        break
+      }
+    }
+  }
+  return path
+}
+
 // Usable by ais, tries to find a path that moves the entity to within dist of
 // the specified location.  Returns true if possible, false otherwise.  If it
 // returns true it also begins execution, so it should become the current
@@ -74,13 +92,19 @@ func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) bool {
     }
   }
   source_cell := []int{a.ent.Game().ToVertex(a.ent.Pos())}
-  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
+  fcost, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
+  cost := int(fcost)
   if path == nil {
     return false
   }
+  path = limitPath(ent.Game(), source_cell[0], path, ent.Stats.ApCur())
   if len(path) <= 1 { // || !canPayForMove(a.Ent, a.Level.MakeBoardPosFromVertex(path[1])) {
     return false
   }
+  if cost > ent.Stats.ApCur() {
+    cost = ent.Stats.ApCur()
+  }
+  ent.Stats.ApplyDamage(-cost, 0, status.Unspecified)
   vertex_to_boardpos := func(v interface{}) interface{} {
     _,x,y := a.ent.Game().FromVertex(v.(int))
     return [2]int{x,y}

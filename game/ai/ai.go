@@ -70,20 +70,25 @@ func (a *Ai) Actions() <-chan game.Action {
 }
 
 func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
+  polish.AddIntMathContext(context)
   // These functions are self-explanitory, they are all relative to the
   // current entity
   context.AddFunc("numVisibleEnemies",
       func() int {
+        println("Doing numVisibleEnemies")
         return numVisibleEntities(ent, false)
       })
   context.AddFunc("nearestEnemy",
       func() *game.Entity {
+        println("Doing nearestEnemy")
         return nearestEntity(ent, false)
       })
+  context.AddFunc("distBetween", distBetween)
 
   // Ends an entity's turn
   context.AddFunc("done",
       func() {
+        println("Doing done")
         <-a.pause
         // a.graph.Term() <- ai.TermError
       })
@@ -91,15 +96,33 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // This entity, the one currently taking its turn
   context.SetValue("me", ent)
 
-  context.AddFunc("move", func() {
-    <-a.pause
-    var move actions.Move
-    x,y := ent.Pos()
-    if move.AiMoveToWithin(ent, x-5, y, 1) {
-      a.res <- &move
+  context.AddFunc("advanceTowards", func(target *game.Entity) {
+            println("Doing advance")
+
+    move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
+    x,y := target.Pos()
+    if move.AiMoveToWithin(ent, x, y, 1) {
+      a.res <- move
     } else {
       a.graph.Term() <- ai.TermError
     }
+    <-a.pause
+    x,y = ent.Pos()
+    println("After move: ", x, " ", y)
+  })
+
+  context.AddFunc("attack", func(target *game.Entity) {
+        println("Doing attack")
+    attack := getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
+    if attack.AiAttackTarget(ent, target) {
+      a.res <- attack
+      println("sent atack")
+    } else {
+      a.graph.Term() <- ai.TermError
+    }
+      println("waiting...")
+    <-a.pause
+      println("unpaused")
   })
 }
 
@@ -117,21 +140,29 @@ func numVisibleEntities(e *game.Entity, ally bool) int {
   return count
 }
 
+func distBetween(e1,e2 *game.Entity) int {
+  e1x,e1y := e1.Pos()
+  e2x,e2y := e2.Pos()
+  dx := e1x - e2x
+  dy := e1y - e2y
+  if dx < 0 { dx = -dx }
+  if dy < 0 { dy = -dy }
+  if dx > dy {
+    return dx
+  }
+  return dy
+}
+
 func nearestEntity(e *game.Entity, ally bool) *game.Entity {
   var nearest *game.Entity
   cur_dist := 1000000000
-  x,y := e.Pos()
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats.HpCur() <= 0 { continue }
     if ally != (e.Side == ent.Side) { continue }
-    ex,ey := ent.Pos()
-    dx := ex - x
-    if dx < 0 { dx = -dx }
-    dy := ey - y
-    if dy < 0 { dy = -dy }
-    if cur_dist > dx + dy {
-      cur_dist = dx + dy
+    dist := distBetween(e, ent)
+    if cur_dist > dist {
+      cur_dist = dist
       nearest = ent
     }
   }

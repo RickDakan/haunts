@@ -290,6 +290,7 @@ func (g *Game) Think(dt int64) {
     switch res {
       case Complete:
         g.current_action.Cancel()
+        fmt.Printf("canceled action\n")
         g.current_action = nil
         g.action_state = noAction
 
@@ -341,6 +342,15 @@ func (g *Game) Think(dt int64) {
   }
   if mod {
     g.los_tex.Remap(-20, -20)
+  }
+
+  // If any entities are not either ready or dead let's wait until they are
+  // before we do any of the ai stuff
+  for _,ent := range g.Ents {
+    state := ent.Sprite.Sprite().AnimState()
+    if state != "ready" && state != "killed" {
+      return
+    }
   }
 
   // Do Ai - if there is any to do
