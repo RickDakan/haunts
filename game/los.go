@@ -66,10 +66,15 @@ func (g *Game) OnRound() {
     g.Side = Explorers
   }
 
-  if g.Turn < 2 { return }
+  if g.Turn <= 2 {
+    g.viewer.RemoveDrawable(g.new_ent)
+    g.new_ent = nil
+  }
+  if g.Turn < 2 {
+    return
+  }
   if g.Turn == 2 {
     g.viewer.Los_tex = g.los_tex
-    g.new_ent = nil
     g.OnBegin()
   }
   for i := range g.Ents {
