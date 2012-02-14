@@ -1,0 +1,17 @@
+{
+  "Name": "Corpse",
+  "Sprite_path" : "entities/corpse",
+  "Action_names": [
+    "Move Test",
+    "Eat Brains"
+  ],
+  "Side": 1,
+  "Base": {
+    "Ap_max": 7,
+    "Hp_max": 7,
+    "Corpus": 5,
+    "Ego": 1,
+    "Sight": 10
+  },
+  "Ai_path": "ais/basic.xgml"
+}

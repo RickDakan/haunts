@@ -13,6 +13,7 @@ const (
   Terror      Kind = "Terror"
   Fire        Kind = "Fire"
   Poison      Kind = "Poison"
+  Brutal      Kind = "Brutal"
   Unspecified Kind = "Unspecified"
 )
 type Primary int
@@ -27,6 +28,7 @@ func (k Kind) Primary() Primary {
     return Ego
 
   case Fire: fallthrough
+  case Brutal: fallthrough
   case Poison:
     return Corpus
   }

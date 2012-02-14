@@ -1,0 +1,8 @@
+{
+  "Name"    : "Eat Brains",
+  "Kind"    : "Brutal",
+  "Ap"      : 2,
+  "Strength": 3,
+  "Damage"  : 3,
+  "Range"   : 1
+}

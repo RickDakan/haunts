@@ -100,6 +100,7 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool
   if dist(x,y,x2,y2) > a.Range { return false }
   a.ent = ent
   a.target = target
+  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
   return true
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
