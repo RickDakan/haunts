@@ -124,7 +124,13 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
   if found,event := group.FindEvent(gin.MouseLButton); found {
     if w.RoomViewer.Temp.Furniture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
-      w.Room.Furniture = append(w.Room.Furniture, w.RoomViewer.Temp.Furniture)
+      fx := w.RoomViewer.Temp.Furniture.X
+      fy := w.RoomViewer.Temp.Furniture.Y
+      fdx,fdy := w.RoomViewer.Temp.Furniture.Dims()
+
+      if fx >= 0 && fy >= 0 && fx + fdx <= w.RoomViewer.room.Size.Dx && fy + fdy <= w.RoomViewer.room.Size.Dy {
+        w.Room.Furniture = append(w.Room.Furniture, w.RoomViewer.Temp.Furniture)
+      }
       w.RoomViewer.Temp.Furniture = nil
     } else if w.RoomViewer.Temp.Furniture == nil && event.Type == gin.Press {
       bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
