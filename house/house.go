@@ -465,6 +465,19 @@ func MakeHouse(name string) *HouseDef {
   return &house
 }
 
+func MakeHouseFromPath(path string) *HouseDef {
+  var house HouseDef
+  base.LoadAndProcessObject(path, "json", &house)
+  for _,floor := range house.Floors {
+    for _,room := range floor.Rooms {
+      for _,door := range room.Doors {
+        door.Opened = true
+      }
+    }
+  }
+  return &house
+}
+
 func MakeHouseEditorPanel() Editor {
   var he HouseEditor
   he.house = *MakeHouseDef()

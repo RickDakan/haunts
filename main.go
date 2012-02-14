@@ -116,8 +116,8 @@ func gameMode() {
       ui.RemoveChild(anchor)
       chooser = nil
       anchor = nil
-      game_panel.LoadHouse("name")
-      // base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
+      game_panel.LoadHouse(path)
+      base.SetStoreVal("last game path", base.TryRelative(datadir, path))
     }
     chooser = gui.MakeFileChooser(filepath.Join(datadir, "houses"), callback, gui.MakeFileFilter(fmt.Sprintf(".house")))
     anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
@@ -233,7 +233,7 @@ func main() {
   editor_name = "house"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
-  game_panel.LoadHouse("name")
+  game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
   sys.Think()

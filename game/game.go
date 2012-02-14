@@ -199,7 +199,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
 func (gp *GamePanel) LoadHouse(name string) {
   gp.HorizontalTable = gui.MakeHorizontalTable()
-  gp.house = house.MakeHouse(name)
+  gp.house = house.MakeHouseFromPath(name)
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
