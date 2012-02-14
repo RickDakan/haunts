@@ -1,7 +1,6 @@
 package game
 
 import (
-  "fmt"
   "glop/gui"
   "haunts/house"
   "glop/util/algorithm"
@@ -302,7 +301,6 @@ func (g *Game) Think(dt int64) {
     switch res {
       case Complete:
         g.current_action.Cancel()
-        fmt.Printf("canceled action\n")
         g.current_action = nil
         g.action_state = noAction
 
@@ -366,15 +364,12 @@ func (g *Game) Think(dt int64) {
   }
 
   // Do Ai - if there is any to do
-  fmt.Printf("action state: %d\n", g.action_state)
   if g.action_state == noAction {
     if g.ai_ent == nil {
       for _,ent := range g.Ents {
         if ent.Side != g.Side { continue }
-        fmt.Printf("ai satus: %d\n", ent.ai_status)
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
-        println("started evaling, ", g.ai_ent.Name)
         g.ai_ent.Ai.Eval()
         g.ai_ent.ai_status = aiRunning
         break
@@ -390,7 +385,6 @@ func (g *Game) Think(dt int64) {
           g.ai_ent.ai_status = aiDone
           g.ai_ent = nil
         }
-        fmt.Printf("Got action: %v\n", g.current_action)
       default:
       }
     }

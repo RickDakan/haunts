@@ -75,12 +75,10 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // current entity
   context.AddFunc("numVisibleEnemies",
       func() int {
-        println("Doing numVisibleEnemies")
         return numVisibleEntities(ent, false)
       })
   context.AddFunc("nearestEnemy",
       func() *game.Entity {
-        println("Doing nearestEnemy")
         return nearestEntity(ent, false)
       })
   context.AddFunc("distBetween", distBetween)
@@ -88,7 +86,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // Ends an entity's turn
   context.AddFunc("done",
       func() {
-        println("Doing done")
         <-a.pause
         // a.graph.Term() <- ai.TermError
       })
@@ -97,7 +94,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   context.SetValue("me", ent)
 
   context.AddFunc("advanceTowards", func(target *game.Entity) {
-            println("Doing advance")
 
     move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
     x,y := target.Pos()
@@ -108,21 +104,16 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     }
     <-a.pause
     x,y = ent.Pos()
-    println("After move: ", x, " ", y)
   })
 
   context.AddFunc("attack", func(target *game.Entity) {
-        println("Doing attack")
     attack := getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
     if attack.AiAttackTarget(ent, target) {
       a.res <- attack
-      println("sent atack")
     } else {
       a.graph.Term() <- ai.TermError
     }
-      println("waiting...")
     <-a.pause
-      println("unpaused")
   })
 }
 
