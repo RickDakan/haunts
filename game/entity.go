@@ -198,7 +198,6 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
-    gl.Color4d(1, 1, 1, 1)
     gl.Begin(gl.QUADS)
     gl.TexCoord2d(tx, -ty)
     gl.Vertex2f(pos.X - width/2, pos.Y)
