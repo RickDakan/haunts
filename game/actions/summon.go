@@ -46,6 +46,7 @@ type SummonActionDef struct {
   Ap           int
   Range        int
   Ent_name     string
+  Animation    string
   Conditions   []string
 }
 type SummonActionInst struct {
@@ -107,7 +108,7 @@ func (a *SummonAction) Cancel() {
 func (a *SummonAction) Maintain(dt int64) game.MaintenanceStatus {
   if a.ent.Sprite.Sprite().State() == "ready" {
     a.ent.TurnToFace(a.cx, a.cy)
-    a.ent.Sprite.Sprite().Command("ranged")
+    a.ent.Sprite.Sprite().Command(a.Animation)
     a.spawn.Stats.OnBegin()
     a.ent.Game().SpawnEntity(a.spawn, a.cx, a.cy)
     return game.Complete

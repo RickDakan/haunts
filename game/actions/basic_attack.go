@@ -46,6 +46,7 @@ type BasicAttackDef struct {
   Strength   int
   Range      int
   Damage     int
+  Animation  string
   Conditions []string
 }
 type basicAttackInst struct {
@@ -138,7 +139,7 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
   if a.ent.Sprite.Sprite().State() == "ready" && a.target.Sprite.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
-    a.ent.Sprite.Sprite().Command("melee")
+    a.ent.Sprite.Sprite().Command(a.Animation)
     a.target.Sprite.Sprite().Command("defend")
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {

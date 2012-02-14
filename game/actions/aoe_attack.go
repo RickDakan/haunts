@@ -47,6 +47,7 @@ type AoeAttackDef struct {
   Range      int
   Diameter   int
   Damage     int
+  Animation  string
   Conditions []string
 }
 type aoeAttackInst struct {
@@ -141,7 +142,7 @@ func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
   for _,target := range a.targets {
     target.TurnToFace(a.tx, a.ty)
   }
-  a.ent.Sprite.Sprite().Command("ranged")
+  a.ent.Sprite.Sprite().Command(a.Animation)
   for _,target := range a.targets {
     target.Sprite.Sprite().Command("defend")
     if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
@@ -158,22 +159,6 @@ func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
       target.Sprite.Sprite().Command("undamaged")
     }
   }
-  
-  //   if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
-  //     for _,name := range a.Conditions {
-  //       a.target.Stats.ApplyCondition(status.MakeCondition(name))
-  //     }
-  //     a.target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
-  //     if a.target.Stats.HpCur() <= 0 {
-  //       a.target.Sprite.Sprite().Command("killed")
-  //     } else {
-  //       a.target.Sprite.Sprite().Command("damaged")
-  //     }
-  //   } else {
-  //     a.target.Sprite.Sprite().Command("undamaged")
-  //   }
-  //   return game.Complete
-  // }
   return game.Complete
 }
 func (a *AoeAttack) Interrupt() bool {

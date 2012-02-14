@@ -1,8 +1,9 @@
 {
-  "Name"    : "Eat Brains",
-  "Kind"    : "Brutal",
-  "Ap"      : 2,
-  "Strength": 3,
-  "Damage"  : 3,
-  "Range"   : 1
+  "Name"     : "Eat Brains",
+  "Kind"     : "Brutal",
+  "Animation": "melee",
+  "Ap"       : 2,
+  "Strength" : 3,
+  "Damage"   : 3,
+  "Range"    : 1
 }
