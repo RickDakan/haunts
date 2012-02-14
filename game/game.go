@@ -53,6 +53,13 @@ func (gp *GamePanel) Draw(region gui.Region) {
   }
 }
 
+func (g *Game) SpawnEntity(spawn *Entity, x,y int) {
+  spawn.X = float64(x)
+  spawn.Y = float64(y)
+  g.viewer.AddDrawable(spawn)
+  g.Ents = append(g.Ents, spawn)
+}
+
 func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
   if group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
     if group.Events[0].Type == gin.Press {
@@ -73,9 +80,9 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
   }
   if g.new_ent != nil {
     x,y := gin.In().GetCursor("Mouse").Point()
-    bx,by := g.viewer.WindowToBoard(x, y)
-    g.new_ent.X = float64(int(bx))
-    g.new_ent.Y = float64(int(by))
+    fbx, fby := g.viewer.WindowToBoard(x, y)
+    bx, by := DiscretizePoint32(fbx, fby)
+    g.new_ent.X, g.new_ent.Y = float64(bx), float64(by)
     if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
       ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
       r := roomAt(g.house.Floors[0], ix, iy)

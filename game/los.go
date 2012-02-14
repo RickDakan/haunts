@@ -210,6 +210,18 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
   return false
 }
 
+func (g *Game) IsCellOccupied(x,y int) bool {
+  r := roomAt(g.house.Floors[0], x, y)
+  if r == nil { return true }
+  f := furnitureAt(r, x - r.X, y - r.Y)
+  if f != nil { return true }
+  for _,ent := range g.Ents {
+    ex,ey := ent.Pos()
+    if x == ex && y == ey { return true }
+  }
+  return false
+}
+
 func (g *Game) Adjacent(v int) ([]int, []float64) {
   room,x,y := g.FromVertex(v)
   var adj []int

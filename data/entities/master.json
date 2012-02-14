@@ -3,7 +3,8 @@
   "Sprite_path" : "entities/master",
   "Action_names": [
     "Move Test",
-    "Basic Test"
+    "Basic Test",
+    "Summon Test"
   ],
   "Side": 1,
   "Base": {

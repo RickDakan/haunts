@@ -1,0 +1,10 @@
+{
+  "Name"    : "Summon Test",
+  "Kind"    : "Fire",
+  "Ap"      : 3,
+  "Strength": 5,
+  "Damage"  : 5,
+  "Range"   : 3,
+  "Ent_name": "Corpse",
+  "Personal_los": true
+}
