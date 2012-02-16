@@ -83,7 +83,7 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   for _,ent := range g.Ents {
     if ent == a.ent { continue }
     x2,y2 := ent.Pos()
-    if dist(x, y, x2, y2) <= a.Range && a.ent.HasLos(x2, y2) {
+    if dist(x, y, x2, y2) <= a.Range && a.ent.HasLos(x2, y2) && ent.Stats.HpCur() > 0 {
       a.targets = append(a.targets, ent)
     }
   }
