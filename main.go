@@ -1,26 +1,26 @@
 package main
 
 import (
-  "glop/gos"
-  "glop/gin"
-  "glop/gui"
-  "glop/system"
-  "glop/render"
-  "runtime"
-  "path/filepath"
-  "os"
   "fmt"
+  "os"
+  "path/filepath"
+  "runtime"
   "runtime/debug"
-  "haunts/house"
-  "haunts/base"
-  "haunts/game"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gos"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/render"
+  "github.com/runningwild/glop/system"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/house"
 
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
-  _ "haunts/game/actions"
-  _ "haunts/game/ai"
+  _ "github.com/runningwild/haunts/game/actions"
+  _ "github.com/runningwild/haunts/game/ai"
 
-  "haunts/game/status"
+  "github.com/runningwild/haunts/game/status"
 )
 
 var (

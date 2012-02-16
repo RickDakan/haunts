@@ -1,9 +1,9 @@
-package conditions_test
+package status_test
 
 import (
-  "gospec"
   "testing"
-  "haunts/game/status"
+  "github.com/orfjackal/gospec/src/gospec"
+  "github.com/runningwild/haunts/game/status"
 )
 
 func TestAllSpecs(t *testing.T) {

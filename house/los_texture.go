@@ -1,10 +1,10 @@
 package house
 
 import (
-  "gl"
-  "gl/glu"
   "runtime"
-  "glop/render"
+  "github.com/runningwild/glop/render"
+  "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/opengl/glu"
 )
 
 const LosMinVisibility = 64

@@ -2,7 +2,7 @@ package game
 
 import (
   "fmt"
-  "glop/gui"
+  "github.com/runningwild/glop/gui"
 )
 
 var action_map map[string]func() Action

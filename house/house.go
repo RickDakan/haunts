@@ -1,12 +1,12 @@
 package house
 
 import (
-  "glop/gui"
-  "glop/gin"
-  "haunts/texture"
-  "haunts/base"
-  "glop/util/algorithm"
   "path/filepath"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
 )
 
 type Room struct {

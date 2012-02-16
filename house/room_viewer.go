@@ -1,12 +1,12 @@
 package house
 
 import (
-  "haunts/base"
-  "glop/gui"
-  "glop/gin"
-  "gl"
   "math"
-  "github.com/arbaal/mathgl"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/mathgl"
+  "github.com/runningwild/opengl/gl"
 )
 
 type RectObject interface {

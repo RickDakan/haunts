@@ -1,13 +1,12 @@
 package ai
 
 import (
-  "glop/ai"
-  "yed"
-  "polish"
   "reflect"
-  // "haunts/game/actions"
-  "haunts/game"
-  "haunts/game/actions"
+  "github.com/runningwild/glop/ai"
+  "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/actions"
+  "github.com/runningwild/polish"
+  "github.com/runningwild/yedparse"
 )
 
 // The Ai struct contains a glop.AiGraph object as well as a few channels for

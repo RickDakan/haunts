@@ -1,9 +1,9 @@
 package house
 
 import (
-  "glop/util/algorithm"
-  "glop/gui"
-  "glop/gin"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
 )
 
 type WallPanel struct {

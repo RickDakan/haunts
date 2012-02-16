@@ -1,12 +1,12 @@
 package actions
 
 import (
-  "glop/gui"
-  "haunts/base"
-  "haunts/game/status"
-  "haunts/game"
   "encoding/gob"
   "path/filepath"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/status"
 )
 
 func registerCharges() map[string]func() game.Action {

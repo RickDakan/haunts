@@ -1,9 +1,9 @@
 package game
 
 import (
-  "glop/gui"
-  "haunts/house"
-  "glop/util/algorithm"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/house"
 )
 
 type Game struct {

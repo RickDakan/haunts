@@ -1,13 +1,13 @@
 package house
 
 import (
-  "glop/gui"
-  "path/filepath"
   "fmt"
-  "os"
+  "github.com/runningwild/glop/gui"
   "io"
-  "haunts/base"
-  "haunts/texture"
+  "os"
+  "path/filepath"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
 )
 
 func GetAllRoomNames() []string {

@@ -1,15 +1,15 @@
 package texture
 
 import (
-  "gl"
-  "gl/glu"
-  "os"
   "image"
-  _ "image/png"
-  _ "image/jpeg"
   "image/draw"
-  "glop/render"
-  "haunts/base"
+  _ "image/jpeg"
+  _ "image/png"
+  "os"
+  "github.com/runningwild/glop/render"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/opengl/glu"
 )
 
 type Object struct {

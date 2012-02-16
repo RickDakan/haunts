@@ -1,10 +1,10 @@
 package house
 
 import (
-  "haunts/base"
-  "haunts/texture"
-  "github.com/arbaal/mathgl"
-  "gl"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/mathgl"
+  "github.com/runningwild/opengl/gl"
 )
 
 func MakeFurniture(name string) *Furniture {

@@ -1,11 +1,11 @@
 package game
 
 import (
-  "glop/gui"
-  "glop/gin"
-  "glop/util/algorithm"
-  "haunts/base"
-  "haunts/house"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
 )
 
 type GamePanel struct {

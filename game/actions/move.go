@@ -1,15 +1,15 @@
 package actions
 
 import (
-  "glop/gin"
-  "glop/gui"
-  "glop/util/algorithm"
-  "haunts/base"
-  "haunts/game"
-  "haunts/game/status"
   "encoding/gob"
   "path/filepath"
-  "gl"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/opengl/gl"
 )
 
 func registerMoves() map[string]func() game.Action {

@@ -1,11 +1,11 @@
 package house
 
 import (
-  "glop/gui"
-  "glop/util/algorithm"
-  "github.com/arbaal/mathgl"
   "math"
-  "haunts/base"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/mathgl"
 )
 
 

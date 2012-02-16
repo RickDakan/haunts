@@ -1,10 +1,10 @@
 package status
 
 import (
-  "fmt"
   "bytes"
-  "encoding/json"
   "encoding/gob"
+  "encoding/json"
+  "fmt"
 )
 
 type Kind string

@@ -1,9 +1,9 @@
 package status
 
 import (
-  "haunts/base"
-  "path/filepath"
   "encoding/gob"
+  "path/filepath"
+  "github.com/runningwild/haunts/base"
 )
 
 // Conditions represent instantaneous or ongoing Conditions on an entity.

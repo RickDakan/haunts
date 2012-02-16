@@ -1,14 +1,14 @@
 package actions
 
 import (
-  "glop/gui"
-  "glop/gin"
-  "haunts/base"
-  "haunts/game/status"
-  "haunts/game"
   "encoding/gob"
   "path/filepath"
-  "gl"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/opengl/gl"
 )
 
 func registerAoeAttacks() map[string]func() game.Action {

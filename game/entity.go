@@ -1,12 +1,12 @@
 package game
 
 import (
-  "glop/sprite"
-  "haunts/base"
-  "haunts/house"
-  "haunts/game/status"
-  "github.com/arbaal/mathgl"
-  "gl"
+  "github.com/runningwild/glop/sprite"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
+  "github.com/runningwild/mathgl"
+  "github.com/runningwild/opengl/gl"
 )
 
 type Ai interface {

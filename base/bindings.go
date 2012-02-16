@@ -1,9 +1,9 @@
 package base
 
 import (
-  "glop/gin"
-  "strings"
   "fmt"
+  "strings"
+  "github.com/runningwild/glop/gin"
 )
 
 type KeyBinds map[string]string

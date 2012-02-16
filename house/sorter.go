@@ -1,9 +1,9 @@
 package house
 
 import (
-  "github.com/petar/GoLLRB/llrb"
-  "glop/util/algorithm"
   "sort"
+  "github.com/runningwild/GoLLRB/llrb"
+  "github.com/runningwild/glop/util/algorithm"
 )
 
 type endpoint struct {

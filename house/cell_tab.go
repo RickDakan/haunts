@@ -1,10 +1,10 @@
 package house
 
 import (
-  "glop/gui"
-  "glop/gin"
   "reflect"
-  "gl"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/opengl/gl"
 )
 
 type CellPos struct {

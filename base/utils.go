@@ -1,13 +1,13 @@
 package base
 
 import (
-  "os"
-  "encoding/json"
   "encoding/gob"
-  "io/ioutil"
-  "path/filepath"
+  "encoding/json"
   "image/color"
-  "gl"
+  "io/ioutil"
+  "os"
+  "path/filepath"
+  "github.com/runningwild/opengl/gl"
 )
 
 var datadir string

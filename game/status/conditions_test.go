@@ -1,13 +1,13 @@
-package conditions_test
+package status_test
 
 import (
-  . "gospec"
-  "gospec"
-  "path/filepath"
-  "encoding/gob"
   "bytes"
-  "haunts/base"
-  "haunts/game/status"
+  "encoding/gob"
+  "path/filepath"
+  "github.com/orfjackal/gospec/src/gospec"
+  . "github.com/orfjackal/gospec/src/gospec"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game/status"
 )
 
 var datadir string

@@ -1,7 +1,7 @@
 package actions_test
 
 import (
-  "gospec"
+  "github.com/orfjackal/gospec/src/gospec"
   "testing"
 )
 
