@@ -1,0 +1,9 @@
+{
+  "Name"     : "Summon Test",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+  "Ap"       : 7,
+  "Range"    : 3,
+  "Ent_name" : "Corpse",
+  "Personal_los": true
+}
