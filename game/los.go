@@ -438,9 +438,9 @@ func (g *Game) MergeLos(ents []*Entity) {
     g.los_full_merger[i] = false
   }
   for _,ent := range ents {
-    for i := range ent.los_grid {
-      for j := range ent.los_grid[i] {
-        if ent.los_grid[i][j] {
+    for i := ent.los.minx; i <= ent.los.maxx; i++ {
+      for j := ent.los.miny; j <= ent.los.maxy; j++ {
+        if ent.los.grid[i][j] {
           g.los_merger[i][j] = true
         }
       }
@@ -468,26 +468,49 @@ func (g *Game) MergeLos(ents []*Entity) {
 
 func (g *Game) DetermineLos(ent *Entity, force bool) {
   ex,ey := ent.Pos()
-  if !force && ex == ent.losx && ey == ent.losy { return }
-  for i := range ent.los_grid {
-    for j := range ent.los_grid[i] {
-      ent.los_grid[i][j] = false
+  if !force && ex == ent.los.x && ey == ent.los.y { return }
+  for i := range ent.los.grid {
+    for j := range ent.los.grid[i] {
+      ent.los.grid[i][j] = false
     }
   }
-  ent.losx = ex
-  ent.losy = ey
+  ent.los.x = ex
+  ent.los.y = ey
 
   minx := ex - ent.Stats.Sight()
   miny := ey - ent.Stats.Sight()
   maxx := ex + ent.Stats.Sight()
   maxy := ey + ent.Stats.Sight()
   for x := minx; x <= maxx; x++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los_grid)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los_grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los.grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los.grid)
   }
   for y := miny; y <= maxy; y++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los_grid)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los_grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los.grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los.grid)
+  }
+
+  ent.los.minx = len(ent.los.grid)
+  ent.los.miny = len(ent.los.grid)
+  ent.los.maxx = 0
+  ent.los.maxy = 0
+  for i := range ent.los.grid {
+    for j := range ent.los.grid[i] {
+      if ent.los.grid[i][j] {
+        if i < ent.los.minx {
+          ent.los.minx = i
+        }
+        if j < ent.los.miny {
+          ent.los.miny = j
+        }
+        if i > ent.los.maxx {
+          ent.los.maxx = i
+        }
+        if j > ent.los.maxy {
+          ent.los.maxy = j
+        }
+      }
+    }
   }
 }
 
