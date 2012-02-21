@@ -19,7 +19,6 @@ type LosTexture struct {
   pix []byte
   p2d [][]byte
   tex gl.Texture
-  x,y int
 
   // The texture needs to be created on the render thread, so we use this to
   // get the texture after it's been made.
@@ -73,12 +72,9 @@ func (lt *LosTexture) ready() bool {
   return false
 }
 
-// Updates OpenGl with any changes that have been made to the texture.  The
-// coordinates given specify the new position of the center of the texture.
+// Updates OpenGl with any changes that have been made to the texture.
 // OpenGl calls in this method are run on the render thread
-func (lt *LosTexture) Remap(x,y int) {
-  lt.x = x
-  lt.y = y
+func (lt *LosTexture) Remap() {
   if !lt.ready() { return }
   render.Queue(func() {
     gl.Enable(gl.TEXTURE_2D)
@@ -93,10 +89,6 @@ func (lt *LosTexture) Bind() {
   lt.tex.Bind(gl.TEXTURE_2D)
 }
 
-func (lt *LosTexture) Size() int {
-  return len(lt.p2d)
-}
-
 // Clears the texture so that all pixels are set to the specified value
 func (lt *LosTexture) Clear(v byte) {
   for i := range lt.pix {
@@ -104,30 +96,12 @@ func (lt *LosTexture) Clear(v byte) {
   }
 }
 
-// Returns the coordinates of the minimum and maximum corners of the region
-// that this texture covers.
-func (lt *LosTexture) Region() (x,y,x2,y2 int) {
-  x = lt.x - len(lt.p2d) / 2 + 1
-  y = lt.y - len(lt.p2d) / 2 + 1
-  x2 = lt.x + len(lt.p2d) / 2
-  y2 = lt.y + len(lt.p2d) / 2
-  return
+// Returns the length of a side of this texture
+func (lt *LosTexture) Size() int {
+  return len(lt.p2d)
 }
 
-// Gets the value at the specified texel, taking into account the offset
-// that the texture is currently positioned at.
-func (lt *LosTexture) Get(x,y int) byte {
-  return lt.p2d[y - lt.y + len(lt.p2d) / 2 - 1][x - lt.x + len(lt.p2d) / 2 - 1]
-}
-
-// Sets the texel at x,y to val, taking into account the offset that the
-// texture is currently positioned at.
-func (lt *LosTexture) Set(x,y int, val byte) {
-  lt.p2d[y - lt.y + len(lt.p2d) / 2 - 1][x - lt.x + len(lt.p2d) / 2 - 1] = val
-}
-
-// Returns a convenient 2d slice over the texture, as well as the coordinates
-// of the lower-left pixel.
-func (lt *LosTexture) Pix() (pix [][]byte, x,y int) {
-  return lt.p2d, lt.x, lt.y
+// Returns a convenient 2d slice over the texture
+func (lt *LosTexture) Pix() [][]byte {
+  return lt.p2d
 }

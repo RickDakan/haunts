@@ -252,10 +252,10 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     }
     los_alpha := 1.0
     if hv.Los_tex != nil {
-      max := hv.Los_tex.Get(room.X, room.Y)
+      max := hv.Los_tex.Pix()[room.X][room.Y]
       for x := room.X; x < room.X + room.Size.Dx; x++ {
         for y := room.Y; y < room.Y + room.Size.Dy; y++ {
-          v := hv.Los_tex.Get(x, y)
+          v := hv.Los_tex.Pix()[x][y]
           if v > max {
             max = v
           }
