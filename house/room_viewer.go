@@ -874,7 +874,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
       } else {
         for x := near_x; x < near_x + dx; x++ {
           for y := near_y; y < near_y + dy; y++ {
-            vis_tot += float64(los_tex.Pix()[int(x) + roomx + 1][int(y) + roomy + 1])
+            vis_tot += float64(los_tex.Pix()[int(x) + roomx][int(y) + roomy])
           }
         }
         vis_tot /= float64(dx * dy * 255)

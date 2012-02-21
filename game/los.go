@@ -26,6 +26,11 @@ type Game struct {
   // fine for now
   los_tex *house.LosTexture
 
+  // When merging the los from different entities we'll do it here, and we
+  // keep it around to avoid reallocating it every time we need it.
+  los_full_merger []bool
+  los_merger [][]bool
+
   Ents []*Entity  `registry:"loadfrom-entities"`
 
   selected_ent *Entity
@@ -278,6 +283,11 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.viewer = viewer
 
   g.los_tex = house.MakeLosTexture(256)
+  g.los_full_merger = make([]bool, 256*256)
+  g.los_merger = make([][]bool, 256)
+  for i := range g.los_merger {
+    g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
+  }
   for i := range g.Ents {
     if g.Ents[i].Side == g.Side {
       g.DetermineLos(g.Ents[i], true)
@@ -392,11 +402,11 @@ func (g *Game) Think(dt int64) {
   }
 }
 
-func (g *Game) doLos(dist int, line [][2]int, los map[[2]int]bool) {
-  los[line[0]] = true
+func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var x0,y0,x,y int
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
+  los[x][y] = true
   room = roomAt(g.house.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
@@ -419,29 +429,39 @@ func (g *Game) doLos(dist int, line [][2]int, los map[[2]int]bool) {
     if furn != nil && furn.Blocks_los { return }
     dist -= 1  // or whatever
     if dist <= 0 { return }
-    los[p] = true
+    los[x][y] = true
   }
 }
 
 func (g *Game) MergeLos(ents []*Entity) {
-  merge := make(map[[2]int]bool)
+  for i := range g.los_full_merger {
+    g.los_full_merger[i] = false
+  }
   for _,ent := range ents {
-    for p := range ent.los {
-      merge[p] = true
+    for i := range ent.los_grid {
+      for j := range ent.los_grid[i] {
+        if ent.los_grid[i][j] {
+          g.los_merger[i][j] = true
+        }
+      }
     }
   }
   pix := g.los_tex.Pix()
   for i := 0; i < len(pix); i++ {
     for j := 0; j < len(pix); j++ {
-      if merge[[2]int{i,j}] { continue }
+      if g.los_merger[i][j] { continue }
       if pix[i][j] >= house.LosVisibilityThreshold {
         pix[i][j] = house.LosVisibilityThreshold - 1
       }
     }
   }
-  for p := range merge {
-    if pix[p[0]][p[1]] < house.LosVisibilityThreshold {
-      pix[p[0]][p[1]] = house.LosVisibilityThreshold
+  for i := range g.los_merger {
+    for j := range g.los_merger[i] {
+      if g.los_merger[i][j] {
+        if pix[i][j] < house.LosVisibilityThreshold {
+          pix[i][j] = house.LosVisibilityThreshold
+        }
+      }
     }
   }
 }
@@ -449,7 +469,11 @@ func (g *Game) MergeLos(ents []*Entity) {
 func (g *Game) DetermineLos(ent *Entity, force bool) {
   ex,ey := ent.Pos()
   if !force && ex == ent.losx && ey == ent.losy { return }
-  ent.los = make(map[[2]int]bool)
+  for i := range ent.los_grid {
+    for j := range ent.los_grid[i] {
+      ent.los_grid[i][j] = false
+    }
+  }
   ent.losx = ex
   ent.losy = ey
 
@@ -458,22 +482,13 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   maxx := ex + ent.Stats.Sight()
   maxy := ey + ent.Stats.Sight()
   for x := minx; x <= maxx; x++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los_grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los_grid)
   }
   for y := miny; y <= maxy; y++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los_grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los_grid)
   }
-
-  // TODO: THIS IS A KLUDGE - There is an off-by-one error somewhere and I'm
-  // taking care of it here, but this is stupid, need to find the real source
-  // of the bug.
-  elos := make(map[[2]int]bool, len(ent.los))
-  for p := range ent.los {
-    elos[[2]int{p[0], p[1]}] = true
-  }
-  ent.los = elos
 }
 
 // Uses Bresenham's alogirthm to determine the points to rasterize a line from
