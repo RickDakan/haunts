@@ -1,13 +1,14 @@
 {
+  "profile"      : "alt+p",
   "zoom"         : "r",
   "drag"         : "r",
   "rotate left"  : "w",
   "rotate right" : "e",
-  "load"         : "gui+l",
-  "save"         : "gui+s",
-  "quit"         : "gui+q",
-  "room editor"  : "gui+1",
-  "house editor" : "gui+2",
-  "game mode"    : "gui+g",
-  "finish round" : "gui+t"
+  "load"         : "ctrl+l",
+  "save"         : "ctrl+s",
+  "quit"         : "ctrl+q",
+  "room editor"  : "ctrl+1",
+  "house editor" : "ctrl+2",
+  "game mode"    : "ctrl+g",
+  "finish round" : "ctrl+t"
 }

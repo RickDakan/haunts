@@ -222,6 +222,7 @@ func processObject(dir string, val reflect.Value, tag string) {
 // RegisterObject().  format should either be "json" or "gob"
 // Files begining with '.' are ignored in this process
 func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
+fmt.Printf("Registering directory: '%s'\n", dir)
   reg,ok := registry_registry[registry_name]
   if !ok {
     panic(fmt.Sprintf("Tried to load objects into an unknown registry '%s'", registry_name))
