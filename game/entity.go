@@ -38,7 +38,6 @@ func MakeEntity(name string, g *Game) *Entity {
   if ent.Ai_path.String() != "" {
     ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
   }
-
   ent.game = g
   return &ent
 }
@@ -95,6 +94,10 @@ type EntityInst struct {
   Sprite spriteContainer
 
   // All positions that can be seen by this entity are stored here.
+  los_grid [][]bool
+  los_offset struct {
+    x,y int
+  }
   los map[[2]int]bool
 
   // Floor coordinates of the last position los was determined from, so that

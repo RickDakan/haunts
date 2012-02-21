@@ -274,15 +274,16 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
   g.house = h
+  g.house.Normalize()
   g.viewer = viewer
 
   g.los_tex = house.MakeLosTexture(256)
-  g.los_tex.Remap(-20, -20)
   for i := range g.Ents {
     if g.Ents[i].Side == g.Side {
       g.DetermineLos(g.Ents[i], true)
     }
   }
+
   g.MergeLos(g.Ents)
 
   g.explorer_selection = gui.MakeVerticalTable()
@@ -330,7 +331,7 @@ func (g *Game) Think(dt int64) {
     }
   }
   g.MergeLos(side_ents)
-  pix,_,_ := g.los_tex.Pix()
+  pix := g.los_tex.Pix()
   amt := dt / 5
   mod := false
   for i := range pix {
@@ -351,7 +352,7 @@ func (g *Game) Think(dt int64) {
     }
   }
   if mod {
-    g.los_tex.Remap(-20, -20)
+    g.los_tex.Remap()
   }
 
   // If any entities are not either ready or dead let's wait until they are
@@ -429,18 +430,18 @@ func (g *Game) MergeLos(ents []*Entity) {
       merge[p] = true
     }
   }
-  ltx,lty,ltx2,lty2 := g.los_tex.Region()
-  for i := ltx; i <= ltx2; i++ {
-    for j := lty; j <= lty2; j++ {
+  pix := g.los_tex.Pix()
+  for i := 0; i < len(pix); i++ {
+    for j := 0; j < len(pix); j++ {
       if merge[[2]int{i,j}] { continue }
-      if g.los_tex.Get(i, j) >= house.LosVisibilityThreshold {
-        g.los_tex.Set(i, j, house.LosVisibilityThreshold - 1)
+      if pix[i][j] >= house.LosVisibilityThreshold {
+        pix[i][j] = house.LosVisibilityThreshold - 1
       }
     }
   }
   for p := range merge {
-    if g.los_tex.Get(p[0], p[1]) < house.LosVisibilityThreshold {
-      g.los_tex.Set(p[0], p[1], house.LosVisibilityThreshold)
+    if pix[p[0]][p[1]] < house.LosVisibilityThreshold {
+      pix[p[0]][p[1]] = house.LosVisibilityThreshold
     }
   }
 }
@@ -470,7 +471,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   // of the bug.
   elos := make(map[[2]int]bool, len(ent.los))
   for p := range ent.los {
-    elos[[2]int{p[0]+1, p[1]+1}] = true
+    elos[[2]int{p[0], p[1]}] = true
   }
   ent.los = elos
 }

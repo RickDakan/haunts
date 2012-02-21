@@ -225,6 +225,31 @@ func MakeHouseDef() *HouseDef {
   return &h
 }
 
+// Shifts the rooms in all floors such that the coordinates of all rooms are
+// as low on each axis as possible without being zero or negative.
+func (h *HouseDef) Normalize() {
+  for i := range h.Floors {
+    if len(h.Floors[i].Rooms) == 0 {
+      continue
+    }
+    var minx,miny int
+    minx,miny = h.Floors[i].Rooms[0].Pos()
+    for j := range h.Floors[i].Rooms {
+      x,y := h.Floors[i].Rooms[j].Pos()
+      if x < minx {
+        minx = x
+      }
+      if y < miny {
+        miny = y
+      }
+    }
+    for j := range h.Floors[i].Rooms {
+      h.Floors[i].Rooms[j].X -= minx - 1
+      h.Floors[i].Rooms[j].Y -= miny - 1
+    }
+  }
+}
+
 type HouseEditor struct {
   *gui.HorizontalTable
   tab *gui.TabFrame
