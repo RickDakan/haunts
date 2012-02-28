@@ -30,7 +30,13 @@ func (wt *WallTexture) Load() {
 type WallTexture struct {
   Defname string
   *wallTextureDef
-  WallTextureInst
+
+  // Position of the texture in floor coordinates.  If these coordinates exceed
+  // either the dx or dy of the room, then this texture will be drawn, at least
+  // partially, on the wall.  The coordinates should not both exceed the
+  // dimensions of the room.
+  X,Y float32
+  Rot float32
 }
 
 type wallTextureDef struct {
@@ -39,15 +45,6 @@ type wallTextureDef struct {
   Name string
 
   Texture texture.Object
-}
-
-type WallTextureInst struct {
-  // Position of the texture in floor coordinates.  If these coordinates exceed
-  // either the dx or dy of the room, then this texture will be drawn, at least
-  // partially, on the wall.  The coordinates should not both exceed the
-  // dimensions of the room.
-  X,Y float32
-  Rot float32
 }
 
 func (wt *WallTexture) Render() {

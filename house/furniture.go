@@ -26,7 +26,12 @@ func LoadAllFurnitureInDir(dir string) {
 type Furniture struct {
   Defname string
   *furnitureDef
-  FurnitureInst
+
+  // Position of this object in board coordinates.
+  X,Y int
+
+  // Index into furnitureDef.Texture_paths
+  Rotation int
 }
 
 func (f *Furniture) Load() {
@@ -45,17 +50,7 @@ func (f *Furniture) Constrain(dx,dy int) {
   }
 }
 
-// This data is what differentiates different instances of the same piece of
-// furniture
-type FurnitureInst struct {
-  // Position of this object in board coordinates.
-  X,Y int
-
-  // Index into furnitureDef.Texture_paths
-  Rotation int
-}
-
-func (f *FurnitureInst) Pos() (int, int) {
+func (f *Furniture) Pos() (int, int) {
   return f.X, f.Y
 }
 
