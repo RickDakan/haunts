@@ -20,12 +20,6 @@ func LoadAllRoomsInDir(dir string) {
   base.RegisterAllObjectsInDir("rooms", dir, ".room", "json")
 }
 
-func MakeRoom(name string) *Room {
-  r := Room{ Defname: name }
-  base.GetObject("rooms", &r)
-  return &r
-}
-
 var (
   datadir string
   tags    Tags

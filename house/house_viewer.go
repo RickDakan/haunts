@@ -132,11 +132,14 @@ func roomOverlap(a,b *Room) bool {
   return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
 }
 
-func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, DoorInst) {
+func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, Door) {
   current_floor := 0
   best := 1.0e9  // If this is unsafe then the house is larger than earth
   var best_room *Room
-  var best_door DoorInst
+  var best_door Door
+  best_door.Defname = ddef.Name
+  best_door.doorDef = ddef
+
   clamp_int := func(n, min, max int) int {
     if n < min { return min }
     if n > max { return max }

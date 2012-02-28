@@ -1,6 +1,7 @@
 package house
 
 import (
+  "fmt"
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
@@ -12,7 +13,12 @@ import (
 type Room struct {
   Defname string
   *roomDef
-  RoomInst
+
+  // The placement of doors in this room
+  Doors []*Door  `registry:"loadfrom-doors"`
+
+  // The offset of this room on this floor
+  X,Y int
 }
 
 type WallFacing int
@@ -58,17 +64,7 @@ type doorDef struct {
 type Door struct {
   Defname string
   *doorDef
-  DoorInst
-}
 
-func (d *Door) TextureData() *texture.Data {
-  if d.Opened {
-    return d.Opened_texture.Data()
-  }
-  return d.Closed_texture.Data()
-}
-
-type DoorInst struct {
   // Which wall the door is on
   Facing WallFacing
 
@@ -79,16 +75,15 @@ type DoorInst struct {
   Opened bool
 }
 
-type RoomInst struct {
-  // The placement of doors in this room
-  Doors []*Door  `registry:"loadfrom-doors"`
-
-  // The offset of this room on this floor
-  X,Y int
+func (d *Door) TextureData() *texture.Data {
+  if d.Opened {
+    return d.Opened_texture.Data()
+  }
+  return d.Closed_texture.Data()
 }
 
-func (ri *RoomInst) Pos() (x,y int) {
-  return ri.X, ri.Y
+func (r *Room) Pos() (x,y int) {
+  return r.X, r.Y
 }
 
 type Floor struct {
@@ -308,7 +303,9 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   for _,name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      hdt.viewer.Temp.Room = MakeRoom(n)
+      hdt.viewer.Temp.Room = &Room{ Defname: n }
+      fmt.Printf("room: %v\n", hdt.viewer.Temp.Room)
+      base.GetObject("rooms", hdt.viewer.Temp.Room)
       hdt.drag_anchor.x = float32(hdt.viewer.Temp.Room.Size.Dx / 2)
       hdt.drag_anchor.y = float32(hdt.viewer.Temp.Room.Size.Dy / 2)
     }))
@@ -427,7 +424,7 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     bx,by := hdt.viewer.WindowToBoard(cursor.Point())
     room, door_inst := hdt.viewer.FindClosestDoorPos(hdt.viewer.Temp.Door_info.Door.doorDef, bx, by)
     hdt.viewer.Temp.Door_room = room
-    hdt.viewer.Temp.Door_info.Door.DoorInst = door_inst
+    hdt.viewer.Temp.Door_info.Door = &door_inst
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
@@ -552,9 +549,7 @@ func (he *HouseEditor) Save() (string, error) {
 func (he *HouseEditor) Reload() {
   for _,floor := range he.house.Floors {
     for i := range floor.Rooms {
-      inst := floor.Rooms[i].RoomInst
-      floor.Rooms[i] = MakeRoom(floor.Rooms[i].Defname)
-      floor.Rooms[i].RoomInst = inst
+      base.GetObject("rooms", floor.Rooms[i])
     }
   }
 }
