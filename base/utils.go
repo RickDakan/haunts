@@ -8,14 +8,34 @@ import (
   "os"
   "path/filepath"
   "github.com/runningwild/opengl/gl"
+  "log"
+  "fmt"
+  "time"
 )
 
 var datadir string
+var logger *log.Logger
 func SetDatadir(_datadir string) {
   datadir = _datadir
+  err := os.Mkdir(filepath.Join(datadir, "logs"), 0777)
+  logger = nil
+  var out *os.File
+  if err == nil {
+    name := time.Now().Format("2006-01-02-15-04-05") + ".log"
+    out, err = os.Create(filepath.Join(datadir, "logs", name))
+  }
+  if err != nil {
+    fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
+    out = os.Stdout
+  }
+  logger = log.New(out, "> ", log.Ltime | log.Lshortfile)
 }
 func GetDataDir() string {
   return datadir
+}
+
+func Logger() *log.Logger {
+  return logger
 }
 
 func GetStoreVal(key string) string {
