@@ -142,6 +142,9 @@ func editMode() {
 
     if key_map["save"].FramePressCount() > 0 && chooser == nil {
       path,err := editor.Save()
+      if err != nil {
+        base.Warn().Printf("Failed to save: %v", err.Error())
+      }
       if path != "" && err == nil {
         base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
       }
@@ -155,6 +158,7 @@ func editMode() {
         anchor = nil
         err = editor.Load(path)
         if err != nil {
+          base.Warn().Printf("Failed to load: %v", err.Error())
         } else {
           base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
         }
@@ -189,14 +193,7 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
-      fmt.Printf("Panic: %v\n", r)
-      fmt.Printf("%s\n", string(data))
-      out,err := os.Open("crash.txt")
-      if err == nil {
-        out.Write([]byte(fmt.Sprintf("Panic: %v\n", r)))
-        out.Write(data)
-        out.Close()
-      }
+      base.Error().Printf("%s\n", string(data))
     }
   } ()
   sys.Startup()

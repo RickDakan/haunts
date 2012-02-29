@@ -540,9 +540,6 @@ func (he *HouseEditor) Load(path string) error {
 func (he *HouseEditor) Save() (string, error) {
   path := filepath.Join(datadir, "houses", he.house.Name + ".house")
   err := base.SaveJson(path, he.house)
-  if err != nil {
-    println("Error: ", err.Error())
-  }
   return path, err
 }
 

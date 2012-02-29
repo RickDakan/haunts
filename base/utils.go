@@ -34,7 +34,20 @@ func GetDataDir() string {
   return datadir
 }
 
-func Logger() *log.Logger {
+// TODO: This probably isn't the best way to do things - different go-routines
+// can call these and screw up prefixes for each other.
+func Log() *log.Logger {
+  logger.SetPrefix("LOG  > ")
+  return logger
+}
+
+func Warn() *log.Logger {
+  logger.SetPrefix("WARN > ")
+  return logger
+}
+
+func Error() *log.Logger {
+  logger.SetPrefix("ERROR> ")
   return logger
 }
 

@@ -29,6 +29,7 @@ func MakeGamePanel() *GamePanel {
 
   main_bar,err := MakeMainBar()
   if err != nil {
+    base.Error().Printf("%v", err)
     panic(err)
   }
   gp.VerticalTable.AddChild(gp.viewer)
@@ -216,6 +217,7 @@ func (gp *GamePanel) LoadHouse(name string) {
 
   main_bar,err := MakeMainBar()
   if err != nil {
+    base.Error().Printf("%v", err)
     panic(err)
   }
   gp.VerticalTable.AddChild(gp.viewer)

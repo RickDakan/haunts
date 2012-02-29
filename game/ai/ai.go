@@ -3,6 +3,7 @@ package ai
 import (
   "reflect"
   "github.com/runningwild/glop/ai"
+  "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/polish"
@@ -32,6 +33,7 @@ func makeAi(path string, ent *game.Entity) game.Ai {
   ai_graph := ai.NewGraph()
   graph,err := yed.ParseFromFile(path)
   if err != nil {
+    base.Error().Printf("%v", err)
     panic(err.Error())
   }
   ai_graph.Graph = &graph.Graph
@@ -55,7 +57,7 @@ func (a *Ai) Eval() {
     err := a.graph.Eval()
     a.res <- nil
     if err != nil {
-      println(err.Error())
+      base.Warn().Printf("%v", err)
     }
   } ()
 }
