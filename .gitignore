@@ -3,4 +3,6 @@ haunts
 haunts.app
 .DS_Store
 _test
+*.sublime-project
+*.sublime-workspace
 
