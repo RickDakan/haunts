@@ -1,0 +1,31 @@
+{
+  "Background": {
+    "Path": "ui/main_bar.png"
+  },
+  "EndTurn": {
+    "X":  2,
+    "Y":  3
+  },
+  "UnitLeft": {
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    },
+    "X":  45,
+    "Y":  65
+  },
+  "UnitRight": {
+    "Texture": {
+      "Path": "ui/arrow_rf.png"
+    },
+    "X":  790,
+    "Y":  65
+  },
+  "ActionLeft": {
+    "X":  2,
+    "Y":  3
+  },
+  "ActionRight": {
+    "X":  2,
+    "Y":  3
+  }
+}
