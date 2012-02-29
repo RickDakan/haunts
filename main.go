@@ -6,6 +6,7 @@ import (
   "path/filepath"
   "runtime"
   "runtime/debug"
+  "runtime/pprof"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
@@ -54,6 +55,8 @@ func init() {
 
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
+fmt.Printf("Args[0]: '%s'\n", os.Args[0])
+fmt.Printf("setting datadir: '%s'\n", datadir)
   base.SetDatadir(datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
@@ -241,6 +244,8 @@ func main() {
 
   edit_mode := true
 
+  var profile_output *os.File
+
   for key_map["quit"].FramePressCount() == 0 {
     sys.Think()
     render.Queue(func() {
@@ -248,6 +253,26 @@ func main() {
       ui.Draw()
     })
     render.Purge()
+
+    if key_map["profile"].FramePressCount() > 0 {
+      if profile_output == nil {
+        profile_output, err = os.Create("cpu.prof")
+        if err == nil {
+          err = pprof.StartCPUProfile(profile_output)
+          if err != nil {
+            fmt.Printf("Unable to start CPU profile: %v\n", err)
+            profile_output.Close()
+            profile_output = nil
+          }
+          fmt.Printf("profout: %v\n", profile_output)
+        } else {
+          fmt.Printf("Unable to start CPU profile: %v\n", err)
+        }
+      } else {
+        pprof.StopCPUProfile()
+        profile_output = nil
+      }
+    }
 
     if key_map["game mode"].FramePressCount() % 2 == 1 {
       if edit_mode {
