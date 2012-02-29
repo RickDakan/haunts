@@ -1,6 +1,11 @@
 {
   "Name": "Occultist",
   "Sprite_path" : "entities/occultist",
+  "Still": {
+    "Path": "entities/occultist/0/ready_01.png"
+  },
+  "Headshot": {
+  },
   "Action_names": [
     "Move Test",
     "Basic Test",

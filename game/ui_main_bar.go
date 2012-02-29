@@ -41,6 +41,10 @@ func (b *Button) RenderAt(x,y,mx,my int) {
   gl.End()
 }
 
+type Center struct {
+  X,Y int
+}
+
 type MainBarLayout struct {
   EndTurn     Button
   UnitLeft    Button
@@ -48,12 +52,16 @@ type MainBarLayout struct {
   ActionLeft  Button
   ActionRight Button
 
+  CenterStillFrame Center
+
   Background  texture.Object `registry:"autoload"`
 }
 
 type MainBar struct {
   layout MainBarLayout
   region gui.Region
+
+  ent *Entity
 
   // Position of the mouse
   mx,my int

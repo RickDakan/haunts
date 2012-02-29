@@ -65,9 +65,8 @@ func init() {
   key_map = key_binds.MakeKeyMap()
   base.SetDefaultKeyMap(key_map)
 
-  factor := 1.0
-  wdx = int(1200 * factor)
-  wdy = int(675 * factor)
+  wdx = 1024
+  wdy = 768
 }
 
 type draggerZoomer interface {

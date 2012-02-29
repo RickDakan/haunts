@@ -1,10 +1,12 @@
 package game
 
 import (
+  "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   "github.com/runningwild/opengl/gl"
 )
@@ -45,6 +47,7 @@ func MakeEntity(name string, g *Game) *Entity {
     ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
   }
 
+  ent.popups = append(ent.popups, gui.MakeTextLine("standard", "foo", 200, 1, 1, 1, 1))
 
   ent.game = g
   return &ent
@@ -75,6 +78,14 @@ type entityDef struct {
   Name string
 
   Sprite_path base.Path
+
+  // Still frame of the sprite - not necessarily one of the individual frames,
+  // but still usable for identifying it.  Should be the same dimensions as
+  // any of the frames.
+  Still    texture.Object  `registry:"autoload"`
+
+  // Headshot of this character.  Should be square.
+  Headshot texture.Object  `registry:"autoload"`
 
   // List of actions that this entity defaults to having
   Action_names []string
@@ -135,6 +146,8 @@ type EntityInst struct {
   // keep easy track of whether or not an entity's Ai has executed yet, since
   // an entity might not do anything else obvious, like run out of Ap.
   ai_status aiStatus
+
+  popups []*gui.TextLine
 }
 type aiStatus int
 const (
@@ -222,6 +235,7 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
     gl.Vertex2f(pos.X + width/2, pos.Y)
     gl.End()
   }
+  e.popups[0].Draw(gui.Region{ gui.Point{ int(pos.X), int(pos.Y) }, gui.Dims{ int(width), int(150) } } )
 }
 
 func facing(v mathgl.Vec2) int {
