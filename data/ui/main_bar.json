@@ -2,6 +2,19 @@
   "Background": {
     "Path": "ui/main_bar.png"
   },
+  "Divider": {
+    "Path": "ui/divider.png"
+  },
+  "CenterStillFrame": {
+    "X": 124,
+    "Y": 75
+  },
+  "Name": {
+    "X": 260,
+    "Y": 90,
+    "Height": 28,
+    "Justification": "center"
+  },
   "EndTurn": {
     "X":  2,
     "Y":  3

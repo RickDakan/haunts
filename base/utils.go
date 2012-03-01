@@ -8,30 +8,39 @@ import (
   "os"
   "path/filepath"
   "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/render"
+  "code.google.com/p/freetype-go/freetype/truetype"
   "log"
   "fmt"
   "time"
+  "sync"
 )
 
 var datadir string
 var logger *log.Logger
 func SetDatadir(_datadir string) {
   datadir = _datadir
-  err := os.Mkdir(filepath.Join(datadir, "logs"), 0777)
+  setupLogger()
+}
+func GetDataDir() string {
+  return datadir
+}
+
+func setupLogger() {
+  // If an error happens when making this directory it might already exist,
+  // all that really matters is making the log file in the directory.
+  os.Mkdir(filepath.Join(datadir, "logs"), 0777)
   logger = nil
   var out *os.File
-  if err == nil {
-    name := time.Now().Format("2006-01-02-15-04-05") + ".log"
-    out, err = os.Create(filepath.Join(datadir, "logs", name))
-  }
+  var err error
+  name := time.Now().Format("2006-01-02-15-04-05") + ".log"
+  out, err = os.Create(filepath.Join(datadir, "logs", name))
   if err != nil {
     fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
     out = os.Stdout
   }
   logger = log.New(out, "> ", log.Ltime | log.Lshortfile)
-}
-func GetDataDir() string {
-  return datadir
 }
 
 // TODO: This probably isn't the best way to do things - different go-routines
@@ -51,14 +60,29 @@ func Error() *log.Logger {
   return logger
 }
 
-func GetStoreVal(key string) string {
-  var store map[string]string
-  LoadJson(filepath.Join(datadir, "store"), &store)
-  if store == nil {
-    store = make(map[string]string)
+var font_dict *gui.Dictionary
+var dictionary_once sync.Once
+func setupFontDictionaries() {
+  f, err := os.Open(filepath.Join(datadir, "fonts", "tomnr.ttf"))
+  if err != nil {
+    Error().Fatalf("Unable to load font: %v", err)
   }
-  val := store[key]
-  return val
+  data, err := ioutil.ReadAll(f)
+  f.Close()
+  if err != nil {
+    Error().Fatalf("Unable to read font: %v", err)
+  }
+  font, err := truetype.Parse(data)
+  if err != nil {
+    Error().Fatalf("Unable to parse font: %v", err)
+  }
+  render.Init()
+  font_dict = gui.MakeDictionary(font)
+}
+
+func GetDictionary() *gui.Dictionary {
+  dictionary_once.Do(setupFontDictionaries)
+  return font_dict
 }
 
 // A Path is a string that is intended to store a path.  When it is encoded
@@ -149,6 +173,16 @@ func TryRelative(base,target string) string {
     return rel
   }
   return target
+}
+
+func GetStoreVal(key string) string {
+  var store map[string]string
+  LoadJson(filepath.Join(datadir, "store"), &store)
+  if store == nil {
+    store = make(map[string]string)
+  }
+  val := store[key]
+  return val
 }
 
 func SetStoreVal(key,val string) {

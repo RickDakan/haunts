@@ -14,6 +14,8 @@ type GamePanel struct {
   house  *house.HouseDef
   viewer *house.HouseViewer
 
+  main_bar *MainBar
+
   // Keep track of this so we know how much time has passed between
   // calls to Think()
   last_think int64
@@ -27,16 +29,18 @@ func MakeGamePanel() *GamePanel {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.VerticalTable = gui.MakeVerticalTable()
 
-  main_bar,err := MakeMainBar()
+  var err error
+  gp.main_bar,err = MakeMainBar()
   if err != nil {
     base.Error().Printf("%v", err)
     panic(err)
   }
   gp.VerticalTable.AddChild(gp.viewer)
-  gp.VerticalTable.AddChild(main_bar)
+  gp.VerticalTable.AddChild(gp.main_bar)
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  gp.main_bar.Ent = gp.game.selected_ent
   gp.VerticalTable.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t
@@ -215,13 +219,13 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.game = makeGame(gp.house, gp.viewer)
   gp.VerticalTable = gui.MakeVerticalTable()
 
-  main_bar,err := MakeMainBar()
+  var err error
+  gp.main_bar,err = MakeMainBar()
   if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
+    base.Error().Fatalf("%v", err)
   }
   gp.VerticalTable.AddChild(gp.viewer)
-  gp.VerticalTable.AddChild(main_bar)
+  gp.VerticalTable.AddChild(gp.main_bar)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {

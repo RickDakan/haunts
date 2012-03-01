@@ -2,7 +2,7 @@
   "Name": "Occultist",
   "Sprite_path" : "entities/occultist",
   "Still": {
-    "Path": "entities/occultist/0/ready_01.png"
+    "Path": "entities/occultist_still.png"
   },
   "Headshot": {
   },

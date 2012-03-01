@@ -45,6 +45,12 @@ type Center struct {
   X,Y int
 }
 
+type TextArea struct {
+  X,Y           int
+  Height        int
+  Justification string
+}
+
 type MainBarLayout struct {
   EndTurn     Button
   UnitLeft    Button
@@ -54,14 +60,16 @@ type MainBarLayout struct {
 
   CenterStillFrame Center
 
-  Background  texture.Object `registry:"autoload"`
+  Background texture.Object
+  Divider    texture.Object
+  Name TextArea
 }
 
 type MainBar struct {
   layout MainBarLayout
   region gui.Region
 
-  ent *Entity
+  Ent *Entity
 
   // Position of the mouse
   mx,my int
@@ -132,6 +140,64 @@ func (m *MainBar) Draw(region gui.Region) {
 
   m.layout.UnitLeft.RenderAt(region.X, region.Y, m.mx, m.my)
   m.layout.UnitRight.RenderAt(region.X, region.Y, m.mx, m.my)
+
+  if m.Ent != nil {
+    gl.Color4d(1, 1, 1, 1)
+    m.Ent.Still.Data().Bind()
+    tdx := m.Ent.Still.Data().Dx
+    tdy := m.Ent.Still.Data().Dy
+    cx := region.X + m.layout.CenterStillFrame.X
+    cy := region.Y + m.layout.CenterStillFrame.Y
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2d(0, 0)
+      gl.Vertex2i(cx - tdx / 2, cy - tdy / 2)
+
+      gl.TexCoord2d(0, -1)
+      gl.Vertex2i(cx - tdx / 2, cy + tdy / 2)
+
+      gl.TexCoord2d(1,-1)
+      gl.Vertex2i(cx + tdx / 2, cy + tdy / 2)
+
+      gl.TexCoord2d(1, 0)
+      gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
+    gl.End()
+    var just gui.Justification
+    switch m.layout.Name.Justification {
+    case "center":
+      just = gui.Center
+    case "left":
+      just = gui.Left
+    case "right":
+      just = gui.Right
+    default:
+      base.Warn().Printf("Unknown justification '%s' in text area 'Name' in main gui bar.", m.layout.Name.Justification)
+      m.layout.Name.Justification = "center"
+    }
+    px := float64(m.layout.Name.X)
+    py := float64(m.layout.Name.Y)
+    h := float64(m.layout.Name.Height)
+    base.GetDictionary().RenderString(m.Ent.Name, px, py, 0, h, just)
+
+    gl.Color4d(1, 1, 1, 1)
+    m.layout.Divider.Data().Bind()
+    tdx = m.layout.Divider.Data().Dx
+    tdy = m.layout.Divider.Data().Dy
+    cx = region.X + m.layout.Name.X
+    cy = region.Y + m.layout.Name.Y
+    gl.Begin(gl.QUADS)
+      gl.TexCoord2d(0, 0)
+      gl.Vertex2i(cx - tdx / 2, cy - tdy / 2)
+
+      gl.TexCoord2d(0, -1)
+      gl.Vertex2i(cx - tdx / 2, cy + tdy / 2)
+
+      gl.TexCoord2d(1,-1)
+      gl.Vertex2i(cx + tdx / 2, cy + tdy / 2)
+
+      gl.TexCoord2d(1, 0)
+      gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
+    gl.End()
+  }
 }
 
 func (m *MainBar) DrawFocused(region gui.Region) {

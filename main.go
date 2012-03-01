@@ -55,9 +55,8 @@ func init() {
 
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
-fmt.Printf("Args[0]: '%s'\n", os.Args[0])
-fmt.Printf("setting datadir: '%s'\n", datadir)
   base.SetDatadir(datadir)
+  base.Log().Printf("Setting datadir: %s", datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
     panic(err.Error())
@@ -196,7 +195,7 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
-      base.Error().Printf("%s\n", string(data))
+      base.Error().Printf("PANIC: %s\n", string(data))
     }
   } ()
   sys.Startup()
@@ -236,6 +235,9 @@ func main() {
 
   ui.AddChild(editor)
   sys.Think()
+  // Wait until now to create the dictionary because the render thread needs
+  // to be running in advance.
+  base.GetDictionary()
   render.Queue(func() {
     ui.Draw()
   })

@@ -89,14 +89,14 @@ func (m *Manager) LoadFromPath(path string) *Data {
     f,err := os.Open(path)
     if err != nil {
       data.Err = err
-      base.Warn().Printf("Unable to load texture: %v", err)
+      base.Warn().Printf("Unable to load texture '%s': %v", path, err)
       return
     }
     im,_,err := image.Decode(f)
     f.Close()
     if err != nil {
       data.Err = err
-      base.Warn().Printf("Unable to decode texture: %v", err)
+      base.Warn().Printf("Unable to decode texture '%s': %v", path, err)
       return
     }
 
