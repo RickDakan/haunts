@@ -1,6 +1,7 @@
 package game
 
 import (
+  "fmt"
   "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
@@ -10,7 +11,7 @@ import (
 
 type Button struct {
   X,Y int
-  Texture texture.Object  `registry:"autoload"`
+  Texture texture.Object
 
   // Color - brighter when the mouse is over it
   shade float64
@@ -51,6 +52,25 @@ type TextArea struct {
   Justification string
 }
 
+func (t *TextArea) RenderString(s string) {
+  var just gui.Justification
+  switch t.Justification {
+  case "center":
+    just = gui.Center
+  case "left":
+    just = gui.Left
+  case "right":
+    just = gui.Right
+  default:
+    base.Warn().Printf("Unknown justification '%s' in main gui bar.", t.Justification)
+    t.Justification = "center"
+  }
+  px := float64(t.X)
+  py := float64(t.Y)
+  h := float64(t.Height)
+  base.GetDictionary().RenderString(s, px, py, 0, h, just)
+}
+
 type MainBarLayout struct {
   EndTurn     Button
   UnitLeft    Button
@@ -62,7 +82,16 @@ type MainBarLayout struct {
 
   Background texture.Object
   Divider    texture.Object
-  Name TextArea
+  Name   TextArea
+  Ap     TextArea
+  Hp     TextArea
+  Corpus TextArea
+  Ego    TextArea
+
+  Conditions struct {
+    X,Y,Height,Spacing float64
+    Count int
+  }
 }
 
 type MainBar struct {
@@ -161,42 +190,41 @@ func (m *MainBar) Draw(region gui.Region) {
       gl.TexCoord2d(1, 0)
       gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
     gl.End()
-    var just gui.Justification
-    switch m.layout.Name.Justification {
-    case "center":
-      just = gui.Center
-    case "left":
-      just = gui.Left
-    case "right":
-      just = gui.Right
-    default:
-      base.Warn().Printf("Unknown justification '%s' in text area 'Name' in main gui bar.", m.layout.Name.Justification)
-      m.layout.Name.Justification = "center"
-    }
-    px := float64(m.layout.Name.X)
-    py := float64(m.layout.Name.Y)
-    h := float64(m.layout.Name.Height)
-    base.GetDictionary().RenderString(m.Ent.Name, px, py, 0, h, just)
+
+    m.layout.Name.RenderString(m.Ent.Name)
+    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", m.Ent.Stats.ApCur()))
+    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", m.Ent.Stats.HpCur()))
+    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", m.Ent.Stats.Corpus()))
+    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", m.Ent.Stats.Ego()))
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
     tdx = m.layout.Divider.Data().Dx
     tdy = m.layout.Divider.Data().Dy
     cx = region.X + m.layout.Name.X
-    cy = region.Y + m.layout.Name.Y
+    cy = region.Y + m.layout.Name.Y - 5
     gl.Begin(gl.QUADS)
       gl.TexCoord2d(0, 0)
       gl.Vertex2i(cx - tdx / 2, cy - tdy / 2)
 
       gl.TexCoord2d(0, -1)
-      gl.Vertex2i(cx - tdx / 2, cy + tdy / 2)
+      gl.Vertex2i(cx - tdx / 2, cy + (tdy + 1) / 2)
 
       gl.TexCoord2d(1,-1)
-      gl.Vertex2i(cx + tdx / 2, cy + tdy / 2)
+      gl.Vertex2i(cx + (tdx + 1) / 2, cy + (tdy + 1) / 2)
 
       gl.TexCoord2d(1, 0)
-      gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
+      gl.Vertex2i(cx + (tdx + 1) / 2, cy - tdy / 2)
     gl.End()
+
+    gl.Color4d(1, 1, 1, 1)
+    for i,s := range m.Ent.Stats.ConditionNames() {
+      if i >= m.layout.Conditions.Count { continue }
+      c := m.layout.Conditions
+      h := (c.Height - (float64(c.Count - 1) * c.Spacing)) / float64(c.Count)
+      y := c.Y + (h + c.Spacing) * float64(c.Count - i - 1)
+      base.GetDictionary().RenderString(s, c.X, y, 0, h, gui.Center)
+    }
   }
 }
 

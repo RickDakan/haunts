@@ -146,6 +146,17 @@ func (s Inst) Sight() int {
   return sight
 }
 
+// Returns a list of the names of the conditions this status object currently
+// has.  This lets external packages see the conditions without accidentally
+// mucking with them.
+func (s *Inst) ConditionNames() []string {
+  names := make([]string, len(s.inst.Conditions))
+  for i := range names {
+    names[i] = s.inst.Conditions[i].Name()
+  }
+  return names
+}
+
 func (s *Inst) ApplyCondition(c Condition) {
   for i := range s.inst.Conditions {
     if s.inst.Conditions[i].Kind() == c.Kind() && s.inst.Conditions[i].Buff() == c.Buff() {

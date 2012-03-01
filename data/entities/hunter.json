@@ -1,6 +1,11 @@
 {
   "Name": "Ghost Hunter",
   "Sprite_path" : "entities/hunter",
+  "Still": {
+    "Path": "entities/hunter_still.png"
+  },
+  "Headshot": {
+  },
   "Action_names": [
     "Move Test",
     "Basic Test"

@@ -9,6 +9,9 @@ import (
 // Conditions represent instantaneous or ongoing Conditions on an entity.
 // Every round the Condition can 
 type Condition interface {
+  // Returns the name of this condition as it should be displayed to the user.
+  Name() string
+
   // Returns whether or not this condition is a buff
   Buff() bool
 
@@ -96,6 +99,10 @@ type basicConditionDef struct {
   // This Condition will OnRound() exactly Time + 1 times.  If Time < 0 then
   // it will OnRound() forever.
   Time int
+}
+
+func (bc *BasicCondition) Name() string {
+  return bc.basicConditionDef.Name
 }
 
 func (bc *BasicCondition) Buff() bool {

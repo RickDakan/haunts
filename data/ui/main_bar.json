@@ -6,14 +6,45 @@
     "Path": "ui/divider.png"
   },
   "CenterStillFrame": {
-    "X": 124,
+    "X": 120,
     "Y": 75
   },
   "Name": {
-    "X": 260,
-    "Y": 90,
+    "X": 225,
+    "Y": 93,
     "Height": 28,
     "Justification": "center"
+  },
+  "Ap": {
+    "X": 145,
+    "Y": 60,
+    "Height": 23,
+    "Justification": "left"
+  },
+  "Hp": {
+    "X": 145,
+    "Y": 30,
+    "Height": 23,
+    "Justification": "left"
+  },
+  "Corpus": {
+    "X": 310,
+    "Y": 60,
+    "Height": 23,
+    "Justification": "right"
+  },
+  "Ego": {
+    "X": 310,
+    "Y": 30,
+    "Height": 23,
+    "Justification": "right"
+  },
+  "Conditions": {
+    "X": 360,
+    "Y": 25,
+    "Height": 100,
+    "Spacing": 3,
+    "Count": 4
   },
   "EndTurn": {
     "X":  2,
