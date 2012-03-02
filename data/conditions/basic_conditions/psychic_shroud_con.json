@@ -1,0 +1,10 @@
+{
+  "Name": "Psychic Shroud",
+  "Strength": 10,
+  "Kind": "Terror",
+  "Time": 3,
+  "Base": {
+    "Corpus": 3,
+    "Ego": 3
+  }
+}

@@ -1,16 +1,19 @@
 {
   "Name": "Angry Shade",
   "Sprite_path" : "entities/shade",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
   "Action_names": [
     "Move Test",
-    "Basic Test"
+    "Chill Touch"
   ],
   "Side": 1,
   "Base": {
-    "Ap_max": 6,
-    "Hp_max": 12,
-    "Corpus": 5,
-    "Ego": 3,
+    "Ap_max": 5,
+    "Hp_max": 3,
+    "Corpus": 7,
+    "Ego": 7,
     "Sight": 15
   },
   "Ai_path": "ais/basic.xgml"
