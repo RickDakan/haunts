@@ -1,7 +1,6 @@
 package game
 
 import (
-  "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -46,8 +45,6 @@ func MakeEntity(name string, g *Game) *Entity {
   for i := range ent.los.grid {
     ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
   }
-
-  ent.popups = append(ent.popups, gui.MakeTextLine("standard", "foo", 200, 1, 1, 1, 1))
 
   ent.game = g
   return &ent
@@ -146,8 +143,6 @@ type EntityInst struct {
   // keep easy track of whether or not an entity's Ai has executed yet, since
   // an entity might not do anything else obvious, like run out of Ap.
   ai_status aiStatus
-
-  popups []*gui.TextLine
 }
 type aiStatus int
 const (
@@ -235,7 +230,6 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
     gl.Vertex2f(pos.X + width/2, pos.Y)
     gl.End()
   }
-  e.popups[0].Draw(gui.Region{ gui.Point{ int(pos.X), int(pos.Y) }, gui.Dims{ int(width), int(150) } } )
 }
 
 func facing(v mathgl.Vec2) int {
