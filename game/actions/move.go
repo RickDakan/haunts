@@ -9,6 +9,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -54,8 +55,12 @@ type Move struct {
 }
 type MoveDef struct {
   Name     string
+  Texture  texture.Object
 }
 
+func (a *Move) Icon() texture.Object {
+  return a.Texture
+}
 func (a *Move) Readyable() bool {
   return false
 }

@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -48,6 +49,7 @@ type BasicAttackDef struct {
   Damage     int
   Animation  string
   Conditions []string
+  Texture    texture.Object
 }
 type basicAttackInst struct {
   ent *game.Entity
@@ -67,6 +69,9 @@ func dist(x,y,x2,y2 int) int {
     return dx
   }
   return dy
+}
+func (a *BasicAttack) Icon() texture.Object {
+  return a.Texture
 }
 func (a *BasicAttack) Readyable() bool {
   return true
