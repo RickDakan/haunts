@@ -239,8 +239,8 @@ func main() {
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
-  sys.Think()
   render.Queue(func() {
+    sys.Think()
     ui.Draw()
   })
   render.Purge()
@@ -251,8 +251,8 @@ func main() {
   var profile_output *os.File
 
   for key_map["quit"].FramePressCount() == 0 {
-    sys.Think()
     render.Queue(func() {
+      sys.Think()
       sys.SwapBuffers()
       ui.Draw()
     })
