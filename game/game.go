@@ -9,10 +9,12 @@ import (
 )
 
 type GamePanel struct {
-  *gui.HorizontalTable
+  *gui.VerticalTable
 
   house  *house.HouseDef
   viewer *house.HouseViewer
+
+  main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
   // calls to Think()
@@ -25,11 +27,21 @@ func MakeGamePanel() *GamePanel {
   var gp GamePanel
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.HorizontalTable = gui.MakeHorizontalTable()
-  gp.HorizontalTable.AddChild(gp.viewer)
+  gp.VerticalTable = gui.MakeVerticalTable()
+
+  var err error
+  gp.main_bar,err = MakeMainBar()
+  if err != nil {
+    base.Error().Printf("%v", err)
+    panic(err)
+  }
+  gp.VerticalTable.AddChild(gp.viewer)
+  gp.VerticalTable.AddChild(gp.main_bar)
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  gp.main_bar.Ent = gp.game.selected_ent
+  gp.VerticalTable.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t
   }
@@ -40,7 +52,7 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 }
 
 func (gp *GamePanel) Draw(region gui.Region) {
-  gp.HorizontalTable.Draw(region)
+  gp.VerticalTable.Draw(region)
 
   // Do heads-up stuff
   region.PushClipPlanes()
@@ -101,7 +113,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if gp.HorizontalTable.Respond(ui, group) {
+  if gp.VerticalTable.Respond(ui, group) {
     return true
   }
 
@@ -198,15 +210,22 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (gp *GamePanel) LoadHouse(name string) {
-  gp.HorizontalTable = gui.MakeHorizontalTable()
+  gp.VerticalTable = gui.MakeVerticalTable()
   gp.house = house.MakeHouseFromPath(name)
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
-  gp.HorizontalTable = gui.MakeHorizontalTable()
-  gp.HorizontalTable.AddChild(gp.viewer)
+  gp.VerticalTable = gui.MakeVerticalTable()
+
+  var err error
+  gp.main_bar,err = MakeMainBar()
+  if err != nil {
+    base.Error().Fatalf("%v", err)
+  }
+  gp.VerticalTable.AddChild(gp.viewer)
+  gp.VerticalTable.AddChild(gp.main_bar)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {

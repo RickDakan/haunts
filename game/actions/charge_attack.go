@@ -6,6 +6,7 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
 )
 
@@ -41,8 +42,12 @@ type ChargeAttackDef struct {
   Ap       int
   Strength int
   Range    int
+  Texture  texture.Object
 }
 
+func (a *ChargeAttack) Icon() texture.Object {
+  return a.Texture
+}
 func (a *ChargeAttack) Readyable() bool {
   return true
 }

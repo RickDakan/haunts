@@ -8,24 +8,85 @@ import (
   "os"
   "path/filepath"
   "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/render"
+  "code.google.com/p/freetype-go/freetype/truetype"
+  "log"
+  "fmt"
+  "time"
+  "sync"
 )
 
 var datadir string
+var logger *log.Logger
 func SetDatadir(_datadir string) {
   datadir = _datadir
+  setupLogger()
 }
 func GetDataDir() string {
   return datadir
 }
 
-func GetStoreVal(key string) string {
-  var store map[string]string
-  LoadJson(filepath.Join(datadir, "store"), &store)
-  if store == nil {
-    store = make(map[string]string)
+func setupLogger() {
+  // If an error happens when making this directory it might already exist,
+  // all that really matters is making the log file in the directory.
+  os.Mkdir(filepath.Join(datadir, "logs"), 0777)
+  logger = nil
+  var out *os.File
+  var err error
+  name := time.Now().Format("2006-01-02-15-04-05") + ".log"
+  out, err = os.Create(filepath.Join(datadir, "logs", name))
+  if err != nil {
+    fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
+    out = os.Stdout
   }
-  val := store[key]
-  return val
+  logger = log.New(out, "> ", log.Ltime | log.Lshortfile)
+}
+
+// TODO: This probably isn't the best way to do things - different go-routines
+// can call these and screw up prefixes for each other.
+func Log() *log.Logger {
+  logger.SetPrefix("LOG  > ")
+  return logger
+}
+
+func Warn() *log.Logger {
+  logger.SetPrefix("WARN > ")
+  return logger
+}
+
+func Error() *log.Logger {
+  logger.SetPrefix("ERROR> ")
+  return logger
+}
+
+var font_dict map[int]*gui.Dictionary
+var dictionary_once sync.Once
+func setupFontDictionaries() {
+  font_dict = make(map[int]*gui.Dictionary)
+  f, err := os.Open(filepath.Join(datadir, "fonts", "tomnr.ttf"))
+  if err != nil {
+    Error().Fatalf("Unable to load font: %v", err)
+  }
+  data, err := ioutil.ReadAll(f)
+  f.Close()
+  if err != nil {
+    Error().Fatalf("Unable to read font: %v", err)
+  }
+  font, err := truetype.Parse(data)
+  if err != nil {
+    Error().Fatalf("Unable to parse font: %v", err)
+  }
+  render.Init()
+  font_dict[10] = gui.MakeDictionary(font, 10)
+  font_dict[12] = gui.MakeDictionary(font, 12)
+  font_dict[15] = gui.MakeDictionary(font, 15)
+  font_dict[25] = gui.MakeDictionary(font, 25)
+}
+
+func GetDictionary(point_size int) *gui.Dictionary {
+  dictionary_once.Do(setupFontDictionaries)
+  return font_dict[point_size]
 }
 
 // A Path is a string that is intended to store a path.  When it is encoded
@@ -116,6 +177,16 @@ func TryRelative(base,target string) string {
     return rel
   }
   return target
+}
+
+func GetStoreVal(key string) string {
+  var store map[string]string
+  LoadJson(filepath.Join(datadir, "store"), &store)
+  if store == nil {
+    store = make(map[string]string)
+  }
+  val := store[key]
+  return val
 }
 
 func SetStoreVal(key,val string) {

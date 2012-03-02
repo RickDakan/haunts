@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -48,11 +49,15 @@ type SummonActionDef struct {
   Ent_name     string
   Animation    string
   Conditions   []string
+  Texture      texture.Object
 }
 type SummonActionInst struct {
   ent *game.Entity
   cx,cy int
   spawn *game.Entity
+}
+func (a *SummonAction) Icon() texture.Object {
+  return a.Texture
 }
 func (a *SummonAction) Readyable() bool {
   return false

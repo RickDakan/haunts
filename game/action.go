@@ -3,6 +3,7 @@ package game
 import (
   "fmt"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/texture"
 )
 
 var action_map map[string]func() Action
@@ -61,7 +62,10 @@ const (
 )
 
 type Action interface {
-  // Returns true iff this action can be used as an interrupt
+  // Returns a texture that can be used to identify this Action.
+  Icon() texture.Object
+
+  // Returns true iff this action can be used as an interrupt.
   Readyable() bool
 
   // Called when the user attempts to select the action.  Returns true if the

@@ -55,9 +55,8 @@ func init() {
 
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
-fmt.Printf("Args[0]: '%s'\n", os.Args[0])
-fmt.Printf("setting datadir: '%s'\n", datadir)
   base.SetDatadir(datadir)
+  base.Log().Printf("Setting datadir: %s", datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
     panic(err.Error())
@@ -68,9 +67,8 @@ fmt.Printf("setting datadir: '%s'\n", datadir)
   key_map = key_binds.MakeKeyMap()
   base.SetDefaultKeyMap(key_map)
 
-  factor := 1.0
-  wdx = int(1200 * factor)
-  wdy = int(675 * factor)
+  wdx = 1024
+  wdy = 768
 }
 
 type draggerZoomer interface {
@@ -146,6 +144,9 @@ func editMode() {
 
     if key_map["save"].FramePressCount() > 0 && chooser == nil {
       path,err := editor.Save()
+      if err != nil {
+        base.Warn().Printf("Failed to save: %v", err.Error())
+      }
       if path != "" && err == nil {
         base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
       }
@@ -159,6 +160,7 @@ func editMode() {
         anchor = nil
         err = editor.Load(path)
         if err != nil {
+          base.Warn().Printf("Failed to load: %v", err.Error())
         } else {
           base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
         }
@@ -193,14 +195,7 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
-      fmt.Printf("Panic: %v\n", r)
-      fmt.Printf("%s\n", string(data))
-      out,err := os.Open("crash.txt")
-      if err == nil {
-        out.Write([]byte(fmt.Sprintf("Panic: %v\n", r)))
-        out.Write(data)
-        out.Close()
-      }
+      base.Error().Printf("PANIC: %s\n", string(data))
     }
   } ()
   sys.Startup()
@@ -239,6 +234,10 @@ func main() {
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
+  sys.Think()
+  // Wait until now to create the dictionary because the render thread needs
+  // to be running in advance.
+  base.GetDictionary(35)
   render.Queue(func() {
     sys.Think()
     ui.Draw()

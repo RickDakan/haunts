@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -49,6 +50,7 @@ type AoeAttackDef struct {
   Damage     int
   Animation  string
   Conditions []string
+  Texture    texture.Object
 }
 type aoeAttackInst struct {
   ent *game.Entity
@@ -59,6 +61,9 @@ type aoeAttackInst struct {
 
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
+}
+func (a *AoeAttack) Icon() texture.Object {
+  return a.Texture
 }
 func (a *AoeAttack) Readyable() bool {
   return true
