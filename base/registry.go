@@ -165,7 +165,7 @@ func LoadAndProcessObject(path,format string, target interface{}) error {
     Error().Fatalf("Can only load with format 'json' and 'gob', not '%s'", format)
   }
   if err != nil {
-    return err
+    Error().Fatalf("Error loading '%s': %v", path, err)
   }
   processObject(path, reflect.ValueOf(target), "")
   return  nil
@@ -240,6 +240,8 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
         err = LoadAndProcessObject(path, format, target.Interface())
         if err == nil {
           RegisterObject(registry_name, target.Interface())
+        } else {
+          Error().Fatalf("Error loading files in '%s': %v", dir, err)
         }
       }
     }

@@ -8,6 +8,7 @@
   "Diameter"  : 3,
   "Animation" : "ranged",
   "Conditions": [
-    "Dot"
+    "Dot",
+    "First Aid"
   ]
 }
