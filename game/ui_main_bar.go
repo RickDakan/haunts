@@ -48,7 +48,7 @@ type Center struct {
 
 type TextArea struct {
   X,Y           int
-  Height        int
+  Size          int
   Justification string
 }
 
@@ -67,8 +67,8 @@ func (t *TextArea) RenderString(s string) {
   }
   px := float64(t.X)
   py := float64(t.Y)
-  h := float64(t.Height)
-  base.GetDictionary().RenderString(s, px, py, 0, h, just)
+  d := base.GetDictionary(t.Size)
+  d.RenderString(s, px, py, 0, d.MaxHeight(), just)
 }
 
 type MainBarLayout struct {
@@ -89,7 +89,11 @@ type MainBarLayout struct {
   Ego    TextArea
 
   Conditions struct {
-    X,Y,Height,Spacing float64
+    X,Y,Height,Width,Size,Spacing float64
+  }
+
+  Actions struct {
+    X,Y,Width,Icon_size float64
     Count int
   }
 }
@@ -169,6 +173,8 @@ func (m *MainBar) Draw(region gui.Region) {
 
   m.layout.UnitLeft.RenderAt(region.X, region.Y, m.mx, m.my)
   m.layout.UnitRight.RenderAt(region.X, region.Y, m.mx, m.my)
+  m.layout.ActionLeft.RenderAt(region.X, region.Y, m.mx, m.my)
+  m.layout.ActionRight.RenderAt(region.X, region.Y, m.mx, m.my)
 
   if m.Ent != nil {
     gl.Color4d(1, 1, 1, 1)
@@ -216,15 +222,44 @@ func (m *MainBar) Draw(region gui.Region) {
       gl.TexCoord2d(1, 0)
       gl.Vertex2i(cx + (tdx + 1) / 2, cy - tdy / 2)
     gl.End()
+  }
 
+  {
     gl.Color4d(1, 1, 1, 1)
-    for i,s := range m.Ent.Stats.ConditionNames() {
-      if i >= m.layout.Conditions.Count { continue }
-      c := m.layout.Conditions
-      h := (c.Height - (float64(c.Count - 1) * c.Spacing)) / float64(c.Count)
-      y := c.Y + (h + c.Spacing) * float64(c.Count - i - 1)
-      base.GetDictionary().RenderString(s, c.X, y, 0, h, gui.Center)
+    c := m.layout.Conditions
+    d := base.GetDictionary(int(c.Size))
+    ypos := c.Height + c.Y
+    var r gui.Region
+    r.X = int(c.X)
+    r.Y = int(c.Y)
+    r.Dx = int(c.Width)
+    r.Dy = int(c.Height)
+    r.PushClipPlanes()
+
+    for _,s := range []string{"Blinded!", "Terrified", "Vexed!", "Offended!", "Hypnotized!", "Conned!", "Scorhed!"} {
+      d.RenderString(s, c.X + c.Width / 2, ypos - float64(d.MaxHeight()), 0, d.MaxHeight(), gui.Center)
+      ypos -= float64(d.MaxHeight())
+      ypos += 3
     }
+
+    r.PopClipPlanes()
+  }
+
+  spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)
+  spacing = m.layout.Actions.Width - spacing
+  spacing /= float64(m.layout.Actions.Count - 1)
+  xpos := m.layout.Actions.X
+  s := m.layout.Actions.Icon_size
+  gl.Disable(gl.TEXTURE_2D)
+  for i := 0; i < 6; i++ {
+    gl.Color4d(1, 0, 0, 1)
+    gl.Begin(gl.QUADS)
+      gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
+      gl.Vertex3d(xpos, m.layout.Actions.Y+s, 0)
+      gl.Vertex3d(xpos+s, m.layout.Actions.Y+s, 0)
+      gl.Vertex3d(xpos+s, m.layout.Actions.Y, 0)
+      xpos += spacing + m.layout.Actions.Icon_size
+    gl.End()
   }
 }
 

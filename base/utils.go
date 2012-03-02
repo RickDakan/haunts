@@ -60,9 +60,10 @@ func Error() *log.Logger {
   return logger
 }
 
-var font_dict *gui.Dictionary
+var font_dict map[int]*gui.Dictionary
 var dictionary_once sync.Once
 func setupFontDictionaries() {
+  font_dict = make(map[int]*gui.Dictionary)
   f, err := os.Open(filepath.Join(datadir, "fonts", "tomnr.ttf"))
   if err != nil {
     Error().Fatalf("Unable to load font: %v", err)
@@ -77,12 +78,15 @@ func setupFontDictionaries() {
     Error().Fatalf("Unable to parse font: %v", err)
   }
   render.Init()
-  font_dict = gui.MakeDictionary(font)
+  font_dict[10] = gui.MakeDictionary(font, 10)
+  font_dict[12] = gui.MakeDictionary(font, 12)
+  font_dict[15] = gui.MakeDictionary(font, 15)
+  font_dict[25] = gui.MakeDictionary(font, 25)
 }
 
-func GetDictionary() *gui.Dictionary {
+func GetDictionary(point_size int) *gui.Dictionary {
   dictionary_once.Do(setupFontDictionaries)
-  return font_dict
+  return font_dict[point_size]
 }
 
 // A Path is a string that is intended to store a path.  When it is encoded

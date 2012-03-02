@@ -12,39 +12,46 @@
   "Name": {
     "X": 225,
     "Y": 93,
-    "Height": 28,
+    "Size": 15,
     "Justification": "center"
   },
   "Ap": {
     "X": 145,
     "Y": 60,
-    "Height": 23,
+    "Size": 12,
     "Justification": "left"
   },
   "Hp": {
     "X": 145,
     "Y": 30,
-    "Height": 23,
+    "Size": 12,
     "Justification": "left"
   },
   "Corpus": {
     "X": 310,
     "Y": 60,
-    "Height": 23,
+    "Size": 12,
     "Justification": "right"
   },
   "Ego": {
     "X": 310,
     "Y": 30,
-    "Height": 23,
+    "Size": 12,
     "Justification": "right"
   },
   "Conditions": {
-    "X": 360,
+    "X": 260,
     "Y": 25,
-    "Height": 100,
-    "Spacing": 3,
-    "Count": 4
+    "Width": 200,
+    "Height": 96,
+    "Size": 10
+  },
+  "Actions": {
+    "X": 435,
+    "Y": 37,
+    "Width": 277,
+    "Icon_size": 40,
+    "Count": 6
   },
   "EndTurn": {
     "X":  2,
@@ -65,11 +72,17 @@
     "Y":  65
   },
   "ActionLeft": {
-    "X":  2,
-    "Y":  3
+    "Texture": {
+      "Path": "ui/arrow_small_lf.png"
+    },
+    "X":  430,
+    "Y":  90
   },
   "ActionRight": {
-    "X":  2,
-    "Y":  3
+    "Texture": {
+      "Path": "ui/arrow_small_rf.png"
+    },
+    "X":  675,
+    "Y":  90
   }
 }
