@@ -153,6 +153,7 @@ func GetAllNamesInRegistry(registry_name string) []string {
 // Processes an object as it is normally processed when registered through
 // RegisterAllObjectsInDir().  Does NOT register the object in any registry.
 func LoadAndProcessObject(path,format string, target interface{}) error {
+  Log().Printf("Registering %s", path)
   var err error
   switch format {
   case "json":
@@ -165,7 +166,7 @@ func LoadAndProcessObject(path,format string, target interface{}) error {
     Error().Fatalf("Can only load with format 'json' and 'gob', not '%s'", format)
   }
   if err != nil {
-    Error().Fatalf("Error loading '%s': %v", path, err)
+    return err
   }
   processObject(path, reflect.ValueOf(target), "")
   return  nil
@@ -221,7 +222,7 @@ func processObject(dir string, val reflect.Value, tag string) {
 // RegisterObject().  format should either be "json" or "gob"
 // Files begining with '.' are ignored in this process
 func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
-  Log().Printf("Registering directory: '%s'\n", dir)
+  Log().Printf("Registering directory: '%s'", dir)
   reg,ok := registry_registry[registry_name]
   if !ok {
     Error().Fatalf("Tried to load objects into an unknown registry '%s'", registry_name)
@@ -247,4 +248,5 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
     }
     return nil
   })
+  Log().Printf("Completed directory '%s'", dir)
 }
