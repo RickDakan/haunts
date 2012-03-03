@@ -70,8 +70,8 @@ func dist(x,y,x2,y2 int) int {
   }
   return dy
 }
-func (a *BasicAttack) Icon() texture.Object {
-  return a.Texture
+func (a *BasicAttack) Icon() *texture.Object {
+  return &a.Texture
 }
 func (a *BasicAttack) Readyable() bool {
   return true

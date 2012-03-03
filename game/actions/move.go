@@ -58,8 +58,8 @@ type MoveDef struct {
   Texture  texture.Object
 }
 
-func (a *Move) Icon() texture.Object {
-  return a.Texture
+func (a *Move) Icon() *texture.Object {
+  return &a.Texture
 }
 func (a *Move) Readyable() bool {
   return false
