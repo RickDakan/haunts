@@ -1,0 +1,9 @@
+{
+  "Name"     : "Chill Touch",
+  "Kind"     : "Fire",
+  "Animation": "melee",
+  "Ap"       : 3,
+  "Strength" : 4,
+  "Damage"   : 1,
+  "Range"    : 1
+}

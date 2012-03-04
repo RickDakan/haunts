@@ -3,6 +3,7 @@ package game
 import (
   "fmt"
   "path/filepath"
+  "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -95,14 +96,27 @@ type MainBarLayout struct {
   Actions struct {
     X,Y,Width,Icon_size float64
     Count int
+    Empty texture.Object
+  }
+}
+
+type mainBarState struct {
+  Actions struct {
+    // target is the action that should be displayed as left-most,
+    // pos is the action that is currently left-most, which can be fractional.
+    scroll_target float64
+    scroll_pos    float64
+
+    selected Action
   }
 }
 
 type MainBar struct {
   layout MainBarLayout
+  state  mainBarState
   region gui.Region
 
-  Ent *Entity
+  ent *Entity
 
   // Position of the mouse
   mx,my int
@@ -124,6 +138,19 @@ func (m *MainBar) Requested() gui.Dims {
   }
 }
 
+func (mb *MainBar) SelectEnt(ent *Entity) {
+  if ent == mb.ent {
+    return
+  }
+  mb.ent = ent
+  mb.state = mainBarState{}
+
+  if mb.ent == nil {
+    return
+  }
+  mb.state.Actions.selected = mb.ent.Actions[2]
+}
+
 func (m *MainBar) Expandable() (bool, bool) {
   return false, false
 }
@@ -134,10 +161,29 @@ func (m *MainBar) Rendered() gui.Region {
 
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
-
+  if m.ent != nil {
+    max := float64(len(m.ent.Actions) - m.layout.Actions.Count)
+    if m.state.Actions.scroll_target > max {
+      m.state.Actions.scroll_target = max
+    }
+    if m.state.Actions.scroll_target < 0 {
+      m.state.Actions.scroll_target = 0
+    }
+  } else {
+    m.state.Actions.scroll_pos = 0
+    m.state.Actions.scroll_target = 0
+  }
+  m.state.Actions.scroll_pos *= 0.8
+  m.state.Actions.scroll_pos += 0.2 * m.state.Actions.scroll_target
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  if found,event := group.FindEvent('w'); found && event.Type == gin.Press {
+    m.state.Actions.scroll_target++
+  }
+  if found,event := group.FindEvent('e'); found && event.Type == gin.Press {
+    m.state.Actions.scroll_target--
+  }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
@@ -176,11 +222,11 @@ func (m *MainBar) Draw(region gui.Region) {
   m.layout.ActionLeft.RenderAt(region.X, region.Y, m.mx, m.my)
   m.layout.ActionRight.RenderAt(region.X, region.Y, m.mx, m.my)
 
-  if m.Ent != nil {
+  if m.ent != nil {
     gl.Color4d(1, 1, 1, 1)
-    m.Ent.Still.Data().Bind()
-    tdx := m.Ent.Still.Data().Dx
-    tdy := m.Ent.Still.Data().Dy
+    m.ent.Still.Data().Bind()
+    tdx := m.ent.Still.Data().Dx
+    tdy := m.ent.Still.Data().Dy
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
@@ -197,11 +243,11 @@ func (m *MainBar) Draw(region gui.Region) {
       gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
     gl.End()
 
-    m.layout.Name.RenderString(m.Ent.Name)
-    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", m.Ent.Stats.ApCur()))
-    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", m.Ent.Stats.HpCur()))
-    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", m.Ent.Stats.Corpus()))
-    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", m.Ent.Stats.Ego()))
+    m.layout.Name.RenderString(m.ent.Name)
+    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", m.ent.Stats.ApCur()))
+    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", m.ent.Stats.HpCur()))
+    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", m.ent.Stats.Corpus()))
+    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", m.ent.Stats.Ego()))
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
@@ -222,6 +268,63 @@ func (m *MainBar) Draw(region gui.Region) {
       gl.TexCoord2d(1, 0)
       gl.Vertex2i(cx + (tdx + 1) / 2, cy - tdy / 2)
     gl.End()
+
+    // Actions
+    {
+      spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)
+      spacing = m.layout.Actions.Width - spacing
+      spacing /= float64(m.layout.Actions.Count - 1)
+      s := m.layout.Actions.Icon_size
+      num_actions := len(m.ent.Actions)
+      xpos := m.layout.Actions.X
+
+      if num_actions > m.layout.Actions.Count {
+        xpos -= m.state.Actions.scroll_pos * (s + spacing)
+      }
+      d := base.GetDictionary(10)
+      var r gui.Region
+      r.X = int(m.layout.Actions.X)
+      r.Y = int(m.layout.Actions.Y - d.MaxHeight())
+      r.Dx = int(m.layout.Actions.Width)
+      r.Dy = int(m.layout.Actions.Icon_size + d.MaxHeight())
+      r.PushClipPlanes()
+
+      gl.Color4d(1, 1, 1, 1)
+      for i,action := range m.ent.Actions {
+        gl.Enable(gl.TEXTURE_2D)
+        action.Icon().Data().Bind()
+        gl.Begin(gl.QUADS)
+          gl.TexCoord2d(0, 0)
+          gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
+
+          gl.TexCoord2d(0, -1)
+          gl.Vertex3d(xpos, m.layout.Actions.Y+s, 0)
+
+          gl.TexCoord2d(1, -1)
+          gl.Vertex3d(xpos+s, m.layout.Actions.Y+s, 0)
+
+          gl.TexCoord2d(1, 0)
+          gl.Vertex3d(xpos+s, m.layout.Actions.Y, 0)
+        gl.End()
+        gl.Disable(gl.TEXTURE_2D)
+
+        ypos := m.layout.Actions.Y - d.MaxHeight() - 2
+        d.RenderString(fmt.Sprintf("%d", i+1), xpos + s / 2, ypos, 0, d.MaxHeight(), gui.Center)
+
+        xpos += spacing + m.layout.Actions.Icon_size
+      }
+
+      r.PopClipPlanes()
+
+      // Now, if there is a selected action, position it between the arrows
+      if m.state.Actions.selected != nil {
+        // a := m.state.Actions.selected
+        d := base.GetDictionary(15)
+        x := m.layout.Actions.X + m.layout.Actions.Width / 2
+        y := float64(m.layout.ActionLeft.Y)
+        d.RenderString("Action - 3 Ap", x, y, 0, d.MaxHeight(), gui.Center)
+      }
+    }
   }
 
   {
@@ -243,23 +346,6 @@ func (m *MainBar) Draw(region gui.Region) {
     }
 
     r.PopClipPlanes()
-  }
-
-  spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)
-  spacing = m.layout.Actions.Width - spacing
-  spacing /= float64(m.layout.Actions.Count - 1)
-  xpos := m.layout.Actions.X
-  s := m.layout.Actions.Icon_size
-  gl.Disable(gl.TEXTURE_2D)
-  for i := 0; i < 6; i++ {
-    gl.Color4d(1, 0, 0, 1)
-    gl.Begin(gl.QUADS)
-      gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
-      gl.Vertex3d(xpos, m.layout.Actions.Y+s, 0)
-      gl.Vertex3d(xpos+s, m.layout.Actions.Y+s, 0)
-      gl.Vertex3d(xpos+s, m.layout.Actions.Y, 0)
-      xpos += spacing + m.layout.Actions.Icon_size
-    gl.End()
   }
 }
 

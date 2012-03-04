@@ -1,0 +1,16 @@
+{
+  "Name"      : "EMR Inhibitor",
+  "Kind"      : "Fire",
+  "Ap"        : 2,
+  "Strength"  : 5,
+  "Damage"    : 0,
+  "Range"     : 6,
+  "Diameter"  : 3,
+  "Animation" : "cast",
+  "Texture"   : {
+    "Path": "actions/icons/inhibit.png"
+  },
+  "Conditions": [
+    "EMR Inhibitor"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "Name": "EMR Inhibitor",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Time": 2,
+  "Base": {
+    "Attack": -2
+  }
+}

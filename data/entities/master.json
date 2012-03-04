@@ -1,17 +1,23 @@
 {
   "Name": "Master of the Manse",
   "Sprite_path" : "entities/master",
+  "Still": {
+    "Path": "entities/master_still.png"
+  },
   "Action_names": [
     "Move Test",
-    "Basic Test",
-    "Summon Test"
+    "Arc of Decay",
+    "Poltergeist Blast",
+    "Visions of Despair",
+    "Summon Lost Soul",
+    "Summon Angry Shade"
   ],
   "Side": 1,
   "Base": {
-    "Ap_max": 15,
-    "Hp_max": 10,
-    "Corpus": 10,
-    "Ego": 6,
+    "Ap_max": 8,
+    "Hp_max": 15,
+    "Corpus": 12,
+    "Ego": 11,
     "Sight": 30
   }
 }

@@ -63,7 +63,7 @@ const (
 
 type Action interface {
   // Returns a texture that can be used to identify this Action.
-  Icon() texture.Object
+  Icon() *texture.Object
 
   // Returns true iff this action can be used as an interrupt.
   Readyable() bool

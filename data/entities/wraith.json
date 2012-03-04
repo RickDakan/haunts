@@ -1,0 +1,21 @@
+{
+  "Name": "Vengeful Wraith",
+  "Sprite_path" : "entities/wraith",
+  "Still": {
+    "Path": "entities/wraith_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Vengeful Curse",
+    "Grave Grasp",
+    "Ghastly Howl"
+  ],
+  "Side": 1,
+  "Base": {
+    "Ap_max": 6,
+    "Hp_max": 6,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 15
+  }
+}

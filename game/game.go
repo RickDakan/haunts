@@ -40,7 +40,7 @@ func MakeGamePanel() *GamePanel {
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
-  gp.main_bar.Ent = gp.game.selected_ent
+  gp.main_bar.SelectEnt(gp.game.selected_ent)
   gp.VerticalTable.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t

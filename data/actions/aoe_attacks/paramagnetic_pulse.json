@@ -1,0 +1,15 @@
+{
+  "Name"      : "Paramagnetic Pulse",
+  "Kind"      : "Fire",
+  "Ap"        : 3,
+  "Strength"  : 5,
+  "Damage"    : 2,
+  "Range"     : 4,
+  "Diameter"  : 2,
+  "Animation" : "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/pulse.png"
+  },
+  "Conditions": [
+]
+}

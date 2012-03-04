@@ -1,0 +1,15 @@
+{
+  "Name"      : "Poltergeist Blast",
+  "Kind"      : "Fire",
+  "Ap"        : 5,
+  "Strength"  : 5,
+  "Damage"    : 4,
+  "Range"     : 3,
+  "Diameter"  : 2,
+  "Animation" : "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/blast.png"
+  },
+  "Conditions": [
+]
+}

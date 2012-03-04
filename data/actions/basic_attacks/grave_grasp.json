@@ -1,0 +1,15 @@
+{
+  "Name"     : "Grave Grasp",
+  "Kind"     : "Panic",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/grasp.png"
+  },
+  "Ap"       : 6,
+  "Strength" : 5,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Condition": [
+     "Grave Grasp"
+   ]
+}

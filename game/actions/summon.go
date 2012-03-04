@@ -56,8 +56,8 @@ type SummonActionInst struct {
   cx,cy int
   spawn *game.Entity
 }
-func (a *SummonAction) Icon() texture.Object {
-  return a.Texture
+func (a *SummonAction) Icon() *texture.Object {
+  return &a.Texture
 }
 func (a *SummonAction) Readyable() bool {
   return false

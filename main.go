@@ -198,6 +198,7 @@ func main() {
       base.Error().Printf("PANIC: %s\n", string(data))
     }
   } ()
+  base.Log().Printf("Version %s", Version())
   sys.Startup()
   render.Init()
   render.Queue(func() {

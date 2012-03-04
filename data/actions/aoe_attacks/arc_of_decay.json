@@ -1,0 +1,15 @@
+{
+  "Name"      : "Arc of Decay",
+  "Kind"      : "Fire",
+  "Ap"        : 3,
+  "Strength"  : 7,
+  "Damage"    : 4,
+  "Range"     : 2,
+  "Diameter"  : 2,
+  "Animation" : "melee",
+  "Texture"   : {
+    "Path": "actions/icons/arc.png"
+  },
+  "Conditions": [
+]
+}

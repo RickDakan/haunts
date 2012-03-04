@@ -1,3 +1,7 @@
+cd tools
+go run version.go
+cd ..
+
 go build .
 
 rm -rf haunts.app

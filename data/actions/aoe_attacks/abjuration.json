@@ -1,0 +1,15 @@
+{
+  "Name"      : "Abjuration",
+  "Kind"      : "Fire",
+  "Ap"        : 4,
+  "Strength"  : 5,
+  "Damage"    : 2,
+  "Range"     : 10,
+  "Diameter"  : 3,
+  "Animation" : "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  },
+  "Conditions": [
+  ]
+}

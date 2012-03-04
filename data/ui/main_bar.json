@@ -48,10 +48,13 @@
   },
   "Actions": {
     "X": 435,
-    "Y": 37,
+    "Y": 50,
     "Width": 277,
-    "Icon_size": 40,
-    "Count": 6
+    "Icon_size": 35,
+    "Count": 6,
+    "Empty": {
+      "Path": "actions/icons/empty.png"
+    }
   },
   "EndTurn": {
     "X":  2,

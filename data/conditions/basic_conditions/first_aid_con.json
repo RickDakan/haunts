@@ -1,0 +1,9 @@
+{
+  "Name": "First Aid",
+  "Strength": 3,
+  "Kind": "Poison",
+  "Time": 1,
+  "Dynamic": {
+    "Hp": 5
+  }
+}

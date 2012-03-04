@@ -62,8 +62,8 @@ type aoeAttackInst struct {
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
 }
-func (a *AoeAttack) Icon() texture.Object {
-  return a.Texture
+func (a *AoeAttack) Icon() *texture.Object {
+  return &a.Texture
 }
 func (a *AoeAttack) Readyable() bool {
   return true
