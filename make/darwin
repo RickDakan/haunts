@@ -1,3 +1,5 @@
+rm GEN_*
+
 cd tools
 go run version.go
 cd ..
