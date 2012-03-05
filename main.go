@@ -259,17 +259,17 @@ func main() {
 
     if key_map["profile"].FramePressCount() > 0 {
       if profile_output == nil {
-        profile_output, err = os.Create("cpu.prof")
+        profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
         if err == nil {
           err = pprof.StartCPUProfile(profile_output)
           if err != nil {
-            fmt.Printf("Unable to start CPU profile: %v\n", err)
+            base.Log().Printf("Unable to start CPU profile: %v\n", err)
             profile_output.Close()
             profile_output = nil
           }
-          fmt.Printf("profout: %v\n", profile_output)
+          base.Log().Printf("profout: %v\n", profile_output)
         } else {
-          fmt.Printf("Unable to start CPU profile: %v\n", err)
+          base.Log().Printf("Unable to start CPU profile: %v\n", err)
         }
       } else {
         pprof.StopCPUProfile()
