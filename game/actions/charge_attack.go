@@ -45,10 +45,19 @@ type ChargeAttackDef struct {
   Texture  texture.Object
 }
 
+func (a *ChargeAttack) AP() int {
+  return a.Ap
+}
+func (a *ChargeAttack) String() string {
+  return a.Name
+}
 func (a *ChargeAttack) Icon() *texture.Object {
   return &a.Texture
 }
 func (a *ChargeAttack) Readyable() bool {
+  return true
+}
+func (a *ChargeAttack) Preppable(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *ChargeAttack) Prep(ent *game.Entity, g *game.Game) bool {

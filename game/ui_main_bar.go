@@ -118,17 +118,20 @@ type MainBar struct {
 
   ent *Entity
 
+  game *Game
+
   // Position of the mouse
   mx,my int
 }
 
-func MakeMainBar() (*MainBar, error) {
+func MakeMainBar(game *Game) (*MainBar, error) {
   var mb MainBar
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "main_bar.json"), "json", &mb.layout)
   if err != nil {
     return nil, err
   }
+  mb.game = game
   return &mb, nil
 }
 func (m *MainBar) Requested() gui.Dims {
@@ -148,7 +151,7 @@ func (mb *MainBar) SelectEnt(ent *Entity) {
   if mb.ent == nil {
     return
   }
-  mb.state.Actions.selected = mb.ent.Actions[2]
+  mb.state.Actions.selected = mb.ent.selected_action
 }
 
 func (m *MainBar) Expandable() (bool, bool) {
@@ -162,6 +165,7 @@ func (m *MainBar) Rendered() gui.Region {
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
   if m.ent != nil {
+    m.state.Actions.selected = m.ent.selected_action
     max := float64(len(m.ent.Actions) - m.layout.Actions.Count)
     if m.state.Actions.scroll_target > max {
       m.state.Actions.scroll_target = max
@@ -293,6 +297,11 @@ func (m *MainBar) Draw(region gui.Region) {
       for i,action := range m.ent.Actions {
         gl.Enable(gl.TEXTURE_2D)
         action.Icon().Data().Bind()
+        if action.Preppable(m.ent, m.game) {
+          gl.Color4d(1, 1, 1, 1)
+        } else {
+          gl.Color4d(0.5, 0.5, 0.5, 1)
+        }
         gl.Begin(gl.QUADS)
           gl.TexCoord2d(0, 0)
           gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
@@ -322,7 +331,8 @@ func (m *MainBar) Draw(region gui.Region) {
         d := base.GetDictionary(15)
         x := m.layout.Actions.X + m.layout.Actions.Width / 2
         y := float64(m.layout.ActionLeft.Y)
-        d.RenderString("Action - 3 Ap", x, y, 0, d.MaxHeight(), gui.Center)
+        str := fmt.Sprintf("%s:%dAP", m.state.Actions.selected.String(), m.state.Actions.selected.AP())
+        d.RenderString(str, x, y, 0, d.MaxHeight(), gui.Center)
       }
     }
   }

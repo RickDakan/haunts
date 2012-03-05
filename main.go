@@ -273,6 +273,7 @@ func main() {
         }
       } else {
         pprof.StopCPUProfile()
+        profile_output.Close()
         profile_output = nil
       }
     }

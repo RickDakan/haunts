@@ -62,19 +62,26 @@ type aoeAttackInst struct {
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
 }
+func (a *AoeAttack) AP() int {
+  return a.Ap
+}
+func (a *AoeAttack) String() string {
+  return a.Name
+}
 func (a *AoeAttack) Icon() *texture.Object {
   return &a.Texture
 }
 func (a *AoeAttack) Readyable() bool {
   return true
 }
+func (a *AoeAttack) Preppable(ent *game.Entity, g *game.Game) bool {
+  return ent.Stats.ApCur() >= a.Ap
+}
 func (a *AoeAttack) Prep(ent *game.Entity, g *game.Game) bool {
-  a.ent = ent
-
-  if a.ent.Stats.ApCur() < a.Ap {
+  if !a.Preppable(ent, g) {
     return false
   }
-
+  a.ent = ent
   bx,by := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
   a.tx = int(bx)
   a.ty = int(by)
@@ -106,16 +113,6 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
     } else {
       return game.Consumed
     }
-    // for _,target := range a.targets {
-    //   if target == g.HoveredEnt() {
-    //     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 {
-    //       a.target = target
-    //       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-    //       return game.ConsumedAndBegin
-    //     }
-    //     return game.Consumed
-    //   }
-    // }
     return game.Consumed
   }
   return game.NotConsumed

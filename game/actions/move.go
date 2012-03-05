@@ -57,7 +57,12 @@ type MoveDef struct {
   Name     string
   Texture  texture.Object
 }
-
+func (a *Move) AP() int {
+  return 0
+}
+func (a *Move) String() string {
+  return a.Name
+}
 func (a *Move) Icon() *texture.Object {
   return &a.Texture
 }
@@ -136,6 +141,9 @@ func (a *Move) findPath(g *game.Game, x,y int) {
   }
 }
 
+func (a *Move) Preppable(ent *game.Entity, g *game.Game) bool {
+  return true
+}
 func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
