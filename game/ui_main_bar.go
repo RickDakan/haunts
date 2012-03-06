@@ -162,21 +162,42 @@ func (m *MainBar) Rendered() gui.Region {
   return m.region
 }
 
-
 func (m *MainBar) Think(g *gui.Gui, t int64) {
   if m.ent != nil {
-    m.state.Actions.selected = m.ent.selected_action
+    min := 0.0
     max := float64(len(m.ent.Actions) - m.layout.Actions.Count)
+    selected_index := -1
+    for i := range m.ent.Actions {
+      if m.ent.Actions[i] == m.state.Actions.selected {
+        selected_index = i
+        break
+      }
+    }
+    if selected_index != -1 {
+      if min < float64(selected_index - m.layout.Actions.Count + 1) {
+        min = float64(selected_index - m.layout.Actions.Count + 1)
+      }
+      if max > float64(selected_index) {
+        max = float64(selected_index)
+      }
+    }
+    m.state.Actions.selected = m.ent.selected_action
     if m.state.Actions.scroll_target > max {
       m.state.Actions.scroll_target = max
     }
-    if m.state.Actions.scroll_target < 0 {
-      m.state.Actions.scroll_target = 0
+    if m.state.Actions.scroll_target < min {
+      m.state.Actions.scroll_target = min
     }
+
+    // If an action is selected and we can't see it then we scroll just enough
+    // so that we can.
+
   } else {
     m.state.Actions.scroll_pos = 0
     m.state.Actions.scroll_target = 0
   }
+
+  // Do a nice scroll motion towards the target position
   m.state.Actions.scroll_pos *= 0.8
   m.state.Actions.scroll_pos += 0.2 * m.state.Actions.scroll_target
 }
@@ -295,6 +316,18 @@ func (m *MainBar) Draw(region gui.Region) {
 
       gl.Color4d(1, 1, 1, 1)
       for i,action := range m.ent.Actions {
+
+        // Highlight the selected action
+        if action == m.ent.selected_action {
+          gl.Disable(gl.TEXTURE_2D)
+          gl.Color4d(1, 0, 0, 1)
+          gl.Begin(gl.QUADS)
+            gl.Vertex3d(xpos - 2, m.layout.Actions.Y - 2, 0)
+            gl.Vertex3d(xpos - 2, m.layout.Actions.Y+s + 2, 0)
+            gl.Vertex3d(xpos+s + 2, m.layout.Actions.Y+s + 2, 0)
+            gl.Vertex3d(xpos+s + 2, m.layout.Actions.Y - 2, 0)
+          gl.End()
+        }
         gl.Enable(gl.TEXTURE_2D)
         action.Icon().Data().Bind()
         if action.Preppable(m.ent, m.game) {
@@ -332,6 +365,7 @@ func (m *MainBar) Draw(region gui.Region) {
         x := m.layout.Actions.X + m.layout.Actions.Width / 2
         y := float64(m.layout.ActionLeft.Y)
         str := fmt.Sprintf("%s:%dAP", m.state.Actions.selected.String(), m.state.Actions.selected.AP())
+        gl.Color4d(1, 1, 1, 1)
         d.RenderString(str, x, y, 0, d.MaxHeight(), gui.Center)
       }
     }
