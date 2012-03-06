@@ -320,14 +320,15 @@ func (g *Game) Think(dt int64) {
     }
   }
 
-  ros := make([]house.RectObject, len(g.Ents))
-  for i := range g.Ents {
-    ros[i] = g.Ents[i]
-  }
-  ros = house.OrderRectObjects(ros)
-  for i := range g.Ents {
-    g.Ents[i] = ros[len(ros) - i - 1].(*Entity)
-  }
+  // Why did I think I had to run this block of code?
+  // ros := make([]house.RectObject, len(g.Ents))
+  // for i := range g.Ents {
+  //   ros[i] = g.Ents[i]
+  // }
+  // ros = house.OrderRectObjects(ros)
+  // for i := range g.Ents {
+  //   g.Ents[i] = ros[len(ros) - i - 1].(*Entity)
+  // }
 
   g.viewer.Floor_drawer = g.current_action
   for i := range g.Ents {

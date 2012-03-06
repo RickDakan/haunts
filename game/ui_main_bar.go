@@ -189,8 +189,48 @@ func buttonFuncActionRight(mb *MainBar) {
   }
 }
 func buttonFuncUnitLeft(mb *MainBar) {
+  mb.game.SetCurrentAction(nil)
+  start_index := len(mb.game.Ents) - 1
+  for i := 0; i < len(mb.game.Ents); i++ {
+    if mb.game.Ents[i] == mb.ent {
+      start_index = i
+      break
+    }
+  }
+  for i := start_index - 1; i >= 0; i-- {
+    if mb.game.Ents[i].Side == mb.game.Side {
+      mb.game.selected_ent = mb.game.Ents[i]
+      return
+    }
+  }
+  for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
+    if mb.game.Ents[i].Side == mb.game.Side {
+      mb.game.selected_ent = mb.game.Ents[i]
+      return
+    }
+  }
 }
 func buttonFuncUnitRight(mb *MainBar) {
+  mb.game.SetCurrentAction(nil)
+  start_index := 0
+  for i := 0; i < len(mb.game.Ents); i++ {
+    if mb.game.Ents[i] == mb.ent {
+      start_index = i
+      break
+    }
+  }
+  for i := start_index + 1; i < len(mb.game.Ents); i++ {
+    if mb.game.Ents[i].Side == mb.game.Side {
+      mb.game.selected_ent = mb.game.Ents[i]
+      return
+    }
+  }
+  for i := 0; i <= start_index; i++ {
+    if mb.game.Ents[i].Side == mb.game.Side {
+      mb.game.selected_ent = mb.game.Ents[i]
+      return
+    }
+  }
 }
 
 func MakeMainBar(game *Game) (*MainBar, error) {
