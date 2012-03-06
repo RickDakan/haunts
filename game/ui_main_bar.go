@@ -123,6 +123,10 @@ type mainBarState struct {
 
     selected Action
   }
+  Conditions struct {
+    scroll_pos float64
+    max_scroll float64
+  }
 }
 
 type MainBar struct {
@@ -285,6 +289,8 @@ func (m *MainBar) Rendered() gui.Region {
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
   if m.ent != nil {
+    // If an action is selected and we can't see it then we scroll just enough
+    // so that we can.
     min := 0.0
     max := float64(len(m.ent.Actions) - m.layout.Actions.Count)
     selected_index := -1
@@ -310,9 +316,17 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
       m.state.Actions.scroll_target = min
     }
 
-    // If an action is selected and we can't see it then we scroll just enough
-    // so that we can.
-
+    // We similarly need to scroll through conditions
+    c := m.layout.Conditions
+    d := base.GetDictionary(int(c.Size))
+    m.state.Conditions.max_scroll = d.MaxHeight() * float64(len(m.ent.Stats.ConditionNames()))
+    m.state.Conditions.max_scroll -= m.layout.Conditions.Height
+    if m.state.Conditions.scroll_pos < 0 {
+      m.state.Conditions.scroll_pos = 0
+    }
+    if m.state.Conditions.scroll_pos > m.state.Conditions.max_scroll {
+      m.state.Conditions.scroll_pos = m.state.Conditions.max_scroll
+    }
   } else {
     m.state.Actions.scroll_pos = 0
     m.state.Actions.scroll_target = 0
@@ -334,6 +348,16 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
       if button.handleClick(m.mx, m.my, m) {
         return true
       }
+    }
+  }
+
+  if found, event := group.FindEvent(gin.MouseWheelVertical); found {
+    x := int(m.layout.Conditions.X)
+    y := int(m.layout.Conditions.Y)
+    x2 := int(m.layout.Conditions.X + m.layout.Conditions.Width)
+    y2 := int(m.layout.Conditions.Y + m.layout.Conditions.Height)
+    if m.mx >= x && m.my >= y && m.mx < x2 && m.my < y2 {
+      m.state.Conditions.scroll_pos += event.Key.FramePressAmt()
     }
   }
 
@@ -491,7 +515,7 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.Color4d(1, 1, 1, 1)
     c := m.layout.Conditions
     d := base.GetDictionary(int(c.Size))
-    ypos := c.Height + c.Y
+    ypos := c.Height + c.Y + m.state.Conditions.scroll_pos
     var r gui.Region
     r.X = int(c.X)
     r.Y = int(c.Y)
@@ -499,10 +523,9 @@ func (m *MainBar) Draw(region gui.Region) {
     r.Dy = int(c.Height)
     r.PushClipPlanes()
 
-    for _,s := range []string{"Blinded!", "Terrified", "Vexed!", "Offended!", "Hypnotized!", "Conned!", "Scorhed!"} {
+    for _,s := range m.ent.Stats.ConditionNames() {
       d.RenderString(s, c.X + c.Width / 2, ypos - float64(d.MaxHeight()), 0, d.MaxHeight(), gui.Center)
       ypos -= float64(d.MaxHeight())
-      ypos += 3
     }
 
     r.PopClipPlanes()
