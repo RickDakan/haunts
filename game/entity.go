@@ -157,6 +157,9 @@ func (e *Entity) Game() *Game {
   return e.game
 }
 func (e *Entity) HasLos(x,y int) bool {
+  if x < 0 || y < 0 || x >= len(e.los.grid) || y >= len(e.los.grid[0]) {
+    return false
+  }
   return e.los.grid[x][y]
 }
 func DiscretizePoint32(x,y float32) (int,int) {
