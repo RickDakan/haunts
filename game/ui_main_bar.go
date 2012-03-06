@@ -16,6 +16,20 @@ type Button struct {
 
   // Color - brighter when the mouse is over it
   shade float64
+
+  // Function to run whenever the button is clicked
+  f func(*MainBar)
+}
+
+// If x,y is inside the button's region then it will run its function and
+// return true, otherwise it does nothing and returns false.
+func (b *Button) handleClick(x,y int, mb *MainBar) bool {
+  d := b.Texture.Data()
+  if x < b.X || y < b.Y || x >= b.X + d.Dx || y >= b.Y + d.Dy {
+    return false
+  }
+  b.f(mb)
+  return true
 }
 
 func (b *Button) RenderAt(x,y,mx,my int) {
@@ -116,12 +130,67 @@ type MainBar struct {
   state  mainBarState
   region gui.Region
 
+  // List of all buttons, just to make it easy to iterate through them.
+  buttons []*Button
+
   ent *Entity
 
   game *Game
 
   // Position of the mouse
   mx,my int
+}
+
+func buttonFuncEndTurn(mb *MainBar) {
+  mb.game.OnRound()
+}
+func buttonFuncActionLeft(mb *MainBar) {
+  if mb.ent == nil {
+    return
+  }
+  start_index := len(mb.ent.Actions)-1
+  if mb.state.Actions.selected != nil {
+    for i := range mb.ent.Actions {
+      if mb.ent.Actions[i] == mb.state.Actions.selected {
+        start_index = i-1
+        break
+      }
+    }
+  }
+  for i := start_index; i >= 0; i-- {
+    action := mb.ent.Actions[i]
+    if action.Preppable(mb.ent, mb.game) {
+      action.Prep(mb.ent, mb.game)
+      mb.game.SetCurrentAction(action)
+      return
+    }
+  }
+}
+func buttonFuncActionRight(mb *MainBar) {
+  if mb.ent == nil {
+    return
+  }
+  start_index := 0
+  if mb.state.Actions.selected != nil {
+    for i := range mb.ent.Actions {
+      if mb.ent.Actions[i] == mb.state.Actions.selected {
+        start_index = i+1
+        break
+      }
+    }
+  }
+  for i := start_index; i < len(mb.ent.Actions); i++ {
+    action := mb.ent.Actions[i]
+    if action.Preppable(mb.ent, mb.game) {
+      action.Prep(mb.ent, mb.game)
+      mb.game.SetCurrentAction(action)
+      return
+    }
+  }
+}
+func buttonFuncUnitLeft(mb *MainBar) {
+}
+func buttonFuncUnitRight(mb *MainBar) {
 }
 
 func MakeMainBar(game *Game) (*MainBar, error) {
@@ -131,6 +200,18 @@ func MakeMainBar(game *Game) (*MainBar, error) {
   if err != nil {
     return nil, err
   }
+  mb.buttons = []*Button{
+    &mb.layout.EndTurn,
+    &mb.layout.UnitLeft,
+    &mb.layout.UnitRight,
+    &mb.layout.ActionLeft,
+    &mb.layout.ActionRight,
+  }
+  mb.layout.EndTurn.f = buttonFuncEndTurn
+  mb.layout.UnitLeft.f = buttonFuncUnitLeft
+  mb.layout.UnitRight.f = buttonFuncUnitRight
+  mb.layout.ActionLeft.f = buttonFuncActionLeft
+  mb.layout.ActionRight.f = buttonFuncActionRight
   mb.game = game
   return &mb, nil
 }
@@ -203,23 +284,19 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
-  if found,event := group.FindEvent('w'); found && event.Type == gin.Press {
-    m.state.Actions.scroll_target++
-  }
-  if found,event := group.FindEvent('e'); found && event.Type == gin.Press {
-    m.state.Actions.scroll_target--
-  }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
-    x := m.region.X
-    x2 := m.region.X + m.region.Dx
-    y := m.region.Y
-    y2 := m.region.Y + m.region.Dy
-    if m.mx >= x && m.mx < x2 && m.my >= y && m.my < y2 {
-      return true
+  }
+
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    for _, button := range m.buttons {
+      if button.handleClick(m.mx, m.my, m) {
+        return true
+      }
     }
   }
+
   return false
 }
 
@@ -242,10 +319,9 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.Vertex2i(region.X + region.Dx, region.Y)
   gl.End()
 
-  m.layout.UnitLeft.RenderAt(region.X, region.Y, m.mx, m.my)
-  m.layout.UnitRight.RenderAt(region.X, region.Y, m.mx, m.my)
-  m.layout.ActionLeft.RenderAt(region.X, region.Y, m.mx, m.my)
-  m.layout.ActionRight.RenderAt(region.X, region.Y, m.mx, m.my)
+  for _, button := range m.buttons {
+    button.RenderAt(region.X, region.Y, m.mx, m.my)
+  }
 
   if m.ent != nil {
     gl.Color4d(1, 1, 1, 1)

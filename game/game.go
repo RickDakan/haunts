@@ -104,6 +104,25 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (g *Game) SetCurrentAction(action Action) {
+  // the action should be one that belongs to the current entity, if not then
+  // we need to bail out immediately
+  if g.selected_ent == nil {
+    base.Warn().Printf("Tried to SetCurrentAction() without a selected entity.")
+    return
+  }
+  if action != nil {
+    valid := false
+    for _, a := range g.selected_ent.Actions {
+      if a == action {
+        valid = true
+        break
+      }
+    }
+    if !valid {
+      base.Warn().Printf("Tried to SetCurrentAction() with an action that did not belong to the selected entity.")
+      return
+    }
+  }
   if g.current_action != nil {
     g.current_action.Cancel()
   }
@@ -118,11 +137,6 @@ func (g *Game) SetCurrentAction(action Action) {
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.VerticalTable.Respond(ui, group) {
-    return true
-  }
-
-  if found,event := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found && event.Type == gin.Press {
-    gp.game.OnRound()
     return true
   }
 
