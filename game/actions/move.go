@@ -58,7 +58,7 @@ type MoveDef struct {
   Texture  texture.Object
 }
 func (a *Move) AP() int {
-  return 0
+  return a.cost
 }
 func (a *Move) String() string {
   return a.Name
