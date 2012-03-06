@@ -122,6 +122,13 @@ type mainBarState struct {
     scroll_pos    float64
 
     selected Action
+
+    // The clicked action was clicked in the Ui but hasn't been set as the
+    // selected action yet because we can't SetCurrentAction during event
+    // handling.
+    clicked Action
+
+    space float64
   }
   Conditions struct {
     scroll_pos float64
@@ -316,6 +323,16 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
       m.state.Actions.scroll_target = min
     }
 
+    if m.state.Actions.clicked != nil {
+      if m.state.Actions.selected != m.state.Actions.clicked {
+        if m.state.Actions.clicked.Preppable(m.ent, m.game) {
+          m.state.Actions.clicked.Prep(m.ent, m.game)
+          m.game.SetCurrentAction(m.state.Actions.clicked)
+          m.state.Actions.clicked = nil
+        }
+      }
+    }
+
     // We similarly need to scroll through conditions
     c := m.layout.Conditions
     d := base.GetDictionary(int(c.Size))
@@ -347,6 +364,24 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
     for _, button := range m.buttons {
       if button.handleClick(m.mx, m.my, m) {
         return true
+      }
+    }
+    if m.ent != nil {
+      x := int(m.layout.Actions.X)
+      y := int(m.layout.Actions.Y)
+      x2 := int(m.layout.Actions.X + m.layout.Actions.Width)
+      y2 := int(m.layout.Actions.Y + m.layout.Actions.Icon_size)
+      if m.mx >= x && m.my >= y && m.mx < x2 && m.my < y2 {
+        pos := float64(m.mx - x) / (m.layout.Actions.Icon_size + m.state.Actions.space)
+        pos += m.state.Actions.scroll_pos
+        p := int(pos)
+        frac := pos - float64(p)
+        // Make sure that the click didn't land in the space between two icons
+        if frac < m.layout.Actions.Icon_size / (m.layout.Actions.Icon_size + m.state.Actions.space) {
+          if p >= 0 && p < len(m.ent.Actions) {
+            m.state.Actions.clicked = m.ent.Actions[p]
+          }
+        }
       }
     }
   }
@@ -439,6 +474,7 @@ func (m *MainBar) Draw(region gui.Region) {
       spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)
       spacing = m.layout.Actions.Width - spacing
       spacing /= float64(m.layout.Actions.Count - 1)
+      m.state.Actions.space = spacing
       s := m.layout.Actions.Icon_size
       num_actions := len(m.ent.Actions)
       xpos := m.layout.Actions.X
@@ -509,26 +545,26 @@ func (m *MainBar) Draw(region gui.Region) {
         d.RenderString(str, x, y, 0, d.MaxHeight(), gui.Center)
       }
     }
-  }
 
-  {
-    gl.Color4d(1, 1, 1, 1)
-    c := m.layout.Conditions
-    d := base.GetDictionary(int(c.Size))
-    ypos := c.Height + c.Y + m.state.Conditions.scroll_pos
-    var r gui.Region
-    r.X = int(c.X)
-    r.Y = int(c.Y)
-    r.Dx = int(c.Width)
-    r.Dy = int(c.Height)
-    r.PushClipPlanes()
+    {
+      gl.Color4d(1, 1, 1, 1)
+      c := m.layout.Conditions
+      d := base.GetDictionary(int(c.Size))
+      ypos := c.Height + c.Y + m.state.Conditions.scroll_pos
+      var r gui.Region
+      r.X = int(c.X)
+      r.Y = int(c.Y)
+      r.Dx = int(c.Width)
+      r.Dy = int(c.Height)
+      r.PushClipPlanes()
 
-    for _,s := range m.ent.Stats.ConditionNames() {
-      d.RenderString(s, c.X + c.Width / 2, ypos - float64(d.MaxHeight()), 0, d.MaxHeight(), gui.Center)
-      ypos -= float64(d.MaxHeight())
+      for _,s := range m.ent.Stats.ConditionNames() {
+        d.RenderString(s, c.X + c.Width / 2, ypos - float64(d.MaxHeight()), 0, d.MaxHeight(), gui.Center)
+        ypos -= float64(d.MaxHeight())
+      }
+
+      r.PopClipPlanes()
     }
-
-    r.PopClipPlanes()
   }
 }
 
