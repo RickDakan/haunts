@@ -238,7 +238,6 @@ func main() {
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
-  base.GetDictionary(35)
   render.Queue(func() {
     ui.Draw()
   })
