@@ -2,6 +2,7 @@
   "profile"      : "alt+p",
   "zoom"         : "r",
   "drag"         : "r",
+  "flip"         : "f",
   "rotate left"  : "w",
   "rotate right" : "e",
   "load"         : "gui+l",

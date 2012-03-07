@@ -4,6 +4,7 @@ import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
 )
 
 type WallPanel struct {
@@ -62,6 +63,12 @@ func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
 
 func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
+    return true
+  }
+  if found,event := group.FindEvent(base.GetDefaultKeyMap()["flip"].Id()); found && event.Type == gin.Press {
+    if w.viewer.Temp.WallTexture != nil {
+      w.viewer.Temp.WallTexture.Flip = !w.viewer.Temp.WallTexture.Flip
+    }
     return true
   }
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
