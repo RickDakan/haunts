@@ -84,13 +84,14 @@ func draggingAndZooming(dz draggerZoomer) {
     return
   }
 
-  if key_map["zoom"].IsDown() != zooming {
-    zooming = !zooming
-  }
+  zooming = key_map["zoom"].IsDown()
   if zooming {
     zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
     dz.Zoom(zoom / 100)
   }
+
+  dz.Zoom(key_map["zoom in"].FramePressAmt() / 20)
+  dz.Zoom(-key_map["zoom out"].FramePressAmt() / 20)
 
   if key_map["drag"].IsDown() != dragging {
     dragging = !dragging
