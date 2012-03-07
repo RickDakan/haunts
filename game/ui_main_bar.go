@@ -134,7 +134,19 @@ type mainBarState struct {
     scroll_pos float64
     max_scroll float64
   }
+  MouseOver struct {
+    active   bool
+    text     string
+    location mouseOverLocation
+  }
 }
+
+type mouseOverLocation int
+const (
+  mouseOverActions = iota
+  mouseOverConditions
+  mouseOverGear
+)
 
 type MainBar struct {
   layout MainBarLayout
@@ -294,7 +306,26 @@ func (m *MainBar) Rendered() gui.Region {
   return m.region
 }
 
+func pointInsideRect(px, py, x, y, dx, dy int) bool {
+  return px >= x && py >= y && px < x + dx && py < y + dy
+}
+
 func (m *MainBar) Think(g *gui.Gui, t int64) {
+  // Handle condition mouseover
+  m.state.MouseOver.active = false
+  c := m.layout.Conditions
+  if pointInsideRect(m.mx, m.my, int(c.X), int(c.Y), int(c.Width), int(c.Height)) {
+    if m.ent == nil {
+      m.state.MouseOver.active = false
+    } else {
+      pos := c.X + c.Height + m.state.Conditions.scroll_pos - float64(m.my)
+      index := int(pos / base.GetDictionary(int(c.Size)).MaxHeight())
+      if index >= 0 && index < len(m.ent.Stats.ConditionNames()) {
+        m.state.MouseOver.active = true
+        m.state.MouseOver.text = m.ent.Stats.ConditionNames()[index]
+      }
+    }
+  }
   if m.ent != nil {
     // If an action is selected and we can't see it then we scroll just enough
     // so that we can.
@@ -565,6 +596,24 @@ func (m *MainBar) Draw(region gui.Region) {
 
       r.PopClipPlanes()
     }
+  }
+
+  // Mouseover text
+  {
+    var x int
+    switch m.state.MouseOver.location {
+      case mouseOverActions:
+        x = int(m.layout.Actions.X + m.layout.Actions.Width / 2)
+      case mouseOverConditions:
+        x = int(m.layout.Conditions.X + m.layout.Conditions.Width / 2)
+      case mouseOverGear:
+      default:
+        base.Warn().Printf("Got an unknown mouseover location: %d", m.state.MouseOver.location)
+        m.state.MouseOver.active = false
+    }
+    y := m.layout.Background.Data().Dy - 40
+    d := base.GetDictionary(15)
+    d.RenderString(m.state.MouseOver.text, float64(x), float64(y), 0, d.MaxHeight(), gui.Center)
   }
 }
 
