@@ -25,10 +25,11 @@ func MakeWallPanel(room *roomDef, viewer *RoomViewer) *WallPanel {
   wp.VerticalTable = gui.MakeVerticalTable()
   wp.selected_walls = make(map[int]bool)
 
+  tex_table := gui.MakeVerticalTable()
   fnames := GetAllWallTextureNames()
   for i := range fnames {
     name := fnames[i]
-    wp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
+    tex_table.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       wt := MakeWallTexture(name)
       if wt == nil { return }
       wp.viewer.Temp.WallTexture = wt
@@ -38,6 +39,7 @@ func MakeWallPanel(room *roomDef, viewer *RoomViewer) *WallPanel {
       wp.drag_anchor.Y = 0
     }))
   }
+  wp.VerticalTable.AddChild(gui.MakeScrollFrame(tex_table, 300, 700))
 
   return &wp
 }
