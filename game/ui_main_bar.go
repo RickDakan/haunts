@@ -354,7 +354,6 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
     max_scroll := d.MaxHeight() * float64(len(m.ent.Stats.ConditionNames()))
     max_scroll -= m.layout.Conditions.Height
     // This might end up with a max that is negative, but we'll cap it at zero
-    base.Log().Printf("%v %v", m.state.Conditions.scroll_pos, max_scroll)
     if m.state.Conditions.scroll_pos > max_scroll {
       m.state.Conditions.scroll_pos = max_scroll
     }
@@ -607,7 +606,7 @@ func (m *MainBar) Draw(region gui.Region) {
   }
 
   // Mouseover text
-  {
+  if m.state.MouseOver.active {
     var x int
     switch m.state.MouseOver.location {
       case mouseOverActions:
