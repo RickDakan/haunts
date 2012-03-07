@@ -353,7 +353,10 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.PushMatrix()
   defer gl.PopMatrix()
 
-  dz := 7
+  var dz int
+  if room.Wall.Data().Dx > 0 {
+    dz = room.Wall.Data().Dy * (room.Size.Dx + room.Size.Dy) / room.Wall.Data().Dx
+  }
   corner := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
   gl.LoadIdentity()
   gl.MultMatrixf(&floor[0])
