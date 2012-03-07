@@ -1,7 +1,6 @@
 package status
 
 import (
-  "github.com/runningwild/haunts/base"
   "bytes"
   "encoding/gob"
   "encoding/json"
@@ -159,13 +158,11 @@ func (s *Inst) ConditionNames() []string {
 }
 
 func (s *Inst) ApplyCondition(c Condition) {
-  base.Log().Printf("Apply condition %s", c.Name())
   for i := range s.inst.Conditions {
     if s.inst.Conditions[i].Kind() == c.Kind() {
       if s.inst.Conditions[i].Strength() <= c.Strength() {
         s.inst.Conditions[i] = c
       }
-      base.Log().Printf("BAIL")
 
       // Regardless of whether it was displaced or not we don't need to keep
       // checking Conditions.  We can only have one condition of each type
@@ -176,7 +173,6 @@ func (s *Inst) ApplyCondition(c Condition) {
 
   // If we didn't find an existing condition of this kind then we can safely
   // add it.
-      base.Log().Printf("Successfully applied")
   s.inst.Conditions = append(s.inst.Conditions, c)
 }
 

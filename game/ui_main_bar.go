@@ -132,7 +132,6 @@ type mainBarState struct {
   }
   Conditions struct {
     scroll_pos float64
-    max_scroll float64
   }
   MouseOver struct {
     active   bool
@@ -311,21 +310,6 @@ func pointInsideRect(px, py, x, y, dx, dy int) bool {
 }
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
-  // Handle condition mouseover
-  m.state.MouseOver.active = false
-  c := m.layout.Conditions
-  if pointInsideRect(m.mx, m.my, int(c.X), int(c.Y), int(c.Width), int(c.Height)) {
-    if m.ent == nil {
-      m.state.MouseOver.active = false
-    } else {
-      pos := c.X + c.Height + m.state.Conditions.scroll_pos - float64(m.my)
-      index := int(pos / base.GetDictionary(int(c.Size)).MaxHeight())
-      if index >= 0 && index < len(m.ent.Stats.ConditionNames()) {
-        m.state.MouseOver.active = true
-        m.state.MouseOver.text = m.ent.Stats.ConditionNames()[index]
-      }
-    }
-  }
   if m.ent != nil {
     // If an action is selected and we can't see it then we scroll just enough
     // so that we can.
@@ -367,15 +351,18 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
     // We similarly need to scroll through conditions
     c := m.layout.Conditions
     d := base.GetDictionary(int(c.Size))
-    m.state.Conditions.max_scroll = d.MaxHeight() * float64(len(m.ent.Stats.ConditionNames()))
-    m.state.Conditions.max_scroll -= m.layout.Conditions.Height
+    max_scroll := d.MaxHeight() * float64(len(m.ent.Stats.ConditionNames()))
+    max_scroll -= m.layout.Conditions.Height
+    // This might end up with a max that is negative, but we'll cap it at zero
+    base.Log().Printf("%v %v", m.state.Conditions.scroll_pos, max_scroll)
+    if m.state.Conditions.scroll_pos > max_scroll {
+      m.state.Conditions.scroll_pos = max_scroll
+    }
     if m.state.Conditions.scroll_pos < 0 {
       m.state.Conditions.scroll_pos = 0
     }
-    if m.state.Conditions.scroll_pos > m.state.Conditions.max_scroll {
-      m.state.Conditions.scroll_pos = m.state.Conditions.max_scroll
-    }
   } else {
+    m.state.Conditions.scroll_pos = 0
     m.state.Actions.scroll_pos = 0
     m.state.Actions.scroll_target = 0
   }
@@ -383,6 +370,27 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
   // Do a nice scroll motion towards the target position
   m.state.Actions.scroll_pos *= 0.8
   m.state.Actions.scroll_pos += 0.2 * m.state.Actions.scroll_target
+
+
+
+  // Handle mouseover stuff after doing all of the scroll stuff since we don't
+  // want to give a mouseover for something that the mouse isn't over after
+  // scrolling something.
+  m.state.MouseOver.active = false
+  c := m.layout.Conditions
+  if pointInsideRect(m.mx, m.my, int(c.X), int(c.Y), int(c.Width), int(c.Height)) {
+    if m.ent == nil {
+      m.state.MouseOver.active = false
+    } else {
+      pos := c.Y + c.Height + m.state.Conditions.scroll_pos - float64(m.my)
+      index := int(pos / base.GetDictionary(int(c.Size)).MaxHeight())
+      if index >= 0 && index < len(m.ent.Stats.ConditionNames()) {
+        m.state.MouseOver.active = true
+        m.state.MouseOver.text = m.ent.Stats.ConditionNames()[index]
+        m.state.MouseOver.location = mouseOverConditions
+      }
+    }
+  }
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
@@ -577,20 +585,20 @@ func (m *MainBar) Draw(region gui.Region) {
       }
     }
 
+    // Conditions
     {
       gl.Color4d(1, 1, 1, 1)
       c := m.layout.Conditions
       d := base.GetDictionary(int(c.Size))
-      ypos := c.Height + c.Y + m.state.Conditions.scroll_pos
+      ypos := c.Y + c.Height - d.MaxHeight() + m.state.Conditions.scroll_pos
       var r gui.Region
       r.X = int(c.X)
       r.Y = int(c.Y)
       r.Dx = int(c.Width)
       r.Dy = int(c.Height)
       r.PushClipPlanes()
-
       for _,s := range m.ent.Stats.ConditionNames() {
-        d.RenderString(s, c.X + c.Width / 2, ypos - float64(d.MaxHeight()), 0, d.MaxHeight(), gui.Center)
+        d.RenderString(s, c.X + c.Width / 2, ypos, 0, d.MaxHeight(), gui.Center)
         ypos -= float64(d.MaxHeight())
       }
 
