@@ -9,7 +9,7 @@
   "Strength" : 5,
   "Damage"   : 5,
   "Range"    : 7,
-  "Condition": [
+  "Conditions": [
      "Vengeful Curse"
    ]
 }

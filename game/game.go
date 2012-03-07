@@ -28,15 +28,6 @@ func MakeGamePanel() *GamePanel {
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.VerticalTable = gui.MakeVerticalTable()
-
-  var err error
-  gp.main_bar,err = MakeMainBar()
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
-  }
-  gp.VerticalTable.AddChild(gp.viewer)
-  gp.VerticalTable.AddChild(gp.main_bar)
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
@@ -112,13 +103,40 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 
+func (g *Game) SetCurrentAction(action Action) {
+  // the action should be one that belongs to the current entity, if not then
+  // we need to bail out immediately
+  if g.selected_ent == nil {
+    base.Warn().Printf("Tried to SetCurrentAction() without a selected entity.")
+    return
+  }
+  if action != nil {
+    valid := false
+    for _, a := range g.selected_ent.Actions {
+      if a == action {
+        valid = true
+        break
+      }
+    }
+    if !valid {
+      base.Warn().Printf("Tried to SetCurrentAction() with an action that did not belong to the selected entity.")
+      return
+    }
+  }
+  if g.current_action != nil {
+    g.current_action.Cancel()
+  }
+  if action == nil {
+    g.action_state = noAction
+  } else {
+    g.action_state = preppingAction
+  }
+  g.current_action = action
+  g.selected_ent.selected_action = action
+}
+
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.VerticalTable.Respond(ui, group) {
-    return true
-  }
-
-  if found,event := group.FindEvent(base.GetDefaultKeyMap()["finish round"].Id()); found && event.Type == gin.Press {
-    gp.game.OnRound()
     return true
   }
 
@@ -155,9 +173,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         return true
 
       case preppingAction:
-        gp.game.action_state = noAction
-        gp.game.current_action.Cancel()
-        gp.game.current_action = nil
+        gp.game.SetCurrentAction(nil)
         return true
 
       case doingAction:
@@ -196,11 +212,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       if index >= 0 && index < len(gp.game.selected_ent.Actions) {
         action := gp.game.selected_ent.Actions[index]
         if action != gp.game.current_action && action.Prep(gp.game.selected_ent, gp.game) {
-          if gp.game.current_action != nil {
-            gp.game.current_action.Cancel()
-          }
-          gp.game.current_action = action
-          gp.game.action_state = preppingAction
+          gp.game.SetCurrentAction(action)
         }
       }
     }
@@ -220,7 +232,7 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.VerticalTable = gui.MakeVerticalTable()
 
   var err error
-  gp.main_bar,err = MakeMainBar()
+  gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Error().Fatalf("%v", err)
   }

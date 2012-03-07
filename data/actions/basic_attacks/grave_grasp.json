@@ -9,7 +9,7 @@
   "Strength" : 5,
   "Damage"   : 0,
   "Range"    : 1,
-  "Condition": [
+  "Conditions": [
      "Grave Grasp"
    ]
 }

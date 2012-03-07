@@ -62,16 +62,28 @@ const (
 )
 
 type Action interface {
+  // The amount of Ap that this action costs if performed in its current
+  // state.  This method should only be called on Actions that have already
+  // been prepped.
+  AP() int
+
+  // The name that will be displayed to the user to represent this Action.
+  String() string
+
   // Returns a texture that can be used to identify this Action.
   Icon() *texture.Object
 
   // Returns true iff this action can be used as an interrupt.
   Readyable() bool
 
+  // If Preppable returns true then Prep will return true.  Unlike Prep,
+  // however, it does not actually change the state of the Action.
+  Preppable(e *Entity, g *Game) bool
+
   // Called when the user attempts to select the action.  Returns true if the
   // actions can be performed at least minimally, false if the action cannot
   // be performed at all.
-  Prep(*Entity, *Game) bool
+  Prep(e *Entity, g *Game) bool
 
   // Got to have some way for the user to interact with the action.  Returns
   // true if the action has been comitted.  If this action is not being

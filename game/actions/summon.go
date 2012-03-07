@@ -56,14 +56,23 @@ type SummonActionInst struct {
   cx,cy int
   spawn *game.Entity
 }
+func (a *SummonAction) AP() int {
+  return a.Ap
+}
+func (a *SummonAction) String() string {
+  return a.Name
+}
 func (a *SummonAction) Icon() *texture.Object {
   return &a.Texture
 }
 func (a *SummonAction) Readyable() bool {
   return false
 }
+func (a *SummonAction) Preppable(ent *game.Entity, g *game.Game) bool {
+  return ent.Stats.ApCur() >= a.Ap
+}
 func (a *SummonAction) Prep(ent *game.Entity, g *game.Game) bool {
-  if ent.Stats.ApCur() < a.Ap {
+  if !a.Preppable(ent, g) {
     return false
   }
   a.ent = ent

@@ -57,8 +57,11 @@
     }
   },
   "EndTurn": {
-    "X":  2,
-    "Y":  3
+    "Texture": {
+      "Path": "ui/end_turn.png"
+    },
+    "X":  895,
+    "Y":  25
   },
   "UnitLeft": {
     "Texture": {
