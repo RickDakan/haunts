@@ -1,6 +1,5 @@
 {
   "Name": "Fire Buff",
-  "Buff": true,
   "Strength": 3,
   "Kind": "Fire",
   "Time": 5,

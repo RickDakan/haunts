@@ -12,9 +12,6 @@ type Condition interface {
   // Returns the name of this condition as it should be displayed to the user.
   Name() string
 
-  // Returns whether or not this condition is a buff
-  Buff() bool
-
   // Returns this condition's Kind
   Kind() Kind
 
@@ -80,18 +77,16 @@ type basicConditionDef struct {
 
   // On OnRound() this Condition will create a Damage object with this Dynamic
   // object.
-  Dynamic
+  Dynamic Dynamic
 
   // This Condition will modify its target unit by adding every value in Base
   // to the unit's Base stats
-  Base
+  Base Base
 
   // Use Type here instead of Kind so it doesn't overlap with the required
   // method name Kind.  Also Type will be used in the json files so it should
   // be no less obvious what it is.
   Kind Kind
-
-  Buff bool
 
   // The strength of this condition
   Strength int
@@ -103,10 +98,6 @@ type basicConditionDef struct {
 
 func (bc *BasicCondition) Name() string {
   return bc.basicConditionDef.Name
-}
-
-func (bc *BasicCondition) Buff() bool {
-  return bc.basicConditionDef.Buff
 }
 
 func (bc *BasicCondition) Strength() int {
@@ -122,12 +113,12 @@ func (bc *basicConditionDef) ModifyDamage(dmg Damage) Damage {
 }
 
 func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
-  base.Ap_max += bc.Ap_max
-  base.Hp_max += bc.Hp_max
-  base.Sight += bc.Sight
-  base.Attack += bc.Attack
-  base.Corpus += bc.Corpus
-  base.Ego += bc.Ego
+  base.Ap_max += bc.Base.Ap_max
+  base.Hp_max += bc.Base.Hp_max
+  base.Sight += bc.Base.Sight
+  base.Attack += bc.Base.Attack
+  base.Corpus += bc.Base.Corpus
+  base.Ego += bc.Base.Ego
   return base
 }
 

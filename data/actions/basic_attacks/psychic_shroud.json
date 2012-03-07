@@ -9,7 +9,7 @@
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
-  "Condition": [
+  "Conditions": [
      "Psychic Shroud"
    ]
 }
