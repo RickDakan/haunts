@@ -132,7 +132,6 @@ func (g *Game) SetCurrentAction(action Action) {
     g.action_state = preppingAction
   }
   g.current_action = action
-  g.selected_ent.selected_action = action
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {

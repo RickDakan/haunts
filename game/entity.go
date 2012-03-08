@@ -134,8 +134,6 @@ type EntityInst struct {
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
 
-  selected_action Action
-
   Stats status.Inst
 
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when

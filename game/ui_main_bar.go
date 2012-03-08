@@ -167,48 +167,10 @@ func buttonFuncEndTurn(mb *MainBar) {
   mb.game.OnRound()
 }
 func buttonFuncActionLeft(mb *MainBar) {
-  if mb.ent == nil {
-    return
-  }
-  start_index := len(mb.ent.Actions)-1
-  if mb.state.Actions.selected != nil {
-    for i := range mb.ent.Actions {
-      if mb.ent.Actions[i] == mb.state.Actions.selected {
-        start_index = i-1
-        break
-      }
-    }
-  }
-  for i := start_index; i >= 0; i-- {
-    action := mb.ent.Actions[i]
-    if action.Preppable(mb.ent, mb.game) {
-      action.Prep(mb.ent, mb.game)
-      mb.game.SetCurrentAction(action)
-      return
-    }
-  }
+  mb.state.Actions.scroll_target -= float64(mb.layout.Actions.Count)
 }
 func buttonFuncActionRight(mb *MainBar) {
-  if mb.ent == nil {
-    return
-  }
-  start_index := 0
-  if mb.state.Actions.selected != nil {
-    for i := range mb.ent.Actions {
-      if mb.ent.Actions[i] == mb.state.Actions.selected {
-        start_index = i+1
-        break
-      }
-    }
-  }
-  for i := start_index; i < len(mb.ent.Actions); i++ {
-    action := mb.ent.Actions[i]
-    if action.Preppable(mb.ent, mb.game) {
-      action.Prep(mb.ent, mb.game)
-      mb.game.SetCurrentAction(action)
-      return
-    }
-  }
+  mb.state.Actions.scroll_target += float64(mb.layout.Actions.Count)
 }
 func buttonFuncUnitLeft(mb *MainBar) {
   mb.game.SetCurrentAction(nil)
@@ -294,7 +256,6 @@ func (mb *MainBar) SelectEnt(ent *Entity) {
   if mb.ent == nil {
     return
   }
-  mb.state.Actions.selected = mb.ent.selected_action
 }
 
 func (m *MainBar) Expandable() (bool, bool) {
@@ -330,7 +291,7 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
         max = float64(selected_index)
       }
     }
-    m.state.Actions.selected = m.ent.selected_action
+    m.state.Actions.selected = m.game.current_action
     if m.state.Actions.scroll_target > max {
       m.state.Actions.scroll_target = max
     }
@@ -343,9 +304,9 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
         if m.state.Actions.clicked.Preppable(m.ent, m.game) {
           m.state.Actions.clicked.Prep(m.ent, m.game)
           m.game.SetCurrentAction(m.state.Actions.clicked)
-          m.state.Actions.clicked = nil
         }
       }
+      m.state.Actions.clicked = nil
     }
 
     // We similarly need to scroll through conditions
@@ -532,7 +493,7 @@ func (m *MainBar) Draw(region gui.Region) {
       for i,action := range m.ent.Actions {
 
         // Highlight the selected action
-        if action == m.ent.selected_action {
+        if action == m.game.current_action {
           gl.Disable(gl.TEXTURE_2D)
           gl.Color4d(1, 0, 0, 1)
           gl.Begin(gl.QUADS)
