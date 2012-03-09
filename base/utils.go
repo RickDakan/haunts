@@ -4,8 +4,10 @@ import (
   "encoding/gob"
   "encoding/json"
   "image/color"
+  "io"
   "io/ioutil"
   "os"
+  "bytes"
   "path/filepath"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/glop/gui"
@@ -19,6 +21,7 @@ import (
 
 var datadir string
 var logger *log.Logger
+var log_reader io.Reader
 func SetDatadir(_datadir string) {
   datadir = _datadir
   setupLogger()
@@ -40,7 +43,9 @@ func setupLogger() {
     fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
     out = os.Stdout
   }
-  logger = log.New(out, "> ", log.Ltime | log.Lshortfile)
+  choke := bytes.NewBuffer(nil)
+  log_reader = io.TeeReader(choke, out)
+  logger = log.New(choke, "> ", log.Ltime | log.Lshortfile)
 }
 
 // TODO: This probably isn't the best way to do things - different go-routines

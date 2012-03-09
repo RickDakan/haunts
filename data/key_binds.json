@@ -1,5 +1,6 @@
 {
   "profile"      : "alt+p",
+  "console"      : "os+c",
   "zoom"         : "r",
   "zoom in"      : "up",
   "zoom out"     : "down",
