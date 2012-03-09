@@ -222,7 +222,11 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
 func (gp *GamePanel) LoadHouse(name string) {
   gp.VerticalTable = gui.MakeVerticalTable()
-  gp.house = house.MakeHouseFromPath(name)
+  var err error
+  gp.house, err = house.MakeHouseFromPath(name)
+  if err != nil {
+    base.Error().Fatalf("%v", err)
+  }
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
@@ -230,7 +234,6 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.game = makeGame(gp.house, gp.viewer)
   gp.VerticalTable = gui.MakeVerticalTable()
 
-  var err error
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Error().Fatalf("%v", err)
