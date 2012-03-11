@@ -6,6 +6,7 @@ import (
   "bufio"
   "github.com/runningwild/opengl/gl"
   "strings"
+  "unicode"
 )
 
 const maxLines = 25
@@ -20,6 +21,7 @@ type Console struct {
   xscroll float64
 
   input *bufio.Reader
+  cmd []byte
 }
 
 func MakeConsole() *Console {
@@ -69,6 +71,17 @@ func (c *Console) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if found, event := group.FindEvent(gin.Space); found && event.Type == gin.Press {
     c.xscroll = 0
   }
+
+  if group.Events[0].Type == gin.Press {
+    r := rune(group.Events[0].Key.Id())
+    if r < 256 {
+      if gin.In().GetKey(gin.EitherShift).IsDown() {
+        r = unicode.ToUpper(r)
+      }
+      c.cmd = append(c.cmd, byte(r))
+    }
+  }
+
   return group.Focus
 }
 
@@ -116,4 +129,5 @@ func (c *Console) DrawFocused(region gui.Region) {
       y -= d.MaxHeight()
     }
   }
+  d.RenderString(string(c.cmd), c.xscroll, y, 0, d.MaxHeight(), gui.Left)
 }
