@@ -22,6 +22,7 @@ import (
 var datadir string
 var logger *log.Logger
 var log_reader io.Reader
+var log_out *os.File
 func SetDatadir(_datadir string) {
   datadir = _datadir
   setupLogger()
@@ -35,16 +36,15 @@ func setupLogger() {
   // all that really matters is making the log file in the directory.
   os.Mkdir(filepath.Join(datadir, "logs"), 0777)
   logger = nil
-  var out *os.File
   var err error
   name := time.Now().Format("2006-01-02-15-04-05") + ".log"
-  out, err = os.Create(filepath.Join(datadir, "logs", name))
+  log_out, err = os.Create(filepath.Join(datadir, "logs", name))
   if err != nil {
     fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
-    out = os.Stdout
+    log_out = os.Stdout
   }
   choke := bytes.NewBuffer(nil)
-  log_reader = io.TeeReader(choke, out)
+  log_reader = io.TeeReader(choke, log_out)
   logger = log.New(choke, "> ", log.Ltime | log.Lshortfile)
 }
 

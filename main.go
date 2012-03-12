@@ -45,6 +45,7 @@ func loadAllRegistries() {
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
+  house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
   game.RegisterActions()
   status.RegisterAllConditions()
 }
@@ -197,6 +198,7 @@ func main() {
     if r := recover(); r != nil {
       data := debug.Stack()
       base.Error().Printf("PANIC: %s\n", string(data))
+      fmt.Printf("PANIC: %s\n", string(data))
     }
   } ()
   base.Log().Printf("Version %s", Version())

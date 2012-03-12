@@ -41,7 +41,7 @@ type HouseViewer struct {
     Door_room *Room
     Door_info doorInfo
 
-    Spawn *Furniture
+    Spawn SpawnPoint
   }
 }
 
@@ -292,24 +292,27 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     for _, furn := range room.Furniture {
       all_furn = append(all_furn, furn)
     }
-    for _, furns := range hv.house.Floors[current_floor].Spawns {
-      for _, furn := range furns {
-        x := furn.X - rx
-        y := furn.Y - ry
-        if x < 0 || y < 0 || x >= rdx || y >= rdy {
-          continue
-        }
-        furn.X -= rx
-        furn.Y -= ry
-        all_furn = append(all_furn, furn)
-        spawns = append(spawns, furn)
+    var spawn_points []SpawnPoint
+    for _, v := range hv.house.Floors[current_floor].Relics {
+      spawn_points = append(spawn_points, v)
+    }
+    for _, spawn := range spawn_points {
+      furn := spawn.Furniture()
+      x := furn.X - rx
+      y := furn.Y - ry
+      if x < 0 || y < 0 || x >= rdx || y >= rdy {
+        continue
       }
+      furn.X -= rx
+      furn.Y -= ry
+      all_furn = append(all_furn, furn)
+      spawns = append(spawns, furn)
     }
     if hv.Temp.Spawn != nil {
-      hv.Temp.Spawn.X -= rx
-      hv.Temp.Spawn.Y -= ry
-      all_furn = append(all_furn, hv.Temp.Spawn)
-      spawns = append(spawns, hv.Temp.Spawn)
+      hv.Temp.Spawn.Furniture().X -= rx
+      hv.Temp.Spawn.Furniture().Y -= ry
+      all_furn = append(all_furn, hv.Temp.Spawn.Furniture())
+      spawns = append(spawns, hv.Temp.Spawn.Furniture())
     }
     drawFurniture(rx, ry, m_floor, hv.zoom, all_furn, nil, drawables, cstack, hv.Los_tex, los_alpha)
     for i := range spawns {

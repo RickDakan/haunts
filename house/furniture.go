@@ -9,7 +9,7 @@ import (
 
 func MakeFurniture(name string) *Furniture {
   f := Furniture{ Defname: name }
-  f.Load()
+  base.GetObject("furniture", &f)
   return &f
 }
 
@@ -32,10 +32,6 @@ type Furniture struct {
 
   // Index into furnitureDef.Texture_paths
   Rotation int
-}
-
-func (f *Furniture) Load() {
-  base.GetObject("furniture", f)
 }
 
 // Changes the position of this object such that it fits within the specified
