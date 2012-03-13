@@ -730,6 +730,19 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
     gl.Vertex2i(room.Size.Dx, room.Size.Dy)
     gl.Vertex2i(room.Size.Dx, 0)
   gl.End()
+
+  gl.Disable(gl.TEXTURE_2D)
+  gl.Color4f(1, 0, 1, 0.9)
+  gl.Begin(gl.LINES)
+  for i := float32(0); i < float32(room.Size.Dx); i += 1.0 {
+    gl.Vertex2f(i, 0)
+    gl.Vertex2f(i, float32(room.Size.Dy))
+  }
+  for j := float32(0); j < float32(room.Size.Dy); j += 1.0 {
+    gl.Vertex2f(0, j)
+    gl.Vertex2f(float32(room.Size.Dx), j)
+  }
+  gl.End()
 }
 
 func (rv *RoomViewer) drawFloor() {

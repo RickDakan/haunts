@@ -210,18 +210,32 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
+func (f *Floor) allSpawns() []SpawnPoint {
+  var spawns []SpawnPoint
+  for i := range f.Relics {
+    spawns = append(spawns, f.Relics[i])
+  }
+  return spawns
+}
+
 func (f *Floor) roomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
   for _, room := range f.Rooms {
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
-    if x < rx || y < ry || x >= rdx || y >= rdy { continue }
+    if x < rx || y < ry || x >= rx + rdx || y >= ry + rdy { continue }
     for _, furn := range room.Furniture {
       tx := x - rx
       ty := y - ry
       fx,fy := furn.Pos()
       fdx,fdy := furn.Dims()
-      if tx < fx || ty < fy || tx >= fdx || ty >= fdy { continue }
+      if tx < fx || ty < fy || tx >= fx + fdx || ty >= fy + fdy { continue }
       return room.roomDef, furn.furnitureDef
+    }
+    for _, spawn := range f.allSpawns() {
+      sx,sy := spawn.Furniture().Pos()
+      if sx == x && sy == y {
+        return room.roomDef, spawn.Furniture().furnitureDef
+      }
     }
     return room.roomDef, nil
   }
@@ -294,7 +308,6 @@ type houseDataTab struct {
 
   name       *gui.TextEditLine
   num_floors *gui.ComboBox
-  theme      *gui.ComboBox
 
   house  *HouseDef
   viewer *HouseViewer
@@ -314,12 +327,10 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   hdt.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)
   num_floors_options := []string{ "1 Floor", "2 Floors", "3 Floors", "4 Floors" }
   hdt.num_floors = gui.MakeComboTextBox(num_floors_options, 300)
-  hdt.theme = gui.MakeComboTextBox(tags.Themes, 300)
 
   hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
-  hdt.VerticalTable.AddChild(hdt.theme)
-
+  
   names := GetAllRoomNames()
   for _,name := range names {
     n := name
@@ -401,7 +412,6 @@ type houseDoorTab struct {
   *gui.VerticalTable
 
   num_floors *gui.ComboBox
-  theme      *gui.ComboBox
 
   house  *HouseDef
   viewer *HouseViewer
@@ -483,13 +493,10 @@ type houseRelicsTab struct {
   *gui.VerticalTable
 
   num_floors *gui.ComboBox
-  theme      *gui.ComboBox
+  spawn_name *gui.TextLine
 
   house  *HouseDef
   viewer *HouseViewer
-
-  // Distance from the mouse to the center of the object, in board coordinates
-  drag_anchor struct{ x,y float32 }
 
   // Which floor we are viewing and editing
   current_floor int
@@ -500,14 +507,57 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   hdt.house = house
   hdt.viewer = viewer
 
-  hdt.VerticalTable.AddChild(gui.MakeButton("standard", "name", 300, 1, 1, 1, 1, func(int64) {
-      hdt.viewer.Temp.Spawn = MakeRelic("foo relic")
-    }))
+  hdt.VerticalTable.AddChild(gui.MakeTextLine("standard", "Spawns", 300, 1, 1, 1, 1))
+  hdt.spawn_name = gui.MakeTextLine("standard", "", 300, 1, 1, 1, 1)
+  hdt.VerticalTable.AddChild(hdt.spawn_name)
+
+  for _, spawn_name := range GetAllRelicNames() {
+    name := spawn_name
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+        hdt.viewer.Temp.Spawn = MakeRelic(name)
+      }))
+  }
 
   return &hdt
 }
 func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
+  defer hdt.VerticalTable.Think(ui, t)
+  rbx,rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
+  bx := roundDown(rbx)
+  by := roundDown(rby)
+  if hdt.viewer.Temp.Spawn != nil {
+    var name string
+    switch s := hdt.viewer.Temp.Spawn.(type) {
+    case *Relic:
+      name = s.Defname
+    default:
+      name = "Unknown Spawn Type"
+    }
+    hdt.spawn_name.SetText(name)
+  } else {
+    set := false
+    for _, r := range hdt.house.Floors[0].Relics {
+      x,y := r.Furniture().Pos()
+      if x == bx && y == by {
+        hdt.spawn_name.SetText(r.Defname)
+        set = true
+        break
+      }
+    }
+    if !set {
+      hdt.spawn_name.SetText("")
+    }
+  }
 }
+
+// Rounds a float32 down, instead of towards zero
+func roundDown(f float32) int {
+  if f >= 0 {
+    return int(f)
+  }
+  return int(f-1)
+}
+
 func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if hdt.VerticalTable.Respond(ui, group) {
     return true
@@ -519,10 +569,16 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   cursor := group.Events[0].Key.Cursor()
+  var rbx, rby float32
+  var bx, by int
+  if cursor != nil {
+    rbx, rby = hdt.viewer.WindowToBoard(cursor.Point())
+    bx = roundDown(rbx)
+    by = roundDown(rby)
+  } 
   if cursor != nil && hdt.viewer.Temp.Spawn != nil {
-    bx,by := hdt.viewer.WindowToBoard(cursor.Point())
-    hdt.viewer.Temp.Spawn.Furniture().X = int(bx)
-    hdt.viewer.Temp.Spawn.Furniture().Y = int(by)
+    hdt.viewer.Temp.Spawn.Furniture().X = bx
+    hdt.viewer.Temp.Spawn.Furniture().Y = by
   }
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
@@ -535,6 +591,19 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
           floor.Relics = append(floor.Relics, relic)
         }
         hdt.viewer.Temp.Spawn = nil
+      }
+    } else {
+      base.Log().Printf("bx,by: %d,%d", bx, by)
+      for i, sp := range floor.Relics {
+        x,y := sp.Furniture().Pos()
+      base.Log().Printf("fx,fy: %d,%d", x, y)
+        if bx == x && by == y {
+          n := len(floor.Relics)
+          floor.Relics[i] = floor.Relics[n-1]
+          floor.Relics = floor.Relics[0:n-1]
+          hdt.viewer.Temp.Spawn = sp
+          break
+        }
       }
     }
   }
