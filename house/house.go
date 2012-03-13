@@ -89,11 +89,32 @@ func (r *Room) Pos() (x,y int) {
 type SpawnPoint interface {
   Furniture() *Furniture
 }
+func getSpawnPointDefName(sp SpawnPoint) string {
+  switch s := sp.(type) {
+  case *Relic:
+    return s.Defname
+  case *Clue:
+    return s.Defname
+  }
+  return "Unknown Spawn Type"
+}
 
 type Floor struct {
   Rooms []*Room  `registry:"loadfrom-rooms"`
 
   Relics  []*Relic
+  Clues   []*Clue
+}
+
+func (f *Floor) allSpawns() []SpawnPoint {
+  var sps []SpawnPoint
+  for _, sp := range f.Relics {
+    sps = append(sps, sp)
+  }
+  for _, sp := range f.Clues {
+    sps = append(sps, sp)
+  }
+  return sps
 }
 
 func (f *Floor) canAddRoom(add *Room) bool {
@@ -208,14 +229,6 @@ func (f *Floor) removeInvalidDoors() {
       return f.findMatchingDoor(room, a.(*Door)) != nil
     }).([]*Door)
   }
-}
-
-func (f *Floor) allSpawns() []SpawnPoint {
-  var spawns []SpawnPoint
-  for i := range f.Relics {
-    spawns = append(spawns, f.Relics[i])
-  }
-  return spawns
 }
 
 func (f *Floor) roomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
@@ -518,28 +531,29 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
       }))
   }
 
+  for _, spawn_name := range GetAllClueNames() {
+    name := spawn_name
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+        hdt.viewer.Temp.Spawn = MakeClue(name)
+      }))
+  }
+
   return &hdt
 }
+
 func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   defer hdt.VerticalTable.Think(ui, t)
   rbx,rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   bx := roundDown(rbx)
   by := roundDown(rby)
   if hdt.viewer.Temp.Spawn != nil {
-    var name string
-    switch s := hdt.viewer.Temp.Spawn.(type) {
-    case *Relic:
-      name = s.Defname
-    default:
-      name = "Unknown Spawn Type"
-    }
-    hdt.spawn_name.SetText(name)
+    hdt.spawn_name.SetText(getSpawnPointDefName(hdt.viewer.Temp.Spawn))
   } else {
     set := false
-    for _, r := range hdt.house.Floors[0].Relics {
-      x,y := r.Furniture().Pos()
+    for _, sp := range hdt.house.Floors[0].allSpawns() {
+      x,y := sp.Furniture().Pos()
       if x == bx && y == by {
-        hdt.spawn_name.SetText(r.Defname)
+        hdt.spawn_name.SetText(getSpawnPointDefName(sp))
         set = true
         break
       }
@@ -587,8 +601,13 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       y := hdt.viewer.Temp.Spawn.Furniture().Y
       room_at, furn_at := floor.roomAndFurnAtPos(x, y)
       if room_at != nil && furn_at == nil {
-        if relic, ok := hdt.viewer.Temp.Spawn.(*Relic); ok {
-          floor.Relics = append(floor.Relics, relic)
+        switch s := hdt.viewer.Temp.Spawn.(type) {
+        case *Relic:
+          floor.Relics = append(floor.Relics, s)
+        case *Clue:
+          floor.Clues = append(floor.Clues, s)
+        default:
+          base.Error().Printf("Tried to place unknown spawn type '%t'", s)
         }
         hdt.viewer.Temp.Spawn = nil
       }
@@ -607,28 +626,6 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }
     }
   }
-  //     other_room, other_door := floor.findRoomForDoor(hdt.viewer.Temp.Door_room, hdt.viewer.Temp.Door_info.Door)
-  //     if other_room != nil {
-  //       other_room.Doors = append(other_room.Doors, other_door)
-  //       hdt.viewer.Temp.Door_room.Doors = append(hdt.viewer.Temp.Door_room.Doors, hdt.viewer.Temp.Door_info.Door)
-  //       hdt.viewer.Temp.Door_room = nil
-  //       hdt.viewer.Temp.Door_info.Door = nil
-  //     }
-  //   } else {
-  //     bx,by := hdt.viewer.WindowToBoard(cursor.Point())
-  //     r,d := hdt.viewer.FindClosestExistingDoor(bx, by)
-  //     if r != nil {
-  //       r.Doors = algorithm.Choose(r.Doors, func(a interface{}) bool {
-  //         return a.(*Door) != d
-  //       }).([]*Door)
-  //       hdt.viewer.Temp.Door_room = r
-  //       hdt.viewer.Temp.Door_info.Door = d
-  //       floor.removeInvalidDoors()
-  //     }
-  //   }
-  //   return true
-  // }
-
   return false
 }
 func (hdt *houseRelicsTab) Collapse() {}

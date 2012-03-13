@@ -42,6 +42,46 @@ func (s *Relic) Furniture() *Furniture {
   return s.Pointer
 }
 
+
+func MakeClue(name string) *Clue {
+  c := Clue{ Defname: name }
+  base.GetObject("clue", &c)
+  return &c
+}
+
+func GetAllClueNames() []string {
+  return base.GetAllNamesInRegistry("clue")
+}
+
+func LoadAllCluesInDir(dir string) {
+  base.RemoveRegistry("clue")
+  base.RegisterRegistry("clue", make(map[string]*clueDef))
+  base.RegisterAllObjectsInDir("clue", dir, ".json", "json")
+}
+
+type clueDef struct {
+  Name  string
+  Text  string
+  Image texture.Object
+}
+
+type Clue struct {
+  Defname string
+  *clueDef
+
+  // The pointer is used in the editor, but also stores the position of the
+  // spawn point for use when the game is actually running.
+  Pointer *Furniture  `registry:"loadfrom-furniture"`
+}
+func (s *Clue) Furniture() *Furniture {
+  if s.Pointer == nil {
+    s.Pointer = MakeFurniture("SpawnClue")
+  }
+  return s.Pointer
+}
+
+
+
 type spawnError struct {
   msg string
 }

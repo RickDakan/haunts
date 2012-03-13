@@ -292,10 +292,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     for _, furn := range room.Furniture {
       all_furn = append(all_furn, furn)
     }
-    var spawn_points []SpawnPoint
-    for _, v := range hv.house.Floors[current_floor].Relics {
-      spawn_points = append(spawn_points, v)
-    }
+    spawn_points := hv.house.Floors[current_floor].allSpawns()
     for _, spawn := range spawn_points {
       furn := spawn.Furniture()
       x := furn.X - rx

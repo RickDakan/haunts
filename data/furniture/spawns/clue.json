@@ -1,11 +1,11 @@
 {
-  "Name": "SpawnRelic",
+  "Name": "SpawnClue",
   "Orientations" : [
     {
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "furniture/spawns/pointer.png"
+        "Path": "furniture/spawns/clue.png"
       }
     }
   ],
