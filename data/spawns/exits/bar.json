@@ -1,0 +1,7 @@
+{
+  "Name": "bar exit",
+  "Text": "This is a sample exit text.",
+  "Image": {
+    "Path": "path/goes/here"
+  }
+}

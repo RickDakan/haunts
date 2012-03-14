@@ -95,6 +95,12 @@ func getSpawnPointDefName(sp SpawnPoint) string {
     return s.Defname
   case *Clue:
     return s.Defname
+  case *Exit:
+    return s.Defname
+  case *Explorer:
+    return s.Defname
+  case *Haunt:
+    return s.Defname
   }
   return "Unknown Spawn Type"
 }
@@ -102,8 +108,11 @@ func getSpawnPointDefName(sp SpawnPoint) string {
 type Floor struct {
   Rooms []*Room  `registry:"loadfrom-rooms"`
 
-  Relics  []*Relic
-  Clues   []*Clue
+  Relics    []*Relic
+  Clues     []*Clue
+  Exits     []*Exit
+  Explorers []*Explorer
+  Haunts    []*Haunt
 }
 
 func (f *Floor) allSpawns() []SpawnPoint {
@@ -112,6 +121,15 @@ func (f *Floor) allSpawns() []SpawnPoint {
     sps = append(sps, sp)
   }
   for _, sp := range f.Clues {
+    sps = append(sps, sp)
+  }
+  for _, sp := range f.Exits {
+    sps = append(sps, sp)
+  }
+  for _, sp := range f.Explorers {
+    sps = append(sps, sp)
+  }
+  for _, sp := range f.Haunts {
     sps = append(sps, sp)
   }
   return sps
@@ -528,6 +546,10 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
     name := spawn_name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
         hdt.viewer.Temp.Spawn = MakeRelic(name)
+        // Pushes it way off screen - as soon as the mouse is moved it will
+        // move to the mouse, and since the mouse will be off the map at the
+        // time it will look fine.
+        hdt.viewer.Temp.Spawn.Furniture().X = 100000
       }))
   }
 
@@ -535,6 +557,31 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
     name := spawn_name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
         hdt.viewer.Temp.Spawn = MakeClue(name)
+        hdt.viewer.Temp.Spawn.Furniture().X = 100000
+      }))
+  }
+
+  for _, spawn_name := range GetAllExitNames() {
+    name := spawn_name
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+        hdt.viewer.Temp.Spawn = MakeExit(name)
+        hdt.viewer.Temp.Spawn.Furniture().X = 100000
+      }))
+  }
+
+  for _, spawn_name := range GetAllExplorerNames() {
+    name := spawn_name
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+        hdt.viewer.Temp.Spawn = MakeExplorer(name)
+        hdt.viewer.Temp.Spawn.Furniture().X = 100000
+      }))
+  }
+
+  for _, spawn_name := range GetAllHauntNames() {
+    name := spawn_name
+    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+        hdt.viewer.Temp.Spawn = MakeHaunt(name)
+        hdt.viewer.Temp.Spawn.Furniture().X = 100000
       }))
   }
 
@@ -606,16 +653,20 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
           floor.Relics = append(floor.Relics, s)
         case *Clue:
           floor.Clues = append(floor.Clues, s)
+        case *Exit:
+          floor.Exits = append(floor.Exits, s)
+        case *Explorer:
+          floor.Explorers = append(floor.Explorers, s)
+        case *Haunt:
+          floor.Haunts = append(floor.Haunts, s)
         default:
           base.Error().Printf("Tried to place unknown spawn type '%t'", s)
         }
         hdt.viewer.Temp.Spawn = nil
       }
     } else {
-      base.Log().Printf("bx,by: %d,%d", bx, by)
       for i, sp := range floor.Relics {
         x,y := sp.Furniture().Pos()
-      base.Log().Printf("fx,fy: %d,%d", x, y)
         if bx == x && by == y {
           n := len(floor.Relics)
           floor.Relics[i] = floor.Relics[n-1]

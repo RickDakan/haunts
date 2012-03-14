@@ -5,6 +5,7 @@ import (
   "github.com/runningwild/haunts/texture"
 )
 
+// RELICS ********************************************************************
 func MakeRelic(name string) *Relic {
   r := Relic{ Defname: name }
   base.GetObject("relic", &r)
@@ -43,6 +44,8 @@ func (s *Relic) Furniture() *Furniture {
 }
 
 
+
+// CLUES *********************************************************************
 func MakeClue(name string) *Clue {
   c := Clue{ Defname: name }
   base.GetObject("clue", &c)
@@ -82,6 +85,126 @@ func (s *Clue) Furniture() *Furniture {
 
 
 
+// EXITS *********************************************************************
+func MakeExit(name string) *Exit {
+  c := Exit{ Defname: name }
+  base.GetObject("exit", &c)
+  return &c
+}
+
+func GetAllExitNames() []string {
+  return base.GetAllNamesInRegistry("exit")
+}
+
+func LoadAllExitsInDir(dir string) {
+  base.RemoveRegistry("exit")
+  base.RegisterRegistry("exit", make(map[string]*exitDef))
+  base.RegisterAllObjectsInDir("exit", dir, ".json", "json")
+}
+
+type exitDef struct {
+  Name  string
+  Text  string
+  Image texture.Object
+}
+
+type Exit struct {
+  Defname string
+  *exitDef
+
+  // The pointer is used in the editor, but also stores the position of the
+  // spawn point for use when the game is actually running.
+  Pointer *Furniture  `registry:"loadfrom-furniture"`
+}
+func (s *Exit) Furniture() *Furniture {
+  if s.Pointer == nil {
+    s.Pointer = MakeFurniture("SpawnExit")
+  }
+  return s.Pointer
+}
+
+
+
+// EXPLORERS *****************************************************************
+func MakeExplorer(name string) *Explorer {
+  c := Explorer{ Defname: name }
+  base.GetObject("explorer", &c)
+  return &c
+}
+
+func GetAllExplorerNames() []string {
+  return base.GetAllNamesInRegistry("explorer")
+}
+
+func LoadAllExplorersInDir(dir string) {
+  base.RemoveRegistry("explorer")
+  base.RegisterRegistry("explorer", make(map[string]*explorerDef))
+  base.RegisterAllObjectsInDir("explorer", dir, ".json", "json")
+}
+
+type explorerDef struct {
+  Name  string
+  Text  string
+  Image texture.Object
+}
+
+type Explorer struct {
+  Defname string
+  *explorerDef
+
+  // The pointer is used in the editor, but also stores the position of the
+  // spawn point for use when the game is actually running.
+  Pointer *Furniture  `registry:"loadfrom-furniture"`
+}
+func (s *Explorer) Furniture() *Furniture {
+  if s.Pointer == nil {
+    s.Pointer = MakeFurniture("SpawnExplorer")
+  }
+  return s.Pointer
+}
+
+
+
+// HAUNTS ********************************************************************
+func MakeHaunt(name string) *Haunt {
+  c := Haunt{ Defname: name }
+  base.GetObject("haunt", &c)
+  return &c
+}
+
+func GetAllHauntNames() []string {
+  return base.GetAllNamesInRegistry("haunt")
+}
+
+func LoadAllHauntsInDir(dir string) {
+  base.RemoveRegistry("haunt")
+  base.RegisterRegistry("haunt", make(map[string]*hauntDef))
+  base.RegisterAllObjectsInDir("haunt", dir, ".json", "json")
+}
+
+type hauntDef struct {
+  Name  string
+  Text  string
+  Image texture.Object
+}
+
+type Haunt struct {
+  Defname string
+  *hauntDef
+
+  // The pointer is used in the editor, but also stores the position of the
+  // spawn point for use when the game is actually running.
+  Pointer *Furniture  `registry:"loadfrom-furniture"`
+}
+func (s *Haunt) Furniture() *Furniture {
+  if s.Pointer == nil {
+    s.Pointer = MakeFurniture("SpawnHaunt")
+  }
+  return s.Pointer
+}
+
+
+
 type spawnError struct {
   msg string
 }
@@ -89,16 +212,16 @@ func (se *spawnError) Error() string {
   return se.msg
 }
 
-func verifyRelicSpawns(h *HouseDef) error {
-  total := 0
-  for i := range h.Floors {
-    total += len(h.Floors[i].Relics)
-  }
-  if total < 5 {
-    return &spawnError{ "House needs at least five relic spawn points." }
-  }
-  return nil
-}
+// func verifyRelicSpawns(h *HouseDef) error {
+//   total := 0
+//   for i := range h.Floors {
+//     total += len(h.Floors[i].Relics)
+//   }
+//   if total < 5 {
+//     return &spawnError{ "House needs at least five relic spawn points." }
+//   }
+//   return nil
+// }
 
 // func verifyPlayerSpawns(h *HouseDef) error {
 //   total := 0

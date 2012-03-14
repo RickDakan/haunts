@@ -47,6 +47,9 @@ func loadAllRegistries() {
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
   house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
   house.LoadAllCluesInDir(filepath.Join(datadir, "spawns", "clues"))
+  house.LoadAllExitsInDir(filepath.Join(datadir, "spawns", "exits"))
+  house.LoadAllExplorersInDir(filepath.Join(datadir, "spawns", "explorers"))
+  house.LoadAllHauntsInDir(filepath.Join(datadir, "spawns", "haunts"))
   game.RegisterActions()
   status.RegisterAllConditions()
 }
