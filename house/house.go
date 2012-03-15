@@ -308,6 +308,10 @@ func (h *HouseDef) Normalize() {
       h.Floors[i].Rooms[j].X -= minx - 1
       h.Floors[i].Rooms[j].Y -= miny - 1
     }
+    for _, sp := range h.Floors[0].allSpawns() {
+      sp.Furniture().X -= minx - 1
+      sp.Furniture().Y -= miny - 1
+    }
   }
 }
 

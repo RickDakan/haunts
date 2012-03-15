@@ -15,7 +15,6 @@ type GamePanel struct {
   viewer *house.HouseViewer
 
   // Only active on turn == 0
-  anchor *gui.AnchorBox
   explorer_setup *explorerSetup
 
   // Only active for turns >= 2
@@ -36,6 +35,19 @@ func MakeGamePanel() *GamePanel {
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  switch gp.game.Turn {
+  case 0:
+  case 1:
+    if gp.explorer_setup != nil {
+      gp.AnchorBox.RemoveChild(gp.explorer_setup)
+      gp.explorer_setup = nil
+      gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
+      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+    }
+
+  case 2:
+  default:
+  }
   gp.main_bar.SelectEnt(gp.game.selected_ent)
   gp.AnchorBox.Think(ui, t)
   if gp.last_think == 0 {
@@ -247,13 +259,8 @@ func (gp *GamePanel) LoadHouse(name string) {
   if err != nil {
     base.Error().Fatalf("%v", err)
   }
-  gp.anchor = gui.MakeAnchorBox(gui.Dims{1024,700})
-  gp.anchor.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
 
-  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
-  gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
   gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
-  // gp.VerticalTable.AddChild(gp.anchor)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {
