@@ -220,6 +220,8 @@ func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
 
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
+  gl.Color4d(1, 1, 1, 1)
+  gl.Enable(gl.TEXTURE_2D)
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
     gl.Begin(gl.QUADS)

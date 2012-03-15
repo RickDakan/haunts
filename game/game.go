@@ -9,11 +9,16 @@ import (
 )
 
 type GamePanel struct {
-  *gui.VerticalTable
+  *gui.AnchorBox
 
   house  *house.HouseDef
   viewer *house.HouseViewer
 
+  // Only active on turn == 0
+  anchor *gui.AnchorBox
+  explorer_setup *explorerSetup
+
+  // Only active for turns >= 2
   main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
@@ -27,12 +32,12 @@ func MakeGamePanel() *GamePanel {
   var gp GamePanel
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.VerticalTable = gui.MakeVerticalTable()
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   gp.main_bar.SelectEnt(gp.game.selected_ent)
-  gp.VerticalTable.Think(ui, t)
+  gp.AnchorBox.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t
   }
@@ -43,7 +48,7 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 }
 
 func (gp *GamePanel) Draw(region gui.Region) {
-  gp.VerticalTable.Draw(region)
+  gp.AnchorBox.Draw(region)
 
   // Do heads-up stuff
   region.PushClipPlanes()
@@ -135,7 +140,7 @@ func (g *Game) SetCurrentAction(action Action) {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if gp.VerticalTable.Respond(ui, group) {
+  if gp.AnchorBox.Respond(ui, group) {
     return true
   }
 
@@ -221,7 +226,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (gp *GamePanel) LoadHouse(name string) {
-  gp.VerticalTable = gui.MakeVerticalTable()
   var err error
   gp.house, err = house.MakeHouseFromPath(name)
   if err != nil {
@@ -232,14 +236,24 @@ func (gp *GamePanel) LoadHouse(name string) {
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
-  gp.VerticalTable = gui.MakeVerticalTable()
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Error().Fatalf("%v", err)
   }
-  gp.VerticalTable.AddChild(gp.viewer)
-  gp.VerticalTable.AddChild(gp.main_bar)
+
+  gp.explorer_setup,err = MakeExplorerSetupBar(gp.game)
+  if err != nil {
+    base.Error().Fatalf("%v", err)
+  }
+  gp.anchor = gui.MakeAnchorBox(gui.Dims{1024,700})
+  gp.anchor.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
+
+  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
+  gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+  gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
+  // gp.VerticalTable.AddChild(gp.anchor)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {
