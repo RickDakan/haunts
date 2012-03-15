@@ -1,0 +1,20 @@
+{
+  "Name": "Box 200",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/box/box200.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/box/box200.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

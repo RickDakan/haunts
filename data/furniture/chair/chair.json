@@ -5,7 +5,14 @@
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "furniture/chair/chair.png"
+        "Path": "furniture/chair/chair_02_lf.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/chair/chair_02_rf.png"
       }
     }
   ],

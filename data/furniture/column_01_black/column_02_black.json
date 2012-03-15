@@ -1,0 +1,20 @@
+{
+  "Name": "Column 02 Black",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/column_01_black/column_02a.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/column_01_black/column_02a.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}
