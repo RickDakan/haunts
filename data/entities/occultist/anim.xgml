@@ -1342,7 +1342,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">-0.38614749908447266</attribute>
-				<attribute key="ySource" type="double">0.9968465566635132</attribute>
+				<attribute key="ySource" type="double">0.9968464970588684</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">move
@@ -1452,7 +1452,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.5727946162223816</attribute>
-				<attribute key="ySource" type="double">0.7567681670188904</attribute>
+				<attribute key="ySource" type="double">0.7567681074142456</attribute>
 				<attribute key="xTarget" type="double">-0.21959459781646729</attribute>
 			</section>
 			<section name="LabelGraphics">
@@ -1571,7 +1571,7 @@ weight:5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.32205143570899963</attribute>
-				<attribute key="ySource" type="double">-0.03853638097643852</attribute>
+				<attribute key="ySource" type="double">-0.038536377251148224</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">defend
@@ -1608,7 +1608,7 @@ weight:5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.3363843560218811</attribute>
-				<attribute key="ySource" type="double">0.4379113018512726</attribute>
+				<attribute key="ySource" type="double">0.4379112720489502</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">ranged</attribute>
@@ -1749,14 +1749,6 @@ facing:1</attribute>
 				<attribute key="xSource" type="double">0.44807150959968567</attribute>
 				<attribute key="xTarget" type="double">0.7571731805801392</attribute>
 				<attribute key="yTarget" type="double">0.013043741695582867</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">0</attribute>
-			<attribute key="target" type="int">31</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 		</section>
 		<section name="edge">
