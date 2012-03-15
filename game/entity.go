@@ -39,6 +39,13 @@ func MakeEntity(name string, g *Game) *Entity {
     ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
   }
 
+  full_los := make([]bool, 256*256)
+  ent.los.grid = make([][]bool, 256)
+  for i := range ent.los.grid {
+    ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
+  }
+
+
   ent.game = g
   return &ent
 }
@@ -94,12 +101,18 @@ type EntityInst struct {
 
   Sprite spriteContainer
 
-  // All positions that can be seen by this entity are stored here.
-  los map[[2]int]bool
+  los struct {
+    // All positions that can be seen by this entity are stored here.
+    grid [][]bool
 
-  // Floor coordinates of the last position los was determined from, so that
-  // we don't need to recalculate it more than we need to as an ent is moving.
-  losx,losy int
+    // Floor coordinates of the last position los was determined from, so that
+    // we don't need to recalculate it more than we need to as an ent is moving.
+    x,y int
+
+    // Range of vision - all true values in grid are contained within these
+    // bounds.
+    minx,miny,maxx,maxy int
+  }
 
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
@@ -134,7 +147,7 @@ func (e *Entity) Game() *Game {
   return e.game
 }
 func (e *Entity) HasLos(x,y int) bool {
-  return e.los[[2]int{x,y}]
+  return e.los.grid[x][y]
 }
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))

@@ -26,6 +26,11 @@ type Game struct {
   // fine for now
   los_tex *house.LosTexture
 
+  // When merging the los from different entities we'll do it here, and we
+  // keep it around to avoid reallocating it every time we need it.
+  los_full_merger []bool
+  los_merger [][]bool
+
   Ents []*Entity  `registry:"loadfrom-entities"`
 
   selected_ent *Entity
@@ -274,15 +279,21 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
   g.house = h
+  g.house.Normalize()
   g.viewer = viewer
 
   g.los_tex = house.MakeLosTexture(256)
-  g.los_tex.Remap(-20, -20)
+  g.los_full_merger = make([]bool, 256*256)
+  g.los_merger = make([][]bool, 256)
+  for i := range g.los_merger {
+    g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
+  }
   for i := range g.Ents {
     if g.Ents[i].Side == g.Side {
       g.DetermineLos(g.Ents[i], true)
     }
   }
+
   g.MergeLos(g.Ents)
 
   g.explorer_selection = gui.MakeVerticalTable()
@@ -330,7 +341,7 @@ func (g *Game) Think(dt int64) {
     }
   }
   g.MergeLos(side_ents)
-  pix,_,_ := g.los_tex.Pix()
+  pix := g.los_tex.Pix()
   amt := dt / 5
   mod := false
   for i := range pix {
@@ -351,7 +362,7 @@ func (g *Game) Think(dt int64) {
     }
   }
   if mod {
-    g.los_tex.Remap(-20, -20)
+    g.los_tex.Remap()
   }
 
   // If any entities are not either ready or dead let's wait until they are
@@ -391,11 +402,11 @@ func (g *Game) Think(dt int64) {
   }
 }
 
-func (g *Game) doLos(dist int, line [][2]int, los map[[2]int]bool) {
-  los[line[0]] = true
+func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var x0,y0,x,y int
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
+  los[x][y] = true
   room = roomAt(g.house.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
@@ -418,61 +429,89 @@ func (g *Game) doLos(dist int, line [][2]int, los map[[2]int]bool) {
     if furn != nil && furn.Blocks_los { return }
     dist -= 1  // or whatever
     if dist <= 0 { return }
-    los[p] = true
+    los[x][y] = true
   }
 }
 
 func (g *Game) MergeLos(ents []*Entity) {
-  merge := make(map[[2]int]bool)
-  for _,ent := range ents {
-    for p := range ent.los {
-      merge[p] = true
-    }
+  for i := range g.los_full_merger {
+    g.los_full_merger[i] = false
   }
-  ltx,lty,ltx2,lty2 := g.los_tex.Region()
-  for i := ltx; i <= ltx2; i++ {
-    for j := lty; j <= lty2; j++ {
-      if merge[[2]int{i,j}] { continue }
-      if g.los_tex.Get(i, j) >= house.LosVisibilityThreshold {
-        g.los_tex.Set(i, j, house.LosVisibilityThreshold - 1)
+  for _,ent := range ents {
+    for i := ent.los.minx; i <= ent.los.maxx; i++ {
+      for j := ent.los.miny; j <= ent.los.maxy; j++ {
+        if ent.los.grid[i][j] {
+          g.los_merger[i][j] = true
+        }
       }
     }
   }
-  for p := range merge {
-    if g.los_tex.Get(p[0], p[1]) < house.LosVisibilityThreshold {
-      g.los_tex.Set(p[0], p[1], house.LosVisibilityThreshold)
+  pix := g.los_tex.Pix()
+  for i := 0; i < len(pix); i++ {
+    for j := 0; j < len(pix); j++ {
+      if g.los_merger[i][j] { continue }
+      if pix[i][j] >= house.LosVisibilityThreshold {
+        pix[i][j] = house.LosVisibilityThreshold - 1
+      }
+    }
+  }
+  for i := range g.los_merger {
+    for j := range g.los_merger[i] {
+      if g.los_merger[i][j] {
+        if pix[i][j] < house.LosVisibilityThreshold {
+          pix[i][j] = house.LosVisibilityThreshold
+        }
+      }
     }
   }
 }
 
 func (g *Game) DetermineLos(ent *Entity, force bool) {
   ex,ey := ent.Pos()
-  if !force && ex == ent.losx && ey == ent.losy { return }
-  ent.los = make(map[[2]int]bool)
-  ent.losx = ex
-  ent.losy = ey
+  if !force && ex == ent.los.x && ey == ent.los.y { return }
+  for i := range ent.los.grid {
+    for j := range ent.los.grid[i] {
+      ent.los.grid[i][j] = false
+    }
+  }
+  ent.los.x = ex
+  ent.los.y = ey
 
   minx := ex - ent.Stats.Sight()
   miny := ey - ent.Stats.Sight()
   maxx := ex + ent.Stats.Sight()
   maxy := ey + ent.Stats.Sight()
   for x := minx; x <= maxx; x++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los.grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los.grid)
   }
   for y := miny; y <= maxy; y++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los.grid)
+    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los.grid)
   }
 
-  // TODO: THIS IS A KLUDGE - There is an off-by-one error somewhere and I'm
-  // taking care of it here, but this is stupid, need to find the real source
-  // of the bug.
-  elos := make(map[[2]int]bool, len(ent.los))
-  for p := range ent.los {
-    elos[[2]int{p[0]+1, p[1]+1}] = true
+  ent.los.minx = len(ent.los.grid)
+  ent.los.miny = len(ent.los.grid)
+  ent.los.maxx = 0
+  ent.los.maxy = 0
+  for i := range ent.los.grid {
+    for j := range ent.los.grid[i] {
+      if ent.los.grid[i][j] {
+        if i < ent.los.minx {
+          ent.los.minx = i
+        }
+        if j < ent.los.miny {
+          ent.los.miny = j
+        }
+        if i > ent.los.maxx {
+          ent.los.maxx = i
+        }
+        if j > ent.los.maxy {
+          ent.los.maxy = j
+        }
+      }
+    }
   }
-  ent.los = elos
 }
 
 // Uses Bresenham's alogirthm to determine the points to rasterize a line from
