@@ -1,17 +1,20 @@
 {
   "Name": "Corpse",
   "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
   "Action_names": [
     "Move Test",
-    "Eat Brains"
+    "Pummel",
+    "Diseased Kiss"
   ],
   "Side": 1,
   "Base": {
-    "Ap_max": 7,
-    "Hp_max": 7,
-    "Corpus": 5,
-    "Ego": 1,
+    "Ap_max": 6,
+    "Hp_max": 6,
+    "Corpus": 9,
+    "Ego": 9,
     "Sight": 10
-  },
-  "Ai_path": "ais/basic.xgml"
+  }
 }

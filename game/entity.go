@@ -5,6 +5,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   "github.com/runningwild/opengl/gl"
 )
@@ -45,7 +46,6 @@ func MakeEntity(name string, g *Game) *Entity {
     ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
   }
 
-
   ent.game = g
   return &ent
 }
@@ -75,6 +75,14 @@ type entityDef struct {
   Name string
 
   Sprite_path base.Path
+
+  // Still frame of the sprite - not necessarily one of the individual frames,
+  // but still usable for identifying it.  Should be the same dimensions as
+  // any of the frames.
+  Still    texture.Object  `registry:"autoload"`
+
+  // Headshot of this character.  Should be square.
+  Headshot texture.Object  `registry:"autoload"`
 
   // List of actions that this entity defaults to having
   Action_names []string
@@ -147,6 +155,9 @@ func (e *Entity) Game() *Game {
   return e.game
 }
 func (e *Entity) HasLos(x,y int) bool {
+  if x < 0 || y < 0 || x >= len(e.los.grid) || y >= len(e.los.grid[0]) {
+    return false
+  }
   return e.los.grid[x][y]
 }
 func DiscretizePoint32(x,y float32) (int,int) {
@@ -209,6 +220,8 @@ func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
 
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
+  gl.Color4d(1, 1, 1, 1)
+  gl.Enable(gl.TEXTURE_2D)
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
     gl.Begin(gl.QUADS)

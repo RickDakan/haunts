@@ -1,17 +1,26 @@
 {
   "Name": "Occultist",
   "Sprite_path" : "entities/occultist",
+  "Still": {
+    "Path": "entities/occultist_still.png"
+  },
   "Action_names": [
     "Move Test",
-    "Basic Test",
-    "Aoe Test"
+    "Dire Curse",
+    "Abjuration",
+    "Exorcise",
+    "Abjuration",
+    "Exorcise",
+    "Abjuration",
+    "Exorcise",
+    "First Aid"
   ],
   "Side": 0,
   "Base": {
-    "Ap_max": 150,
-    "Hp_max": 10,
-    "Corpus": 10,
-    "Ego": 6,
+    "Ap_max": 6,
+    "Hp_max": 20,
+    "Corpus": 8,
+    "Ego": 12,
     "Sight": 30
   }
 }

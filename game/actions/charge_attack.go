@@ -1,11 +1,12 @@
 package actions
 
 import (
-  "encoding/gob"
+  // "encoding/gob"
   "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
 )
 
@@ -26,10 +27,10 @@ func registerCharges() map[string]func() game.Action {
   return makers
 }
 
-func init() {
-  game.RegisterActionMakers(registerCharges)
-  gob.Register(&ChargeAttack{})
-}
+// func init() {
+//   game.RegisterActionMakers(registerCharges)
+//   gob.Register(&ChargeAttack{})
+// }
 
 type ChargeAttack struct {
   Defname string
@@ -41,9 +42,22 @@ type ChargeAttackDef struct {
   Ap       int
   Strength int
   Range    int
+  Texture  texture.Object
 }
 
+func (a *ChargeAttack) AP() int {
+  return a.Ap
+}
+func (a *ChargeAttack) String() string {
+  return a.Name
+}
+func (a *ChargeAttack) Icon() *texture.Object {
+  return &a.Texture
+}
 func (a *ChargeAttack) Readyable() bool {
+  return true
+}
+func (a *ChargeAttack) Preppable(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *ChargeAttack) Prep(ent *game.Entity, g *game.Game) bool {

@@ -1,0 +1,15 @@
+{
+  "Name"     : "Psychic Shroud",
+  "Kind"     : "Terror",
+  "Animation": "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/shroud.png"
+  },
+  "Ap"       : 1,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Conditions": [
+     "Psychic Shroud"
+   ]
+}

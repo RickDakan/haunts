@@ -9,7 +9,7 @@ import (
 
 func MakeFurniture(name string) *Furniture {
   f := Furniture{ Defname: name }
-  f.Load()
+  base.GetObject("furniture", &f)
   return &f
 }
 
@@ -26,11 +26,12 @@ func LoadAllFurnitureInDir(dir string) {
 type Furniture struct {
   Defname string
   *furnitureDef
-  FurnitureInst
-}
 
-func (f *Furniture) Load() {
-  base.GetObject("furniture", f)
+  // Position of this object in board coordinates.
+  X,Y int
+
+  // Index into furnitureDef.Texture_paths
+  Rotation int
 }
 
 // Changes the position of this object such that it fits within the specified
@@ -45,17 +46,7 @@ func (f *Furniture) Constrain(dx,dy int) {
   }
 }
 
-// This data is what differentiates different instances of the same piece of
-// furniture
-type FurnitureInst struct {
-  // Position of this object in board coordinates.
-  X,Y int
-
-  // Index into furnitureDef.Texture_paths
-  Rotation int
-}
-
-func (f *FurnitureInst) Pos() (int, int) {
+func (f *Furniture) Pos() (int, int) {
   return f.X, f.Y
 }
 

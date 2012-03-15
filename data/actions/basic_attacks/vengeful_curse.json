@@ -1,0 +1,15 @@
+{
+  "Name"     : "Vengeful Curse",
+  "Kind"     : "Terror",
+  "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/vengeful.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 5,
+  "Damage"   : 5,
+  "Range"    : 7,
+  "Conditions": [
+     "Vengeful Curse"
+   ]
+}

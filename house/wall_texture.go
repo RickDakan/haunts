@@ -30,7 +30,16 @@ func (wt *WallTexture) Load() {
 type WallTexture struct {
   Defname string
   *wallTextureDef
-  WallTextureInst
+
+  // Position of the texture in floor coordinates.  If these coordinates exceed
+  // either the dx or dy of the room, then this texture will be drawn, at least
+  // partially, on the wall.  The coordinates should not both exceed the
+  // dimensions of the room.
+  X,Y float32
+  Rot float32
+
+  // Whether or not to flip the texture about one of its axes
+  Flip bool
 }
 
 type wallTextureDef struct {
@@ -39,15 +48,6 @@ type wallTextureDef struct {
   Name string
 
   Texture texture.Object
-}
-
-type WallTextureInst struct {
-  // Position of the texture in floor coordinates.  If these coordinates exceed
-  // either the dx or dy of the room, then this texture will be drawn, at least
-  // partially, on the wall.  The coordinates should not both exceed the
-  // dimensions of the room.
-  X,Y float32
-  Rot float32
 }
 
 func (wt *WallTexture) Render() {
@@ -69,14 +69,19 @@ func (wt *WallTexture) Render() {
   ur.Transform(&rot)
   lr.Transform(&rot)
 
+  tx2 := 1
+  if wt.Flip {
+    tx2 = -1
+  }
+
   gl.Begin(gl.QUADS)
   gl.TexCoord2i(0, 0)
   gl.Vertex2f(wt.X + ll.X, wt.Y + ll.Y)
   gl.TexCoord2i(0, -1)
   gl.Vertex2f(wt.X + ul.X, wt.Y + ul.Y)
-  gl.TexCoord2i(-1, -1)
+  gl.TexCoord2i(tx2, -1)
   gl.Vertex2f(wt.X + ur.X, wt.Y + ur.Y)
-  gl.TexCoord2i(-1, 0)
+  gl.TexCoord2i(tx2, 0)
   gl.Vertex2f(wt.X + lr.X, wt.Y + lr.Y)
   gl.End()
 }

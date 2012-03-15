@@ -1,0 +1,7 @@
+{
+  "Name": "foo clue",
+  "Text": "This is aNOTHER sample clue text.",
+  "Image": {
+    "Path": "path/goes/here"
+  }
+}
