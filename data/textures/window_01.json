@@ -1,0 +1,6 @@
+{
+  "Name": "Window01",
+  "Texture":  {
+    "Path": "textures/window_01.png"
+  }
+}
