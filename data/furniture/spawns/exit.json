@@ -1,0 +1,13 @@
+{
+  "Name": "SpawnExit",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/spawns/exit.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

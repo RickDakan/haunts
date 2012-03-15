@@ -1,0 +1,12 @@
+{
+  "Name"     : "Agonizing Thoughts",
+  "Kind"     : "Terror",
+  "Animation": "cast",
+  "Ap"       : 3,
+  "Strength" : 7,
+  "Damage"   : 0,
+  "Range"    : 10,
+  "Conditions": [
+     "Grave Grasp"
+   ]
+}

@@ -1,0 +1,12 @@
+{
+  "Name"     : "Dire Curse",
+  "Kind"     : "Fire",
+  "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/dire_curse.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 5,
+  "Damage"   : 5,
+  "Range"    : 10
+}

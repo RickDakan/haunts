@@ -1,0 +1,12 @@
+{
+  "Name"     : "Kick",
+  "Kind"     : "Fire",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/kick.png"
+  },
+  "Ap"       : 2,
+  "Strength" : 5,
+  "Damage"   : 2,
+  "Range"    : 1
+}

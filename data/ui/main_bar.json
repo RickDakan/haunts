@@ -1,0 +1,94 @@
+{
+  "Background": {
+    "Path": "ui/main_bar.png"
+  },
+  "Divider": {
+    "Path": "ui/divider.png"
+  },
+  "CenterStillFrame": {
+    "X": 120,
+    "Y": 75
+  },
+  "Name": {
+    "X": 225,
+    "Y": 93,
+    "Size": 15,
+    "Justification": "center"
+  },
+  "Ap": {
+    "X": 145,
+    "Y": 60,
+    "Size": 12,
+    "Justification": "left"
+  },
+  "Hp": {
+    "X": 145,
+    "Y": 30,
+    "Size": 12,
+    "Justification": "left"
+  },
+  "Corpus": {
+    "X": 310,
+    "Y": 60,
+    "Size": 12,
+    "Justification": "right"
+  },
+  "Ego": {
+    "X": 310,
+    "Y": 30,
+    "Size": 12,
+    "Justification": "right"
+  },
+  "Conditions": {
+    "X": 260,
+    "Y": 25,
+    "Width": 200,
+    "Height": 96,
+    "Size": 10
+  },
+  "Actions": {
+    "X": 435,
+    "Y": 50,
+    "Width": 277,
+    "Icon_size": 35,
+    "Count": 6,
+    "Empty": {
+      "Path": "actions/icons/empty.png"
+    }
+  },
+  "EndTurn": {
+    "Texture": {
+      "Path": "ui/end_turn.png"
+    },
+    "X":  895,
+    "Y":  25
+  },
+  "UnitLeft": {
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    },
+    "X":  45,
+    "Y":  65
+  },
+  "UnitRight": {
+    "Texture": {
+      "Path": "ui/arrow_rf.png"
+    },
+    "X":  790,
+    "Y":  65
+  },
+  "ActionLeft": {
+    "Texture": {
+      "Path": "ui/arrow_small_lf.png"
+    },
+    "X":  430,
+    "Y":  90
+  },
+  "ActionRight": {
+    "Texture": {
+      "Path": "ui/arrow_small_rf.png"
+    },
+    "X":  675,
+    "Y":  90
+  }
+}

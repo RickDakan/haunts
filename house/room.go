@@ -20,12 +20,6 @@ func LoadAllRoomsInDir(dir string) {
   base.RegisterAllObjectsInDir("rooms", dir, ".room", "json")
 }
 
-func MakeRoom(name string) *Room {
-  r := Room{ Defname: name }
-  base.GetObject("rooms", &r)
-  return &r
-}
-
 var (
   datadir string
   tags    Tags
@@ -172,67 +166,6 @@ func (room *roomDef) ensureRelative(prefix, image_path string, t int64) (string,
 
   target_path = target_path[len(prefix) + 1: ]
   return target_path, nil
-}
-
-// 1. Gob the file to datadir/rooms/<name>.room
-// 2. If the wall path is not prefixed by datadir/rooms/walls, copy to datadir/rooms/walls/<name.wall - then fix the wall path
-// 3. Same for floor path
-func (room *roomDef) SaveOLD(t int64) string {
-  failed := func(err error) bool {
-    // TODO: Log an error
-    // TODO: Also save things *somewhere* so data isn't completely lost
-    // TODO: Better to just pop up something that says the save failed
-    if err != nil {
-      fmt.Printf("Failed to save: %v\n", err)
-      return true
-    }
-    return false
-  }
-
-  rooms_dir := filepath.Join(datadir, "rooms")
-  floors_dir := filepath.Join(rooms_dir, "floors")
-  err := os.MkdirAll(floors_dir, 0755)
-  if failed(err) { return "" }
-  walls_dir := filepath.Join(rooms_dir, "walls")
-  err = os.MkdirAll(walls_dir, 0755)
-  if failed(err) { return "" }
-
-  target_path := filepath.Join(rooms_dir, room.Name + ".room")
-  _,err = os.Stat(target_path)
-  if err == nil {
-    err = os.Rename(target_path, filepath.Join(rooms_dir, fmt.Sprintf(".%s.%d.room", room.Name, t)))
-    if failed(err) { return "" }
-  }
-
-  putInDir := func(target_dir, source string, final *base.Path) error {
-    if !filepath.IsAbs(source) {
-      room.Wall.Path = base.Path(filepath.Clean(filepath.Join(target_dir, source)))
-    }
-    path, err := room.ensureRelative(target_dir, source, t)
-    if err != nil {
-      *final = ".."
-      return err
-    }
-    rel := filepath.Clean(filepath.Join(target_dir, path))
-    *final = base.Path(base.TryRelative(target_path, rel))
-    return nil
-  }
-
-  putInDir(floors_dir, room.Floor.Path.String(), &room.Floor.Path)
-  putInDir(walls_dir, room.Wall.Path.String(), &room.Wall.Path)
-
-  err = base.SaveJson(target_path, room)
-  if failed(err) { return "" }
-  // TODO: We should definitely gob instead of json encode the rooms, just doing
-  // json for now for ease of debugging
-  // // Create the target and gob the room to it
-  // target, err := os.Create(target_path)
-  // if failed(err) { return }
-  // defer target.Close()
-  // encoder := gob.NewEncoder(target)
-  // err = encoder.Encode(room)
-  // if failed(err) { return }
-  return target_path
 }
 
 type tabWidget interface {

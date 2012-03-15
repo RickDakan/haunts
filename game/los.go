@@ -1,9 +1,11 @@
 package game
 
 import (
+  "math/rand"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/base"
 )
 
 type Game struct {
@@ -64,6 +66,39 @@ func (g *Game) OnBegin() {
   }
 }
 
+func (g *Game) PlaceInitialExplorers(ents []*Entity) {
+  floor := g.house.Floors[0]
+  if len(floor.Explorers) == 0 {
+    base.Error().Printf("No initial explorer positions listed.")
+    return
+  }
+  if len(ents) > 9 {
+    base.Error().Printf("Cannot place more than 9 ents at a starting position.")
+    return
+  }
+  for i := range floor.Explorers {
+    x,y := floor.Explorers[i].Furniture().Pos()
+    base.Log().Printf("pos: %d, %d", x, y)
+  }
+  x,y := floor.Explorers[0].Furniture().Pos()
+  var poss [][2]int
+  for dx := -1; dx <= 1; dx++ {
+    for dy := -1; dy <= 1; dy++ {
+      poss = append(poss, [2]int{x+dx, y+dy})
+    }
+  }
+  for i := range ents {
+    g.Ents = append(g.Ents, ents[i])
+    g.viewer.AddDrawable(ents[i])
+    index := rand.Intn(len(poss))
+    pos := poss[index]
+    poss[index] = poss[len(poss)-1]
+    poss = poss[0:len(poss)-1]
+    ents[i].X = float64(pos[0])
+    ents[i].Y = float64(pos[1])
+  }
+}
+
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
@@ -72,6 +107,11 @@ func (g *Game) OnRound() {
     g.Side = Haunt
   } else {
     g.Side = Explorers
+  }
+
+  if g.Turn == 1 {
+    // Explorers just finished selecting their crew, so remove the UI for it
+    // and switch to the haunts UI.
   }
 
   if g.Turn <= 2 {
@@ -318,15 +358,6 @@ func (g *Game) Think(dt int64) {
       case InProgress:
       case CheckForInterrupts:
     }
-  }
-
-  ros := make([]house.RectObject, len(g.Ents))
-  for i := range g.Ents {
-    ros[i] = g.Ents[i]
-  }
-  ros = house.OrderRectObjects(ros)
-  for i := range g.Ents {
-    g.Ents[i] = ros[len(ros) - i - 1].(*Entity)
   }
 
   g.viewer.Floor_drawer = g.current_action

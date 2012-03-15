@@ -1,0 +1,9 @@
+{
+  "Name": "Ghastly Howl",
+  "Strength": 5,
+  "Kind": "Terror",
+  "Time": 3,
+  "Base": {
+    "Ego": -2
+  }
+}

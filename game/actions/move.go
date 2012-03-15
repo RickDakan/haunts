@@ -9,6 +9,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -54,8 +55,17 @@ type Move struct {
 }
 type MoveDef struct {
   Name     string
+  Texture  texture.Object
 }
-
+func (a *Move) AP() int {
+  return a.cost
+}
+func (a *Move) String() string {
+  return a.Name
+}
+func (a *Move) Icon() *texture.Object {
+  return &a.Texture
+}
 func (a *Move) Readyable() bool {
   return false
 }
@@ -131,6 +141,9 @@ func (a *Move) findPath(g *game.Game, x,y int) {
   }
 }
 
+func (a *Move) Preppable(ent *game.Entity, g *game.Game) bool {
+  return true
+}
 func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())

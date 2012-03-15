@@ -1,0 +1,13 @@
+{
+  "Name": "SpawnClue",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/spawns/clue.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

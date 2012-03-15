@@ -6,6 +6,7 @@ import (
   "path/filepath"
   "runtime"
   "runtime/debug"
+  "runtime/pprof"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
@@ -44,6 +45,11 @@ func loadAllRegistries() {
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
+  house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
+  house.LoadAllCluesInDir(filepath.Join(datadir, "spawns", "clues"))
+  house.LoadAllExitsInDir(filepath.Join(datadir, "spawns", "exits"))
+  house.LoadAllExplorersInDir(filepath.Join(datadir, "spawns", "explorers"))
+  house.LoadAllHauntsInDir(filepath.Join(datadir, "spawns", "haunts"))
   game.RegisterActions()
   status.RegisterAllConditions()
 }
@@ -55,6 +61,7 @@ func init() {
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)
+  base.Log().Printf("Setting datadir: %s", datadir)
   err := house.SetDatadir(datadir)
   if err != nil {
     panic(err.Error())
@@ -65,9 +72,8 @@ func init() {
   key_map = key_binds.MakeKeyMap()
   base.SetDefaultKeyMap(key_map)
 
-  factor := 1.0
-  wdx = int(1200 * factor)
-  wdy = int(675 * factor)
+  wdx = 1024
+  wdy = 700
 }
 
 type draggerZoomer interface {
@@ -83,13 +89,14 @@ func draggingAndZooming(dz draggerZoomer) {
     return
   }
 
-  if key_map["zoom"].IsDown() != zooming {
-    zooming = !zooming
-  }
+  zooming = key_map["zoom"].IsDown()
   if zooming {
     zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
     dz.Zoom(zoom / 100)
   }
+
+  dz.Zoom(key_map["zoom in"].FramePressAmt() / 20)
+  dz.Zoom(-key_map["zoom out"].FramePressAmt() / 20)
 
   if key_map["drag"].IsDown() != dragging {
     dragging = !dragging
@@ -143,6 +150,9 @@ func editMode() {
 
     if key_map["save"].FramePressCount() > 0 && chooser == nil {
       path,err := editor.Save()
+      if err != nil {
+        base.Warn().Printf("Failed to save: %v", err.Error())
+      }
       if path != "" && err == nil {
         base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
       }
@@ -156,6 +166,7 @@ func editMode() {
         anchor = nil
         err = editor.Load(path)
         if err != nil {
+          base.Warn().Printf("Failed to load: %v", err.Error())
         } else {
           base.SetStoreVal(fmt.Sprintf("last %s path", editor_name), base.TryRelative(datadir, path))
         }
@@ -190,16 +201,11 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
-      fmt.Printf("Panic: %v\n", r)
-      fmt.Printf("%s\n", string(data))
-      out,err := os.Open("crash.txt")
-      if err == nil {
-        out.Write([]byte(fmt.Sprintf("Panic: %v\n", r)))
-        out.Write(data)
-        out.Close()
-      }
+      base.Error().Printf("PANIC: %s\n", string(data))
+      fmt.Printf("PANIC: %s\n", string(data))
     }
   } ()
+  base.Log().Printf("Version %s", Version())
   sys.Startup()
   render.Init()
   render.Queue(func() {
@@ -236,7 +242,10 @@ func main() {
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
+  ui.AddChild(base.MakeConsole())
   sys.Think()
+  // Wait until now to create the dictionary because the render thread needs
+  // to be running in advance.
   render.Queue(func() {
     ui.Draw()
   })
@@ -245,6 +254,8 @@ func main() {
 
   edit_mode := true
 
+  var profile_output *os.File
+
   for key_map["quit"].FramePressCount() == 0 {
     sys.Think()
     render.Queue(func() {
@@ -252,6 +263,27 @@ func main() {
       ui.Draw()
     })
     render.Purge()
+
+    if key_map["profile"].FramePressCount() > 0 {
+      if profile_output == nil {
+        profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
+        if err == nil {
+          err = pprof.StartCPUProfile(profile_output)
+          if err != nil {
+            base.Log().Printf("Unable to start CPU profile: %v\n", err)
+            profile_output.Close()
+            profile_output = nil
+          }
+          base.Log().Printf("profout: %v\n", profile_output)
+        } else {
+          base.Log().Printf("Unable to start CPU profile: %v\n", err)
+        }
+      } else {
+        pprof.StopCPUProfile()
+        profile_output.Close()
+        profile_output = nil
+      }
+    }
 
     if key_map["game mode"].FramePressCount() % 2 == 1 {
       if edit_mode {

@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
 
@@ -48,6 +49,7 @@ type BasicAttackDef struct {
   Damage     int
   Animation  string
   Conditions []string
+  Texture    texture.Object
 }
 type basicAttackInst struct {
   ent *game.Entity
@@ -68,29 +70,39 @@ func dist(x,y,x2,y2 int) int {
   }
   return dy
 }
+func (a *BasicAttack) AP() int {
+  return a.Ap
+}
+func (a *BasicAttack) String() string {
+  return a.Name
+}
+func (a *BasicAttack) Icon() *texture.Object {
+  return &a.Texture
+}
 func (a *BasicAttack) Readyable() bool {
   return true
 }
-func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
-  a.ent = ent
-  a.targets = nil
-
-  if a.ent.Stats.ApCur() < a.Ap {
-    return false
-  }
-
-  x,y := a.ent.Pos()
-  for _,ent := range g.Ents {
-    if ent == a.ent { continue }
-    x2,y2 := ent.Pos()
-    if dist(x, y, x2, y2) <= a.Range && a.ent.HasLos(x2, y2) && ent.Stats.HpCur() > 0 {
-      a.targets = append(a.targets, ent)
+func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
+  var targets []*game.Entity
+  x,y := ent.Pos()
+  for _,e := range g.Ents {
+    if e == ent { continue }
+    x2,y2 := e.Pos()
+    if dist(x, y, x2, y2) <= a.Range && ent.HasLos(x2, y2) && e.Stats.HpCur() > 0 {
+      targets = append(targets, e)
     }
   }
-  if len(a.targets) == 0 {
-    a.ent = nil
+  return targets
+}
+func (a *BasicAttack) Preppable(ent *game.Entity, g *game.Game) bool {
+  return ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
+}
+func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
+  if !a.Preppable(ent, g) {
     return false
   }
+  a.ent = ent
+  a.targets = a.findTargets(ent, g)
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {

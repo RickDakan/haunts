@@ -1,17 +1,22 @@
 {
   "Name": "Teen",
   "Sprite_path" : "entities/teen",
+  "Still": {
+    "Path": "entities/teen_still.png"
+  },
   "Action_names": [
     "Move Test",
-    "Basic Test",
-    "Aoe Test"
+    "Pistol",
+    "Kick",
+    "Agonizing Thoughts",
+    "Psychic Shroud"
   ],
   "Side": 0,
   "Base": {
-    "Ap_max": 15,
-    "Hp_max": 10,
+    "Ap_max": 6,
+    "Hp_max": 20,
     "Corpus": 10,
-    "Ego": 6,
+    "Ego": 10,
     "Sight": 30
   }
 }

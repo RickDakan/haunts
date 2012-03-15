@@ -1,0 +1,7 @@
+{
+  "Name": "foo explorer",
+  "Text": "This is aNOTHER sample explorer text.",
+  "Image": {
+    "Path": "path/goes/here"
+  }
+}

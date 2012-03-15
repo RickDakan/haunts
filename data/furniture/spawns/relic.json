@@ -1,0 +1,13 @@
+{
+  "Name": "SpawnRelic",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/spawns/relic.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

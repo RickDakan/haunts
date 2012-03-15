@@ -1,0 +1,7 @@
+{
+  "Name": "bar relic",
+  "Text": "This is a sample relic text.",
+  "Image": {
+    "Path": "path/goes/here"
+  }
+}

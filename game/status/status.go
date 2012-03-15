@@ -39,8 +39,8 @@ func (k Kind) Primary() Primary {
 // and Hp is affected through this mechanism so that Conditions have a chance
 // to modify it before it actually gets applied.
 type Damage struct {
-  Dynamic
-  Kind Kind
+  Dynamic Dynamic
+  Kind    Kind
 }
 
 type Dynamic struct {
@@ -63,8 +63,8 @@ func MakeInst(b Base) Inst {
 }
 
 type inst struct {
-  Base
-  Dynamic
+  Base       Base
+  Dynamic    Dynamic
   Conditions []Condition
 }
 
@@ -146,9 +146,20 @@ func (s Inst) Sight() int {
   return sight
 }
 
+// Returns a list of the names of the conditions this status object currently
+// has.  This lets external packages see the conditions without accidentally
+// mucking with them.
+func (s *Inst) ConditionNames() []string {
+  names := make([]string, len(s.inst.Conditions))
+  for i := range names {
+    names[i] = s.inst.Conditions[i].Name()
+  }
+  return names
+}
+
 func (s *Inst) ApplyCondition(c Condition) {
   for i := range s.inst.Conditions {
-    if s.inst.Conditions[i].Kind() == c.Kind() && s.inst.Conditions[i].Buff() == c.Buff() {
+    if s.inst.Conditions[i].Kind() == c.Kind() {
       if s.inst.Conditions[i].Strength() <= c.Strength() {
         s.inst.Conditions[i] = c
       }
@@ -170,12 +181,12 @@ func (s *Inst) ApplyDamage(dap,dhp int, kind Kind) {
   for _,c := range s.inst.Conditions {
     dmg = c.ModifyDamage(dmg)
   }
-  s.inst.Ap += dmg.Ap
-  s.inst.Hp += dmg.Hp
+  s.inst.Dynamic.Ap += dmg.Dynamic.Ap
+  s.inst.Dynamic.Hp += dmg.Dynamic.Hp
 }
 
 func (s *Inst) OnBegin() {
-  s.inst.Hp = s.inst.Hp_max
+  s.inst.Dynamic.Hp = s.inst.Base.Hp_max
   s.OnRound()
 }
 
@@ -192,22 +203,22 @@ func (s *Inst) OnRound() {
     }
   }
 
-  s.inst.Ap = s.ApMax()
+  s.inst.Dynamic.Ap = s.ApMax()
   for _,dmg := range dmgs {
-    s.ApplyDamage(dmg.Ap, dmg.Hp, dmg.Kind)
+    s.ApplyDamage(dmg.Dynamic.Ap, dmg.Dynamic.Hp, dmg.Kind)
   }
 
   // Negative Ap is as useless as zero, so just set it to zero for simplicity
-  if s.inst.Ap < 0 {
-    s.inst.Ap = 0
+  if s.inst.Dynamic.Ap < 0 {
+    s.inst.Dynamic.Ap = 0
   }
 
   // Hp is capped at 0 as well, but also capped at its max
-  if s.inst.Hp < 0 {
-    s.inst.Hp = 0
+  if s.inst.Dynamic.Hp < 0 {
+    s.inst.Dynamic.Hp = 0
   }
-  if s.inst.Hp > s.HpMax() {
-    s.inst.Hp = s.HpMax()
+  if s.inst.Dynamic.Hp > s.HpMax() {
+    s.inst.Dynamic.Hp = s.HpMax()
   }
 
   // Now remove all of the Conditions that completed
