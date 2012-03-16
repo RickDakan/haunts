@@ -9,7 +9,10 @@
     "Pummel",
     "Diseased Kiss"
   ],
-  "Side": "Haunt",
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

@@ -116,7 +116,7 @@ func (g *Game) OnRound() {
 
   g.Turn++
   if g.Side == SideExplorers {
-    g.Side = SideHaunts
+    g.Side = SideHaunt
   } else {
     g.Side = SideExplorers
   }
@@ -151,7 +151,7 @@ func (g *Game) OnRound() {
   }).([]*Entity)
 
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.Ents[i].OnRound()
     }
   }
@@ -343,7 +343,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
     g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
   }
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], true)
     }
   }
@@ -380,7 +380,7 @@ func (g *Game) Think(dt int64) {
   }
   var side_ents []*Entity
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], false)
       side_ents = append(side_ents, g.Ents[i])
     }
@@ -423,7 +423,7 @@ func (g *Game) Think(dt int64) {
   if g.action_state == noAction {
     if g.ai_ent == nil {
       for _,ent := range g.Ents {
-        if ent.Side != g.Side { continue }
+        if ent.Side() != g.Side { continue }
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
         g.ai_ent.Ai.Eval()

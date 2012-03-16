@@ -186,13 +186,13 @@ func buttonFuncUnitLeft(mbi interface{}) {
     }
   }
   for i := start_index - 1; i >= 0; i-- {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
   }
   for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
@@ -209,13 +209,13 @@ func buttonFuncUnitRight(mbi interface{}) {
     }
   }
   for i := start_index + 1; i < len(mb.game.Ents); i++ {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
   }
   for i := 0; i <= start_index; i++ {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }

@@ -157,7 +157,7 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     return MakeEntity(a.(string), game)
   }).([]*Entity)
   ents = algorithm.Choose(ents, func(a interface{}) bool {
-    return a.(*Entity).Side == game.Side
+    return a.(*Entity).Side() == SideExplorers
   }).([]*Entity)
 
   es.roster_chooser = makeRosterChooser(es.layout.Roster, game, ents)

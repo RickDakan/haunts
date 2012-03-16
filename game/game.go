@@ -66,10 +66,10 @@ func (gp *GamePanel) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
   if gp.game.selected_ent != nil {
-    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side == gp.game.Side, true)
+    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side() == gp.game.Side, true)
   }
   if gp.game.hovered_ent != nil {
-    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side == gp.game.Side, false)
+    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side() == gp.game.Side, false)
   }
 }
 
@@ -89,7 +89,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
         return MakeEntity(a.(string), g)
       }).([]*Entity)
       ents = algorithm.Choose(ents, func(a interface{}) bool {
-        return a.(*Entity).Side == g.Side
+        return a.(*Entity).Side() == g.Side
       }).([]*Entity)
       if index >= 0 && index < len(ents) {
         g.viewer.RemoveDrawable(g.new_ent)
@@ -200,7 +200,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
-      if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side == gp.game.Side {
+      if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {
         gp.game.selected_ent = gp.game.hovered_ent
       }
       return true

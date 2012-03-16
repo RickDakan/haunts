@@ -92,17 +92,42 @@ type entityDef struct {
 
   Base status.Base
 
-  Side Side
+  ExplorerEnt *ExplorerEnt
+  HauntEnt    *HauntEnt
 }
-
+func (ei *entityDef) Side() Side {
+  if (ei.ExplorerEnt == nil) && (ei.HauntEnt == nil) {
+    base.Error().Printf("Entity '%s' did not specify explorer or haunt data", ei.Name)
+  }
+  if (ei.ExplorerEnt != nil) && (ei.HauntEnt != nil) {
+    base.Error().Printf("Entity '%s' specified both explorer and haunt data", ei.Name)
+  }
+  if ei.ExplorerEnt != nil {
+    return SideExplorers
+  }
+  return SideHaunt
+}
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
 }
 
-type Side string
+type HauntEnt struct {
+  Cost int
+  Type EntLevel
+}
+type EntLevel string
 const(
-  SideExplorers Side = "Explorers"
-  SideHaunts    Side = "Haunt"
+  LevelMinion   EntLevel = "Minion"
+  LevelServitor EntLevel = "Servitor"
+  LevelMaster   EntLevel = "Master"
+)
+
+type ExplorerEnt struct {}
+
+type Side int
+const(
+  SideExplorers Side = iota
+  SideHaunt
 )
 
 type EntityInst struct {
