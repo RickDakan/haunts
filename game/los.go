@@ -8,6 +8,14 @@ import (
   "github.com/runningwild/haunts/base"
 )
 
+type Purpose int
+const(
+  NoPurpose Purpose = iota
+  Relic
+  Mystery
+  Cleanse
+)
+
 type Game struct {
   Defname string
 
@@ -44,6 +52,10 @@ type Game struct {
   // Current turn number - incremented on each OnRound() so every two
   // indicates that a complete round has happened.
   Turn int
+
+  // The purpose that the explorers have for entering the house, chosen at the
+  // beginning of the game.
+  Purpose Purpose
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity

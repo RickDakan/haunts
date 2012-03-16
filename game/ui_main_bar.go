@@ -18,17 +18,17 @@ type Button struct {
   shade float64
 
   // Function to run whenever the button is clicked
-  f func(*MainBar)
+  f func(interface{})
 }
 
 // If x,y is inside the button's region then it will run its function and
 // return true, otherwise it does nothing and returns false.
-func (b *Button) handleClick(x,y int, mb *MainBar) bool {
+func (b *Button) handleClick(x,y int, data interface{}) bool {
   d := b.Texture.Data()
   if x < b.X || y < b.Y || x >= b.X + d.Dx || y >= b.Y + d.Dy {
     return false
   }
-  b.f(mb)
+  b.f(data)
   return true
 }
 
@@ -163,16 +163,20 @@ type MainBar struct {
   mx,my int
 }
 
-func buttonFuncEndTurn(mb *MainBar) {
+func buttonFuncEndTurn(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.OnRound()
 }
-func buttonFuncActionLeft(mb *MainBar) {
+func buttonFuncActionLeft(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.state.Actions.scroll_target -= float64(mb.layout.Actions.Count)
 }
-func buttonFuncActionRight(mb *MainBar) {
+func buttonFuncActionRight(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.state.Actions.scroll_target += float64(mb.layout.Actions.Count)
 }
-func buttonFuncUnitLeft(mb *MainBar) {
+func buttonFuncUnitLeft(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.SetCurrentAction(nil)
   start_index := len(mb.game.Ents) - 1
   for i := 0; i < len(mb.game.Ents); i++ {
@@ -194,7 +198,8 @@ func buttonFuncUnitLeft(mb *MainBar) {
     }
   }
 }
-func buttonFuncUnitRight(mb *MainBar) {
+func buttonFuncUnitRight(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.SetCurrentAction(nil)
   start_index := 0
   for i := 0; i < len(mb.game.Ents); i++ {
