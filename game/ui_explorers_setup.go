@@ -11,7 +11,7 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
-type purposeSelector struct {
+type iconWithText struct {
   Name string
   Icon texture.Object
 }
@@ -25,7 +25,7 @@ type rosterLayout struct {
 }
 
 type explorerSetupLayout struct {
-  Purposes []purposeSelector
+  Purposes []iconWithText
   Purpose struct {
     Dx, Dy int
   }

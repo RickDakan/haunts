@@ -115,10 +115,10 @@ func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
   g.Turn++
-  if g.Side == Explorers {
-    g.Side = Haunt
+  if g.Side == SideExplorers {
+    g.Side = SideHaunts
   } else {
-    g.Side = Explorers
+    g.Side = SideExplorers
   }
 
   if g.Turn == 1 {
@@ -331,6 +331,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
+  g.Side = SideExplorers
   g.house = h
   g.house.Normalize()
   g.viewer = viewer

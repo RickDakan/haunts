@@ -10,7 +10,7 @@
     "Grave Grasp",
     "Ghastly Howl"
   ],
-  "Side": 1,
+  "Side": "Haunt",
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

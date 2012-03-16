@@ -10,7 +10,7 @@
     "Paramagnetic Pulse",
     "EMR Inhibitor"
   ],
-  "Side": 0,
+  "Side": "Explorers",
   "Base": {
     "Ap_max": 6,
     "Hp_max": 20,

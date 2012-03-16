@@ -94,14 +94,15 @@ type entityDef struct {
 
   Side Side
 }
+
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
 }
 
-type Side int
-const (
-  Explorers Side = iota
-  Haunt
+type Side string
+const(
+  SideExplorers Side = "Explorers"
+  SideHaunts    Side = "Haunt"
 )
 
 type EntityInst struct {

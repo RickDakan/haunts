@@ -8,7 +8,7 @@
     "Move Test",
     "Ectoplasmic Discharge"
   ],
-  "Side": 1,
+  "Side": "Haunt",
   "Base": {
     "Ap_max": 5,
     "Hp_max": 3,

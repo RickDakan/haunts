@@ -11,7 +11,7 @@
     "Agonizing Thoughts",
     "Psychic Shroud"
   ],
-  "Side": 0,
+  "Side": "Explorers",
   "Base": {
     "Ap_max": 6,
     "Hp_max": 20,

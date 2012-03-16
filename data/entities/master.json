@@ -12,7 +12,7 @@
     "Summon Lost Soul",
     "Summon Angry Shade"
   ],
-  "Side": 1,
+  "Side": "Haunt",
   "Base": {
     "Ap_max": 8,
     "Hp_max": 15,
