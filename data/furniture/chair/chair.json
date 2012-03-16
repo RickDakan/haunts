@@ -8,6 +8,20 @@
         "Path": "furniture/chair/chair_02_lf.png"
       }
     },
+  {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/chair/chair_02_rlf.png"
+      }
+    },
+  {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/chair/chair_02_rrf.png"
+      }
+    },
     {
       "Dx": 1,
       "Dy": 1,
