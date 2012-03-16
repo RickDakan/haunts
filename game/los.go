@@ -10,10 +10,10 @@ import (
 
 type Purpose int
 const(
-  NoPurpose Purpose = iota
-  Relic
-  Mystery
-  Cleanse
+  PurposeNone Purpose = iota
+  PurposeRelic
+  PurposeMystery
+  PurposeCleanse
 )
 
 type Game struct {
@@ -122,8 +122,9 @@ func (g *Game) OnRound() {
   }
 
   if g.Turn == 1 {
-    // Explorers just finished selecting their crew, so remove the UI for it
-    // and switch to the haunts UI.
+    if g.Purpose == PurposeNone {
+      base.Error().Printf("Explorers have not set a purpose")
+    }
   }
 
   if g.Turn <= 2 {

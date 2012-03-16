@@ -163,12 +163,20 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   es.roster_chooser = makeRosterChooser(es.layout.Roster, game, ents)
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   es.purpose_table = gui.MakeVerticalTable()
-  f := func() {
-    es.AnchorBox.RemoveChild(es.purpose_table)
-    es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-  }
   for i := range es.layout.Purposes {
     purpose := es.layout.Purposes[i]
+    f := func() {
+      es.AnchorBox.RemoveChild(es.purpose_table)
+      es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+      switch es.layout.Purposes[i].Name {
+      case "Relic":
+        game.Purpose = PurposeRelic
+      case "Cleanse":
+        game.Purpose = PurposeCleanse
+      case "Mystery":
+        game.Purpose = PurposeMystery
+      }
+    }
     es.purpose_table.AddChild(makeHoverButton(es.layout.Purpose.Dx, es.layout.Purpose.Dy, purpose.Name, purpose.Icon, f))
   }
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
