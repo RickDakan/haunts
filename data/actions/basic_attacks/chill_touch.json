@@ -2,6 +2,9 @@
   "Name"     : "Chill Touch",
   "Kind"     : "Fire",
   "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/chill_touch.png"
+  },
   "Ap"       : 3,
   "Strength" : 4,
   "Damage"   : 1,

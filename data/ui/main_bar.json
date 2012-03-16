@@ -12,31 +12,31 @@
   "Name": {
     "X": 225,
     "Y": 93,
-    "Size": 15,
+    "Size": 12,
     "Justification": "center"
   },
   "Ap": {
     "X": 145,
     "Y": 60,
-    "Size": 12,
+    "Size": 10,
     "Justification": "left"
   },
   "Hp": {
     "X": 145,
     "Y": 30,
-    "Size": 12,
+    "Size": 10,
     "Justification": "left"
   },
   "Corpus": {
     "X": 310,
     "Y": 60,
-    "Size": 12,
+    "Size": 10,
     "Justification": "right"
   },
   "Ego": {
     "X": 310,
     "Y": 30,
-    "Size": 12,
+    "Size": 10,
     "Justification": "right"
   },
   "Conditions": {
@@ -61,7 +61,7 @@
       "Path": "ui/end_turn.png"
     },
     "X":  895,
-    "Y":  25
+    "Y":  37
   },
   "UnitLeft": {
     "Texture": {

@@ -6,7 +6,7 @@
   "Damage"    : 0,
   "Range"     : 6,
   "Diameter"  : 3,
-  "Animation" : "cast",
+  "Animation" : "inhibit",
   "Texture"   : {
     "Path": "actions/icons/inhibit.png"
   },

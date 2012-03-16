@@ -5,7 +5,14 @@
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "furniture/clock/clock.png"
+        "Path": "furniture/clock/clock_01_lf.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/clock/clock_01_rf.png"
       }
     }
   ],
