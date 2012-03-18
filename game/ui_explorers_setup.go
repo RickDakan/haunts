@@ -3,17 +3,58 @@ package game
 import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/haunts/game/hui"
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/mathgl"
   "github.com/runningwild/opengl/gl"
 )
 
 type iconWithText struct {
   Name string
   Icon texture.Object
+}
+func (c *iconWithText) Draw(hovered, selected, selectable bool, region gui.Region) {
+  var f float64
+  switch {
+  case selected:
+    f = 1.0
+  case hovered || selectable:
+    f = 0.6
+  default:
+    f = 0.4
+  }
+  gl.Color4d(f, f, f, 1)
+  c.Icon.Data().RenderNatural(region.X, region.Y)
+  if hovered && selectable {
+    if selected {
+      gl.Color4d(1, 0, 0, 0.3)
+    } else {
+      gl.Color4d(1, 0, 0, 1)
+    }
+    gl.Disable(gl.TEXTURE_2D)
+    gl.Begin(gl.LINES)
+    x := region.X + 1
+    y := region.Y + 1
+    x2 := region.X + region.Dx - 1
+    y2 := region.Y + region.Dy - 1
+
+    gl.Vertex2i(x, y)
+    gl.Vertex2i(x, y2)
+
+    gl.Vertex2i(x, y2)
+    gl.Vertex2i(x2, y2)
+
+    gl.Vertex2i(x2, y2)
+    gl.Vertex2i(x2, y)
+
+    gl.Vertex2i(x2, y)
+    gl.Vertex2i(x, y)
+    gl.End()
+  }
+}
+func (c *iconWithText) Think(dt int64) {
 }
 
 type rosterLayout struct {
@@ -65,7 +106,13 @@ func (hb *hoverButton) Think(ui *gui.Gui, t int64) {
 }
 func (hb *hoverButton) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    hb.f()
+    x,y := gin.In().GetCursor("Mouse").Point()
+    p := gui.Point{x,y}
+    if p.Inside(hb.Render_region) {
+      hb.f()
+      return true
+    }
+    return false
   }
   return false
 }
@@ -107,41 +154,9 @@ type explorerSetup struct {
 
   purpose_table *gui.VerticalTable
 
-  roster_chooser *rosterChooser
+  roster_chooser *hui.RosterChooser
 
   layout explorerSetupLayout
-}
-
-type rosterChooser struct {
-  gui.BasicZone
-  layout rosterLayout
-  game *Game
-  ents []*Entity
-
-  // So we can give a dt to the ents to animate them
-  last_think int64
-
-  // What ent we are currently focused on
-  focus int
-
-  // As we move the focus around we gradually move our view to smoothly
-  // adjust
-  focus_pos float64
-
-  // What ents we have currently selected
-  selected map[int]bool
-  selected_order [3]*Entity
-}
-
-func makeRosterChooser(layout rosterLayout, game *Game, ents []*Entity) *rosterChooser {
-  var rc rosterChooser
-  rc.BasicZone.Request_dims.Dx = 2*layout.Dx + layout.Buffer
-  rc.BasicZone.Request_dims.Dy = 3*layout.Dy
-  rc.layout = layout
-  rc.game = game
-  rc.ents = ents
-  rc.selected = make(map[int]bool)
-  return &rc
 }
 
 func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
@@ -160,12 +175,53 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     return a.(*Entity).Side() == SideExplorers
   }).([]*Entity)
 
-  es.roster_chooser = makeRosterChooser(es.layout.Roster, game, ents)
+  es.roster_chooser = hui.MakeRosterChooser([]hui.Option{
+    &iconWithText{
+      Name: "Thunder",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts.png"))},
+    },
+    &iconWithText{
+      Name: "Monkey",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts2.png"))},
+    },
+    &iconWithText{
+      Name: "Chalice",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts.png"))},
+    },
+    &iconWithText{
+      Name: "Grandiose",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute1.png"))},
+    },
+    &iconWithText{
+      Name: "Lightning",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute2.png"))},
+    },
+    &iconWithText{
+      Name: "Orangutan",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute3.png"))},
+    },
+    &iconWithText{
+      Name: "Mead",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute4.png"))},
+    },
+    &iconWithText{
+      Name: "Grandeure",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute5.png"))},
+    },
+  },
+  hui.SelectAtMostN(3),
+  func(m map[int]bool) {
+    base.Log().Printf("complete: %v", m)
+    es.AnchorBox.RemoveChild(es.roster_chooser)
+  },
+  )
+
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   es.purpose_table = gui.MakeVerticalTable()
   for i := range es.layout.Purposes {
     purpose := es.layout.Purposes[i]
     f := func() {
+      base.Log().Printf("Roster: %v", purpose)
       es.AnchorBox.RemoveChild(es.purpose_table)
       es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
       switch es.layout.Purposes[i].Name {
@@ -188,107 +244,9 @@ func (es *explorerSetup) Think(ui *gui.Gui, t int64) {
   es.AnchorBox.Think(ui, t)
 }
 
-func (rc *rosterChooser) Think(ui *gui.Gui, t int64) {
-  var dt int64
-  if rc.last_think != 0 {
-    dt = t - rc.last_think
-  }
-  rc.last_think = t
-  for i := range rc.ents {
-    rc.ents[i].Think(dt)
-  }
-
-  max := len(rc.ents)
-  if rc.focus < 0 {
-    rc.focus = 0
-  }
-  if rc.focus >= max {
-    rc.focus = max - 1
-  }
-  frac := 0.8
-  rc.focus_pos = frac * rc.focus_pos + (1-frac) * float64(rc.focus)
-}
-
 func (es *explorerSetup) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if es.AnchorBox.Respond(ui, group) {
     return true
-  }
-  return false
-}
-
-func (rc *rosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if found, event := group.FindEvent('l'); found && event.Type == gin.Press {
-    rc.focus+=3
-    return true
-  }
-  if found, event := group.FindEvent('o'); found && event.Type == gin.Press {
-    rc.focus-=3
-    return true
-  }
-  if found, event := group.FindEvent(gin.Return); found && event.Type == gin.Press {
-    if len(rc.selected) == len(rc.selected_order) {
-      rc.game.PlaceInitialExplorers(rc.selected_order[:])
-      rc.game.OnRound()
-    }
-    return true
-  }
-
-  cursor := gin.In().GetCursor("Mouse")
-  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    x,y := cursor.Point()
-
-    // Throw out the click if it is outside of this window
-    if x < rc.Render_region.X { return false }
-    if y < rc.Render_region.Y { return false }
-    if x >= rc.Render_region.X + rc.Render_region.Dx { return false }
-    if y >= rc.Render_region.Y + rc.Render_region.Dy { return false }
-
-    // Throw out the click if it is in the buffer region
-    if x >= rc.Render_region.X + rc.layout.Dx &&
-       x < rc.Render_region.X + rc.layout.Dx + rc.layout.Buffer {
-        return false
-      }
-
-    if x < rc.Render_region.X + rc.layout.Dx {
-      // If it is on the left figure out what index was clicked and either add
-      // or remove that ent if possible
-      off := float64(rc.Render_region.Y + 2*rc.layout.Dy - y) / float64(rc.layout.Dy)
-      off += rc.focus_pos
-      index := int(off)
-      if index >= 0 && index < len(rc.ents) {
-        if rc.selected[index] {
-          delete(rc.selected, index)
-          for i := 0; i < len(rc.selected_order); i++ {
-            if rc.selected_order[i] == rc.ents[index] {
-              rc.selected_order[i] = nil
-            }
-          }
-        } else {
-          if len(rc.selected) < 3 {
-            rc.selected[index] = true
-            for i := 0; i < len(rc.selected_order); i++ {
-              if rc.selected_order[i] == nil {
-                rc.selected_order[i] = rc.ents[index]
-                break
-              }
-            }
-          }
-        }
-      }
-    } else {
-      // The click is in the other region, we can only deselect ents from here
-      off := float64(rc.Render_region.Y + 3*rc.layout.Dy - y) / float64(rc.layout.Dy)
-      index := int(off)
-      if index >= 0 && index < len(rc.selected_order) && rc.selected_order[index] != nil {
-        for i := range rc.ents {
-          if rc.ents[i] == rc.selected_order[index] {
-            rc.selected_order[index] = nil
-            delete(rc.selected, i)
-            break
-          }
-        }
-      }
-    }
   }
   return false
 }
@@ -297,92 +255,6 @@ func (es *explorerSetup) Draw(r gui.Region) {
   es.BasicZone.Render_region = r
   es.AnchorBox.Draw(r)
 }
-
-func (rc *rosterChooser) Draw(r gui.Region) {
-  rc.Render_region = r
-  gl.Disable(gl.TEXTURE_2D)
-  r.PushClipPlanes()
-  defer r.PopClipPlanes()
-  x := float64(r.X)
-  y := float64(r.Y) + float64(rc.layout.Dy) * (2 + rc.focus_pos)
-  for i := -1; i <= len(rc.ents); i++ {
-    if rc.selected[i] {
-      gl.Color4d(1, 1, 1, 1)
-    } else {
-      gl.Color4d(0.5, 0.5, 0.5, 1)
-    }
-    dx := float64(rc.layout.Dx)
-    dy := float64(rc.layout.Dy)
-    gl.Disable(gl.TEXTURE_2D)
-    gl.Begin(gl.QUADS)
-      gl.Vertex2d(x, y)
-      gl.Vertex2d(x, y + dy)
-      gl.Vertex2d(x + dx, y + dy)
-      gl.Vertex2d(x + dx, y)
-    gl.End()
-    if i >= 0 && i < len(rc.ents) {
-      rc.ents[i].Render(mathgl.Vec2{float32(r.X + rc.layout.Ent.X), float32(int(y) + rc.layout.Ent.Y)}, 100)
-      d := base.GetDictionary(15)
-      gl.Color4d(0, 0, 0, 1)
-      d.RenderString(rc.ents[i].Name, x + float64(rc.layout.Ent.X)*2, y + float64(rc.layout.Dy)/2, 0, d.MaxHeight(), gui.Left)
-    }
-    y -= dy
-  }
-
-  x = float64(r.X + rc.layout.Dx + rc.layout.Buffer)
-  y = float64(r.Y) + float64(rc.layout.Dy) * 3
-  for i := range rc.selected_order {
-    dx := float64(rc.layout.Dx)
-    dy := float64(rc.layout.Dy)
-    y -= dy
-    if rc.selected_order[i] != nil {
-      gl.Color4d(1, 1, 1, 1)
-    } else {
-      continue
-    }
-    gl.Disable(gl.TEXTURE_2D)
-    gl.Begin(gl.QUADS)
-      gl.Vertex2d(x, y)
-      gl.Vertex2d(x, y + dy)
-      gl.Vertex2d(x + dx, y + dy)
-      gl.Vertex2d(x + dx, y)
-    gl.End()
-    if i >= 0 && i < len(rc.ents) {
-      rc.selected_order[i].Render(mathgl.Vec2{float32(int(x) + rc.layout.Ent.X), float32(int(y) + rc.layout.Ent.Y)}, 100)
-      d := base.GetDictionary(15)
-      gl.Color4d(0, 0, 0, 1)
-      d.RenderString(rc.selected_order[i].Name, x + float64(rc.layout.Ent.X)*2, y + float64(rc.layout.Dy)/2, 0, d.MaxHeight(), gui.Left)
-    }
-  }
-
-
-  gl.Disable(gl.TEXTURE_2D)
-  dx := rc.layout.Dx
-  gl.Begin(gl.QUADS)
-    gl.Color4d(0, 0, 0, 0)
-    gl.Vertex2i(r.X, r.Y + rc.layout.Dy)
-    gl.Vertex2i(r.X + dx, r.Y + rc.layout.Dy)
-    gl.Color4d(0, 0, 0, 1)
-    gl.Vertex2i(r.X + dx, r.Y)
-    gl.Vertex2i(r.X, r.Y)
-
-    gl.Color4d(0, 0, 0, 0)
-    gl.Vertex2i(r.X + dx, r.Y + 2*rc.layout.Dy)
-    gl.Vertex2i(r.X, r.Y + 2*rc.layout.Dy)
-    gl.Color4d(0, 0, 0, 1)
-    gl.Vertex2i(r.X, r.Y + 3*rc.layout.Dy)
-    gl.Vertex2i(r.X + dx, r.Y + 3*rc.layout.Dy)
-  gl.End()
-}
-
-func (rc *rosterChooser) DrawFocused(gui.Region) {
-
-}
-
-func (rc *rosterChooser) String() string {
-  return "roster chooser"
-}
-
 
 func (es *explorerSetup) String() string {
   return "explorer setup"

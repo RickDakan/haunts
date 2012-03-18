@@ -25,7 +25,7 @@ type Button struct {
 // return true, otherwise it does nothing and returns false.
 func (b *Button) handleClick(x,y int, data interface{}) bool {
   d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X + d.Dx || y >= b.Y + d.Dy {
+  if x < b.X || y < b.Y || x >= b.X + d.Dx() || y >= b.Y + d.Dy() {
     return false
   }
   b.f(data)
@@ -34,8 +34,8 @@ func (b *Button) handleClick(x,y int, data interface{}) bool {
 
 func (b *Button) RenderAt(x,y,mx,my int) {
   b.Texture.Data().Bind()
-  tdx :=  + b.Texture.Data().Dx
-  tdy :=  + b.Texture.Data().Dy
+  tdx :=  + b.Texture.Data().Dx()
+  tdy :=  + b.Texture.Data().Dy()
   if mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy {
     b.shade = b.shade * 0.9 + 0.1
   } else {
@@ -246,8 +246,8 @@ func MakeMainBar(game *Game) (*MainBar, error) {
 }
 func (m *MainBar) Requested() gui.Dims {
   return gui.Dims{
-    Dx: m.layout.Background.Data().Dx,
-    Dy: m.layout.Background.Data().Dy,
+    Dx: m.layout.Background.Data().Dx(),
+    Dy: m.layout.Background.Data().Dy(),
   }
 }
 
@@ -429,8 +429,8 @@ func (m *MainBar) Draw(region gui.Region) {
   if m.ent != nil {
     gl.Color4d(1, 1, 1, 1)
     m.ent.Still.Data().Bind()
-    tdx := m.ent.Still.Data().Dx
-    tdy := m.ent.Still.Data().Dy
+    tdx := m.ent.Still.Data().Dx()
+    tdy := m.ent.Still.Data().Dy()
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
@@ -455,8 +455,8 @@ func (m *MainBar) Draw(region gui.Region) {
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
-    tdx = m.layout.Divider.Data().Dx
-    tdy = m.layout.Divider.Data().Dy
+    tdx = m.layout.Divider.Data().Dx()
+    tdy = m.layout.Divider.Data().Dy()
     cx = region.X + m.layout.Name.X
     cy = region.Y + m.layout.Name.Y - 5
     gl.Begin(gl.QUADS)
@@ -584,7 +584,7 @@ func (m *MainBar) Draw(region gui.Region) {
         base.Warn().Printf("Got an unknown mouseover location: %d", m.state.MouseOver.location)
         m.state.MouseOver.active = false
     }
-    y := m.layout.Background.Data().Dy - 40
+    y := m.layout.Background.Data().Dy() - 40
     d := base.GetDictionary(15)
     d.RenderString(m.state.MouseOver.text, float64(x), float64(y), 0, d.MaxHeight(), gui.Center)
   }

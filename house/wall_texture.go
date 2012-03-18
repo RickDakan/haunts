@@ -51,8 +51,8 @@ type wallTextureDef struct {
 }
 
 func (wt *WallTexture) Render() {
-  dx2 := float32(wt.Texture.Data().Dx) / 100 / 2
-  dy2 := float32(wt.Texture.Data().Dy) / 100 / 2
+  dx2 := float32(wt.Texture.Data().Dx()) / 100 / 2
+  dy2 := float32(wt.Texture.Data().Dy()) / 100 / 2
   gl.Enable(gl.TEXTURE_2D)
   wt.Texture.Data().Bind()
 

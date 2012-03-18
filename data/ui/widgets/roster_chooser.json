@@ -1,0 +1,14 @@
+{
+  "Num_options": 3,
+  "Option": {
+    "Dx": 300,
+    "Dy": 200
+  },
+  "Up": {
+    "Path": "ui/up_arrow.png"
+  },
+  "Down": {
+    "Path": "ui/down_arrow.png"
+  },
+  "Speed": 0.1
+}
