@@ -7,4 +7,5 @@ _test
 *.sublime-workspace
 GEN*
 openme
+*.gob
 

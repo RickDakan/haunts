@@ -8,6 +8,14 @@ import (
   "github.com/runningwild/haunts/base"
 )
 
+type Purpose int
+const(
+  PurposeNone Purpose = iota
+  PurposeRelic
+  PurposeMystery
+  PurposeCleanse
+)
+
 type Game struct {
   Defname string
 
@@ -44,6 +52,10 @@ type Game struct {
   // Current turn number - incremented on each OnRound() so every two
   // indicates that a complete round has happened.
   Turn int
+
+  // The purpose that the explorers have for entering the house, chosen at the
+  // beginning of the game.
+  Purpose Purpose
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
@@ -103,15 +115,16 @@ func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
   g.Turn++
-  if g.Side == Explorers {
-    g.Side = Haunt
+  if g.Side == SideExplorers {
+    g.Side = SideHaunt
   } else {
-    g.Side = Explorers
+    g.Side = SideExplorers
   }
 
   if g.Turn == 1 {
-    // Explorers just finished selecting their crew, so remove the UI for it
-    // and switch to the haunts UI.
+    if g.Purpose == PurposeNone {
+      base.Error().Printf("Explorers have not set a purpose")
+    }
   }
 
   if g.Turn <= 2 {
@@ -138,7 +151,7 @@ func (g *Game) OnRound() {
   }).([]*Entity)
 
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.Ents[i].OnRound()
     }
   }
@@ -318,6 +331,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
+  g.Side = SideExplorers
   g.house = h
   g.house.Normalize()
   g.viewer = viewer
@@ -329,7 +343,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
     g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
   }
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], true)
     }
   }
@@ -366,7 +380,7 @@ func (g *Game) Think(dt int64) {
   }
   var side_ents []*Entity
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], false)
       side_ents = append(side_ents, g.Ents[i])
     }
@@ -409,7 +423,7 @@ func (g *Game) Think(dt int64) {
   if g.action_state == noAction {
     if g.ai_ent == nil {
       for _,ent := range g.Ents {
-        if ent.Side != g.Side { continue }
+        if ent.Side() != g.Side { continue }
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
         g.ai_ent.Ai.Eval()

@@ -12,7 +12,10 @@
     "Summon Lost Soul",
     "Summon Angry Shade"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost": 1,
+    "Level": "Minion"
+  },
   "Base": {
     "Ap_max": 8,
     "Hp_max": 15,

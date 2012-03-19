@@ -10,7 +10,10 @@
     "Grave Grasp",
     "Ghastly Howl"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Minion"
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

@@ -354,8 +354,8 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   defer gl.PopMatrix()
 
   var dz int
-  if room.Wall.Data().Dx > 0 {
-    dz = room.Wall.Data().Dy * (room.Size.Dx + room.Size.Dy) / room.Wall.Data().Dx
+  if room.Wall.Data().Dx() > 0 {
+    dz = room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy) / room.Wall.Data().Dx()
   }
   corner := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
   gl.LoadIdentity()
@@ -406,7 +406,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
       }
       cstack.ApplyWithAlpha(alpha * los_alpha)
       gl.Begin(gl.QUADS)
-      height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
+      height := float64(door.Width * door.TextureData().Dy()) / float64(door.TextureData().Dx())
       gl.TexCoord2f(1, 0)
       gl.Vertex3d(float64(room.Size.Dx), float64(door.Pos), 0)
       gl.TexCoord2f(1, -1)
@@ -535,7 +535,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
       }
       cstack.ApplyWithAlpha(alpha * los_alpha)
       gl.Begin(gl.QUADS)
-      height := float64(door.Width * door.TextureData().Dy) / float64(door.TextureData().Dx)
+      height := float64(door.Width * door.TextureData().Dy()) / float64(door.TextureData().Dx())
       gl.TexCoord2f(0, 0)
       gl.Vertex3d(float64(door.Pos), float64(room.Size.Dy), 0)
       gl.TexCoord2f(0, -1)
