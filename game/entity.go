@@ -105,6 +105,13 @@ func (ei *entityDef) Side() Side {
   if ei.ExplorerEnt != nil {
     return SideExplorers
   }
+  switch ei.HauntEnt.Level {
+  case LevelMinion:
+  case LevelMaster:
+  case LevelServitor:
+  default:
+    base.Error().Printf("Entity '%s' speciied unknown level '%s'.", ei.Name, ei.HauntEnt.Level)
+  }
   return SideHaunt
 }
 func (ei *entityDef) Dims() (int,int) {
@@ -112,8 +119,8 @@ func (ei *entityDef) Dims() (int,int) {
 }
 
 type HauntEnt struct {
-  Cost int
-  Type EntLevel
+  Cost  int
+  Level EntLevel
 }
 type EntLevel string
 const(
@@ -246,7 +253,6 @@ func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
 
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
-  gl.Color4d(1, 1, 1, 1)
   gl.Enable(gl.TEXTURE_2D)
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()

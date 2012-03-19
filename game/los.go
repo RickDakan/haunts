@@ -90,7 +90,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
   for i := range floor.Explorers {
     x,y := floor.Explorers[i].Furniture().Pos()
-    base.Log().Printf("pos: %d, %d", x, y)
+    base.Log().Printf("Initial explorer %d at position: %d, %d", i, x, y)
   }
   x,y := floor.Explorers[0].Furniture().Pos()
   var poss [][2]int

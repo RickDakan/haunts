@@ -249,7 +249,7 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
-func (f *Floor) roomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
+func (f *Floor) RoomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
   for _, room := range f.Rooms {
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
@@ -650,7 +650,7 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     if hdt.viewer.Temp.Spawn != nil {
       x := hdt.viewer.Temp.Spawn.Furniture().X
       y := hdt.viewer.Temp.Spawn.Furniture().Y
-      room_at, furn_at := floor.roomAndFurnAtPos(x, y)
+      room_at, furn_at := floor.RoomAndFurnAtPos(x, y)
       if room_at != nil && furn_at == nil {
         switch s := hdt.viewer.Temp.Spawn.(type) {
         case *Relic:

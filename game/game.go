@@ -17,6 +17,9 @@ type GamePanel struct {
   // Only active on turn == 0
   explorer_setup *explorerSetup
 
+  // Only active on turn == 1
+  haunt_setup *hauntSetup
+
   // Only active for turns >= 2
   main_bar *MainBar
 
@@ -41,8 +44,16 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
     if gp.explorer_setup != nil {
       gp.AnchorBox.RemoveChild(gp.explorer_setup)
       gp.explorer_setup = nil
+
       gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
-      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+      var err error
+      gp.haunt_setup,err = MakeHauntSetupBar(gp.game)
+      if err == nil {
+        gp.AnchorBox.AddChild(gp.haunt_setup, gui.Anchor{0, 0.5, 0, 0.5})
+      } else {
+        base.Error().Printf("Unable to create haunt setup bar: %v", err)
+      }
+      // gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
     }
 
   case 2:
@@ -96,25 +107,6 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
         g.new_ent = ents[index]
         g.viewer.AddDrawable(g.new_ent)
       }
-    }
-  }
-  if g.new_ent != nil {
-    x,y := gin.In().GetCursor("Mouse").Point()
-    fbx, fby := g.viewer.WindowToBoard(x, y)
-    bx, by := DiscretizePoint32(fbx, fby)
-    g.new_ent.X, g.new_ent.Y = float64(bx), float64(by)
-    if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-      ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
-      r := roomAt(g.house.Floors[0], ix, iy)
-      if r == nil { return true }
-      f := furnitureAt(r, ix - r.X, iy - r.Y)
-      if f != nil { return true }
-      for _,e := range g.Ents {
-        x,y := e.Pos()
-        if x == ix && y == iy { return true }
-      }
-      g.Ents = append(g.Ents, g.new_ent)
-      g.new_ent = nil
     }
   }
   return false
