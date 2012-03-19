@@ -152,7 +152,7 @@ func (hb *hoverButton) DrawFocused(r gui.Region) {
 type explorerSetup struct {
   *gui.AnchorBox
 
-  purpose_table *gui.VerticalTable
+  purpose_table gui.Widget
 
   roster_chooser *hui.RosterChooser
 
@@ -209,7 +209,7 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
       Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute5.png"))},
     },
   },
-  hui.SelectAtMostN(3),
+  hui.SelectInRange(3,3),
   func(m map[int]bool) {
     base.Log().Printf("complete: %v", m)
     es.AnchorBox.RemoveChild(es.roster_chooser)
@@ -217,24 +217,38 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   )
 
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
-  es.purpose_table = gui.MakeVerticalTable()
-  for i := range es.layout.Purposes {
-    purpose := es.layout.Purposes[i]
-    f := func() {
-      base.Log().Printf("Roster: %v", purpose)
-      es.AnchorBox.RemoveChild(es.purpose_table)
-      es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-      switch es.layout.Purposes[i].Name {
-      case "Relic":
-        game.Purpose = PurposeRelic
-      case "Cleanse":
-        game.Purpose = PurposeCleanse
-      case "Mystery":
-        game.Purpose = PurposeMystery
-      }
-    }
-    es.purpose_table.AddChild(makeHoverButton(es.layout.Purpose.Dx, es.layout.Purpose.Dy, purpose.Name, purpose.Icon, f))
+
+  purposes := []hui.Option{
+    &iconWithText{
+      Name: "Relic",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "relic.png"))},
+    },
+    &iconWithText{
+      Name: "Cleanse",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "cleanse.png"))},
+    },
+    &iconWithText{
+      Name: "Mystery",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "mystery.png"))},
+    },
   }
+  es.purpose_table = hui.MakeRosterChooser(purposes, hui.SelectExactlyOne, func(m map[int]bool) {
+    for k := range m {
+      game.Purpose = Purpose(k)
+      break
+    }
+    base.Log().Printf("Selected %d", game.Purpose)
+    es.AnchorBox.RemoveChild(es.purpose_table)
+    es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    // switch es.layout.Purposes[i].Name {
+    // case "Relic":
+    //   game.Purpose = PurposeRelic
+    // case "Cleanse":
+    //   game.Purpose = PurposeCleanse
+    // case "Mystery":
+    //   game.Purpose = PurposeMystery
+    // }
+  })
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil

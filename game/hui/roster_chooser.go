@@ -54,7 +54,7 @@ type RosterChooser struct {
   // What options we have currently selected
   selected map[int]bool
 
-  selection_filter SelectionFilter
+  selector Selector
 
   on_complete func(map[int]bool)
 
@@ -68,26 +68,61 @@ type RosterChooser struct {
   }
 }
 
-// A SelectionFilter is a function that, given the index of the option the
-// user is trying to select and the set of options already selected, returns
-// true iff the user is allowed to select that option.  This is used to
-// determine if an option qualifies for 'hovered' as well as if it can be
+// A Selector determines whether a particular index can be clicked to toggle
+// whether or not it is selected.
+//
+// index: The index of the option that the user is trying to select.  If index
+// is -1 the function should return whether or not the current selected map is
+// valid.  If index is -1 doit will be false.
+//
+// selected: a map from index to whether or not that index is already selected
+// only selected indices should be stored in the map, when an index is
+// deselected it should be removed from the map.
+//
+// doit: if this is true this function should also add/remove index from
 // selected.
-// If an index of -1 is passed in this indicates that the user is trying to
-// complete their selection, in this case the function should return true
-// if the selection is valid.
-type SelectionFilter func(int, map[int]bool) bool
+type Selector func(index int, selected map[int]bool, doit bool) bool
 
-func SelectAtMostN(n int) SelectionFilter {
-  return func(k int, m map[int]bool) bool {
-    if k == -1 {
-      return len(m) <= n
+func SelectInRange(min, max int) Selector {
+  return func(index int, selected map[int]bool, doit bool) (valid bool) {
+    if index == -1 {
+      valid = (len(selected) >= min && len(selected) <= max)
+    } else {
+      if _, ok := selected[index]; ok {
+        valid = true
+      } else {
+        valid = len(selected) < max
+      }
     }
-    return m[k] || len(m) < n
+    if doit && valid {
+      if _, ok := selected[index]; ok {
+        delete(selected, index)
+      } else {
+        selected[index] = true
+      }
+    }
+    return
   }
 }
 
-func MakeRosterChooser(options []Option, filter SelectionFilter, on_complete func(map[int]bool)) *RosterChooser {
+func SelectExactlyOne(index int, selected map[int]bool, doit bool) (valid bool) {
+  if index == -1 {
+    valid = (len(selected) == 1)
+  } else {
+    valid = true
+  }
+  if doit {
+    var other int
+    for k,_ := range selected {
+      other = k
+    }
+    delete(selected, other)
+    selected[index] = true
+  }
+  return
+}
+
+func MakeRosterChooser(options []Option, selector Selector, on_complete func(map[int]bool)) *RosterChooser {
   var rc RosterChooser
   rc.options = options
   err := base.LoadAndProcessObject(filepath.Join(base.GetDataDir(), "ui", "widgets", "roster_chooser.json"), "json", &rc.layout)
@@ -100,7 +135,7 @@ func MakeRosterChooser(options []Option, filter SelectionFilter, on_complete fun
     rc.layout.Num_options * rc.layout.Option.Dy + 2*int(base.GetDictionary(15).MaxHeight()),
   }
   rc.selected = make(map[int]bool)
-  rc.selection_filter = filter
+  rc.selector = selector
   rc.on_complete = on_complete
   rc.render.options = make([]gui.Region, len(rc.options))
   return &rc
@@ -149,18 +184,12 @@ func (rc *RosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     } else if gp.Inside(rc.render.all_options) {
       for i := range rc.render.options {
         if gp.Inside(rc.render.options[i]) {
-          if rc.selection_filter(i, rc.selected) {
-            if rc.selected[i] {
-              delete(rc.selected, i)
-            } else {
-              rc.selected[i] = true
-            }
-          }
+          rc.selector(i, rc.selected, true)
           return true
         }
       }
     } else if gp.Inside(rc.render.done) {
-      if rc.selection_filter(-1, rc.selected) {
+      if rc.selector(-1, rc.selected, false) {
         rc.on_complete(rc.selected)
       }
       return true
@@ -220,7 +249,7 @@ func (rc *RosterChooser) Draw(r gui.Region) {
       }
       hovered := rc.mouse.Inside(rc.render.options[i])
       selected := rc.selected[i]
-      selectable := rc.selection_filter(i, rc.selected)
+      selectable := rc.selector(i, rc.selected, false)
       rc.options[i].Draw(hovered, selected, selectable, rc.render.options[i])
       y-=rc.layout.Option.Dy
     }
