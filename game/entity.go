@@ -49,12 +49,9 @@ func (g *Game) placeEntity(initial bool) bool {
     haunt := g.new_ent.HauntEnt
     if haunt != nil {
       for _, sp := range g.house.Floors[0].Haunts {
-        base.Log().Printf("sp: %p", sp)
         if sp == nil {
           continue
         }
-        base.Log().Printf("sp.Name: %s", sp.Name)
-        base.Log().Printf("haunt.Level: %s", haunt.Level)
         if !strings.HasPrefix(sp.Name, string(haunt.Level)) {
           continue
         }
