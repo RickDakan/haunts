@@ -1,3 +1,6 @@
 {
-  "Name": "Move Test"
-}
+  "Name": "Move Test",
+"Texture"   : {
+    "Path": "actions/icons/move.png"
+  }
+  }

@@ -6,4 +6,6 @@ _test
 *.sublime-project
 *.sublime-workspace
 GEN*
+openme
+*.gob
 

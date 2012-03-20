@@ -6,6 +6,8 @@ import (
   _ "image/jpeg"
   _ "image/png"
   "os"
+  "runtime"
+  "sync"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
@@ -29,15 +31,55 @@ func (o *Object) Data() *Data {
 }
 
 type Data struct {
-  Dx,Dy int
+  dx,dy int
   texture gl.Texture
+}
+func (d *Data) Dx() int {
+  return d.dx
+}
+func (d *Data) Dy() int {
+  return d.dy
+}
 
-  // If there was an error loading this texture it will be stored here
-  Err error
+var textureList uint
+var textureListSync sync.Once
+func setupTextureList() {
+  textureListSync.Do(func() {
+    render.Queue(func() {
+      textureList = gl.GenLists(1)
+      gl.NewList(textureList, gl.COMPILE)
+      gl.Begin(gl.QUADS)
+        gl.TexCoord2d(0, 0)
+        gl.Vertex2i(0, 0)
+
+        gl.TexCoord2d(0, -1)
+        gl.Vertex2i(0, 1)
+
+        gl.TexCoord2d(1, -1)
+        gl.Vertex2i(1, 1)
+
+        gl.TexCoord2d(1, 0)
+        gl.Vertex2i(1, 0)
+      gl.End()
+      gl.EndList()
+    })
+  })
+}
+// Renders the texture on a quad at the texture's natural size.
+func (d *Data) RenderNatural(x, y int) {
+  if textureList != 0 {
+    gl.PushMatrix()
+    gl.Enable(gl.TEXTURE_2D)
+    d.Bind()
+    gl.Translated(float64(x), float64(y), 0)
+    gl.Scaled(float64(d.dx), float64(d.dy), 1)
+    gl.CallList(textureList)
+    gl.PopMatrix()
+  }
 }
 
 func (d *Data) Bind() {
-  if d.Err != nil {
+  if d.texture == 0 {
     if error_texture == 0 {
       gl.Enable(gl.TEXTURE_2D)
       error_texture = gl.GenTexture()
@@ -78,31 +120,41 @@ func (m *Manager) Reload() {
 func LoadFromPath(path string) *Data {
   return manager.LoadFromPath(path)
 }
+
+func finalizeData(d *Data) {
+  render.Queue(func() {
+    d.texture.Delete()
+  })
+}
+
 func (m *Manager) LoadFromPath(path string) *Data {
+  setupTextureList()
   if data,ok := m.registry[path]; ok {
     return data
   }
   var data Data
   m.registry[path] = &data
 
+  f,err := os.Open(path)
+  if err != nil {
+    base.Warn().Printf("Unable to load texture '%s': %v", path, err)
+    return &data
+  }
+  config,_,err := image.DecodeConfig(f)
+  f.Close()
+  f,_ = os.Open(path)
+  data.dx = config.Width
+  data.dy = config.Height
+
   go func() {
-    f,err := os.Open(path)
-    if err != nil {
-      data.Err = err
-      base.Warn().Printf("Unable to load texture '%s': %v", path, err)
-      return
-    }
     im,_,err := image.Decode(f)
     f.Close()
     if err != nil {
-      data.Err = err
       base.Warn().Printf("Unable to decode texture '%s': %v", path, err)
       return
     }
 
-    data.Dx = im.Bounds().Dx()
-    data.Dy = im.Bounds().Dy()
-    rgba := image.NewRGBA(image.Rect(0, 0, data.Dx, data.Dy))
+    rgba := image.NewRGBA(image.Rect(0, 0, data.dx, data.dy))
     draw.Draw(rgba, im.Bounds(), im, image.Point{0, 0}, draw.Over)
     render.Queue(func() {
       gl.Enable(gl.TEXTURE_2D)
@@ -113,8 +165,9 @@ func (m *Manager) LoadFromPath(path string) *Data {
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-      glu.Build2DMipmaps(gl.TEXTURE_2D, 4, data.Dx, data.Dy, gl.RGBA, rgba.Pix)
+      glu.Build2DMipmaps(gl.TEXTURE_2D, 4, data.dx, data.dy, gl.RGBA, rgba.Pix)
     })
+    runtime.SetFinalizer(&data, finalizeData)
   } ()
 
   return &data

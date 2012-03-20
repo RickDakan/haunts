@@ -13,9 +13,6 @@ type FurniturePanel struct {
   room_size  *gui.ComboBox
   floor_path *gui.FileWidget
   wall_path  *gui.FileWidget
-  themes     *gui.CheckBoxes
-  sizes      *gui.CheckBoxes
-  decor      *gui.CheckBoxes
 
   Room       *roomDef
   RoomViewer *RoomViewer
@@ -73,10 +70,6 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
       break
     }
   }
-  fp.themes = gui.MakeCheckTextBox(tags.Themes, 300, room.Themes)
-  fp.sizes = gui.MakeCheckTextBox(tags.HouseSizes, 300, room.Sizes)
-  fp.decor = gui.MakeCheckTextBox(tags.Decor, 300, room.Decor)
-
   fp.VerticalTable = gui.MakeVerticalTable()
   fp.VerticalTable.Params().Spacing = 3  
   fp.VerticalTable.Params().Background.R = 0.3
@@ -85,13 +78,12 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
   fp.VerticalTable.AddChild(fp.floor_path)
   fp.VerticalTable.AddChild(fp.wall_path)
   fp.VerticalTable.AddChild(fp.room_size)
-  fp.VerticalTable.AddChild(fp.themes)
-  fp.VerticalTable.AddChild(fp.sizes)
-  fp.VerticalTable.AddChild(fp.decor)
+
+  furn_table := gui.MakeVerticalTable()
   fnames := GetAllFurnitureNames()
   for i := range fnames {
     name := fnames[i]
-    fp.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
+    furn_table.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       f := MakeFurniture(name)
       if f == nil { return }
       fp.RoomViewer.Temp.Furniture = f
@@ -101,6 +93,8 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
       fp.drag_anchor.y = float32(dy - 1) / 2
     }))
   }
+  fp.VerticalTable.AddChild(gui.MakeScrollFrame(furn_table, 300, 600))
+
   return &fp
 }
 
@@ -189,35 +183,5 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
   w.Room.Name = w.name.GetText()
   w.Room.Floor.Path = base.Path(w.floor_path.GetPath())
   w.Room.Wall.Path = base.Path(w.wall_path.GetPath())
-
-  for i := range tags.Themes {
-    selected := false
-    for _,j := range w.themes.GetSelectedIndexes() {
-      if j == i {
-        selected = true
-        break
-      }
-    }
-    if selected {
-      w.Room.Themes[tags.Themes[i]] = true
-    } else if _,ok := w.Room.Themes[tags.Themes[i]]; ok {
-      delete(w.Room.Themes, tags.Themes[i])
-    }
-  }
-
-  for i := range tags.Decor {
-    selected := false
-    for _,j := range w.decor.GetSelectedIndexes() {
-      if j == i {
-        selected = true
-        break
-      }
-    }
-    if selected {
-      w.Room.Decor[tags.Decor[i]] = true
-    } else if _,ok := w.Room.Decor[tags.Decor[i]]; ok {
-      delete(w.Room.Decor, tags.Decor[i])
-    }
-  }
 }
 

@@ -106,7 +106,7 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
-  if ent.Side == target.Side { return false }
+  if ent.Side() == target.Side() { return false }
   if ent.Stats.ApCur() < a.Ap { return false }
   x,y := ent.Pos()
   x2,y2 := target.Pos()

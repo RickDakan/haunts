@@ -9,7 +9,7 @@ import (
 
 func MakeFurniture(name string) *Furniture {
   f := Furniture{ Defname: name }
-  f.Load()
+  base.GetObject("furniture", &f)
   return &f
 }
 
@@ -32,10 +32,6 @@ type Furniture struct {
 
   // Index into furnitureDef.Texture_paths
   Rotation int
-}
-
-func (f *Furniture) Load() {
-  base.GetObject("furniture", f)
 }
 
 // Changes the position of this object such that it fits within the specified
@@ -88,7 +84,7 @@ func (f *Furniture) Dims() (int, int) {
 
 func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
-  dy := width * float32(orientation.Texture.Data().Dy) / float32(orientation.Texture.Data().Dx)
+  dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
 
   gl.Begin(gl.QUADS)
   gl.TexCoord2f(0, 1)
@@ -104,7 +100,7 @@ func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
 
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
-  dy := width * float32(orientation.Texture.Data().Dy) / float32(orientation.Texture.Data().Dx)
+  dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
   gl.Enable(gl.TEXTURE_2D)
   orientation.Texture.Data().Bind()
   gl.Begin(gl.QUADS)

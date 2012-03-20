@@ -1,14 +1,18 @@
 {
   "profile"      : "alt+p",
+  "console"      : "os+c",
   "zoom"         : "r",
+  "zoom in"      : "up",
+  "zoom out"     : "down",
   "drag"         : "r",
+  "flip"         : "f",
   "rotate left"  : "w",
   "rotate right" : "e",
-  "load"         : "ctrl+l",
-  "save"         : "ctrl+s",
-  "quit"         : "ctrl+q",
-  "room editor"  : "ctrl+1",
-  "house editor" : "ctrl+2",
-  "game mode"    : "ctrl+g",
-  "finish round" : "ctrl+t"
+  "load"         : "os+l",
+  "save"         : "os+s",
+  "quit"         : "os+q",
+  "room editor"  : "os+1",
+  "house editor" : "os+2",
+  "game mode"    : "os+g",
+  "finish round" : "os+t"
 }

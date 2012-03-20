@@ -1,0 +1,22 @@
+{
+  "Name": "Bed - Master",
+  "Dx": 4,
+  "Dy": 4,
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 4,
+      "Texture": {
+        "Path": "furniture/bed_master/bed_master_lf.png"
+      }
+    },
+    {
+      "Dx": 4,
+      "Dy": 4,
+      "Texture": {
+        "Path": "furniture/bed_master/bed_master_rf.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

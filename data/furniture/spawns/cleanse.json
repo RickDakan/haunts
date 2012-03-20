@@ -1,0 +1,13 @@
+{
+  "Name": "SpawnCleanse",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/spawns/cleanse.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

@@ -123,7 +123,7 @@ func numVisibleEntities(e *game.Entity, ally bool) int {
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side == ent.Side) { continue }
+    if ally != (e.Side() == ent.Side()) { continue }
     x,y := ent.Pos()
     if e.HasLos(x, y) {
       count++
@@ -151,7 +151,7 @@ func nearestEntity(e *game.Entity, ally bool) *game.Entity {
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side == ent.Side) { continue }
+    if ally != (e.Side() == ent.Side()) { continue }
     dist := distBetween(e, ent)
     if cur_dist > dist {
       cur_dist = dist

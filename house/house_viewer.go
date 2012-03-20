@@ -40,6 +40,8 @@ type HouseViewer struct {
     // If we have a temporary door then this is the room it is attached to
     Door_room *Room
     Door_info doorInfo
+
+    Spawn SpawnPoint
   }
 }
 
@@ -286,7 +288,34 @@ func (hv *HouseViewer) Draw(region gui.Region) {
         drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-    drawFurniture(rx, ry, m_floor, hv.zoom, room.roomDef.Furniture, nil, drawables, cstack, hv.Los_tex, los_alpha)
+    var all_furn, spawns []*Furniture
+    for _, furn := range room.Furniture {
+      all_furn = append(all_furn, furn)
+    }
+    spawn_points := hv.house.Floors[current_floor].allSpawns()
+    for _, spawn := range spawn_points {
+      furn := spawn.Furniture()
+      x := furn.X - rx
+      y := furn.Y - ry
+      if x < 0 || y < 0 || x >= rdx || y >= rdy {
+        continue
+      }
+      furn.X -= rx
+      furn.Y -= ry
+      all_furn = append(all_furn, furn)
+      spawns = append(spawns, furn)
+    }
+    if hv.Temp.Spawn != nil {
+      hv.Temp.Spawn.Furniture().X -= rx
+      hv.Temp.Spawn.Furniture().Y -= ry
+      all_furn = append(all_furn, hv.Temp.Spawn.Furniture())
+      spawns = append(spawns, hv.Temp.Spawn.Furniture())
+    }
+    drawFurniture(rx, ry, m_floor, hv.zoom, all_furn, nil, drawables, cstack, hv.Los_tex, los_alpha)
+    for i := range spawns {
+      spawns[i].X += rx
+      spawns[i].Y += ry
+    }
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }
 }

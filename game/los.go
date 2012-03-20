@@ -1,9 +1,19 @@
 package game
 
 import (
+  "math/rand"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/base"
+)
+
+type Purpose int
+const(
+  PurposeNone Purpose = iota
+  PurposeRelic
+  PurposeMystery
+  PurposeCleanse
 )
 
 type Game struct {
@@ -43,6 +53,10 @@ type Game struct {
   // indicates that a complete round has happened.
   Turn int
 
+  // The purpose that the explorers have for entering the house, chosen at the
+  // beginning of the game.
+  Purpose Purpose
+
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
 
@@ -64,14 +78,53 @@ func (g *Game) OnBegin() {
   }
 }
 
+func (g *Game) PlaceInitialExplorers(ents []*Entity) {
+  floor := g.house.Floors[0]
+  if len(floor.Explorers) == 0 {
+    base.Error().Printf("No initial explorer positions listed.")
+    return
+  }
+  if len(ents) > 9 {
+    base.Error().Printf("Cannot place more than 9 ents at a starting position.")
+    return
+  }
+  for i := range floor.Explorers {
+    x,y := floor.Explorers[i].Furniture().Pos()
+    base.Log().Printf("Initial explorer %d at position: %d, %d", i, x, y)
+  }
+  x,y := floor.Explorers[0].Furniture().Pos()
+  var poss [][2]int
+  for dx := -1; dx <= 1; dx++ {
+    for dy := -1; dy <= 1; dy++ {
+      poss = append(poss, [2]int{x+dx, y+dy})
+    }
+  }
+  for i := range ents {
+    g.Ents = append(g.Ents, ents[i])
+    g.viewer.AddDrawable(ents[i])
+    index := rand.Intn(len(poss))
+    pos := poss[index]
+    poss[index] = poss[len(poss)-1]
+    poss = poss[0:len(poss)-1]
+    ents[i].X = float64(pos[0])
+    ents[i].Y = float64(pos[1])
+  }
+}
+
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
   g.Turn++
-  if g.Side == Explorers {
-    g.Side = Haunt
+  if g.Side == SideExplorers {
+    g.Side = SideHaunt
   } else {
-    g.Side = Explorers
+    g.Side = SideExplorers
+  }
+
+  if g.Turn == 1 {
+    if g.Purpose == PurposeNone {
+      base.Error().Printf("Explorers have not set a purpose")
+    }
   }
 
   if g.Turn <= 2 {
@@ -98,7 +151,7 @@ func (g *Game) OnRound() {
   }).([]*Entity)
 
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.Ents[i].OnRound()
     }
   }
@@ -278,6 +331,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
+  g.Side = SideExplorers
   g.house = h
   g.house.Normalize()
   g.viewer = viewer
@@ -289,7 +343,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
     g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
   }
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], true)
     }
   }
@@ -320,23 +374,13 @@ func (g *Game) Think(dt int64) {
     }
   }
 
-  // Why did I think I had to run this block of code?
-  // ros := make([]house.RectObject, len(g.Ents))
-  // for i := range g.Ents {
-  //   ros[i] = g.Ents[i]
-  // }
-  // ros = house.OrderRectObjects(ros)
-  // for i := range g.Ents {
-  //   g.Ents[i] = ros[len(ros) - i - 1].(*Entity)
-  // }
-
   g.viewer.Floor_drawer = g.current_action
   for i := range g.Ents {
     g.Ents[i].Think(dt)
   }
   var side_ents []*Entity
   for i := range g.Ents {
-    if g.Ents[i].Side == g.Side {
+    if g.Ents[i].Side() == g.Side {
       g.DetermineLos(g.Ents[i], false)
       side_ents = append(side_ents, g.Ents[i])
     }
@@ -379,7 +423,7 @@ func (g *Game) Think(dt int64) {
   if g.action_state == noAction {
     if g.ai_ent == nil {
       for _,ent := range g.Ents {
-        if ent.Side != g.Side { continue }
+        if ent.Side() != g.Side { continue }
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
         g.ai_ent.Ai.Eval()

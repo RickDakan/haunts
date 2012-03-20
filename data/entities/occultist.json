@@ -9,13 +9,9 @@
     "Dire Curse",
     "Abjuration",
     "Exorcise",
-    "Abjuration",
-    "Exorcise",
-    "Abjuration",
-    "Exorcise",
     "First Aid"
   ],
-  "Side": 0,
+  "ExplorerEnt": {},
   "Base": {
     "Ap_max": 6,
     "Hp_max": 20,

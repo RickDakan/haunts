@@ -23,6 +23,7 @@ func getKeysFromString(str string) []gin.KeyId {
   parts := strings.Split(str, "+")
   var kids []gin.KeyId
   for _,part := range parts {
+    part = osSpecifyKey(part)
     var kid gin.KeyId
     switch {
     case len(part) == 1:  // Single character - should be ascii
@@ -39,6 +40,12 @@ func getKeysFromString(str string) []gin.KeyId {
 
     case part == "gui":
       kid = gin.EitherGui
+
+    case part == "up":
+      kid = gin.Up
+
+    case part == "down":
+      kid = gin.Down
 
     default:
       key := gin.In().GetKeyByName(part)

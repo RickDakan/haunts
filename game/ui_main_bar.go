@@ -18,24 +18,24 @@ type Button struct {
   shade float64
 
   // Function to run whenever the button is clicked
-  f func(*MainBar)
+  f func(interface{})
 }
 
 // If x,y is inside the button's region then it will run its function and
 // return true, otherwise it does nothing and returns false.
-func (b *Button) handleClick(x,y int, mb *MainBar) bool {
+func (b *Button) handleClick(x,y int, data interface{}) bool {
   d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X + d.Dx || y >= b.Y + d.Dy {
+  if x < b.X || y < b.Y || x >= b.X + d.Dx() || y >= b.Y + d.Dy() {
     return false
   }
-  b.f(mb)
+  b.f(data)
   return true
 }
 
 func (b *Button) RenderAt(x,y,mx,my int) {
   b.Texture.Data().Bind()
-  tdx :=  + b.Texture.Data().Dx
-  tdy :=  + b.Texture.Data().Dy
+  tdx :=  + b.Texture.Data().Dx()
+  tdy :=  + b.Texture.Data().Dy()
   if mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy {
     b.shade = b.shade * 0.9 + 0.1
   } else {
@@ -163,54 +163,20 @@ type MainBar struct {
   mx,my int
 }
 
-func buttonFuncEndTurn(mb *MainBar) {
+func buttonFuncEndTurn(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.OnRound()
 }
-func buttonFuncActionLeft(mb *MainBar) {
-  if mb.ent == nil {
-    return
-  }
-  start_index := len(mb.ent.Actions)-1
-  if mb.state.Actions.selected != nil {
-    for i := range mb.ent.Actions {
-      if mb.ent.Actions[i] == mb.state.Actions.selected {
-        start_index = i-1
-        break
-      }
-    }
-  }
-  for i := start_index; i >= 0; i-- {
-    action := mb.ent.Actions[i]
-    if action.Preppable(mb.ent, mb.game) {
-      action.Prep(mb.ent, mb.game)
-      mb.game.SetCurrentAction(action)
-      return
-    }
-  }
+func buttonFuncActionLeft(mbi interface{}) {
+  mb := mbi.(*MainBar)
+  mb.state.Actions.scroll_target -= float64(mb.layout.Actions.Count)
 }
-func buttonFuncActionRight(mb *MainBar) {
-  if mb.ent == nil {
-    return
-  }
-  start_index := 0
-  if mb.state.Actions.selected != nil {
-    for i := range mb.ent.Actions {
-      if mb.ent.Actions[i] == mb.state.Actions.selected {
-        start_index = i+1
-        break
-      }
-    }
-  }
-  for i := start_index; i < len(mb.ent.Actions); i++ {
-    action := mb.ent.Actions[i]
-    if action.Preppable(mb.ent, mb.game) {
-      action.Prep(mb.ent, mb.game)
-      mb.game.SetCurrentAction(action)
-      return
-    }
-  }
+func buttonFuncActionRight(mbi interface{}) {
+  mb := mbi.(*MainBar)
+  mb.state.Actions.scroll_target += float64(mb.layout.Actions.Count)
 }
-func buttonFuncUnitLeft(mb *MainBar) {
+func buttonFuncUnitLeft(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.SetCurrentAction(nil)
   start_index := len(mb.game.Ents) - 1
   for i := 0; i < len(mb.game.Ents); i++ {
@@ -220,19 +186,20 @@ func buttonFuncUnitLeft(mb *MainBar) {
     }
   }
   for i := start_index - 1; i >= 0; i-- {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
   }
   for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
   }
 }
-func buttonFuncUnitRight(mb *MainBar) {
+func buttonFuncUnitRight(mbi interface{}) {
+  mb := mbi.(*MainBar)
   mb.game.SetCurrentAction(nil)
   start_index := 0
   for i := 0; i < len(mb.game.Ents); i++ {
@@ -242,13 +209,13 @@ func buttonFuncUnitRight(mb *MainBar) {
     }
   }
   for i := start_index + 1; i < len(mb.game.Ents); i++ {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
   }
   for i := 0; i <= start_index; i++ {
-    if mb.game.Ents[i].Side == mb.game.Side {
+    if mb.game.Ents[i].Side() == mb.game.Side {
       mb.game.selected_ent = mb.game.Ents[i]
       return
     }
@@ -279,8 +246,8 @@ func MakeMainBar(game *Game) (*MainBar, error) {
 }
 func (m *MainBar) Requested() gui.Dims {
   return gui.Dims{
-    Dx: m.layout.Background.Data().Dx,
-    Dy: m.layout.Background.Data().Dy,
+    Dx: m.layout.Background.Data().Dx(),
+    Dy: m.layout.Background.Data().Dy(),
   }
 }
 
@@ -294,7 +261,6 @@ func (mb *MainBar) SelectEnt(ent *Entity) {
   if mb.ent == nil {
     return
   }
-  mb.state.Actions.selected = mb.ent.selected_action
 }
 
 func (m *MainBar) Expandable() (bool, bool) {
@@ -330,7 +296,7 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
         max = float64(selected_index)
       }
     }
-    m.state.Actions.selected = m.ent.selected_action
+    m.state.Actions.selected = m.game.current_action
     if m.state.Actions.scroll_target > max {
       m.state.Actions.scroll_target = max
     }
@@ -343,9 +309,9 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
         if m.state.Actions.clicked.Preppable(m.ent, m.game) {
           m.state.Actions.clicked.Prep(m.ent, m.game)
           m.game.SetCurrentAction(m.state.Actions.clicked)
-          m.state.Actions.clicked = nil
         }
       }
+      m.state.Actions.clicked = nil
     }
 
     // We similarly need to scroll through conditions
@@ -463,8 +429,8 @@ func (m *MainBar) Draw(region gui.Region) {
   if m.ent != nil {
     gl.Color4d(1, 1, 1, 1)
     m.ent.Still.Data().Bind()
-    tdx := m.ent.Still.Data().Dx
-    tdy := m.ent.Still.Data().Dy
+    tdx := m.ent.Still.Data().Dx()
+    tdy := m.ent.Still.Data().Dy()
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
@@ -489,8 +455,8 @@ func (m *MainBar) Draw(region gui.Region) {
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
-    tdx = m.layout.Divider.Data().Dx
-    tdy = m.layout.Divider.Data().Dy
+    tdx = m.layout.Divider.Data().Dx()
+    tdy = m.layout.Divider.Data().Dy()
     cx = region.X + m.layout.Name.X
     cy = region.Y + m.layout.Name.Y - 5
     gl.Begin(gl.QUADS)
@@ -532,7 +498,7 @@ func (m *MainBar) Draw(region gui.Region) {
       for i,action := range m.ent.Actions {
 
         // Highlight the selected action
-        if action == m.ent.selected_action {
+        if action == m.game.current_action {
           gl.Disable(gl.TEXTURE_2D)
           gl.Color4d(1, 0, 0, 1)
           gl.Begin(gl.QUADS)
@@ -618,7 +584,7 @@ func (m *MainBar) Draw(region gui.Region) {
         base.Warn().Printf("Got an unknown mouseover location: %d", m.state.MouseOver.location)
         m.state.MouseOver.active = false
     }
-    y := m.layout.Background.Data().Dy - 40
+    y := m.layout.Background.Data().Dy() - 40
     d := base.GetDictionary(15)
     d.RenderString(m.state.MouseOver.text, float64(x), float64(y), 0, d.MaxHeight(), gui.Center)
   }

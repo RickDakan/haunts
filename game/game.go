@@ -9,11 +9,18 @@ import (
 )
 
 type GamePanel struct {
-  *gui.VerticalTable
+  *gui.AnchorBox
 
   house  *house.HouseDef
   viewer *house.HouseViewer
 
+  // Only active on turn == 0
+  explorer_setup *explorerSetup
+
+  // Only active on turn == 1
+  haunt_setup *hauntSetup
+
+  // Only active for turns >= 2
   main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
@@ -27,12 +34,38 @@ func MakeGamePanel() *GamePanel {
   var gp GamePanel
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.VerticalTable = gui.MakeVerticalTable()
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
   return &gp
 }
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  switch gp.game.Turn {
+  case 0:
+  case 1:
+    if gp.explorer_setup != nil {
+      gp.AnchorBox.RemoveChild(gp.explorer_setup)
+      gp.explorer_setup = nil
+
+      gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
+      var err error
+      gp.haunt_setup,err = MakeHauntSetupBar(gp.game)
+      if err == nil {
+        gp.AnchorBox.AddChild(gp.haunt_setup, gui.Anchor{0, 0.5, 0, 0.5})
+      } else {
+        base.Error().Printf("Unable to create haunt setup bar: %v", err)
+      }
+      // gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+    }
+
+  case 2:
+    if gp.haunt_setup != nil {
+      gp.AnchorBox.RemoveChild(gp.haunt_setup)
+      gp.haunt_setup = nil
+      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+    }
+  default:
+  }
   gp.main_bar.SelectEnt(gp.game.selected_ent)
-  gp.VerticalTable.Think(ui, t)
+  gp.AnchorBox.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t
   }
@@ -43,16 +76,16 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 }
 
 func (gp *GamePanel) Draw(region gui.Region) {
-  gp.VerticalTable.Draw(region)
+  gp.AnchorBox.Draw(region)
 
   // Do heads-up stuff
   region.PushClipPlanes()
   defer region.PopClipPlanes()
   if gp.game.selected_ent != nil {
-    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side == gp.game.Side, true)
+    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side() == gp.game.Side, true)
   }
   if gp.game.hovered_ent != nil {
-    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side == gp.game.Side, false)
+    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side() == gp.game.Side, false)
   }
 }
 
@@ -72,32 +105,13 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
         return MakeEntity(a.(string), g)
       }).([]*Entity)
       ents = algorithm.Choose(ents, func(a interface{}) bool {
-        return a.(*Entity).Side == g.Side
+        return a.(*Entity).Side() == g.Side
       }).([]*Entity)
       if index >= 0 && index < len(ents) {
         g.viewer.RemoveDrawable(g.new_ent)
         g.new_ent = ents[index]
         g.viewer.AddDrawable(g.new_ent)
       }
-    }
-  }
-  if g.new_ent != nil {
-    x,y := gin.In().GetCursor("Mouse").Point()
-    fbx, fby := g.viewer.WindowToBoard(x, y)
-    bx, by := DiscretizePoint32(fbx, fby)
-    g.new_ent.X, g.new_ent.Y = float64(bx), float64(by)
-    if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-      ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
-      r := roomAt(g.house.Floors[0], ix, iy)
-      if r == nil { return true }
-      f := furnitureAt(r, ix - r.X, iy - r.Y)
-      if f != nil { return true }
-      for _,e := range g.Ents {
-        x,y := e.Pos()
-        if x == ix && y == iy { return true }
-      }
-      g.Ents = append(g.Ents, g.new_ent)
-      g.new_ent = nil
     }
   }
   return false
@@ -132,11 +146,10 @@ func (g *Game) SetCurrentAction(action Action) {
     g.action_state = preppingAction
   }
   g.current_action = action
-  g.selected_ent.selected_action = action
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if gp.VerticalTable.Respond(ui, group) {
+  if gp.AnchorBox.Respond(ui, group) {
     return true
   }
 
@@ -184,7 +197,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
-      if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side == gp.game.Side {
+      if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {
         gp.game.selected_ent = gp.game.hovered_ent
       }
       return true
@@ -222,22 +235,29 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (gp *GamePanel) LoadHouse(name string) {
-  gp.VerticalTable = gui.MakeVerticalTable()
-  gp.house = house.MakeHouseFromPath(name)
+  var err error
+  gp.house, err = house.MakeHouseFromPath(name)
+  if err != nil {
+    base.Error().Fatalf("%v", err)
+  }
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
-  gp.VerticalTable = gui.MakeVerticalTable()
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
-  var err error
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Error().Fatalf("%v", err)
   }
-  gp.VerticalTable.AddChild(gp.viewer)
-  gp.VerticalTable.AddChild(gp.main_bar)
+
+  gp.explorer_setup,err = MakeExplorerSetupBar(gp.game)
+  if err != nil {
+    base.Error().Fatalf("%v", err)
+  }
+
+  gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {

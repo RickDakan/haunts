@@ -6,9 +6,19 @@
   ],
   "RoomSizes" : [
     {
+      "Name" : "Tiny",
+      "Dx": 4,
+      "Dy": 4
+    },
+    {
       "Name" : "Small",
       "Dx": 10,
       "Dy": 10
+    },
+  {
+      "Name" : "Small_Rect",
+      "Dx": 10,
+      "Dy": 15
     },
     {
       "Name" : "Medium",
@@ -19,6 +29,11 @@
       "Name" : "Large",
       "Dx": 20,
       "Dy": 20
+    },
+    {
+      "Name" : "Hall",
+      "Dx": 5,
+      "Dy": 19
     }
   ],
   "HouseSizes" : [

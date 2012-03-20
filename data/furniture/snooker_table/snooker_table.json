@@ -1,0 +1,22 @@
+{
+  "Name": "Snooker Table",
+  "Dx": 5,
+  "Dy": 3,
+  "Orientations" : [
+    {
+      "Dx": 5,
+      "Dy": 3,
+      "Texture": {
+        "Path": "furniture/snooker_table/snooker_table_lf.png"
+      }
+    },
+    {
+      "Dx": 3,
+      "Dy": 5,
+      "Texture": {
+        "Path": "furniture/snooker_table/snooker_table_rf.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

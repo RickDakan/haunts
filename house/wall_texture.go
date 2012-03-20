@@ -37,6 +37,9 @@ type WallTexture struct {
   // dimensions of the room.
   X,Y float32
   Rot float32
+
+  // Whether or not to flip the texture about one of its axes
+  Flip bool
 }
 
 type wallTextureDef struct {
@@ -48,8 +51,8 @@ type wallTextureDef struct {
 }
 
 func (wt *WallTexture) Render() {
-  dx2 := float32(wt.Texture.Data().Dx) / 100 / 2
-  dy2 := float32(wt.Texture.Data().Dy) / 100 / 2
+  dx2 := float32(wt.Texture.Data().Dx()) / 100 / 2
+  dy2 := float32(wt.Texture.Data().Dy()) / 100 / 2
   gl.Enable(gl.TEXTURE_2D)
   wt.Texture.Data().Bind()
 
@@ -66,14 +69,19 @@ func (wt *WallTexture) Render() {
   ur.Transform(&rot)
   lr.Transform(&rot)
 
+  tx2 := 1
+  if wt.Flip {
+    tx2 = -1
+  }
+
   gl.Begin(gl.QUADS)
   gl.TexCoord2i(0, 0)
   gl.Vertex2f(wt.X + ll.X, wt.Y + ll.Y)
   gl.TexCoord2i(0, -1)
   gl.Vertex2f(wt.X + ul.X, wt.Y + ul.Y)
-  gl.TexCoord2i(-1, -1)
+  gl.TexCoord2i(tx2, -1)
   gl.Vertex2f(wt.X + ur.X, wt.Y + ur.Y)
-  gl.TexCoord2i(-1, 0)
+  gl.TexCoord2i(tx2, 0)
   gl.Vertex2f(wt.X + lr.X, wt.Y + lr.Y)
   gl.End()
 }

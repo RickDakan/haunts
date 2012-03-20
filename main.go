@@ -42,6 +42,11 @@ var (
 func loadAllRegistries() {
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
+  house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
+  house.LoadAllCluesInDir(filepath.Join(datadir, "spawns", "clues"))
+  house.LoadAllExitsInDir(filepath.Join(datadir, "spawns", "exits"))
+  house.LoadAllExplorersInDir(filepath.Join(datadir, "spawns", "explorers"))
+  house.LoadAllHauntsInDir(filepath.Join(datadir, "spawns", "haunts"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
@@ -68,7 +73,7 @@ func init() {
   base.SetDefaultKeyMap(key_map)
 
   wdx = 1024
-  wdy = 768
+  wdy = 700
 }
 
 type draggerZoomer interface {
@@ -84,13 +89,14 @@ func draggingAndZooming(dz draggerZoomer) {
     return
   }
 
-  if key_map["zoom"].IsDown() != zooming {
-    zooming = !zooming
-  }
+  zooming = key_map["zoom"].IsDown()
   if zooming {
     zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
     dz.Zoom(zoom / 100)
   }
+
+  dz.Zoom(key_map["zoom in"].FramePressAmt() / 20)
+  dz.Zoom(-key_map["zoom out"].FramePressAmt() / 20)
 
   if key_map["drag"].IsDown() != dragging {
     dragging = !dragging
@@ -196,6 +202,7 @@ func main() {
     if r := recover(); r != nil {
       data := debug.Stack()
       base.Error().Printf("PANIC: %s\n", string(data))
+      fmt.Printf("PANIC: %s\n", string(data))
     }
   } ()
   base.Log().Printf("Version %s", Version())
@@ -235,6 +242,7 @@ func main() {
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
+  ui.AddChild(base.MakeConsole())
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.

@@ -10,7 +10,10 @@
     "Grave Grasp",
     "Ghastly Howl"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

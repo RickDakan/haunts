@@ -8,10 +8,10 @@
     "Move Test",
     "Pistol",
     "Kick",
-    "Agonizing Thoughts",
+    "Telepathic Coordination",
     "Psychic Shroud"
   ],
-  "Side": 0,
+  "ExplorerEnt": {},
   "Base": {
     "Ap_max": 6,
     "Hp_max": 20,

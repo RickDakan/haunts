@@ -1,0 +1,35 @@
+{
+  "Purposes": [
+    {
+      "Name":  "Relic",
+      "Icon": {
+        "Path": "ui/explorer_setup/relic.png"
+      }
+    },
+    {
+      "Name":  "Mystery",
+      "Icon": {
+        "Path": "ui/explorer_setup/mystery.png"
+      }
+    },
+    {
+      "Name":  "Cleanse",
+      "Icon": {
+        "Path": "ui/explorer_setup/cleanse.png"
+      }
+    }
+  ],
+  "Purpose": {
+    "Dx": 300,
+    "Dy": 150
+  },
+  "Roster": {
+    "Dx": 350,
+    "Dy": 175,
+    "Buffer": 25,
+    "Ent": {
+      "X": 50,
+      "Y": 10
+    }
+  }
+}

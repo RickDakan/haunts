@@ -1,6 +1,7 @@
 package game
 
 import (
+  "strings"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -25,6 +26,59 @@ func LoadAllEntitiesInDir(dir string) {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
   base.RegisterAllObjectsInDir("entities", dir, ".json", "json")
+}
+
+// Tries to place new_ent in the game at its current position.  Returns true
+// on success, false otherwise.  If initial is true it will only place spawns
+// in their appropriate spawn regions, as defined by spawn points.
+func (g *Game) placeEntity(initial bool) bool {
+  if g.new_ent == nil {
+    return false
+  }
+  ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
+  r, f := g.house.Floors[0].RoomAndFurnAtPos(ix, iy)
+  if r == nil || f != nil { return false }
+  for _,e := range g.Ents {
+    x,y := e.Pos()
+    if x == ix && y == iy { return false }
+  }
+
+  // Check for spawn points, if it is an initial placement
+  placeable := false
+  if initial {
+    haunt := g.new_ent.HauntEnt
+    if haunt != nil {
+      for _, sp := range g.house.Floors[0].Haunts {
+        if sp == nil {
+          continue
+        }
+        if !strings.HasPrefix(sp.Name, string(haunt.Level)) {
+          continue
+        }
+        x, y := sp.Furniture().Pos()
+        dx := x - ix
+        if dx < 0 { dx = -dx }
+        dy := y - iy
+        if dy < 0 { dy = -dy }
+        max := dx
+        if dy > max { max = dy}
+        if max > sp.Size {
+          continue
+        }
+        placeable = true
+        break
+      }
+    }
+  } else {
+    placeable = true
+  }
+  if !placeable {
+    return false
+  }
+
+  g.Ents = append(g.Ents, g.new_ent)
+  g.new_ent = nil
+  return true
 }
 
 func MakeEntity(name string, g *Game) *Entity {
@@ -92,16 +146,57 @@ type entityDef struct {
 
   Base status.Base
 
-  Side Side
+  ExplorerEnt *ExplorerEnt
+  HauntEnt    *HauntEnt
+}
+func (ei *entityDef) Side() Side {
+  if (ei.ExplorerEnt == nil) && (ei.HauntEnt == nil) {
+    base.Error().Printf("Entity '%s' did not specify explorer or haunt data", ei.Name)
+  }
+  if (ei.ExplorerEnt != nil) && (ei.HauntEnt != nil) {
+    base.Error().Printf("Entity '%s' specified both explorer and haunt data", ei.Name)
+  }
+  if ei.ExplorerEnt != nil {
+    return SideExplorers
+  }
+  switch ei.HauntEnt.Level {
+  case LevelMinion:
+  case LevelMaster:
+  case LevelServitor:
+  default:
+    base.Error().Printf("Entity '%s' speciied unknown level '%s'.", ei.Name, ei.HauntEnt.Level)
+  }
+  return SideHaunt
 }
 func (ei *entityDef) Dims() (int,int) {
   return 1, 1
 }
 
+type HauntEnt struct {
+  // If this entity is a Master, Cost indicates how many points it can spend
+  // on Servitors, otherwise it indicates how many points a Master must pay to
+  // include this entity in its army.
+  Cost    int
+
+  // If this entity is a Master this indicates how many points worth of
+  // minions it begins the game with.  Not used for non-Masters.
+  Minions int
+
+  Level   EntLevel
+}
+type EntLevel string
+const(
+  LevelMinion   EntLevel = "Minion"
+  LevelServitor EntLevel = "Servitor"
+  LevelMaster   EntLevel = "Master"
+)
+
+type ExplorerEnt struct {}
+
 type Side int
-const (
-  Explorers Side = iota
-  Haunt
+const(
+  SideExplorers Side = iota
+  SideHaunt
 )
 
 type EntityInst struct {
@@ -133,8 +228,6 @@ type EntityInst struct {
   // Actions that this entity currently has available to it for use.  This
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
-
-  selected_action Action
 
   Stats status.Inst
 
@@ -222,6 +315,7 @@ func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
 
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
+  gl.Enable(gl.TEXTURE_2D)
   if e.Sprite.sp != nil {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
     gl.Begin(gl.QUADS)
