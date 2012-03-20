@@ -57,6 +57,11 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
     }
 
   case 2:
+    if gp.haunt_setup != nil {
+      gp.AnchorBox.RemoveChild(gp.haunt_setup)
+      gp.haunt_setup = nil
+      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+    }
   default:
   }
   gp.main_bar.SelectEnt(gp.game.selected_ent)

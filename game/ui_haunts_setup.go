@@ -1,7 +1,10 @@
 package game
 
 import (
+  "math/rand"
+  "strings"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
@@ -27,6 +30,7 @@ type hauntSetup struct {
   roster_chooser *hui.RosterChooser
 
   points int
+  minion_points int
 
   mode EntLevel
 }
@@ -135,10 +139,50 @@ func (hs *hauntSetup) masterToServitor() {
 
   hs.roster_chooser = hui.MakeRosterChooser(roster,
     hs.makeServitorPlacer(ents),
-    func(m map[int]bool) {},
-    )
+    func(m map[int]bool) {
+      hs.servitorToMinion()
+    },
+  )
 
   hs.AnchorBox.AddChild(hs.roster_chooser, gui.Anchor{0, 0.5, 0, 0.5})
+}
+
+func (hs *hauntSetup) servitorToMinion() {
+  hs.AnchorBox.RemoveChild(hs.roster_chooser)
+  ents := getAllEntsWithSideAndLevel(hs.game, SideHaunt, LevelMinion)
+
+  spawns := hs.game.house.Floors[0].Haunts
+  spawns = algorithm.Choose(spawns, func(a interface{}) bool {
+    return strings.HasPrefix(a.(*house.Haunt).Name, "Minion")
+  }).([]*house.Haunt)
+
+  // Randomly select a minion, then randomly select a minion spawn point, then
+  // randomly place it within that spawn point's region.  Continue until
+  // all minion points are used up or sanity has run out.
+  sanity := 100
+  for hs.minion_points > 0 && sanity > 0 {
+    ent := ents[rand.Intn(len(ents))]
+    if ent.HauntEnt.Cost > hs.minion_points {
+      sanity--
+      continue
+    }
+    spawn := spawns[rand.Intn(len(spawns))]
+    x, y := spawn.Furniture().Pos()
+    x += rand.Intn(2 * spawn.Size + 1) - spawn.Size
+    y += rand.Intn(2 * spawn.Size + 1) - spawn.Size
+    hs.game.new_ent = MakeEntity(ent.Name, hs.game)
+    hs.game.new_ent.X = float64(x)
+    hs.game.new_ent.Y = float64(y)
+    hs.game.viewer.AddDrawable(hs.game.new_ent)
+    if hs.game.placeEntity(true) {
+      sanity += 10
+      hs.minion_points -= ent.HauntEnt.Cost
+    } else {
+      sanity--
+      hs.game.viewer.RemoveDrawable(hs.game.new_ent)
+    }
+  }
+  hs.game.OnRound()
 }
 
 func (hs *hauntSetup) Respond(ui *gui.Gui, group gui.EventGroup) bool {
@@ -151,27 +195,21 @@ func (hs *hauntSetup) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     bx, by := DiscretizePoint32(fbx, fby)
     hs.game.new_ent.X, hs.game.new_ent.Y = float64(bx), float64(by)
     if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-      ix,iy := int(hs.game.new_ent.X), int(hs.game.new_ent.Y)
-      r, f := hs.game.house.Floors[0].RoomAndFurnAtPos(ix, iy)
-      if r == nil || f != nil { return true }
-      for _,e := range hs.game.Ents {
-        x,y := e.Pos()
-        if x == ix && y == iy { return true }
-      }
-      hs.game.Ents = append(hs.game.Ents, hs.game.new_ent)
-      if hs.mode == LevelMaster {
-        hs.points = hs.game.new_ent.HauntEnt.Cost
-        hs.masterToServitor()
-        hs.game.new_ent = nil
-      } else if hs.mode == LevelServitor {
-        hs.points-=hs.game.new_ent.HauntEnt.Cost
-        if hs.game.new_ent.HauntEnt.Cost <= hs.points {
-          hs.game.new_ent = MakeEntity(hs.game.new_ent.Name, hs.game)
-          hs.game.viewer.AddDrawable(hs.game.new_ent)
-        } else {
-          hs.game.new_ent = nil
+      ent := hs.game.new_ent
+      if hs.game.placeEntity(true) {
+        if hs.mode == LevelMaster {
+          hs.points = ent.HauntEnt.Cost
+          hs.minion_points = ent.HauntEnt.Minions
+          hs.masterToServitor()
+        } else if hs.mode == LevelServitor {
+          hs.points-=ent.HauntEnt.Cost
+          if ent.HauntEnt.Cost <= hs.points {
+            hs.game.new_ent = MakeEntity(ent.Name, hs.game)
+            hs.game.viewer.AddDrawable(hs.game.new_ent)
+          }
         }
       }
+      return true
     }
   }
   return false

@@ -108,11 +108,11 @@ func getSpawnPointDefName(sp SpawnPoint) string {
 type Floor struct {
   Rooms []*Room  `registry:"loadfrom-rooms"`
 
-  Relics    []*Relic
-  Clues     []*Clue
-  Exits     []*Exit
-  Explorers []*Explorer
-  Haunts    []*Haunt
+  Relics    []*Relic     `registry:"loadfrom-relic"`
+  Clues     []*Clue      `registry:"loadfrom-clue"`
+  Exits     []*Exit      `registry:"loadfrom-exit"`
+  Explorers []*Explorer  `registry:"loadfrom-explorer"`
+  Haunts    []*Haunt     `registry:"loadfrom-haunt"`
 }
 
 func (f *Floor) allSpawns() []SpawnPoint {

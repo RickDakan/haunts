@@ -1,6 +1,7 @@
 package game
 
 import (
+  "strings"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -25,6 +26,62 @@ func LoadAllEntitiesInDir(dir string) {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
   base.RegisterAllObjectsInDir("entities", dir, ".json", "json")
+}
+
+// Tries to place new_ent in the game at its current position.  Returns true
+// on success, false otherwise.  If initial is true it will only place spawns
+// in their appropriate spawn regions, as defined by spawn points.
+func (g *Game) placeEntity(initial bool) bool {
+  if g.new_ent == nil {
+    return false
+  }
+  ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
+  r, f := g.house.Floors[0].RoomAndFurnAtPos(ix, iy)
+  if r == nil || f != nil { return false }
+  for _,e := range g.Ents {
+    x,y := e.Pos()
+    if x == ix && y == iy { return false }
+  }
+
+  // Check for spawn points, if it is an initial placement
+  placeable := false
+  if initial {
+    haunt := g.new_ent.HauntEnt
+    if haunt != nil {
+      for _, sp := range g.house.Floors[0].Haunts {
+        base.Log().Printf("sp: %p", sp)
+        if sp == nil {
+          continue
+        }
+        base.Log().Printf("sp.Name: %s", sp.Name)
+        base.Log().Printf("haunt.Level: %s", haunt.Level)
+        if !strings.HasPrefix(sp.Name, string(haunt.Level)) {
+          continue
+        }
+        x, y := sp.Furniture().Pos()
+        dx := x - ix
+        if dx < 0 { dx = -dx }
+        dy := y - iy
+        if dy < 0 { dy = -dy }
+        max := dx
+        if dy > max { max = dy}
+        if max > sp.Size {
+          continue
+        }
+        placeable = true
+        break
+      }
+    }
+  } else {
+    placeable = true
+  }
+  if !placeable {
+    return false
+  }
+
+  g.Ents = append(g.Ents, g.new_ent)
+  g.new_ent = nil
+  return true
 }
 
 func MakeEntity(name string, g *Game) *Entity {
@@ -119,8 +176,16 @@ func (ei *entityDef) Dims() (int,int) {
 }
 
 type HauntEnt struct {
-  Cost  int
-  Level EntLevel
+  // If this entity is a Master, Cost indicates how many points it can spend
+  // on Servitors, otherwise it indicates how many points a Master must pay to
+  // include this entity in its army.
+  Cost    int
+
+  // If this entity is a Master this indicates how many points worth of
+  // minions it begins the game with.  Not used for non-Masters.
+  Minions int
+
+  Level   EntLevel
 }
 type EntLevel string
 const(

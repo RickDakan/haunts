@@ -11,8 +11,8 @@
     "Ghastly Howl"
   ],
   "HauntEnt": {
-    "Cost":  1,
-    "Level": "Minion"
+    "Cost":  3,
+    "Level": "Servitor"
   },
   "Base": {
     "Ap_max": 6,
