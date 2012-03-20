@@ -135,6 +135,24 @@ func (f *Floor) allSpawns() []SpawnPoint {
   return sps
 }
 
+func (f *Floor) removeSpawn(sp SpawnPoint) {
+  chooser := func(a interface{}) bool {
+    return a.(SpawnPoint) != sp
+  }
+  switch sp.(type) {
+  case *Relic:
+    f.Relics = algorithm.Choose(f.Relics, chooser).([]*Relic)
+  case *Clue:
+    f.Clues = algorithm.Choose(f.Clues, chooser).([]*Clue)
+  case *Exit:
+    f.Exits = algorithm.Choose(f.Exits, chooser).([]*Exit)
+  case *Explorer:
+    f.Explorers = algorithm.Choose(f.Explorers, chooser).([]*Explorer)
+  case *Haunt:
+    f.Haunts = algorithm.Choose(f.Haunts, chooser).([]*Haunt)
+  }
+}
+
 func (f *Floor) canAddRoom(add *Room) bool {
   for _,room := range f.Rooms {
     if roomOverlap(room, add) { return false }
@@ -669,13 +687,11 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         hdt.viewer.Temp.Spawn = nil
       }
     } else {
-      for i, sp := range floor.Relics {
+      for _, sp := range floor.allSpawns() {
         x,y := sp.Furniture().Pos()
         if bx == x && by == y {
-          n := len(floor.Relics)
-          floor.Relics[i] = floor.Relics[n-1]
-          floor.Relics = floor.Relics[0:n-1]
           hdt.viewer.Temp.Spawn = sp
+          floor.removeSpawn(sp)
           break
         }
       }

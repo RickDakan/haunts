@@ -183,9 +183,8 @@ func LoadAllHauntsInDir(dir string) {
 }
 
 type hauntDef struct {
-  Name  string
-  Text  string
-  Image texture.Object
+  Name string
+  Size int
 }
 
 type Haunt struct {
