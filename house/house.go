@@ -719,12 +719,13 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
-  // for i,floor := range house.Floors {
-  //   for _,room := range floor.Rooms {
-  //     for _,door := range room.Doors {
-  //       door.Opened = true
-  //     }
-  //   }
+  for _,floor := range house.Floors {
+    for _,room := range floor.Rooms {
+      for _,door := range room.Doors {
+        door.Opened = true
+      }
+    }
+  }
   //   if house.Floors[i].Spawns == nil {
   //     house.Floors[i].Spawns = make(map[string][]*Furniture)
   //   } else {
