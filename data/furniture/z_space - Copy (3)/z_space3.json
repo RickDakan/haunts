@@ -1,0 +1,20 @@
+{
+  "Name": "Z Space 3",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/face/face200.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/face/face200.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

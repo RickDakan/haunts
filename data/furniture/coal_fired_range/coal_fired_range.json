@@ -1,0 +1,22 @@
+{
+  "Name": "Coal Fired Range",
+  "Dx": 4,
+  "Dy": 1,
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/coal_fired_range/coal_fired_range_rf.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 4,
+      "Texture": {
+        "Path": "furniture/coal_fired_range/coal_fired_range_lf.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

@@ -2,6 +2,9 @@
   "Name"     : "Ectoplasmic Discharge",
   "Kind"     : "Fire",
   "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/discharge.png"
+  },
   "Ap"       : 3,
   "Strength" : 5,
   "Damage"   : 5,

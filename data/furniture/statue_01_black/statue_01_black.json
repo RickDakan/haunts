@@ -1,0 +1,20 @@
+{
+  "Name": "Statue 01 Black",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/statue_01_black/statue_02_lf.png"
+      }
+    },
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/statue_01_black/statue_02_rf.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}
