@@ -459,7 +459,9 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 func (hdt *houseDataTab) Collapse() {}
 func (hdt *houseDataTab) Expand() {}
-func (hdt *houseDataTab) Reload() {}
+func (hdt *houseDataTab) Reload() {
+  hdt.name.SetText(hdt.house.Name)
+}
 
 type houseDoorTab struct {
   *gui.VerticalTable
