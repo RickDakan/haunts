@@ -656,18 +656,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
-  room.Floor.Data().Bind()
   cstack.ApplyWithAlpha(los_alpha)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2i(0, 0)
-    gl.Vertex2i(0, 0)
-    gl.TexCoord2i(0, -1)
-    gl.Vertex2i(0, room.Size.Dy)
-    gl.TexCoord2i(1, -1)
-    gl.Vertex2i(room.Size.Dx, room.Size.Dy)
-    gl.TexCoord2i(1, 0)
-    gl.Vertex2i(room.Size.Dx, 0)
-  gl.End()
+  room.Floor.Data().Render(0, 0, float64(room.Size.Dx), float64(room.Size.Dy))
 
   if los_tex != nil {
     los_tex.Bind()
