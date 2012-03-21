@@ -8,4 +8,5 @@ _test
 GEN*
 openme
 *.gob
+*.log
 
