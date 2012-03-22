@@ -87,6 +87,7 @@ func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity
   x,y := ent.Pos()
   for _,e := range g.Ents {
     if e == ent { continue }
+    if e.Stats == nil { continue }
     x2,y2 := e.Pos()
     if dist(x, y, x2, y2) <= a.Range && ent.HasLos(x2, y2) && e.Stats.HpCur() > 0 {
       targets = append(targets, e)
@@ -119,6 +120,7 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
   target := g.HoveredEnt()
   if target == nil { return game.NotConsumed }
+  if target.Stats == nil { return game.NotConsumed }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(target.Pos()) {
       a.target = target

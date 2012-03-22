@@ -1,7 +1,9 @@
 package game
 
 import (
+  "image"
   "strings"
+  "path/filepath"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -22,10 +24,12 @@ func SetAiMaker(f func(path string, ent *Entity) Ai) {
   ai_maker = f
 }
 
-func LoadAllEntitiesInDir(dir string) {
+func LoadAllEntities() {
   base.RemoveRegistry("entities")
   base.RegisterRegistry("entities", make(map[string]*entityDef))
-  base.RegisterAllObjectsInDir("entities", dir, ".json", "json")
+  basedir := base.GetDataDir()
+  base.RegisterAllObjectsInDir("entities", filepath.Join(basedir, "entities"), ".json", "json")
+  base.RegisterAllObjectsInDir("entities", filepath.Join(basedir, "objects"), ".json", "json")
 }
 
 // Tries to place new_ent in the game at its current position.  Returns true
@@ -36,11 +40,17 @@ func (g *Game) placeEntity(initial bool) bool {
     return false
   }
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
+  idx,idy := g.new_ent.Dims()
   r, f := g.house.Floors[0].RoomAndFurnAtPos(ix, iy)
   if r == nil || f != nil { return false }
   for _,e := range g.Ents {
     x,y := e.Pos()
-    if x == ix && y == iy { return false }
+    dx,dy := e.Dims()
+    r1 := image.Rect(x, y, x+dx, y+dy)
+    r2 := image.Rect(ix, iy, ix+idx, iy+idy)
+    if r1.Overlaps(r2) {
+      return false
+    }
   }
 
   // Check for spawn points, if it is an initial placement
@@ -88,16 +98,20 @@ func MakeEntity(name string, g *Game) *Entity {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
   ent.Sprite.Load(ent.Sprite_path.String())
-  ent.Stats = status.MakeInst(ent.Base)
 
   if ent.Ai_path.String() != "" {
     ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
   }
 
-  full_los := make([]bool, 256*256)
-  ent.los.grid = make([][]bool, 256)
-  for i := range ent.los.grid {
-    ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
+  if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
+    ent.los = &losData{}
+    full_los := make([]bool, 256*256)
+    ent.los.grid = make([][]bool, 256)
+    for i := range ent.los.grid {
+      ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
+    }
+    stats := status.MakeInst(ent.Base)
+    ent.Stats = &stats
   }
 
   ent.game = g
@@ -148,28 +162,47 @@ type entityDef struct {
 
   ExplorerEnt *ExplorerEnt
   HauntEnt    *HauntEnt
+  ObjectEnt   *ObjectEnt
 }
 func (ei *entityDef) Side() Side {
-  if (ei.ExplorerEnt == nil) && (ei.HauntEnt == nil) {
-    base.Error().Printf("Entity '%s' did not specify explorer or haunt data", ei.Name)
-  }
-  if (ei.ExplorerEnt != nil) && (ei.HauntEnt != nil) {
-    base.Error().Printf("Entity '%s' specified both explorer and haunt data", ei.Name)
-  }
+  types := 0
   if ei.ExplorerEnt != nil {
+    types++
+  }
+  if ei.HauntEnt != nil {
+    types++
+  }
+  if ei.ObjectEnt != nil {
+    types++
+  }
+  if types != 1 {
+    base.Error().Printf("Entity '%s' must specify exactly one ent type.", ei.Name)
+    return SideNone
+  }
+
+  switch {
+  case ei.ExplorerEnt != nil:
     return SideExplorers
+
+  case ei.HauntEnt != nil:
+    switch ei.HauntEnt.Level {
+    case LevelMinion:
+    case LevelMaster:
+    case LevelServitor:
+    default:
+      base.Error().Printf("Entity '%s' speciied unknown level '%s'.", ei.Name, ei.HauntEnt.Level)
+    }
+    return SideHaunt
+
+  case ei.ObjectEnt != nil:
+    return SideObject
   }
-  switch ei.HauntEnt.Level {
-  case LevelMinion:
-  case LevelMaster:
-  case LevelServitor:
-  default:
-    base.Error().Printf("Entity '%s' speciied unknown level '%s'.", ei.Name, ei.HauntEnt.Level)
-  }
-  return SideHaunt
+
+  base.Error().Printf("This code should have been unreachable - offending entity: '%s'", ei.Name)
+  return SideNone
 }
 func (ei *entityDef) Dims() (int,int) {
-  return 1, 1
+  return 2, 2
 }
 
 type HauntEnt struct {
@@ -184,6 +217,9 @@ type HauntEnt struct {
 
   Level   EntLevel
 }
+type ExplorerEnt struct {}
+type ObjectEnt struct {}
+
 type EntLevel string
 const(
   LevelMinion   EntLevel = "Minion"
@@ -191,31 +227,33 @@ const(
   LevelMaster   EntLevel = "Master"
 )
 
-type ExplorerEnt struct {}
-
 type Side int
 const(
-  SideExplorers Side = iota
+  SideNone      Side = iota
+  SideExplorers
   SideHaunt
+  SideObject
 )
+
+type losData struct {
+  // All positions that can be seen by this entity are stored here.
+  grid [][]bool
+
+  // Floor coordinates of the last position los was determined from, so that
+  // we don't need to recalculate it more than we need to as an ent is moving.
+  x,y int
+
+  // Range of vision - all true values in grid are contained within these
+  // bounds.
+  minx,miny,maxx,maxy int
+}
 
 type EntityInst struct {
   X,Y float64
 
   Sprite spriteContainer
 
-  los struct {
-    // All positions that can be seen by this entity are stored here.
-    grid [][]bool
-
-    // Floor coordinates of the last position los was determined from, so that
-    // we don't need to recalculate it more than we need to as an ent is moving.
-    x,y int
-
-    // Range of vision - all true values in grid are contained within these
-    // bounds.
-    minx,miny,maxx,maxy int
-  }
+  los *losData
 
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
@@ -229,7 +267,7 @@ type EntityInst struct {
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
 
-  Stats status.Inst
+  Stats *status.Inst
 
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
@@ -238,6 +276,10 @@ type EntityInst struct {
   // keep easy track of whether or not an entity's Ai has executed yet, since
   // an entity might not do anything else obvious, like run out of Ap.
   ai_status aiStatus
+
+  // For inanimate objects - some of them need to be activated so we know when
+  // the players can interact with them.
+  Active bool
 }
 type aiStatus int
 const (
@@ -250,6 +292,9 @@ func (e *Entity) Game() *Game {
   return e.game
 }
 func (e *Entity) HasLos(x,y int) bool {
+  if e.los == nil {
+    return false
+  }
   if x < 0 || y < 0 || x >= len(e.los.grid) || y >= len(e.los.grid[0]) {
     return false
   }
@@ -414,9 +459,11 @@ func (e *Entity) Think(dt int64) {
 }
 
 func (e *Entity) OnRound() {
-  e.Stats.OnRound()
-  if e.Stats.HpCur() <= 0 {
-    e.Sprite.Sprite().Command("defend")
-    e.Sprite.Sprite().Command("killed")
+  if e.Stats != nil {
+    e.Stats.OnRound()
+    if e.Stats.HpCur() <= 0 {
+      e.Sprite.Sprite().Command("defend")
+      e.Sprite.Sprite().Command("killed")
+    }
   }
 }

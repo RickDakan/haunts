@@ -5,6 +5,7 @@ import (
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
@@ -109,6 +110,9 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
           a.targets = append(a.targets, ent)
         }
       }
+      a.targets = algorithm.Choose(a.targets, func(a interface{}) bool {
+        return a.(*game.Entity).Stats != nil
+      }).([]*game.Entity)
       return game.ConsumedAndBegin
     } else {
       return game.Consumed

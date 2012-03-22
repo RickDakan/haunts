@@ -74,7 +74,9 @@ func (g *Game) SelectedEnt() *Entity {
 
 func (g *Game) OnBegin() {
   for i := range g.Ents {
-    g.Ents[i].Stats.OnBegin()
+    if g.Ents[i].Stats != nil {
+      g.Ents[i].Stats.OnBegin()
+    }
   }
 }
 
@@ -139,7 +141,7 @@ func (g *Game) OnRound() {
     g.OnBegin()
   }
   for i := range g.Ents {
-    if g.Ents[i].Stats.HpCur() <= 0 {
+    if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
     }
     if g.Ents[i].Ai_path.String() != "" {
@@ -147,7 +149,7 @@ func (g *Game) OnRound() {
     }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
-    return a.(*Entity).Stats.HpCur() > 0
+    return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
 
   for i := range g.Ents {
@@ -287,7 +289,12 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
   ent_occupied := make(map[[2]int]bool)
   for _,ent := range g.Ents {
     x,y := ent.Pos()
-    ent_occupied[[2]int{ x, y }] = true
+    dx,dy := ent.Dims()
+    for i := x; i < x+dx; i++ {
+      for j := y; j < y+dy; j++ {
+        ent_occupied[[2]int{ i, j }] = true
+      }
+    }
   }
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
@@ -483,6 +490,7 @@ func (g *Game) MergeLos(ents []*Entity) {
     g.los_full_merger[i] = false
   }
   for _,ent := range ents {
+    if ent.los == nil { continue }
     for i := ent.los.minx; i <= ent.los.maxx; i++ {
       for j := ent.los.miny; j <= ent.los.maxy; j++ {
         if ent.los.grid[i][j] {
@@ -512,6 +520,7 @@ func (g *Game) MergeLos(ents []*Entity) {
 }
 
 func (g *Game) DetermineLos(ent *Entity, force bool) {
+  if ent.los == nil || ent.Stats == nil { return }
   ex,ey := ent.Pos()
   if !force && ex == ent.los.x && ey == ent.los.y { return }
   for i := range ent.los.grid {
@@ -521,6 +530,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   }
   ent.los.x = ex
   ent.los.y = ey
+
 
   minx := ex - ent.Stats.Sight()
   miny := ey - ent.Stats.Sight()

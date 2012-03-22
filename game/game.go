@@ -245,6 +245,15 @@ func (gp *GamePanel) LoadHouse(name string) {
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
+
+
+  sc := MakeEntity("Scepter", gp.game)
+  gp.game.viewer.AddDrawable(sc)
+  gp.game.Ents = append(gp.game.Ents, sc)
+  sc.X = 3
+  sc.Y = 3
+
+
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
   gp.main_bar,err = MakeMainBar(gp.game)
