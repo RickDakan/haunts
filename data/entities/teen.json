@@ -1,5 +1,7 @@
 {
   "Name": "Teen",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/teen",
   "Still": {
     "Path": "entities/teen_still.png"

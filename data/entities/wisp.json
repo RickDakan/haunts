@@ -1,5 +1,7 @@
 {
   "Name": "Lost Soul",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/wisp",
   "Still": {
     "Path": "entities/wisp_still.png"

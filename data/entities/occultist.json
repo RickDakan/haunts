@@ -1,5 +1,7 @@
 {
   "Name": "Occultist",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/occultist",
   "Still": {
     "Path": "entities/occultist_still.png"

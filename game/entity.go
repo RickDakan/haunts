@@ -141,7 +141,7 @@ const (
 
 type entityDef struct {
   Name string
-
+  Dx, Dy int
   Sprite_path base.Path
 
   // Still frame of the sprite - not necessarily one of the individual frames,
@@ -202,7 +202,12 @@ func (ei *entityDef) Side() Side {
   return SideNone
 }
 func (ei *entityDef) Dims() (int,int) {
-  return 2, 2
+  if ei.Dx <= 0 || ei.Dy <= 0 {
+    base.Error().Printf("Entity '%s' didn't have its Dims set properly", ei.Name)
+    ei.Dx = 1
+    ei.Dy = 1
+  }
+  return ei.Dx, ei.Dy
 }
 
 type HauntEnt struct {
