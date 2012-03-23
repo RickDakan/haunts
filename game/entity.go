@@ -223,7 +223,15 @@ type HauntEnt struct {
   Level   EntLevel
 }
 type ExplorerEnt struct {}
-type ObjectEnt struct {}
+type ObjectEnt struct {
+  Goal ObjectGoal
+}
+type ObjectGoal string
+const(
+  GoalRelic   ObjectGoal = "Relic"
+  GoalCleanse ObjectGoal = "Cleanse"
+  GoalMystery ObjectGoal = "Mystery"
+)
 
 type EntLevel string
 const(
