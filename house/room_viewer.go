@@ -876,7 +876,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
-    botx,boty := board_to_window(near_x, near_y)
+    _,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     } else {
@@ -895,7 +895,8 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
       case Drawable:
       gl.Enable(gl.TEXTURE_2D)
-      d.Render(mathgl.Vec2{botx, boty}, rightx - leftx)
+      x := (leftx + rightx) / 2
+      d.Render(mathgl.Vec2{x, boty}, rightx - leftx)
     }
   }
   gl.PopMatrix()
