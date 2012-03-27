@@ -510,6 +510,8 @@ type houseRelicsTab struct {
 
   // Which floor we are viewing and editing
   current_floor int
+
+  drag_anchor struct{x, y float32}
 }
 func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   var hdt houseRelicsTab
@@ -566,8 +568,8 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
 func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   defer hdt.VerticalTable.Think(ui, t)
   rbx,rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
-  bx := roundDown(rbx)
-  by := roundDown(rby)
+  bx := roundDown(rbx - hdt.drag_anchor.x)
+  by := roundDown(rby - hdt.drag_anchor.y)
   if hdt.viewer.Temp.Spawn != nil {
     hdt.spawn_name.SetText("Monkey cake")
     hdt.viewer.Temp.Spawn.X = bx
@@ -612,39 +614,40 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   var bx, by int
   if cursor != nil {
     rbx, rby = hdt.viewer.WindowToBoard(cursor.Point())
-    bx = roundDown(rbx)
-    by = roundDown(rby)
+    bx = roundDown(rbx - hdt.drag_anchor.x)
+    by = roundDown(rby - hdt.drag_anchor.y)
   } 
-  if cursor != nil && hdt.viewer.Temp.Spawn != nil {
-    hdt.viewer.Temp.Spawn.X = bx
-    hdt.viewer.Temp.Spawn.Y = by
-  }
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.viewer.Temp.Spawn != nil {
       x := hdt.viewer.Temp.Spawn.X
       y := hdt.viewer.Temp.Spawn.Y
       ok := true
+      var room_def *roomDef
       for ix := 0; ix < hdt.viewer.Temp.Spawn.Dx; ix++ {
         for iy := 0; iy < hdt.viewer.Temp.Spawn.Dy; iy++ {
           room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(x + ix, y + iy)
-          if room_at == nil || furn_at || spawn_at {
+          if room_at == nil || (room_def != nil && room_at != room_def) || furn_at || spawn_at {
             ok = false
-            base.Log().Printf("Failed at %d %d", x+ix, y+iy)
           } else {
-            base.Log().Printf("Opened at %d %d", x+ix, y+iy)
+            room_def = room_at
           }
         }
       }
       if ok {
         floor.Spawns = append(floor.Spawns, hdt.viewer.Temp.Spawn)
         hdt.viewer.Temp.Spawn = nil
+        hdt.drag_anchor.x = 0
+        hdt.drag_anchor.y = 0
       }
     } else {
       for _, sp := range floor.Spawns {
-        x,y := sp.Pos()
-        if bx == x && by == y {
+        x, y := sp.Pos()
+        dx, dy := sp.Dims()
+        if bx >= x && bx < x + dx && by >= y && by < y + dy {
           hdt.viewer.Temp.Spawn = sp
+          hdt.drag_anchor.x = float32(bx) - float32(hdt.viewer.Temp.Spawn.X)
+          hdt.drag_anchor.y = float32(by) - float32(hdt.viewer.Temp.Spawn.Y)
           floor.removeSpawn(sp)
           break
         }
