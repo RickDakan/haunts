@@ -632,7 +632,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 }
 
-func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer FloorDrawer) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer []FloorDrawer) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -701,8 +701,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   gl.PushMatrix()
   gl.Translated(-float64(room.X), -float64(room.Y), 0)
-  if floor_drawer != nil {
-    floor_drawer.RenderOnFloor()
+  for _, fd := range floor_drawer {
+    fd.RenderOnFloor()
   }
   gl.PopMatrix()
 

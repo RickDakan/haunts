@@ -81,20 +81,23 @@ func (g *Game) OnBegin() {
 }
 
 func (g *Game) PlaceInitialExplorers(ents []*Entity) {
-  floor := g.house.Floors[0]
-  if len(floor.Explorers) == 0 {
-    base.Error().Printf("No initial explorer positions listed.")
-    return
-  }
   if len(ents) > 9 {
     base.Error().Printf("Cannot place more than 9 ents at a starting position.")
     return
   }
-  for i := range floor.Explorers {
-    x,y := floor.Explorers[i].Furniture().Pos()
-    base.Log().Printf("Initial explorer %d at position: %d, %d", i, x, y)
+
+  var spawns []*house.SpawnPoint
+  for _, s := range g.house.Floors[0].Spawns {
+    if s.Type == house.SpawnExplorers {
+      spawns = append(spawns, s)
+    }
   }
-  x,y := floor.Explorers[0].Furniture().Pos()
+  if len(spawns) == 0 {
+    base.Error().Printf("No initial explorer positions listed.")
+    return
+  }
+  x, y := spawns[0].Pos()
+  base.Log().Printf("Starting explorers at (%d, %d)", x, y)
   var poss [][2]int
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {

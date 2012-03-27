@@ -2,7 +2,6 @@ package game
 
 import (
   "image"
-  "strings"
   "path/filepath"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
@@ -42,7 +41,7 @@ func (g *Game) placeEntity(initial bool) bool {
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
   r, f := g.house.Floors[0].RoomAndFurnAtPos(ix, iy)
-  if r == nil || f != nil { return false }
+  if r == nil || f { return false }
   for _,e := range g.Ents {
     x,y := e.Pos()
     dx,dy := e.Dims()
@@ -58,23 +57,16 @@ func (g *Game) placeEntity(initial bool) bool {
   if initial {
     haunt := g.new_ent.HauntEnt
     if haunt != nil {
-      for _, sp := range g.house.Floors[0].Haunts {
-        if sp == nil {
-          continue
-        }
-        if !strings.HasPrefix(sp.Name, string(haunt.Level)) {
-          continue
-        }
-        x, y := sp.Furniture().Pos()
+      for _, spawn := range g.house.Floors[0].Spawns {
+        if spawn.Type != house.SpawnHaunts { continue }
+        x, y := spawn.Pos()
         dx := x - ix
         if dx < 0 { dx = -dx }
+        if dx >= spawn.Dx { continue }
         dy := y - iy
         if dy < 0 { dy = -dy }
-        max := dx
-        if dy > max { max = dy}
-        if max > sp.Size {
-          continue
-        }
+        if dy >= spawn.Dy { continue }
+
         placeable = true
         break
       }

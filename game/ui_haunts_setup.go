@@ -2,7 +2,6 @@ package game
 
 import (
   "math/rand"
-  "strings"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/hui"
@@ -151,10 +150,10 @@ func (hs *hauntSetup) servitorToMinion() {
   hs.AnchorBox.RemoveChild(hs.roster_chooser)
   ents := getAllEntsWithSideAndLevel(hs.game, SideHaunt, LevelMinion)
 
-  spawns := hs.game.house.Floors[0].Haunts
+  spawns := hs.game.house.Floors[0].Spawns
   spawns = algorithm.Choose(spawns, func(a interface{}) bool {
-    return strings.HasPrefix(a.(*house.Haunt).Name, "Minion")
-  }).([]*house.Haunt)
+    return a.(*house.SpawnPoint).Type == house.SpawnHaunts
+  }).([]*house.SpawnPoint)
 
   // Randomly select a minion, then randomly select a minion spawn point, then
   // randomly place it within that spawn point's region.  Continue until
@@ -167,9 +166,9 @@ func (hs *hauntSetup) servitorToMinion() {
       continue
     }
     spawn := spawns[rand.Intn(len(spawns))]
-    x, y := spawn.Furniture().Pos()
-    x += rand.Intn(2 * spawn.Size + 1) - spawn.Size
-    y += rand.Intn(2 * spawn.Size + 1) - spawn.Size
+    x, y := spawn.Pos()
+    x += rand.Intn(2 * spawn.Dx + 1) - spawn.Dx
+    y += rand.Intn(2 * spawn.Dy + 1) - spawn.Dy
     hs.game.new_ent = MakeEntity(ent.Name, hs.game)
     hs.game.new_ent.X = float64(x)
     hs.game.new_ent.Y = float64(y)

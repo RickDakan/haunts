@@ -1,6 +1,7 @@
 package house
 
 import (
+  "sort"
   "fmt"
   "path/filepath"
   "github.com/runningwild/glop/gin"
@@ -86,71 +87,19 @@ func (r *Room) Pos() (x,y int) {
   return r.X, r.Y
 }
 
-type SpawnPoint interface {
-  Furniture() *Furniture
-}
 func getSpawnPointDefName(sp SpawnPoint) string {
-  switch s := sp.(type) {
-  case *Relic:
-    return s.Defname
-  case *Clue:
-    return s.Defname
-  case *Exit:
-    return s.Defname
-  case *Explorer:
-    return s.Defname
-  case *Haunt:
-    return s.Defname
-  }
   return "Unknown Spawn Type"
 }
 
 type Floor struct {
-  Rooms []*Room  `registry:"loadfrom-rooms"`
-
-  Relics    []*Relic     `registry:"loadfrom-relic"`
-  Clues     []*Clue      `registry:"loadfrom-clue"`
-  Exits     []*Exit      `registry:"loadfrom-exit"`
-  Explorers []*Explorer  `registry:"loadfrom-explorer"`
-  Haunts    []*Haunt     `registry:"loadfrom-haunt"`
+  Rooms  []*Room  `registry:"loadfrom-rooms"`
+  Spawns []*SpawnPoint
 }
 
-func (f *Floor) allSpawns() []SpawnPoint {
-  var sps []SpawnPoint
-  for _, sp := range f.Relics {
-    sps = append(sps, sp)
-  }
-  for _, sp := range f.Clues {
-    sps = append(sps, sp)
-  }
-  for _, sp := range f.Exits {
-    sps = append(sps, sp)
-  }
-  for _, sp := range f.Explorers {
-    sps = append(sps, sp)
-  }
-  for _, sp := range f.Haunts {
-    sps = append(sps, sp)
-  }
-  return sps
-}
-
-func (f *Floor) removeSpawn(sp SpawnPoint) {
-  chooser := func(a interface{}) bool {
-    return a.(SpawnPoint) != sp
-  }
-  switch sp.(type) {
-  case *Relic:
-    f.Relics = algorithm.Choose(f.Relics, chooser).([]*Relic)
-  case *Clue:
-    f.Clues = algorithm.Choose(f.Clues, chooser).([]*Clue)
-  case *Exit:
-    f.Exits = algorithm.Choose(f.Exits, chooser).([]*Exit)
-  case *Explorer:
-    f.Explorers = algorithm.Choose(f.Explorers, chooser).([]*Explorer)
-  case *Haunt:
-    f.Haunts = algorithm.Choose(f.Haunts, chooser).([]*Haunt)
-  }
+func (f *Floor) removeSpawn(sp *SpawnPoint) {
+  f.Spawns = algorithm.Choose(f.Spawns, func(a interface{}) bool {
+    return a.(*SpawnPoint) != sp
+  }).([]*SpawnPoint)
 }
 
 func (f *Floor) canAddRoom(add *Room) bool {
@@ -267,7 +216,7 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
-func (f *Floor) RoomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
+func (f *Floor) RoomAndFurnAtPos(x, y int) (*roomDef, bool) {
   for _, room := range f.Rooms {
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
@@ -278,17 +227,18 @@ func (f *Floor) RoomAndFurnAtPos(x, y int) (*roomDef, *furnitureDef) {
       fx,fy := furn.Pos()
       fdx,fdy := furn.Dims()
       if tx < fx || ty < fy || tx >= fx + fdx || ty >= fy + fdy { continue }
-      return room.roomDef, furn.furnitureDef
+      return room.roomDef, true
     }
-    for _, spawn := range f.allSpawns() {
-      sx,sy := spawn.Furniture().Pos()
-      if sx == x && sy == y {
-        return room.roomDef, spawn.Furniture().furnitureDef
+    for _, spawn := range f.Spawns {
+      sx, sy := spawn.Pos()
+      sdx, sdy := spawn.Dims()
+      if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
+        return room.roomDef, true
       }
     }
-    return room.roomDef, nil
+    return room.roomDef, false
   }
-  return nil, nil
+  return nil, false
 }
 
 type HouseDef struct {
@@ -326,9 +276,9 @@ func (h *HouseDef) Normalize() {
       h.Floors[i].Rooms[j].X -= minx - 1
       h.Floors[i].Rooms[j].Y -= miny - 1
     }
-    for _, sp := range h.Floors[0].allSpawns() {
-      sp.Furniture().X -= minx - 1
-      sp.Furniture().Y -= miny - 1
+    for _, sp := range h.Floors[0].Spawns {
+      sp.X -= minx - 1
+      sp.Y -= miny - 1
     }
   }
 }
@@ -549,6 +499,8 @@ type houseRelicsTab struct {
 
   num_floors *gui.ComboBox
   spawn_name *gui.TextLine
+  spawn_type *gui.ComboBox
+  spawn_dims *gui.ComboBox
 
   house  *HouseDef
   viewer *HouseViewer
@@ -566,47 +518,43 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   hdt.spawn_name = gui.MakeTextLine("standard", "", 300, 1, 1, 1, 1)
   hdt.VerticalTable.AddChild(hdt.spawn_name)
 
-  for _, spawn_name := range GetAllRelicNames() {
-    name := spawn_name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-        hdt.viewer.Temp.Spawn = MakeRelic(name)
-        // Pushes it way off screen - as soon as the mouse is moved it will
-        // move to the mouse, and since the mouse will be off the map at the
-        // time it will look fine.
-        hdt.viewer.Temp.Spawn.Furniture().X = 100000
-      }))
+  spawn_options := map[string]SpawnType {
+    "Haunts" : SpawnHaunts,
+    "Explorers" : SpawnExplorers,
+    "Relics" : SpawnRelic,
+    "Clues" : SpawnClue,
+    "Exits" : SpawnExit,
   }
-
-  for _, spawn_name := range GetAllClueNames() {
-    name := spawn_name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-        hdt.viewer.Temp.Spawn = MakeClue(name)
-        hdt.viewer.Temp.Spawn.Furniture().X = 100000
-      }))
+  var spawn_names []string
+  for name := range spawn_options {
+    spawn_names = append(spawn_names, name)
   }
+  sort.Strings(spawn_names)
+  hdt.spawn_type = gui.MakeComboTextBox(spawn_names, 300)
 
-  for _, spawn_name := range GetAllExitNames() {
-    name := spawn_name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-        hdt.viewer.Temp.Spawn = MakeExit(name)
-        hdt.viewer.Temp.Spawn.Furniture().X = 100000
-      }))
+  var dims_options []string
+  for i := 1; i <= 4; i++ {
+    for j := 1; j <= 4; j++ {
+      dims_options = append(dims_options, fmt.Sprintf("%dx%d", i, j))
+    }
   }
+  hdt.spawn_dims = gui.MakeComboTextBox(dims_options, 300)
 
-  for _, spawn_name := range GetAllExplorerNames() {
+  hdt.VerticalTable.AddChild(hdt.spawn_type)
+  hdt.VerticalTable.AddChild(hdt.spawn_dims)
+  for _, spawn_name := range []string{"foo","bar","nubcake"} {
     name := spawn_name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-        hdt.viewer.Temp.Spawn = MakeExplorer(name)
-        hdt.viewer.Temp.Spawn.Furniture().X = 100000
-      }))
-  }
-
-  for _, spawn_name := range GetAllHauntNames() {
-    name := spawn_name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-        hdt.viewer.Temp.Spawn = MakeHaunt(name)
-        hdt.viewer.Temp.Spawn.Furniture().X = 100000
-      }))
+      var dx, dy int
+      dims_str := dims_options[hdt.spawn_dims.GetComboedIndex()]
+      fmt.Sscanf(dims_str, "%dx%d", &dx, &dy)
+      hdt.viewer.Temp.Spawn = &SpawnPoint{
+        Dx: dx,
+        Dy: dy,
+        Y: 100000,
+      }
+      hdt.viewer.Temp.Spawn.Type = spawn_options[hdt.spawn_type.GetComboedOption().(string)]
+    }))
   }
 
   return &hdt
@@ -618,13 +566,16 @@ func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   bx := roundDown(rbx)
   by := roundDown(rby)
   if hdt.viewer.Temp.Spawn != nil {
-    hdt.spawn_name.SetText(getSpawnPointDefName(hdt.viewer.Temp.Spawn))
+    hdt.spawn_name.SetText("Monkey cake")
+    hdt.viewer.Temp.Spawn.X = bx
+    hdt.viewer.Temp.Spawn.Y = by
   } else {
     set := false
-    for _, sp := range hdt.house.Floors[0].allSpawns() {
-      x,y := sp.Furniture().Pos()
-      if x == bx && y == by {
-        hdt.spawn_name.SetText(getSpawnPointDefName(sp))
+    for _, sp := range hdt.house.Floors[0].Spawns {
+      x,y := sp.Pos()
+      dx,dy := sp.Dims()
+      if bx >= x && bx < x + dx && by >= y && by < y + dy {
+        hdt.spawn_name.SetText("Hoogabooo")
         set = true
         break
       }
@@ -662,35 +613,33 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     by = roundDown(rby)
   } 
   if cursor != nil && hdt.viewer.Temp.Spawn != nil {
-    hdt.viewer.Temp.Spawn.Furniture().X = bx
-    hdt.viewer.Temp.Spawn.Furniture().Y = by
+    hdt.viewer.Temp.Spawn.X = bx
+    hdt.viewer.Temp.Spawn.Y = by
   }
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.viewer.Temp.Spawn != nil {
-      x := hdt.viewer.Temp.Spawn.Furniture().X
-      y := hdt.viewer.Temp.Spawn.Furniture().Y
-      room_at, furn_at := floor.RoomAndFurnAtPos(x, y)
-      if room_at != nil && furn_at == nil {
-        switch s := hdt.viewer.Temp.Spawn.(type) {
-        case *Relic:
-          floor.Relics = append(floor.Relics, s)
-        case *Clue:
-          floor.Clues = append(floor.Clues, s)
-        case *Exit:
-          floor.Exits = append(floor.Exits, s)
-        case *Explorer:
-          floor.Explorers = append(floor.Explorers, s)
-        case *Haunt:
-          floor.Haunts = append(floor.Haunts, s)
-        default:
-          base.Error().Printf("Tried to place unknown spawn type '%t'", s)
+      x := hdt.viewer.Temp.Spawn.X
+      y := hdt.viewer.Temp.Spawn.Y
+      ok := true
+      for ix := 0; ix < hdt.viewer.Temp.Spawn.Dx; ix++ {
+        for iy := 0; iy < hdt.viewer.Temp.Spawn.Dy; iy++ {
+          room_at, furn_at := floor.RoomAndFurnAtPos(x + ix, y + iy)
+          if room_at == nil || furn_at {
+            ok = false
+            base.Log().Printf("Failed at %d %d", x+ix, y+iy)
+          } else {
+            base.Log().Printf("Opened at %d %d", x+ix, y+iy)
+          }
         }
+      }
+      if ok {
+        floor.Spawns = append(floor.Spawns, hdt.viewer.Temp.Spawn)
         hdt.viewer.Temp.Spawn = nil
       }
     } else {
-      for _, sp := range floor.allSpawns() {
-        x,y := sp.Furniture().Pos()
+      for _, sp := range floor.Spawns {
+        x,y := sp.Pos()
         if bx == x && by == y {
           hdt.viewer.Temp.Spawn = sp
           floor.removeSpawn(sp)
