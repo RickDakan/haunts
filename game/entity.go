@@ -36,11 +36,19 @@ func LoadAllEntities() {
 // in their appropriate spawn regions, as defined by spawn points.
 func (g *Game) placeEntity(initial bool) bool {
   if g.new_ent == nil {
+    base.Log().Printf("No new ent")
     return false
   }
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
-  r, f := g.house.Floors[0].RoomAndFurnAtPos(ix, iy)
+  r, f, s := g.house.Floors[0].RoomFurnSpawnAtPos(ix, iy)
+  if r != nil {
+    base.Log().Printf("Found room: %s\n", r.Name)
+    base.Log().Printf("%t %t", f, s)
+  } else {
+    base.Log().Printf("No room")
+  }
+
   if r == nil || f { return false }
   for _,e := range g.Ents {
     x,y := e.Pos()
@@ -51,7 +59,6 @@ func (g *Game) placeEntity(initial bool) bool {
       return false
     }
   }
-
   // Check for spawn points, if it is an initial placement
   placeable := false
   if initial {
@@ -60,13 +67,10 @@ func (g *Game) placeEntity(initial bool) bool {
       for _, spawn := range g.house.Floors[0].Spawns {
         if spawn.Type != house.SpawnHaunts { continue }
         x, y := spawn.Pos()
-        dx := x - ix
-        if dx < 0 { dx = -dx }
-        if dx >= spawn.Dx { continue }
-        dy := y - iy
-        if dy < 0 { dy = -dy }
-        if dy >= spawn.Dy { continue }
-
+        dx, dy := spawn.Dims()
+        base.Log().Printf("%d %d %d %d - %d %d %d %d", ix, iy, idx, idy, x, y, dx, dy)
+        if ix < x || ix + idx > x + dx { continue }
+        if iy < y || iy + idy > y + dy { continue }
         placeable = true
         break
       }

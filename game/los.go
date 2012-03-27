@@ -86,21 +86,26 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
     return
   }
 
-  var spawns []*house.SpawnPoint
+  var sp *house.SpawnPoint
   for _, s := range g.house.Floors[0].Spawns {
     if s.Type == house.SpawnExplorers {
-      spawns = append(spawns, s)
+      sp = s
+      break
     }
   }
-  if len(spawns) == 0 {
+  if sp == nil {
     base.Error().Printf("No initial explorer positions listed.")
     return
   }
-  x, y := spawns[0].Pos()
+  if sp.Dx * sp.Dy < len(ents) {
+    base.Error().Printf("Not enough space to place the explorers.")
+    return
+  }
+  x, y := sp.Pos()
   base.Log().Printf("Starting explorers at (%d, %d)", x, y)
   var poss [][2]int
-  for dx := -1; dx <= 1; dx++ {
-    for dy := -1; dy <= 1; dy++ {
+  for dx := 0; dx <= sp.Dx; dx++ {
+    for dy := 0; dy <= sp.Dy; dy++ {
       poss = append(poss, [2]int{x+dx, y+dy})
     }
   }

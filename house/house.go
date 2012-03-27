@@ -216,29 +216,32 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
-func (f *Floor) RoomAndFurnAtPos(x, y int) (*roomDef, bool) {
+func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room_def *roomDef, furn, spawn bool) {
   for _, room := range f.Rooms {
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
     if x < rx || y < ry || x >= rx + rdx || y >= ry + rdy { continue }
-    for _, furn := range room.Furniture {
+    room_def = room.roomDef
+    for _, furniture := range room.Furniture {
       tx := x - rx
       ty := y - ry
-      fx,fy := furn.Pos()
-      fdx,fdy := furn.Dims()
+      fx,fy := furniture.Pos()
+      fdx,fdy := furniture.Dims()
       if tx < fx || ty < fy || tx >= fx + fdx || ty >= fy + fdy { continue }
-      return room.roomDef, true
+      furn = true
+      break
     }
-    for _, spawn := range f.Spawns {
-      sx, sy := spawn.Pos()
-      sdx, sdy := spawn.Dims()
+    for _, sp := range f.Spawns {
+      sx, sy := sp.Pos()
+      sdx, sdy := sp.Dims()
       if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
-        return room.roomDef, true
+        spawn = true
+        break
       }
     }
-    return room.roomDef, false
+    return
   }
-  return nil, false
+  return
 }
 
 type HouseDef struct {
@@ -624,8 +627,8 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       ok := true
       for ix := 0; ix < hdt.viewer.Temp.Spawn.Dx; ix++ {
         for iy := 0; iy < hdt.viewer.Temp.Spawn.Dy; iy++ {
-          room_at, furn_at := floor.RoomAndFurnAtPos(x + ix, y + iy)
-          if room_at == nil || furn_at {
+          room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(x + ix, y + iy)
+          if room_at == nil || furn_at || spawn_at {
             ok = false
             base.Log().Printf("Failed at %d %d", x+ix, y+iy)
           } else {
