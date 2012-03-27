@@ -104,8 +104,8 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   x, y := sp.Pos()
   base.Log().Printf("Starting explorers at (%d, %d)", x, y)
   var poss [][2]int
-  for dx := 0; dx <= sp.Dx; dx++ {
-    for dy := 0; dy <= sp.Dy; dy++ {
+  for dx := 0; dx < sp.Dx; dx++ {
+    for dy := 0; dy < sp.Dy; dy++ {
       poss = append(poss, [2]int{x+dx, y+dy})
     }
   }

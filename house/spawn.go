@@ -15,8 +15,8 @@ const(
 )
 type SpawnPoint struct {
   Dx,Dy int
-  X,Y int
-  Type SpawnType
+  X,Y   int
+  Type  SpawnType
 }
 func (sp *SpawnPoint) Dims() (int,int) {
   return sp.Dx, sp.Dy
