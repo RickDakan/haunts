@@ -1,7 +1,6 @@
 package house
 
 import (
-  "sort"
   "fmt"
   "path/filepath"
   "github.com/runningwild/glop/gin"
@@ -92,8 +91,8 @@ func getSpawnPointDefName(sp SpawnPoint) string {
 }
 
 type Floor struct {
-  Rooms  []*Room  `registry:"loadfrom-rooms"`
-  Spawns []*SpawnPoint
+  Rooms  []*Room        `registry:"loadfrom-rooms"`
+  Spawns []*SpawnPoint  `registry:"loadfrom-spawns"`
 }
 
 func (f *Floor) removeSpawn(sp *SpawnPoint) {
@@ -523,19 +522,6 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   hdt.spawn_name = gui.MakeTextLine("standard", "", 300, 1, 1, 1, 1)
   hdt.VerticalTable.AddChild(hdt.spawn_name)
 
-  spawn_options := map[string]SpawnType {
-    "Haunts" : SpawnHaunts,
-    "Explorers" : SpawnExplorers,
-    "Relics" : SpawnRelic,
-    "Clues" : SpawnClue,
-    "Exits" : SpawnExit,
-  }
-  var spawn_names []string
-  for name := range spawn_options {
-    spawn_names = append(spawn_names, name)
-  }
-  sort.Strings(spawn_names)
-  hdt.spawn_type = gui.MakeComboTextBox(spawn_names, 300)
 
   var dims_options []string
   for i := 1; i <= 4; i++ {
@@ -545,20 +531,19 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   }
   hdt.spawn_dims = gui.MakeComboTextBox(dims_options, 300)
 
-  hdt.VerticalTable.AddChild(hdt.spawn_type)
   hdt.VerticalTable.AddChild(hdt.spawn_dims)
-  for _, spawn_name := range []string{"foo","bar","nubcake"} {
+  spawn_names := GetAllSpawnPointNames()
+  for _, spawn_name := range spawn_names {
     name := spawn_name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
       var dx, dy int
       dims_str := dims_options[hdt.spawn_dims.GetComboedIndex()]
       fmt.Sscanf(dims_str, "%dx%d", &dx, &dy)
-      hdt.viewer.Temp.Spawn = &SpawnPoint{
-        Dx: dx,
-        Dy: dy,
-        Y: 100000,
-      }
-      hdt.viewer.Temp.Spawn.Type = spawn_options[hdt.spawn_type.GetComboedOption().(string)]
+      hdt.viewer.Temp.Spawn = MakeSpawnPoint(name)
+      hdt.viewer.Temp.Spawn.X = 100000
+      hdt.viewer.Temp.Spawn.Dx = dx
+      hdt.viewer.Temp.Spawn.Dy = dy
+      // hdt.viewer.Temp.Spawn.Type = spawn_options[hdt.spawn_type.GetComboedOption().(string)]
     }))
   }
 

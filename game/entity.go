@@ -41,13 +41,7 @@ func (g *Game) placeEntity(initial bool) bool {
   }
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
-  r, f, s := g.house.Floors[0].RoomFurnSpawnAtPos(ix, iy)
-  if r != nil {
-    base.Log().Printf("Found room: %s\n", r.Name)
-    base.Log().Printf("%t %t", f, s)
-  } else {
-    base.Log().Printf("No room")
-  }
+  r, f, _ := g.house.Floors[0].RoomFurnSpawnAtPos(ix, iy)
 
   if r == nil || f { return false }
   for _,e := range g.Ents {
@@ -65,7 +59,10 @@ func (g *Game) placeEntity(initial bool) bool {
     haunt := g.new_ent.HauntEnt
     if haunt != nil {
       for _, spawn := range g.house.Floors[0].Spawns {
-        if spawn.Type != house.SpawnHaunts { continue }
+        if spawn.Type() != house.SpawnHaunts { continue }
+        if haunt.Level == LevelMinion && !spawn.Haunt.Minions { continue }
+        if haunt.Level == LevelServitor && !spawn.Haunt.Servitors { continue }
+        if haunt.Level == LevelMaster && !spawn.Haunt.Masters { continue }
         x, y := spawn.Pos()
         dx, dy := spawn.Dims()
         base.Log().Printf("%d %d %d %d - %d %d %d %d", ix, iy, idx, idy, x, y, dx, dy)

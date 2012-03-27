@@ -152,7 +152,7 @@ func (hs *hauntSetup) servitorToMinion() {
 
   spawns := hs.game.house.Floors[0].Spawns
   spawns = algorithm.Choose(spawns, func(a interface{}) bool {
-    return a.(*house.SpawnPoint).Type == house.SpawnHaunts
+    return a.(*house.SpawnPoint).Type() == house.SpawnHaunts
   }).([]*house.SpawnPoint)
 
   // Randomly select a minion, then randomly select a minion spawn point, then

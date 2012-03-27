@@ -88,7 +88,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
 
   var sp *house.SpawnPoint
   for _, s := range g.house.Floors[0].Spawns {
-    if s.Type == house.SpawnExplorers {
+    if s.Type() == house.SpawnExplorers {
       sp = s
       break
     }
