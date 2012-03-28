@@ -13,6 +13,7 @@ const(
   SpawnExplorers
   SpawnHaunts
   SpawnClue
+  SpawnCleanse
 )
 
 func MakeSpawnPoint(name string) *SpawnPoint {
@@ -37,6 +38,7 @@ type HauntPoint struct {
 }
 type ExplorerPoint struct {}
 type CluePoint struct {}
+type CleansePoint struct {}
 type ExitPoint struct {}
 type RelicPoint struct {}
 
@@ -47,6 +49,7 @@ type SpawnPointDef struct {
   Haunt     *HauntPoint
   Explorer  *ExplorerPoint
   Clue      *CluePoint
+  Cleanse   *CleansePoint
   Exit      *ExitPoint
   Relic     *RelicPoint
 }
@@ -55,6 +58,7 @@ func (sp *SpawnPointDef) Type() SpawnType {
   if sp.Haunt != nil { count++ }
   if sp.Explorer != nil { count++ }
   if sp.Clue != nil { count++ }
+  if sp.Cleanse != nil { count++ }
   if sp.Exit != nil { count++ }
   if sp.Relic != nil { count++ }
   if count > 1 {
@@ -68,6 +72,8 @@ func (sp *SpawnPointDef) Type() SpawnType {
     return SpawnExplorers
   case sp.Clue != nil:
     return SpawnClue
+  case sp.Cleanse != nil:
+    return SpawnCleanse
   case sp.Exit != nil:
     return SpawnClue
   case sp.Relic != nil:
@@ -113,6 +119,9 @@ func (sp *SpawnPoint) RenderOnFloor() {
   case SpawnClue:
     gl.Color4d(0, 0, 1, 0.7)
 
+  case SpawnCleanse:
+    gl.Color4d(1, 1, 1, 0.7)
+
   case SpawnExplorers:
     gl.Color4d(0, 1, 0, 0.7)
 
@@ -120,7 +129,7 @@ func (sp *SpawnPoint) RenderOnFloor() {
     gl.Color4d(1, 0, 0, 0.7)
 
   case SpawnExit:
-    gl.Color4d(1, 1, 1, 0.7)
+    gl.Color4d(1, 0, 1, 0.7)
 
   default:
     gl.Color4d(0, 0, 0, 0.7)
