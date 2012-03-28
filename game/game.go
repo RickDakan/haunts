@@ -1,6 +1,7 @@
 package game
 
 import (
+  "math/rand"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -246,13 +247,38 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
 
-
-  sc := MakeEntity("Scepter", gp.game)
-  gp.game.viewer.AddDrawable(sc)
-  gp.game.Ents = append(gp.game.Ents, sc)
-  sc.X = 3
-  sc.Y = 3
-
+  relic_spawns := algorithm.Choose(gp.game.house.Floors[0].Spawns, func(a interface{}) bool {
+    return a.(*house.SpawnPoint).Type() == house.SpawnRelic
+  }).([]*house.SpawnPoint)
+  used_relics := make(map[string]bool)
+  ent_names := base.GetAllNamesInRegistry("entities")
+  for _, relic_spawn := range relic_spawns {
+    sanity := 100
+    for sanity > 0 {
+      sanity--
+      name := ent_names[rand.Intn(len(ent_names))]
+      if used_relics[name] {
+        continue
+      }
+      relic := MakeEntity(name, gp.game)
+      if relic.ObjectEnt == nil {
+        continue
+      }
+      if relic.Dx > relic_spawn.Dx || relic.Dy > relic_spawn.Dy {
+        continue
+      }
+      used_relics[name] = true
+      gp.game.viewer.AddDrawable(relic)
+      gp.game.Ents = append(gp.game.Ents, relic)
+      relic.X = float64(relic_spawn.X + rand.Intn(relic_spawn.Dx - relic.Dx + 1))
+      relic.Y = float64(relic_spawn.Y + rand.Intn(relic_spawn.Dy - relic.Dy + 1))
+      base.Log().Printf("Using relic '%s' at (%.0f, %.0f)", relic.Name, relic.X, relic.Y)
+      break
+    }
+    if sanity == 0 {
+      base.Error().Print("Failed to place all relics properly")
+    }
+  }
 
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 

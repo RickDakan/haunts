@@ -65,7 +65,6 @@ func (g *Game) placeEntity(initial bool) bool {
         if haunt.Level == LevelMaster && !spawn.Haunt.Masters { continue }
         x, y := spawn.Pos()
         dx, dy := spawn.Dims()
-        base.Log().Printf("%d %d %d %d - %d %d %d %d", ix, iy, idx, idy, x, y, dx, dy)
         if ix < x || ix + idx > x + dx { continue }
         if iy < y || iy + idy > y + dy { continue }
         placeable = true
