@@ -62,6 +62,13 @@ type Game struct {
 
   action_state actionState
   current_action Action
+
+  // Goals ******************************************************
+
+  // The active cleanse points - when interacted with they will be removed
+  // from this list, so in a Cleanse scenario the mission is accomplished
+  // when this list is empty.  In other scenarios this list is always empty.
+  active_cleanses []*Entity
 }
 
 func (g *Game) HoveredEnt() *Entity {
@@ -132,8 +139,34 @@ func (g *Game) OnRound() {
   }
 
   if g.Turn == 1 {
-    if g.Purpose == PurposeNone {
+    switch g.Purpose {
+    case PurposeNone:
       base.Error().Printf("Explorers have not set a purpose")
+
+    case PurposeCleanse:
+    // If this is a cleanse scenario we need to choose the active cleanse points
+    cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
+      ent := a.(*Entity)
+      return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
+    }).([]*Entity)
+    count := 3
+    if len(cleanses) < 3 {
+      count = len(cleanses)
+    }
+    for i := 0; i < count; i++ {
+      n := rand.Intn(len(cleanses))
+      active := cleanses[n]
+      cleanses[n] = cleanses[len(cleanses)-1]
+      cleanses = cleanses[0:len(cleanses)-1]
+      g.active_cleanses = append(g.active_cleanses, active)
+    }
+    for _, active := range g.active_cleanses {
+      base.Log().Printf("Active cleanse point: %s", active.Name)
+    }
+
+    case PurposeMystery:
+
+    case PurposeRelic:
     }
   }
 

@@ -1,0 +1,11 @@
+{
+  "Name": "AltarTart",
+  "Dx": 4,
+  "Dy": 4,
+  "Sprite_path" : "objects/cleanse/altar",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Cleanse"
+  }
+}

@@ -263,7 +263,10 @@ type entSpawnPair struct {
   spawn *house.SpawnPoint
 }
 
-// Distributes the ents among the spawn points, 
+// Distributes the ents among the spawn points.  Since this is done randomly
+// it might not work, so there is a very small chance that not all spawns will
+// have an ent given to them, even if it is possible to distrbiute them
+// properly.  Regardless, at least some will be spawned.
 func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   sort.Sort(orderSpawnsSmallToBig(spawns))
   sanity := 100
