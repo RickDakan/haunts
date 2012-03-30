@@ -260,7 +260,7 @@ func main() {
     })
     render.Purge()
 
-    if key_map["profile"].FramePressCount() > 0 {
+    if key_map["cpu profile"].FramePressCount() > 0 {
       if profile_output == nil {
         profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
         if err == nil {
@@ -278,6 +278,19 @@ func main() {
         pprof.StopCPUProfile()
         profile_output.Close()
         profile_output = nil
+      }
+    }
+
+    if key_map["heap profile"].FramePressCount() > 0 {
+      out, err := os.Create(filepath.Join(datadir, "heap.prof"))
+      if err == nil {
+        err = pprof.WriteHeapProfile(out)
+        out.Close()
+        if err != nil {
+          base.Warn().Printf("Unable to write heap profile: %v", err)
+        }
+      } else {
+        base.Warn().Printf("Unable to create heap profile: %v", err)
       }
     }
 
