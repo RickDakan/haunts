@@ -65,10 +65,13 @@ type Game struct {
 
   // Goals ******************************************************
 
+  // Defaults to the zero value which is NoSide
+  winner Side
+
   // The active cleanse points - when interacted with they will be removed
   // from this list, so in a Cleanse scenario the mission is accomplished
   // when this list is empty.  In other scenarios this list is always empty.
-  active_cleanses []*Entity
+  Active_cleanses []*Entity
 }
 
 func (g *Game) HoveredEnt() *Entity {
@@ -128,6 +131,49 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
 }
 
+func (g *Game) checkWinConditions() {
+  // Check for explorer win conditions
+  explorer_win := false
+  switch g.Purpose {
+  case PurposeRelic:
+  case PurposeMystery:
+  case PurposeCleanse:
+    if len(g.Active_cleanses) == 0 {
+      explorer_win = true
+    }
+
+  default:
+    base.Log().Printf("No purpose set - unable to check for explorer win condition")
+  }
+  if explorer_win {
+    base.Log().Printf("Explorers won - kaboom")
+  }
+
+  // Check for haunt win condition - all intruders dead
+  haunts_win := true
+  for i := range g.Ents {
+    if g.Ents[i].Side() == SideExplorers {
+      haunts_win = false
+    }
+  }
+  if haunts_win {
+    base.Log().Printf("Haunts won - kaboom")
+  }
+
+  if g.winner == SideNone {
+    if explorer_win && !haunts_win {
+      g.winner = SideExplorers
+    }
+    if haunts_win && !explorer_win {
+      g.winner = SideHaunt
+    }
+    if explorer_win && haunts_win {
+      // Let's just hope this is far beyond impossible
+      base.Error().Printf("Both sides won at the same time omg!")
+    }
+  }
+}
+
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
@@ -139,11 +185,13 @@ func (g *Game) OnRound() {
   }
 
   if g.Turn == 1 {
+    var action_name string
     switch g.Purpose {
     case PurposeNone:
       base.Error().Printf("Explorers have not set a purpose")
 
     case PurposeCleanse:
+    action_name = "Cleanse"
     // If this is a cleanse scenario we need to choose the active cleanse points
     cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
       ent := a.(*Entity)
@@ -158,15 +206,28 @@ func (g *Game) OnRound() {
       active := cleanses[n]
       cleanses[n] = cleanses[len(cleanses)-1]
       cleanses = cleanses[0:len(cleanses)-1]
-      g.active_cleanses = append(g.active_cleanses, active)
+      g.Active_cleanses = append(g.Active_cleanses, active)
     }
-    for _, active := range g.active_cleanses {
+    for _, active := range g.Active_cleanses {
       base.Log().Printf("Active cleanse point: %s", active.Name)
     }
 
     case PurposeMystery:
+    action_name = "Mystery"
 
     case PurposeRelic:
+    action_name = "Relic"
+    }
+    if action_name != "" {
+      for i := range g.Ents {
+        ent := g.Ents[i]
+        if ent.Side() != SideExplorers { continue }
+        action := MakeAction(action_name)
+        ent.Actions = append(ent.Actions, action)
+        for j := len(ent.Actions) - 1; j > 1; j-- {
+          ent.Actions[j], ent.Actions[j-1] = ent.Actions[j-1], ent.Actions[j]
+        }
+      }
     }
   }
 
@@ -416,6 +477,7 @@ func (g *Game) Think(dt int64) {
         g.current_action.Cancel()
         g.current_action = nil
         g.action_state = noAction
+        g.checkWinConditions()
 
       case InProgress:
       case CheckForInterrupts:

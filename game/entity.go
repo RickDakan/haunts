@@ -296,14 +296,19 @@ const (
 func (e *Entity) Game() *Game {
   return e.game
 }
-func (e *Entity) HasLos(x,y int) bool {
+func (e *Entity) HasLos(x,y,dx,dy int) bool {
   if e.los == nil {
     return false
   }
-  if x < 0 || y < 0 || x >= len(e.los.grid) || y >= len(e.los.grid[0]) {
-    return false
+  for i := x; i < x+dx; i++ {
+    for j := y; j < y+dy; j++ {
+      if i < 0 || j < 0 || i >= len(e.los.grid) || j >= len(e.los.grid[0]) {
+        continue
+      }
+      return e.los.grid[i][j]
+    }
   }
-  return e.los.grid[x][y]
+  return false
 }
 func DiscretizePoint32(x,y float32) (int,int) {
   return DiscretizePoint64(float64(x), float64(y))

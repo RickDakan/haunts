@@ -29,6 +29,8 @@ type GamePanel struct {
   // calls to Think()
   last_think int64
 
+  complete gui.Widget
+
   game *Game
 }
 
@@ -75,6 +77,16 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   gp.last_think = t
 
   gp.game.Think(dt)
+  if gp.game.winner != SideNone {
+    var name string
+    if gp.game.winner == SideExplorers {
+      name = "A Winner is an Intruder"
+    } else {
+      name = "A Winner is a Denizen"
+    }
+    gp.complete = gui.MakeTextLine("standard", name, 300, 1, 1, 1, 1)
+    gp.AnchorBox.AddChild(gp.complete, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  }
 }
 
 func (gp *GamePanel) Draw(region gui.Region) {
@@ -151,6 +163,10 @@ func (g *Game) SetCurrentAction(action Action) {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if gp.game.winner != SideNone {
+    // This is lame - but works for now
+    return false
+  }
   if gp.AnchorBox.Respond(ui, group) {
     return true
   }

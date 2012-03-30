@@ -89,7 +89,7 @@ func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity
     if e == ent { continue }
     if e.Stats == nil { continue }
     x2,y2 := e.Pos()
-    if dist(x, y, x2, y2) <= a.Range && ent.HasLos(x2, y2) && e.Stats.HpCur() > 0 {
+    if dist(x, y, x2, y2) <= a.Range && ent.HasLos(x2, y2, 1, 1) && e.Stats.HpCur() > 0 {
       targets = append(targets, e)
     }
   }
@@ -122,7 +122,8 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
   if target == nil { return game.NotConsumed }
   if target.Stats == nil { return game.NotConsumed }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(target.Pos()) {
+    px, py := target.Pos()
+    if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
       a.target = target
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       return game.ConsumedAndBegin

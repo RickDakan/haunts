@@ -97,7 +97,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
   }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     ex,ey := a.ent.Pos()
-    if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty) {
+    if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       x := a.tx - (a.Diameter + 1) / 2
       y := a.ty - (a.Diameter + 1) / 2
@@ -123,7 +123,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
 }
 func (a *AoeAttack) RenderOnFloor() {
   ex,ey := a.ent.Pos()
-  if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty) {
+  if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
     gl.Color4d(1.0, 0.2, 0.2, 0.8)
   } else {
     gl.Color4d(0.6, 0.6, 0.6, 0.8)
