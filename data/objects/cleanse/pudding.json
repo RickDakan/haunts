@@ -1,0 +1,11 @@
+{
+  "Name": "AltarPudding",
+  "Dx": 3,
+  "Dy": 3,
+  "Sprite_path" : "objects/cleanse/altar",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Cleanse"
+  }
+}

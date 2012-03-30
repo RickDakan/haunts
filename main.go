@@ -42,13 +42,9 @@ var (
 func loadAllRegistries() {
   house.LoadAllFurnitureInDir(filepath.Join(datadir, "furniture"))
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
-  house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
-  house.LoadAllCluesInDir(filepath.Join(datadir, "spawns", "clues"))
-  house.LoadAllExitsInDir(filepath.Join(datadir, "spawns", "exits"))
-  house.LoadAllExplorersInDir(filepath.Join(datadir, "spawns", "explorers"))
-  house.LoadAllHauntsInDir(filepath.Join(datadir, "spawns", "haunts"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
+  house.LoadAllSpawnPointsInDir(filepath.Join(datadir, "spawns"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
   game.RegisterActions()
   status.RegisterAllConditions()
@@ -212,6 +208,7 @@ func main() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
   })
+  runtime.GOMAXPROCS(8)
   var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
@@ -222,7 +219,7 @@ func main() {
   // TODO: Might want to be able to reload stuff, but this is sensitive because it
   // is loading textures.  We should probably redo the sprite system so that this
   // is easier to safely handle.
-  game.LoadAllEntitiesInDir(filepath.Join(datadir, "entities"))
+  game.LoadAllEntities()
 
   // Set up editors
   editors = map[string]house.Editor {
@@ -251,7 +248,6 @@ func main() {
     ui.Draw()
   })
   render.Purge()
-  runtime.GOMAXPROCS(8)
 
   edit_mode := true
 

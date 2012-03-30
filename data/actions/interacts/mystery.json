@@ -1,0 +1,10 @@
+{
+  "Name": "Mystery",
+  "Display_name": "Investigate",
+  "Ap": 3,
+  "Range": 3,
+  "Animation": "Ranged",
+  "Texture": {
+    "Path": "fudgecake"
+  }
+}

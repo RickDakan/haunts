@@ -12,6 +12,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/opengl/glu"
+  "github.com/runningwild/mathgl"
 )
 
 type Object struct {
@@ -67,12 +68,52 @@ func setupTextureList() {
 }
 // Renders the texture on a quad at the texture's natural size.
 func (d *Data) RenderNatural(x, y int) {
+  d.Render(float64(x), float64(y), float64(d.dx), float64(d.dy))
+}
+
+func (d *Data) Render(x, y, dx, dy float64) {
   if textureList != 0 {
+    var run, op mathgl.Mat4
+    run.Identity()
+    op.Translation(float32(x), float32(y), 0)
+    run.Multiply(&op)
+    op.Scaling(float32(dx), float32(dy), 1)
+    run.Multiply(&op)
+
     gl.PushMatrix()
     gl.Enable(gl.TEXTURE_2D)
     d.Bind()
-    gl.Translated(float64(x), float64(y), 0)
-    gl.Scaled(float64(d.dx), float64(d.dy), 1)
+    gl.MultMatrixf(&run[0])
+    gl.CallList(textureList)
+    gl.PopMatrix()
+  }
+}
+
+func (d *Data) RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
+  if textureList != 0 {
+    var run, op mathgl.Mat4
+    run.Identity()
+    op.Translation(float32(x), float32(y), 0)
+    run.Multiply(&op)
+    op.Translation(float32(dx/2), float32(dy/2), 0)
+    run.Multiply(&op)
+    op.RotationZ(float32(rot))
+    run.Multiply(&op)
+    if flip {
+      op.Translation(float32(-dx/2), float32(-dy/2), 0)
+      run.Multiply(&op)
+      op.Scaling(float32(dx), float32(dy), 1)
+      run.Multiply(&op)
+    } else {
+      op.Translation(float32(dx/2), float32(-dy/2), 0)
+      run.Multiply(&op)
+      op.Scaling(float32(-dx), float32(dy), 1)
+      run.Multiply(&op)
+    }
+    gl.PushMatrix()
+    gl.MultMatrixf(&run[0])
+    gl.Enable(gl.TEXTURE_2D)
+    d.Bind()
     gl.CallList(textureList)
     gl.PopMatrix()
   }

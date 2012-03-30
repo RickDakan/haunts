@@ -1,5 +1,7 @@
 {
   "Name": "Vengeful Wraith",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/wraith",
   "Still": {
     "Path": "entities/wraith_still.png"

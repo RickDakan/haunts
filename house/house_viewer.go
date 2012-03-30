@@ -41,7 +41,7 @@ type HouseViewer struct {
     Door_room *Room
     Door_info doorInfo
 
-    Spawn SpawnPoint
+    Spawn *SpawnPoint
   }
 }
 
@@ -277,8 +277,6 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex, los_alpha)
     }
-    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, hv.Floor_drawer)
-
     var drawables []Drawable
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
@@ -288,28 +286,37 @@ func (hv *HouseViewer) Draw(region gui.Region) {
         drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-    var all_furn, spawns []*Furniture
+    var all_furn []*Furniture
+    var spawns []*SpawnPoint
     for _, furn := range room.Furniture {
       all_furn = append(all_furn, furn)
     }
-    spawn_points := hv.house.Floors[current_floor].allSpawns()
+    spawn_points := hv.house.Floors[current_floor].Spawns
     for _, spawn := range spawn_points {
-      furn := spawn.Furniture()
-      x := furn.X - rx
-      y := furn.Y - ry
+      x, y := spawn.Pos()
+      x -= rx
+      y -= ry
       if x < 0 || y < 0 || x >= rdx || y >= rdy {
         continue
       }
-      furn.X -= rx
-      furn.Y -= ry
-      all_furn = append(all_furn, furn)
-      spawns = append(spawns, furn)
+      drawables = append(drawables, spawn)
+      spawns = append(spawns, spawn)
     }
     if hv.Temp.Spawn != nil {
-      hv.Temp.Spawn.Furniture().X -= rx
-      hv.Temp.Spawn.Furniture().Y -= ry
-      all_furn = append(all_furn, hv.Temp.Spawn.Furniture())
-      spawns = append(spawns, hv.Temp.Spawn.Furniture())
+      drawables = append(drawables, hv.Temp.Spawn)
+      spawns = append(spawns, hv.Temp.Spawn)
+    }
+    var fds []FloorDrawer
+    if hv.Floor_drawer != nil {
+      fds = append(fds, hv.Floor_drawer)
+    }
+    for _, sp := range spawns {
+      fds = append(fds, sp)
+    }
+    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, fds)
+    for i := range spawns {
+      spawns[i].X -= rx
+      spawns[i].Y -= ry
     }
     drawFurniture(rx, ry, m_floor, hv.zoom, all_furn, nil, drawables, cstack, hv.Los_tex, los_alpha)
     for i := range spawns {

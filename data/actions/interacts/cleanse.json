@@ -1,0 +1,10 @@
+{
+  "Name": "Cleanse",
+  "Display_name": "Cleanse",
+  "Ap": 3,
+  "Range": 3,
+  "Animation": "Ranged",
+  "Texture": {
+    "Path": "fudgecake"
+  }
+}

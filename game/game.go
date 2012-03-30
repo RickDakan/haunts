@@ -1,6 +1,8 @@
 package game
 
 import (
+  "math/rand"
+  "sort"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -26,6 +28,8 @@ type GamePanel struct {
   // Keep track of this so we know how much time has passed between
   // calls to Think()
   last_think int64
+
+  complete gui.Widget
 
   game *Game
 }
@@ -73,6 +77,16 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   gp.last_think = t
 
   gp.game.Think(dt)
+  if gp.game.winner != SideNone {
+    var name string
+    if gp.game.winner == SideExplorers {
+      name = "A Winner is an Intruder"
+    } else {
+      name = "A Winner is a Denizen"
+    }
+    gp.complete = gui.MakeTextLine("standard", name, 300, 1, 1, 1, 1)
+    gp.AnchorBox.AddChild(gp.complete, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  }
 }
 
 func (gp *GamePanel) Draw(region gui.Region) {
@@ -149,6 +163,10 @@ func (g *Game) SetCurrentAction(action Action) {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if gp.game.winner != SideNone {
+    // This is lame - but works for now
+    return false
+  }
   if gp.AnchorBox.Respond(ui, group) {
     return true
   }
@@ -234,6 +252,113 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 
+type orderEntsBigToSmall []*Entity
+func (o orderEntsBigToSmall) Len() int {
+  return len(o)
+}
+func (o orderEntsBigToSmall) Swap(i, j int) {
+  o[i], o[j] = o[j], o[i]
+}
+func (o orderEntsBigToSmall) Less(i, j int) bool {
+  return o[i].Dx * o[i].Dy > o[j].Dx * o[j].Dy
+}
+
+type orderSpawnsSmallToBig []*house.SpawnPoint
+func (o orderSpawnsSmallToBig) Len() int {
+  return len(o)
+}
+func (o orderSpawnsSmallToBig) Swap(i, j int) {
+  o[i], o[j] = o[j], o[i]
+}
+func (o orderSpawnsSmallToBig) Less(i, j int) bool {
+  return o[i].Dx * o[i].Dy < o[j].Dx * o[j].Dy
+}
+
+type entSpawnPair struct {
+  ent   *Entity
+  spawn *house.SpawnPoint
+}
+
+// Distributes the ents among the spawn points.  Since this is done randomly
+// it might not work, so there is a very small chance that not all spawns will
+// have an ent given to them, even if it is possible to distrbiute them
+// properly.  Regardless, at least some will be spawned.
+func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
+  sort.Sort(orderSpawnsSmallToBig(spawns))
+  sanity := 100
+  var places []entSpawnPair
+  for sanity > 0 {
+    sanity--
+    places = places[0:0]
+    sort.Sort(orderEntsBigToSmall(ents))
+    //slightly shuffle the ents
+    for i := range ents {
+      j := i + rand.Intn(5) - 2
+      if j >= 0 && j < len(ents) {
+        ents[i], ents[j] = ents[j], ents[i]
+      }
+    }
+    // Go through each ent and try to place it in an unused spawn point
+    used_spawns := make(map[*house.SpawnPoint]bool)
+    for _, ent := range ents {
+      for _, spawn := range spawns {
+        if used_spawns[spawn] { continue }
+        if spawn.Dx < ent.Dx || spawn.Dy < ent.Dy { continue }
+        used_spawns[spawn] = true
+        places = append(places, entSpawnPair{ent, spawn})
+        break
+      }
+    }
+    if len(places) == len(spawns) {
+      break
+    }
+  }
+  if sanity > 0 {
+    base.Log().Printf("Placed all objects with %d sanity remaining", sanity)
+  } else {
+    base.Log().Printf("Only able to place %d out of %d objects", len(places), len(spawns))
+  }
+  for _, place := range places {
+    place.ent.X = float64(place.spawn.X + rand.Intn(place.spawn.Dx - place.ent.Dx + 1))
+    place.ent.Y = float64(place.spawn.Y + rand.Intn(place.spawn.Dy - place.ent.Dy + 1))
+    g.viewer.AddDrawable(place.ent)
+    g.Ents = append(g.Ents, place.ent)
+    base.Log().Printf("Using object '%s' at (%.0f, %.0f)", place.ent.Name, place.ent.X, place.ent.Y)
+  }
+}
+func spawnAllRelics(g *Game) {
+  relic_spawns := algorithm.Choose(g.house.Floors[0].Spawns, func(a interface{}) bool {
+    return a.(*house.SpawnPoint).Type() == house.SpawnRelic
+  }).([]*house.SpawnPoint)
+
+  ent_names := base.GetAllNamesInRegistry("entities")
+  all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
+    return MakeEntity(a.(string), g)
+  }).([]*Entity)
+  relic_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
+    e := a.(*Entity)
+    return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalRelic
+  }).([]*Entity)
+
+  spawnEnts(g, relic_ents, relic_spawns)
+}
+func spawnAllCleanses(g *Game) {
+  cleanse_spawns := algorithm.Choose(g.house.Floors[0].Spawns, func(a interface{}) bool {
+    return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
+  }).([]*house.SpawnPoint)
+
+  ent_names := base.GetAllNamesInRegistry("entities")
+  all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
+    return MakeEntity(a.(string), g)
+  }).([]*Entity)
+  cleanse_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
+    e := a.(*Entity)
+    return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalCleanse
+  }).([]*Entity)
+
+  spawnEnts(g, cleanse_ents, cleanse_spawns)
+}
+
 func (gp *GamePanel) LoadHouse(name string) {
   var err error
   gp.house, err = house.MakeHouseFromPath(name)
@@ -245,6 +370,10 @@ func (gp *GamePanel) LoadHouse(name string) {
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.game = makeGame(gp.house, gp.viewer)
+
+  spawnAllRelics(gp.game)
+  spawnAllCleanses(gp.game)
+
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
   gp.main_bar,err = MakeMainBar(gp.game)

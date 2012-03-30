@@ -1,4 +1,6 @@
 {
-  "Name": "Master-3",
-  "Size": 3
+  "Name": "Masters",
+  "Haunt": {
+    "Masters": true
+  }
 }

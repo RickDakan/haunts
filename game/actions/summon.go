@@ -94,7 +94,7 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) game.Inpu
     if g.IsCellOccupied(a.cx, a.cy) {
       return game.Consumed
     }
-    if a.Personal_los && !a.ent.HasLos(a.cx, a.cy) {
+    if a.Personal_los && !a.ent.HasLos(a.cx, a.cy, 1, 1) {
       return game.Consumed
     }
     if a.ent.Stats.ApCur() >= a.Ap {

@@ -1,4 +1,6 @@
 {
-  "Name": "Servitor-5",
-  "Size": 5
+  "Name": "Servitors",
+  "Haunt": {
+    "Servitors": true
+  }
 }

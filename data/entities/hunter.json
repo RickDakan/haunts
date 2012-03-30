@@ -1,5 +1,7 @@
 {
   "Name": "Ghost Hunter",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/hunter",
   "Still": {
     "Path": "entities/hunter_still.png"

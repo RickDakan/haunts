@@ -1,4 +1,6 @@
 {
-  "Name": "Minion-9",
-  "Size": 9
+  "Name": "Minions",
+  "Haunt": {
+    "Minions": true
+  }
 }

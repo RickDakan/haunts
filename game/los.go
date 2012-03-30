@@ -62,6 +62,16 @@ type Game struct {
 
   action_state actionState
   current_action Action
+
+  // Goals ******************************************************
+
+  // Defaults to the zero value which is NoSide
+  winner Side
+
+  // The active cleanse points - when interacted with they will be removed
+  // from this list, so in a Cleanse scenario the mission is accomplished
+  // when this list is empty.  In other scenarios this list is always empty.
+  Active_cleanses []*Entity
 }
 
 func (g *Game) HoveredEnt() *Entity {
@@ -74,28 +84,38 @@ func (g *Game) SelectedEnt() *Entity {
 
 func (g *Game) OnBegin() {
   for i := range g.Ents {
-    g.Ents[i].Stats.OnBegin()
+    if g.Ents[i].Stats != nil {
+      g.Ents[i].Stats.OnBegin()
+    }
   }
 }
 
 func (g *Game) PlaceInitialExplorers(ents []*Entity) {
-  floor := g.house.Floors[0]
-  if len(floor.Explorers) == 0 {
-    base.Error().Printf("No initial explorer positions listed.")
-    return
-  }
   if len(ents) > 9 {
     base.Error().Printf("Cannot place more than 9 ents at a starting position.")
     return
   }
-  for i := range floor.Explorers {
-    x,y := floor.Explorers[i].Furniture().Pos()
-    base.Log().Printf("Initial explorer %d at position: %d, %d", i, x, y)
+
+  var sp *house.SpawnPoint
+  for _, s := range g.house.Floors[0].Spawns {
+    if s.Type() == house.SpawnExplorers {
+      sp = s
+      break
+    }
   }
-  x,y := floor.Explorers[0].Furniture().Pos()
+  if sp == nil {
+    base.Error().Printf("No initial explorer positions listed.")
+    return
+  }
+  if sp.Dx * sp.Dy < len(ents) {
+    base.Error().Printf("Not enough space to place the explorers.")
+    return
+  }
+  x, y := sp.Pos()
+  base.Log().Printf("Starting explorers at (%d, %d)", x, y)
   var poss [][2]int
-  for dx := -1; dx <= 1; dx++ {
-    for dy := -1; dy <= 1; dy++ {
+  for dx := 0; dx < sp.Dx; dx++ {
+    for dy := 0; dy < sp.Dy; dy++ {
       poss = append(poss, [2]int{x+dx, y+dy})
     }
   }
@@ -111,6 +131,49 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
 }
 
+func (g *Game) checkWinConditions() {
+  // Check for explorer win conditions
+  explorer_win := false
+  switch g.Purpose {
+  case PurposeRelic:
+  case PurposeMystery:
+  case PurposeCleanse:
+    if len(g.Active_cleanses) == 0 {
+      explorer_win = true
+    }
+
+  default:
+    base.Log().Printf("No purpose set - unable to check for explorer win condition")
+  }
+  if explorer_win {
+    base.Log().Printf("Explorers won - kaboom")
+  }
+
+  // Check for haunt win condition - all intruders dead
+  haunts_win := true
+  for i := range g.Ents {
+    if g.Ents[i].Side() == SideExplorers {
+      haunts_win = false
+    }
+  }
+  if haunts_win {
+    base.Log().Printf("Haunts won - kaboom")
+  }
+
+  if g.winner == SideNone {
+    if explorer_win && !haunts_win {
+      g.winner = SideExplorers
+    }
+    if haunts_win && !explorer_win {
+      g.winner = SideHaunt
+    }
+    if explorer_win && haunts_win {
+      // Let's just hope this is far beyond impossible
+      base.Error().Printf("Both sides won at the same time omg!")
+    }
+  }
+}
+
 func (g *Game) OnRound() {
   if g.action_state != noAction { return }
 
@@ -122,8 +185,49 @@ func (g *Game) OnRound() {
   }
 
   if g.Turn == 1 {
-    if g.Purpose == PurposeNone {
+    var action_name string
+    switch g.Purpose {
+    case PurposeNone:
       base.Error().Printf("Explorers have not set a purpose")
+
+    case PurposeCleanse:
+    action_name = "Cleanse"
+    // If this is a cleanse scenario we need to choose the active cleanse points
+    cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
+      ent := a.(*Entity)
+      return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
+    }).([]*Entity)
+    count := 3
+    if len(cleanses) < 3 {
+      count = len(cleanses)
+    }
+    for i := 0; i < count; i++ {
+      n := rand.Intn(len(cleanses))
+      active := cleanses[n]
+      cleanses[n] = cleanses[len(cleanses)-1]
+      cleanses = cleanses[0:len(cleanses)-1]
+      g.Active_cleanses = append(g.Active_cleanses, active)
+    }
+    for _, active := range g.Active_cleanses {
+      base.Log().Printf("Active cleanse point: %s", active.Name)
+    }
+
+    case PurposeMystery:
+    action_name = "Mystery"
+
+    case PurposeRelic:
+    action_name = "Relic"
+    }
+    if action_name != "" {
+      for i := range g.Ents {
+        ent := g.Ents[i]
+        if ent.Side() != SideExplorers { continue }
+        action := MakeAction(action_name)
+        ent.Actions = append(ent.Actions, action)
+        for j := len(ent.Actions) - 1; j > 1; j-- {
+          ent.Actions[j], ent.Actions[j-1] = ent.Actions[j-1], ent.Actions[j]
+        }
+      }
     }
   }
 
@@ -139,7 +243,7 @@ func (g *Game) OnRound() {
     g.OnBegin()
   }
   for i := range g.Ents {
-    if g.Ents[i].Stats.HpCur() <= 0 {
+    if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
     }
     if g.Ents[i].Ai_path.String() != "" {
@@ -147,7 +251,7 @@ func (g *Game) OnRound() {
     }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
-    return a.(*Entity).Stats.HpCur() > 0
+    return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
 
   for i := range g.Ents {
@@ -287,7 +391,12 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
   ent_occupied := make(map[[2]int]bool)
   for _,ent := range g.Ents {
     x,y := ent.Pos()
-    ent_occupied[[2]int{ x, y }] = true
+    dx,dy := ent.Dims()
+    for i := x; i < x+dx; i++ {
+      for j := y; j < y+dy; j++ {
+        ent_occupied[[2]int{ i, j }] = true
+      }
+    }
   }
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
@@ -368,6 +477,7 @@ func (g *Game) Think(dt int64) {
         g.current_action.Cancel()
         g.current_action = nil
         g.action_state = noAction
+        g.checkWinConditions()
 
       case InProgress:
       case CheckForInterrupts:
@@ -483,6 +593,7 @@ func (g *Game) MergeLos(ents []*Entity) {
     g.los_full_merger[i] = false
   }
   for _,ent := range ents {
+    if ent.los == nil { continue }
     for i := ent.los.minx; i <= ent.los.maxx; i++ {
       for j := ent.los.miny; j <= ent.los.maxy; j++ {
         if ent.los.grid[i][j] {
@@ -512,6 +623,7 @@ func (g *Game) MergeLos(ents []*Entity) {
 }
 
 func (g *Game) DetermineLos(ent *Entity, force bool) {
+  if ent.los == nil || ent.Stats == nil { return }
   ex,ey := ent.Pos()
   if !force && ex == ent.los.x && ey == ent.los.y { return }
   for i := range ent.los.grid {
@@ -521,6 +633,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   }
   ent.los.x = ex
   ent.los.y = ey
+
 
   minx := ex - ent.Stats.Sight()
   miny := ey - ent.Stats.Sight()

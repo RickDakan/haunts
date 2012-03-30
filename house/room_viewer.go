@@ -632,7 +632,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 }
 
-func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer FloorDrawer) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer []FloorDrawer) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -656,18 +656,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
-  room.Floor.Data().Bind()
   cstack.ApplyWithAlpha(los_alpha)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2i(0, 0)
-    gl.Vertex2i(0, 0)
-    gl.TexCoord2i(0, -1)
-    gl.Vertex2i(0, room.Size.Dy)
-    gl.TexCoord2i(1, -1)
-    gl.Vertex2i(room.Size.Dx, room.Size.Dy)
-    gl.TexCoord2i(1, 0)
-    gl.Vertex2i(room.Size.Dx, 0)
-  gl.End()
+  room.Floor.Data().Render(0, 0, float64(room.Size.Dx), float64(room.Size.Dy))
 
   if los_tex != nil {
     los_tex.Bind()
@@ -711,8 +701,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   gl.PushMatrix()
   gl.Translated(-float64(room.X), -float64(room.Y), 0)
-  if floor_drawer != nil {
-    floor_drawer.RenderOnFloor()
+  for _, fd := range floor_drawer {
+    fd.RenderOnFloor()
   }
   gl.PopMatrix()
 
@@ -886,7 +876,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
-    botx,boty := board_to_window(near_x, near_y)
+    _,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     } else {
@@ -905,7 +895,8 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
       case Drawable:
       gl.Enable(gl.TEXTURE_2D)
-      d.Render(mathgl.Vec2{botx, boty}, rightx - leftx)
+      x := (leftx + rightx) / 2
+      d.Render(mathgl.Vec2{x, boty}, rightx - leftx)
     }
   }
   gl.PopMatrix()

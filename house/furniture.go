@@ -4,7 +4,6 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  "github.com/runningwild/opengl/gl"
 )
 
 func MakeFurniture(name string) *Furniture {
@@ -82,35 +81,8 @@ func (f *Furniture) Dims() (int, int) {
   return orientation.Dx, orientation.Dy
 }
 
-func (f *Furniture) RenderDims(pos mathgl.Vec2, width float32) {
-  orientation := f.Orientations[f.Rotation]
-  dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
-
-  gl.Begin(gl.QUADS)
-  gl.TexCoord2f(0, 1)
-  gl.Vertex2f(pos.X, pos.Y)
-  gl.TexCoord2f(0, 0)
-  gl.Vertex2f(pos.X, pos.Y + dy)
-  gl.TexCoord2f(1, 0)
-  gl.Vertex2f(pos.X + width, pos.Y + dy)
-  gl.TexCoord2f(1, 1)
-  gl.Vertex2f(pos.X + width, pos.Y)
-  gl.End()
-}
-
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
-  gl.Enable(gl.TEXTURE_2D)
-  orientation.Texture.Data().Bind()
-  gl.Begin(gl.QUADS)
-  gl.TexCoord2f(0, 1)
-  gl.Vertex2f(pos.X, pos.Y)
-  gl.TexCoord2f(0, 0)
-  gl.Vertex2f(pos.X, pos.Y + dy)
-  gl.TexCoord2f(1, 0)
-  gl.Vertex2f(pos.X + width, pos.Y + dy)
-  gl.TexCoord2f(1, 1)
-  gl.Vertex2f(pos.X + width, pos.Y)
-  gl.End()
+  orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
 }
