@@ -1,0 +1,34 @@
+{
+  "Name": "Coffin",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/coffin/coffin_closed.png"
+      }
+    },
+  {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/coffin/coffin_open.png"
+      }
+    },
+  {
+      "Dx": 3,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/coffin/coffin_open_floor.png"
+      }
+    },
+  {
+      "Dx": 3,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/coffin/coffin_closed_floor.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

@@ -1,0 +1,34 @@
+{
+  "Name": "Dining Chair",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/chair/dining_chair_ff.png"
+      }
+    },
+  {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/chair/dining_chair_rf.png"
+      }
+    },
+  {
+      "Dx": 1,
+      "Dy": 3,
+      "Texture": {
+        "Path": "furniture/chair/dining_chair_rf_fallen.png"
+      }
+    },
+  {
+      "Dx": 1,
+      "Dy": 3,
+      "Texture": {
+        "Path": "furniture/chair/dining_chair_ff_fallen.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

@@ -1,11 +1,11 @@
 {
-  "Name": "SpawnExplorer",
+  "Name": "Plant 02 Topiary",
   "Orientations" : [
     {
       "Dx": 1,
       "Dy": 1,
       "Texture": {
-        "Path": "furniture/spawns/spawn_intruder.png"
+        "Path": "furniture/plant/topiary.png"
       }
     }
   ],
