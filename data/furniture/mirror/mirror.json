@@ -1,0 +1,20 @@
+{
+  "Name": "Dressing Mirror",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/mirror/dressing_mirror.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/mirror/dressing_mirror_cracked.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
