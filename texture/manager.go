@@ -9,6 +9,7 @@ import (
   "runtime"
   "sync"
   "github.com/runningwild/glop/render"
+  "github.com/runningwild/glop/memory"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/opengl/glu"
@@ -173,6 +174,7 @@ func (m *Manager) LoadFromPath(path string) *Data {
   if data,ok := m.registry[path]; ok {
     return data
   }
+  base.Log().Printf("Loading %s\n", path)
   var data Data
   m.registry[path] = &data
 
@@ -195,7 +197,8 @@ func (m *Manager) LoadFromPath(path string) *Data {
       return
     }
 
-    rgba := image.NewRGBA(image.Rect(0, 0, data.dx, data.dy))
+    rect := image.Rect(0, 0, data.dx, data.dy)
+    rgba := &image.RGBA{memory.GetBlock(4*data.dx*data.dy), 4*data.dx, rect}
     draw.Draw(rgba, im.Bounds(), im, image.Point{0, 0}, draw.Over)
     render.Queue(func() {
       gl.Enable(gl.TEXTURE_2D)
@@ -207,6 +210,7 @@ func (m *Manager) LoadFromPath(path string) *Data {
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
       glu.Build2DMipmaps(gl.TEXTURE_2D, 4, data.dx, data.dy, gl.RGBA, rgba.Pix)
+      memory.FreeBlock(rgba.Pix)
     })
     runtime.SetFinalizer(&data, finalizeData)
   } ()
