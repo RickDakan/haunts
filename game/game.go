@@ -363,7 +363,8 @@ func (gp *GamePanel) LoadHouse(name string) {
   var err error
   gp.house, err = house.MakeHouseFromPath(name)
   if err != nil {
-    base.Error().Fatalf("%v", err)
+    base.Error().Printf("%v", err)
+    panic(err)
   }
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
@@ -378,12 +379,14 @@ func (gp *GamePanel) LoadHouse(name string) {
 
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
-    base.Error().Fatalf("%v", err)
+    base.Error().Printf("%v", err)
+    panic(err)
   }
 
   gp.explorer_setup,err = MakeExplorerSetupBar(gp.game)
   if err != nil {
-    base.Error().Fatalf("%v", err)
+    base.Error().Printf("%v", err)
+    panic(err)
   }
 
   gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
