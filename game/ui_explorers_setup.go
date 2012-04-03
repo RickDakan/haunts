@@ -251,6 +251,11 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     }
     game.PlaceInitialExplorers(ents)
     game.OnRound()
+    for i := range game.Ents {
+      // Something might still be walking, so lets just stop everything before
+      // we move on.
+      game.Ents[i].Sprite.sp.Command("stop")
+    }
   },
   )
 
