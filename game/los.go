@@ -639,13 +639,21 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   miny := ey - ent.Stats.Sight()
   maxx := ex + ent.Stats.Sight()
   maxy := ey + ent.Stats.Sight()
+  line := make([][2]int, ent.Stats.Sight())
   for x := minx; x <= maxx; x++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, miny), ent.los.grid)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, x, maxy), ent.los.grid)
+    bresenham(ex, ey, x, miny, &line)
+    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
+    line = line[0:0]
+    bresenham(ex, ey, x, maxy, &line)
+    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
   }
   for y := miny; y <= maxy; y++ {
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, minx, y), ent.los.grid)
-    g.doLos(ent.Stats.Sight(), bresenham(ex, ey, maxx, y), ent.los.grid)
+    line = line[0:0]
+    bresenham(ex, ey, minx, y, &line)
+    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
+    line = line[0:0]
+    bresenham(ex, ey, maxx, y, &line)
+    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
   }
 
   ent.los.minx = len(ent.los.grid)
@@ -674,7 +682,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
 
 // Uses Bresenham's alogirthm to determine the points to rasterize a line from
 // x,y to x2,y2.
-func bresenham(x, y, x2, y2 int) [][2]int {
+func bresenham(x, y, x2, y2 int, res *[][2]int) {
   dx := x2 - x
   if dx < 0 {
     dx = -dx
@@ -684,15 +692,11 @@ func bresenham(x, y, x2, y2 int) [][2]int {
     dy = -dy
   }
 
-  var ret [][2]int
   steep := dy > dx
   if steep {
     x, y = y, x
     x2, y2 = y2, x2
     dx, dy = dy, dx
-    ret = make([][2]int, dy)[0:0]
-  } else {
-    ret = make([][2]int, dx)[0:0]
   }
 
   err := dx >> 1
@@ -708,9 +712,9 @@ func bresenham(x, y, x2, y2 int) [][2]int {
   }
   for cx := x; cx != x2; cx += xstep {
     if !steep {
-      ret = append(ret, [2]int{cx, cy})
+      *res = append(*res, [2]int{cx, cy})
     } else {
-      ret = append(ret, [2]int{cy, cx})
+      *res = append(*res, [2]int{cy, cx})
     }
     err -= dy
     if err < 0 {
@@ -719,9 +723,8 @@ func bresenham(x, y, x2, y2 int) [][2]int {
     }
   }
   if !steep {
-    ret = append(ret, [2]int{x2, cy})
+    *res = append(*res, [2]int{x2, cy})
   } else {
-    ret = append(ret, [2]int{cy, x2})
+    *res = append(*res, [2]int{cy, x2})
   }
-  return ret
 }
