@@ -179,10 +179,29 @@ var load_mutex sync.Mutex
 const load_threshold = 1000*1000
 func init() {
   load_requests = make(chan loadRequest, 100)
-  go loadTextureRoutine()
+  for i := 0; i < 4; i++ {
+    go loadTextureRoutine()
+  }
 }
 
-func handleLoadRequest(req loadRequest, im image.Image) {
+// This routine waits for a filename and a data object, then loads the texture
+// in that file into that object.  This is so that only one texture is being
+// loaded at a time, it prevents us from hammering the filesystem and also
+// makes sure we aren't using up a ton of memory all at once.
+func loadTextureRoutine() {
+  for req := range load_requests {
+    handleLoadRequest(req)
+  }
+}
+
+func handleLoadRequest(req loadRequest) {
+  f,_ := os.Open(req.path)
+  im,_,err := image.Decode(f)
+  f.Close()
+  if err != nil {
+    base.Warn().Printf("Unable to decode texture '%s': %v", req.path, err)
+    return
+  }
   gray := true
   dx := im.Bounds().Dx()
   dy := im.Bounds().Dy()
@@ -208,7 +227,7 @@ func handleLoadRequest(req loadRequest, im image.Image) {
     pix = memory.GetBlock(4*req.data.dx*req.data.dy)
     canvas = &image.RGBA{pix, 4*req.data.dx, im.Bounds()}
   }
-  draw.Draw(canvas, im.Bounds(), im, image.Point{}, draw.Over)
+  draw.Draw(canvas, im.Bounds(), im, image.Point{}, draw.Src)
   load_mutex.Lock()
   load_count += len(pix)
   manual_unlock := false
@@ -231,9 +250,7 @@ func handleLoadRequest(req loadRequest, im image.Image) {
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
     if gray {
-      // glu.Build2DMipmaps(gl.TEXTURE_2D, gl.LUMINANCE, req.data.dx, req.data.dy, gl.LUMINANCE, pix)
       glu.Build2DMipmaps(gl.TEXTURE_2D, gl.LUMINANCE_ALPHA, req.data.dx, req.data.dy, gl.LUMINANCE_ALPHA, pix)
-      // glu.Build2DMipmaps(target, gl.LUMINANCE, width, height, gl.LUMINANCE, data)
     } else {
       glu.Build2DMipmaps(gl.TEXTURE_2D, gl.RGBA, req.data.dx, req.data.dy, gl.RGBA, pix)
     }
@@ -244,23 +261,6 @@ func handleLoadRequest(req loadRequest, im image.Image) {
     }
     runtime.SetFinalizer(req.data, finalizeData)
   })
-}
-
-// This routine waits for a filename and a data object, then loads the texture
-// in that file into that object.  This is so that only one texture is being
-// loaded at a time, it prevents us from hammering the filesystem and also
-// makes sure we aren't using up a ton of memory all at once.
-func loadTextureRoutine() {
-  for req := range load_requests {
-    f,_ := os.Open(req.path)
-    im,_,err := image.Decode(f)
-    f.Close()
-    if err != nil {
-      base.Warn().Printf("Unable to decode texture '%s': %v", req.path, err)
-      continue
-    }
-    go handleLoadRequest(req, im)
-  }
 }
 
 func (m *Manager) LoadFromPath(path string) *Data {

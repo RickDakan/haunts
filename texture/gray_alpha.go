@@ -61,9 +61,8 @@ func (p *GrayAlpha) Set(x, y int, c color.Color) {
     return
   }
   i := p.PixOffset(x, y)
-  ga := GrayAlphaModel.Convert(c).(grayAlpha)
-  l,_,_,a := ga.RGBA()  
-  p.Pix[i] = byte(l >> 8)
+  r,_,_,a := c.RGBA()
+  p.Pix[i] = byte(r >> 8)
   p.Pix[i+1] = byte(a >> 8)
 }
 func NewGrayAlpha(r image.Rectangle) *GrayAlpha {
