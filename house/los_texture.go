@@ -4,7 +4,6 @@ import (
   "runtime"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/opengl/gl"
-  "github.com/runningwild/opengl/glu"
 )
 
 const LosMinVisibility = 64
@@ -47,15 +46,14 @@ func MakeLosTexture(size int) *LosTexture {
     tex := gl.GenTexture()
     tex.Bind(gl.TEXTURE_2D)
     gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    glu.Build2DMipmaps(gl.TEXTURE_2D, gl.RGBA, len(lt.p2d), len(lt.p2d), gl.ALPHA, lt.pix)
+    gl.TexImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, len(lt.p2d), len(lt.p2d), 0, gl.ALPHA, gl.BYTE, lt.pix)
     lt.rec <- tex
+    runtime.SetFinalizer(&lt, losTextureFinalize)
   })
-
-  runtime.SetFinalizer(&lt, losTextureFinalize)
 
   return &lt
 }
@@ -79,7 +77,7 @@ func (lt *LosTexture) Remap() {
   render.Queue(func() {
     gl.Enable(gl.TEXTURE_2D)
     lt.tex.Bind(gl.TEXTURE_2D)
-    glu.Build2DMipmaps(gl.TEXTURE_2D, gl.RGBA, len(lt.p2d), len(lt.p2d), gl.ALPHA, lt.pix)
+    gl.TexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, len(lt.p2d), len(lt.p2d), gl.ALPHA, lt.pix)
   })
 }
 
