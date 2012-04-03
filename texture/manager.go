@@ -208,12 +208,12 @@ func handleLoadRequest(req loadRequest) {
   for i := 0; i < dx; i++ {
     for j := 0; j < dy; j++ {
       r, g, b, _ := im.At(i, j).RGBA()
-      if r != g && g != b {
+      if r != g || g != b {
         gray = false
         break
       }
     }
-    if gray {
+    if !gray {
       break
     }
   }
