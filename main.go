@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/memory"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
@@ -252,6 +253,7 @@ func main() {
   edit_mode := true
 
   var profile_output *os.File
+  heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
     render.Queue(func() {
@@ -283,7 +285,8 @@ func main() {
     }
 
     if key_map["heap profile"].FramePressCount() > 0 {
-      out, err := os.Create(filepath.Join(datadir, "heap.prof"))
+      out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
+      heap_prof_count++
       if err == nil {
         err = pprof.WriteHeapProfile(out)
         out.Close()
@@ -293,6 +296,10 @@ func main() {
       } else {
         base.Warn().Printf("Unable to create heap profile: %v", err)
       }
+    }
+
+    if key_map["manual mem"].FramePressCount() > 0 {
+      base.Log().Printf(memory.TotalAllocations())
     }
 
     if key_map["game mode"].FramePressCount() % 2 == 1 {
