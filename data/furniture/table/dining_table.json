@@ -1,0 +1,15 @@
+{
+  "Name": "Dining Table without Chairs",
+  "Dx": 5,
+  "Dy": 2,
+  "Orientations" : [
+    {
+      "Dx": 5,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/table/dining_table.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

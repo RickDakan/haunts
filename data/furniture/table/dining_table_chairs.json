@@ -1,0 +1,15 @@
+{
+  "Name": "Dining Table with Chairs",
+  "Dx": 5,
+  "Dy": 2,
+  "Orientations" : [
+    {
+      "Dx": 5,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/table/dining_table_chairs.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

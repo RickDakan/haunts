@@ -1,11 +1,11 @@
 {
-  "Name": "SpawnExplorer",
+  "Name": "Setee 02 White",
   "Orientations" : [
     {
       "Dx": 1,
-      "Dy": 1,
+      "Dy": 2,
       "Texture": {
-        "Path": "furniture/spawns/spawn_intruder.png"
+        "Path": "furniture/setee/setee_02.png"
       }
     }
   ],

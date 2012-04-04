@@ -1,0 +1,20 @@
+{
+  "Name": "Standalabra",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/standalabra/standalabra.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 6,
+      "Texture": {
+        "Path": "furniture/standalabra/standalabra_fallen.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
