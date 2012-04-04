@@ -70,9 +70,9 @@ func (hv *HouseViewer) AddDrawable(d Drawable) {
   hv.drawables = append(hv.drawables, d)
 }
 func (hv *HouseViewer) RemoveDrawable(d Drawable) {
-  hv.drawables = algorithm.Choose(hv.drawables, func(a interface{}) bool {
-    return a.(Drawable) != d
-  }).([]Drawable)
+  algorithm.Choose2(&hv.drawables, func(t Drawable) bool {
+    return t != d
+  })
 }
 
 func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
