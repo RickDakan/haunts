@@ -1,0 +1,13 @@
+{
+  "Name": "Setee 02 White",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/setee/setee_02.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

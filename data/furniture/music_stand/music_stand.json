@@ -1,0 +1,20 @@
+{
+  "Name": "Music Stand",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/music_stand/music_stand.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 3,
+      "Texture": {
+        "Path": "furniture/music_stand/music_stand_fallen.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

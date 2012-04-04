@@ -1,5 +1,7 @@
 {
-  "profile"      : "alt+p",
+  "cpu profile"  : "alt+p",
+  "heap profile" : "alt+h",
+  "manual mem"   : "alt+m",
   "console"      : "os+c",
   "zoom"         : "r",
   "zoom in"      : "up",

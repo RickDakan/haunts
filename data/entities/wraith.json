@@ -1,5 +1,7 @@
 {
   "Name": "Vengeful Wraith",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/wraith",
   "Still": {
     "Path": "entities/wraith_still.png"
@@ -10,7 +12,10 @@
     "Grave Grasp",
     "Ghastly Howl"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

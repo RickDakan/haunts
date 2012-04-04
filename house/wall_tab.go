@@ -54,8 +54,8 @@ func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
     } else {
       xx,yy,_ = w.viewer.modelviewToBoard(float32(wx), float32(wy))
     }
-    dx := float32(tex.Texture.Data().Dx) / 100 / 2
-    dy := float32(tex.Texture.Data().Dy) / 100 / 2
+    dx := float32(tex.Texture.Data().Dx()) / 100 / 2
+    dy := float32(tex.Texture.Data().Dy()) / 100 / 2
     if xx > tex.X - dx && xx < tex.X + dx && yy > tex.Y - dy && yy < tex.Y + dy {
       return tex
     }
@@ -94,9 +94,9 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         w.prev_wall_texture = new(WallTexture)
         *w.prev_wall_texture = *w.viewer.Temp.WallTexture
       }
-      w.room.WallTextures = algorithm.Choose(w.room.WallTextures, func(a interface{}) bool {
-        return a.(*WallTexture) != w.viewer.Temp.WallTexture
-      }).([]*WallTexture)
+      algorithm.Choose2(&w.room.WallTextures, func(a *WallTexture) bool {
+        return a != w.viewer.Temp.WallTexture
+      })
       if w.viewer.Temp.WallTexture != nil {
         wx,wy := w.viewer.BoardToWindow(w.viewer.Temp.WallTexture.X, w.viewer.Temp.WallTexture.Y)
         px,py := event.Key.Cursor().Point()

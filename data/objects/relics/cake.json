@@ -1,0 +1,11 @@
+{
+  "Name": "Scepter",
+  "Dx": 4,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/scepter",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Relic"
+  }
+}

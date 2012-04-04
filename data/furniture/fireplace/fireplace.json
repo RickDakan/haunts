@@ -1,0 +1,13 @@
+{
+  "Name": "Fireplace",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 4,
+      "Texture": {
+        "Path": "furniture/fireplace/fireplace.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

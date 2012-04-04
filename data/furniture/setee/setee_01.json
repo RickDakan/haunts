@@ -1,0 +1,13 @@
+{
+  "Name": "Setee 01 Black",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/setee/setee.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

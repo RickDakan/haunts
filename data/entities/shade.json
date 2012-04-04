@@ -1,5 +1,7 @@
 {
   "Name": "Angry Shade",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/shade",
   "Still": {
     "Path": "entities/shade_still.png"
@@ -8,7 +10,10 @@
     "Move Test",
     "Chill Touch"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Minion"
+  },
   "Base": {
     "Ap_max": 5,
     "Hp_max": 3,

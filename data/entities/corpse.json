@@ -1,5 +1,7 @@
 {
   "Name": "Corpse",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/corpse",
   "Still": {
     "Path": "entities/corpse_still.png"
@@ -9,7 +11,10 @@
     "Pummel",
     "Diseased Kiss"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 6,

@@ -5,6 +5,6 @@
     "Path": "doors/door_01.png"
   },
   "Closed_texture": {
-    "Path": "doors/door_01.png"
+    "Path": "doors/door_01_closed.png"
   }
 }

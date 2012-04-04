@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/memory"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
@@ -44,12 +45,8 @@ func loadAllRegistries() {
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
+  house.LoadAllSpawnPointsInDir(filepath.Join(datadir, "spawns"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
-  house.LoadAllRelicsInDir(filepath.Join(datadir, "spawns", "relics"))
-  house.LoadAllCluesInDir(filepath.Join(datadir, "spawns", "clues"))
-  house.LoadAllExitsInDir(filepath.Join(datadir, "spawns", "exits"))
-  house.LoadAllExplorersInDir(filepath.Join(datadir, "spawns", "explorers"))
-  house.LoadAllHauntsInDir(filepath.Join(datadir, "spawns", "haunts"))
   game.RegisterActions()
   status.RegisterAllConditions()
 }
@@ -212,6 +209,7 @@ func main() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
   })
+  runtime.GOMAXPROCS(8)
   var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
@@ -222,7 +220,7 @@ func main() {
   // TODO: Might want to be able to reload stuff, but this is sensitive because it
   // is loading textures.  We should probably redo the sprite system so that this
   // is easier to safely handle.
-  game.LoadAllEntitiesInDir(filepath.Join(datadir, "entities"))
+  game.LoadAllEntities()
 
   // Set up editors
   editors = map[string]house.Editor {
@@ -250,11 +248,11 @@ func main() {
     ui.Draw()
   })
   render.Purge()
-  runtime.GOMAXPROCS(8)
 
   edit_mode := true
 
   var profile_output *os.File
+  heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
     sys.Think()
@@ -264,7 +262,7 @@ func main() {
     })
     render.Purge()
 
-    if key_map["profile"].FramePressCount() > 0 {
+    if key_map["cpu profile"].FramePressCount() > 0 {
       if profile_output == nil {
         profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
         if err == nil {
@@ -283,6 +281,24 @@ func main() {
         profile_output.Close()
         profile_output = nil
       }
+    }
+
+    if key_map["heap profile"].FramePressCount() > 0 {
+      out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
+      heap_prof_count++
+      if err == nil {
+        err = pprof.WriteHeapProfile(out)
+        out.Close()
+        if err != nil {
+          base.Warn().Printf("Unable to write heap profile: %v", err)
+        }
+      } else {
+        base.Warn().Printf("Unable to create heap profile: %v", err)
+      }
+    }
+
+    if key_map["manual mem"].FramePressCount() > 0 {
+      base.Log().Printf(memory.TotalAllocations())
     }
 
     if key_map["game mode"].FramePressCount() % 2 == 1 {

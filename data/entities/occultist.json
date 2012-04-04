@@ -1,5 +1,7 @@
 {
   "Name": "Occultist",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/occultist",
   "Still": {
     "Path": "entities/occultist_still.png"
@@ -11,7 +13,7 @@
     "Exorcise",
     "First Aid"
   ],
-  "Side": 0,
+  "ExplorerEnt": {},
   "Base": {
     "Ap_max": 6,
     "Hp_max": 20,

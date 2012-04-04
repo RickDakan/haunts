@@ -1,6 +1,7 @@
 package ai
 
 import (
+  "math/rand"
   "reflect"
   "github.com/runningwild/glop/ai"
   "github.com/runningwild/haunts/base"
@@ -70,8 +71,20 @@ func (a *Ai) Actions() <-chan game.Action {
   return a.res
 }
 
+// Does the roll dice-d-sides, like 3d6, and returns the result
+func roll(dice, sides int) int {
+  result := 0
+  for i := 0; i < dice; i++ {
+    result += rand.Intn(sides) + 1
+  }
+  return result
+}
+
 func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   polish.AddIntMathContext(context)
+
+  context.AddFunc("roll", roll)
+
   // These functions are self-explanitory, they are all relative to the
   // current entity
   context.AddFunc("numVisibleEnemies",
@@ -88,7 +101,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   context.AddFunc("done",
       func() {
         <-a.pause
-        // a.graph.Term() <- ai.TermError
       })
 
   // This entity, the one currently taking its turn
@@ -122,10 +134,10 @@ func numVisibleEntities(e *game.Entity, ally bool) int {
   count := 0
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
-    if ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side == ent.Side) { continue }
+    if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
+    if ally != (e.Side() == ent.Side()) { continue }
     x,y := ent.Pos()
-    if e.HasLos(x, y) {
+    if e.HasLos(x, y, 1, 1) {
       count++
     }
   }
@@ -150,8 +162,8 @@ func nearestEntity(e *game.Entity, ally bool) *game.Entity {
   cur_dist := 1000000000
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
-    if ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side == ent.Side) { continue }
+    if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
+    if ally != (e.Side() == ent.Side()) { continue }
     dist := distBetween(e, ent)
     if cur_dist > dist {
       cur_dist = dist
@@ -161,27 +173,6 @@ func nearestEntity(e *game.Entity, ally bool) *game.Entity {
   return nearest
 }
 
-// func attack(e *game.Entity, target *game.Entity) {
-//   if target == nil {
-//     panic("No target")
-//   }
-//   var att *ActionBasicAttack
-//   att = e.getAction(reflect.TypeOf(&ActionBasicAttack{})).(*ActionBasicAttack)
-//   if att == nil {
-//     panic("couldn't find an attack action")
-//   }
-
-//   e.doCmd(func() bool {
-//     // TODO: This preamble should be in a level method
-//     if att.aiDoAttack(target) {
-//       e.level.pending_action = att
-//       e.level.mid_action = true
-//       return true
-//     }
-//     return false
-//   })
-// }
-
 func getAction(e *game.Entity, typ reflect.Type) game.Action {
   for _,action := range e.Actions {
     if reflect.TypeOf(action) == typ {
@@ -190,40 +181,3 @@ func getAction(e *game.Entity, typ reflect.Type) game.Action {
   }
   return nil
 }
-
-// func doCmd(e *game.Entity, f func() bool) {
-//   e.Cmds() <- f
-//   cont := <-e.Cont()
-//   switch cont {
-//     case game.AiEvalCont:
-
-//     case game.AiEvalTerm:
-//     e.Ai.Term() <- ai.TermError
-
-//     case game.AiEvalPause:
-//     e.Ai.Term() <- ai.InterruptError
-//   }
-// }
-
-// func advanceTowards(e *game.Entity, target *game.Entity) {
-//   if target == nil {
-//     panic("No target")
-//   }
-
-//   var move *actions.Move
-//   move = getAction(e, reflect.TypeOf(&actions.Move{})).(*actions.Move)
-//   if move == nil {
-//     panic("couldn't find the move action")
-//   }
-
-//   doCmd(e, func() bool {
-//     // TODO: This preamble should be in a level method
-//     tx,ty := target.Pos()
-//     if move.AiMoveToWithin(e, tx, ty, 1) {
-//       // e.level.pending_action = move
-//       // e.level.mid_action = true
-//       return true
-//     }
-//     return false
-//   })
-// }

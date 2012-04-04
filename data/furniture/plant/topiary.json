@@ -1,0 +1,13 @@
+{
+  "Name": "Plant 02 Topiary",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/plant/topiary.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

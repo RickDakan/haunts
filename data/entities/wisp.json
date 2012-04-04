@@ -1,5 +1,7 @@
 {
   "Name": "Lost Soul",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/wisp",
   "Still": {
     "Path": "entities/wisp_still.png"
@@ -8,7 +10,10 @@
     "Move Test",
     "Ectoplasmic Discharge"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost": 1,
+    "Level": "Minion"
+  },
   "Base": {
     "Ap_max": 5,
     "Hp_max": 3,

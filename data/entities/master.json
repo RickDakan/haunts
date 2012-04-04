@@ -1,5 +1,7 @@
 {
   "Name": "Master of the Manse",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/master",
   "Still": {
     "Path": "entities/master_still.png"
@@ -12,7 +14,11 @@
     "Summon Lost Soul",
     "Summon Angry Shade"
   ],
-  "Side": 1,
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
+  },
   "Base": {
     "Ap_max": 8,
     "Hp_max": 15,
