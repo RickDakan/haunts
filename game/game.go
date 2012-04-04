@@ -118,9 +118,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
       ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
         return MakeEntity(a.(string), g)
       }).([]*Entity)
-      ents = algorithm.Choose(ents, func(a interface{}) bool {
-        return a.(*Entity).Side() == g.Side
-      }).([]*Entity)
+      algorithm.Choose2(&ents, func(ent *Entity) bool { return ent.Side() != g.Side })
       if index >= 0 && index < len(ents) {
         g.viewer.RemoveDrawable(g.new_ent)
         g.new_ent = ents[index]
