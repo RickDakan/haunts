@@ -7,6 +7,7 @@ import (
   "runtime"
   "runtime/debug"
   "runtime/pprof"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
@@ -204,13 +205,16 @@ func main() {
   } ()
   base.Log().Printf("Version %s", Version())
   sys.Startup()
+  err := gl.Init()
+  if err != nil {
+    panic(err)
+  }
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
   })
   runtime.GOMAXPROCS(8)
-  var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
