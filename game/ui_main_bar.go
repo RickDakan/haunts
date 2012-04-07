@@ -188,7 +188,9 @@ func buttonFuncActionRight(mbi interface{}) {
 }
 func buttonFuncUnitLeft(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.SetCurrentAction(nil)
+  if !mb.game.SetCurrentAction(nil) {
+    return
+  }
   start_index := len(mb.game.Ents) - 1
   for i := 0; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i] == mb.ent {
@@ -198,22 +200,22 @@ func buttonFuncUnitLeft(mbi interface{}) {
   }
   for i := start_index - 1; i >= 0; i-- {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
-      mb.game.viewer.Focus(mb.game.selected_ent.FPos())
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
   for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
-      mb.game.viewer.Focus(mb.game.selected_ent.FPos())
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
 }
 func buttonFuncUnitRight(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.SetCurrentAction(nil)
+  if !mb.game.SetCurrentAction(nil) {
+    return
+  }
   start_index := 0
   for i := 0; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i] == mb.ent {
@@ -223,15 +225,13 @@ func buttonFuncUnitRight(mbi interface{}) {
   }
   for i := start_index + 1; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
-      mb.game.viewer.Focus(mb.game.selected_ent.FPos())
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
   for i := 0; i <= start_index; i++ {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
-      mb.game.viewer.Focus(mb.game.selected_ent.FPos())
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
@@ -376,10 +376,6 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
-  base.Log().Printf("Num events in group: %d", len(group.Events))
-  for _, event := range group.Events {
-    base.Log().Printf("event: %s %d\n", event.String(), event.Key.Id())
-  }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
