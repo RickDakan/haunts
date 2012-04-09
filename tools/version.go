@@ -36,12 +36,7 @@ func main() {
     fmt.Printf("Error: %v\n", err)
     return
   }
-  parts := strings.Fields(head)
-  ref, err := read(filepath.Join("..", ".git", filepath.ToSlash(parts[1])))
-  if err != nil {
-    fmt.Printf("Error: %v\n", err)
-    return
-  }
+  head = strings.TrimSpace(head)
 
   target := filepath.Join("..", "GEN_version.go")
   os.Remove(target)  // Don't care about errors on this one
@@ -50,6 +45,6 @@ func main() {
     fmt.Printf("Error: %v\n", err)
     return
   }
-  outputTemplate.Execute(f, strings.TrimSpace(ref))
+  outputTemplate.Execute(f, head)
   f.Close()
 }

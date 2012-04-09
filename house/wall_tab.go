@@ -94,9 +94,9 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         w.prev_wall_texture = new(WallTexture)
         *w.prev_wall_texture = *w.viewer.Temp.WallTexture
       }
-      w.room.WallTextures = algorithm.Choose(w.room.WallTextures, func(a interface{}) bool {
-        return a.(*WallTexture) != w.viewer.Temp.WallTexture
-      }).([]*WallTexture)
+      algorithm.Choose2(&w.room.WallTextures, func(a *WallTexture) bool {
+        return a != w.viewer.Temp.WallTexture
+      })
       if w.viewer.Temp.WallTexture != nil {
         wx,wy := w.viewer.BoardToWindow(w.viewer.Temp.WallTexture.X, w.viewer.Temp.WallTexture.Y)
         px,py := event.Key.Cursor().Point()

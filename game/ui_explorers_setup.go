@@ -9,11 +9,73 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/mathgl"
 )
+
+type entityLabel struct {
+  ent *Entity
+  hovered, selected, selectable bool
+}
+func makeEntLabel(ent *Entity) *entityLabel {
+  var e entityLabel
+  e.ent = ent
+  e.ent.TurnToFace(1, -2)
+  return &e
+}
+func (e *entityLabel) Draw(hovered, selected, selectable bool, region gui.Region) {
+  e.hovered = hovered
+  e.selected = selected
+  e.selectable = selectable
+  gl.Disable(gl.TEXTURE_2D)
+  var f float64
+  switch {
+  case selected:
+    f = 1
+  case hovered && selectable:
+    f = 0.8
+  case selectable:
+    f = 0.5
+  default:
+    f = 0.3
+  }
+  gl.Color4d(f, f, f, 1)
+  gl.Begin(gl.QUADS)
+    gl.Vertex2i(region.X, region.Y)
+    gl.Vertex2i(region.X, region.Y + region.Dy)
+
+    gl.Vertex2i(region.X, region.Y + region.Dy)
+    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
+
+    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
+    gl.Vertex2i(region.X + region.Dx, region.Y)
+
+    gl.Vertex2i(region.X + region.Dx, region.Y)
+    gl.Vertex2i(region.X, region.Y)
+  gl.End()
+  d := base.GetDictionary(15)
+  gl.Color4d(0, 0, 0, 1)
+  d.RenderString(e.ent.Name, float64(region.X) + 210, float64(region.Y) + 100 - d.MaxHeight()/2, 0, d.MaxHeight(), gui.Center)
+  if selectable || selected {
+    f = 1
+  }
+  gl.Color4d(f, f, f, 1)
+  e.ent.Render(mathgl.Vec2{float32(region.X + 55), float32(region.Y) + 20}, 100)
+}
+func (e *entityLabel) Think(dt int64) {
+  if e.hovered && e.selectable {
+    e.ent.Sprite.Sprite().Command("move")
+  } else {
+    e.ent.Sprite.Sprite().Command("stop")
+  }
+  if e.selected || e.selectable {
+    e.ent.Think(dt)
+  }
+}
 
 type iconWithText struct {
   Name string
   Icon texture.Object
+  Data interface{}
 }
 func (c *iconWithText) Draw(hovered, selected, selectable bool, region gui.Region) {
   var f float64
@@ -152,7 +214,7 @@ func (hb *hoverButton) DrawFocused(r gui.Region) {
 type explorerSetup struct {
   *gui.AnchorBox
 
-  purpose_table *gui.VerticalTable
+  purpose_table gui.Widget
 
   roster_chooser *hui.RosterChooser
 
@@ -175,66 +237,56 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     return a.(*Entity).Side() == SideExplorers
   }).([]*Entity)
 
-  es.roster_chooser = hui.MakeRosterChooser([]hui.Option{
-    &iconWithText{
-      Name: "Thunder",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts.png"))},
-    },
-    &iconWithText{
-      Name: "Monkey",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts2.png"))},
-    },
-    &iconWithText{
-      Name: "Chalice",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "haunts_setup", "ghosts.png"))},
-    },
-    &iconWithText{
-      Name: "Grandiose",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute1.png"))},
-    },
-    &iconWithText{
-      Name: "Lightning",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute2.png"))},
-    },
-    &iconWithText{
-      Name: "Orangutan",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute3.png"))},
-    },
-    &iconWithText{
-      Name: "Mead",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute4.png"))},
-    },
-    &iconWithText{
-      Name: "Grandeure",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "cute5.png"))},
-    },
-  },
-  hui.SelectAtMostN(3),
+  var roster []hui.Option
+  for _, ent := range ents {
+    roster = append(roster, makeEntLabel(ent))
+  }
+
+  es.roster_chooser = hui.MakeRosterChooser(roster,
+  hui.SelectInRange(3,3),
   func(m map[int]bool) {
-    base.Log().Printf("complete: %v", m)
-    es.AnchorBox.RemoveChild(es.roster_chooser)
+    var ents []*Entity
+    for i := range m {
+      ents = append(ents, roster[i].(*entityLabel).ent)
+    }
+    game.PlaceInitialExplorers(ents)
+    game.OnRound()
+    for i := range game.Ents {
+      // Something might still be walking, so lets just stop everything before
+      // we move on.
+      game.Ents[i].Sprite.sp.Command("stop")
+    }
   },
   )
 
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
-  es.purpose_table = gui.MakeVerticalTable()
-  for i := range es.layout.Purposes {
-    purpose := es.layout.Purposes[i]
-    f := func() {
-      base.Log().Printf("Roster: %v", purpose)
-      es.AnchorBox.RemoveChild(es.purpose_table)
-      es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-      switch es.layout.Purposes[i].Name {
-      case "Relic":
-        game.Purpose = PurposeRelic
-      case "Cleanse":
-        game.Purpose = PurposeCleanse
-      case "Mystery":
-        game.Purpose = PurposeMystery
-      }
-    }
-    es.purpose_table.AddChild(makeHoverButton(es.layout.Purpose.Dx, es.layout.Purpose.Dy, purpose.Name, purpose.Icon, f))
+
+  purposes := []hui.Option{
+    &iconWithText{
+      Name: "Relic",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "relic.png"))},
+      Data: PurposeRelic,
+    },
+    &iconWithText{
+      Name: "Cleanse",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "cleanse.png"))},
+      Data: PurposeCleanse,
+    },
+    &iconWithText{
+      Name: "Mystery",
+      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "mystery.png"))},
+      Data: PurposeMystery,
+    },
   }
+  es.purpose_table = hui.MakeRosterChooser(purposes, hui.SelectExactlyOne, func(m map[int]bool) {
+    for k := range m {
+      game.Purpose = purposes[k].(*iconWithText).Data.(Purpose)
+      break
+    }
+    base.Log().Printf("Selected %d", game.Purpose)
+    es.AnchorBox.RemoveChild(es.purpose_table)
+    es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  })
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil

@@ -1,5 +1,7 @@
 {
   "Name": "Corpse",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/corpse",
   "Still": {
     "Path": "entities/corpse_still.png"

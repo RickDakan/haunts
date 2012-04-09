@@ -1,5 +1,7 @@
 {
   "Name": "Angry Shade",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "entities/shade",
   "Still": {
     "Path": "entities/shade_still.png"

@@ -19,16 +19,22 @@ type doorInfo struct {
 
 type HouseViewer struct {
   gui.Childless
-  gui.EmbeddedWidget
   gui.BasicZone
   gui.NonFocuser
-  gui.NonResponder
-  gui.NonThinker
 
   house *HouseDef
 
   zoom,angle,fx,fy float32
   floor,ifloor mathgl.Mat4
+
+  // target[xy] are the values that f[xy] approach, this gives us a nice way
+  // to change what the camera is looking at
+  targetx, targety float32
+  target_on bool
+
+  // Need to keep track of time so we can measure time between thinks
+  last_timestamp int64
+
 
   drawables    []Drawable
   Los_tex      *LosTexture
@@ -41,13 +47,20 @@ type HouseViewer struct {
     Door_room *Room
     Door_info doorInfo
 
-    Spawn SpawnPoint
+    Spawn *SpawnPoint
   }
+
+  // Keeping a variety of slices here so that we don't keep allocating new
+  // ones every time we render everything
+  rooms           []RectObject
+  temp_drawables  []Drawable
+  all_furn        []*Furniture
+  spawns          []*SpawnPoint
+  floor_drawers   []FloorDrawer
 }
 
 func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   var hv HouseViewer
-  hv.EmbeddedWidget = &gui.BasicWidget{ CoreWidget: &hv }
   hv.Request_dims.Dx = 100
   hv.Request_dims.Dy = 100
   hv.Ex = true
@@ -58,13 +71,35 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   return &hv
 }
 
+func (hv *HouseViewer) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  return false
+}
+
+func (hv *HouseViewer) Think(g *gui.Gui, t int64) {
+  dt := t - hv.last_timestamp
+  if hv.last_timestamp == 0 {
+    dt = 0
+  }
+  hv.last_timestamp = t
+  if hv.target_on {
+    f := mathgl.Vec2{hv.fx, hv.fy}
+    v := mathgl.Vec2{hv.targetx, hv.targety}
+    v.Subtract(&f)
+    scale := 1 - float32(math.Pow(0.005, float64(dt)/1000))
+    v.Scale(scale)
+    f.Add(&v)
+    hv.fx = f.X
+    hv.fy = f.Y
+  }
+}
+
 func (hv *HouseViewer) AddDrawable(d Drawable) {
   hv.drawables = append(hv.drawables, d)
 }
 func (hv *HouseViewer) RemoveDrawable(d Drawable) {
-  hv.drawables = algorithm.Choose(hv.drawables, func(a interface{}) bool {
-    return a.(Drawable) != d
-  }).([]Drawable)
+  algorithm.Choose2(&hv.drawables, func(t Drawable) bool {
+    return t != d
+  })
 }
 
 func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
@@ -116,6 +151,14 @@ func (hv *HouseViewer) Drag(dx, dy float64) {
   v.Z = d2p(hv.floor, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
   v.Transform(&hv.ifloor)
   hv.fx, hv.fy = v.X, v.Y
+
+  hv.target_on = false
+}
+
+func (hv *HouseViewer) Focus(bx, by float64) {
+  hv.targetx = float32(bx)
+  hv.targety = float32(by)
+  hv.target_on = true
 }
 
 func (hv *HouseViewer) String() string {
@@ -223,18 +266,18 @@ func (hv *HouseViewer) Draw(region gui.Region) {
 
   current_floor := 0
 
-  var rooms []RectObject
+  hv.rooms = hv.rooms[0:0]
   for _,room := range hv.house.Floors[current_floor].Rooms {
-    rooms = append(rooms, room)
+    hv.rooms = append(hv.rooms, room)
   }
   if hv.Temp.Room != nil {
-    rooms = append(rooms, hv.Temp.Room)
+    hv.rooms = append(hv.rooms, hv.Temp.Room)
   }
-  rooms = OrderRectObjects(rooms)
+  hv.rooms = OrderRectObjects(hv.rooms)
 
   drawPrep()
-  for i := len(rooms) - 1; i >= 0; i-- {
-    room := rooms[i].(*Room)
+  for i := len(hv.rooms) - 1; i >= 0; i-- {
+    room := hv.rooms[i].(*Room)
     // TODO: Would be better to be able to just get the floor mats alone
     m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, hv.fx - float32(room.X), hv.fy - float32(room.Y), hv.angle, hv.zoom)
 
@@ -277,44 +320,51 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     } else {
       drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex, los_alpha)
     }
-    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, hv.Floor_drawer)
-
-    var drawables []Drawable
+    hv.temp_drawables = hv.temp_drawables[0:0]
     rx,ry := room.Pos()
     rdx,rdy := room.Dims()
     for _,d := range hv.drawables {
       x,y := d.Pos()
       if x >= rx && y >= ry && x < rx + rdx && y < ry + rdy {
-        drawables = append(drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
+        hv.temp_drawables = append(hv.temp_drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
       }
     }
-    var all_furn, spawns []*Furniture
+    hv.all_furn = hv.all_furn[0:0]
+    hv.spawns = hv.spawns[0:0]
     for _, furn := range room.Furniture {
-      all_furn = append(all_furn, furn)
+      hv.all_furn = append(hv.all_furn, furn)
     }
-    spawn_points := hv.house.Floors[current_floor].allSpawns()
+    spawn_points := hv.house.Floors[current_floor].Spawns
     for _, spawn := range spawn_points {
-      furn := spawn.Furniture()
-      x := furn.X - rx
-      y := furn.Y - ry
+      x, y := spawn.Pos()
+      x -= rx
+      y -= ry
       if x < 0 || y < 0 || x >= rdx || y >= rdy {
         continue
       }
-      furn.X -= rx
-      furn.Y -= ry
-      all_furn = append(all_furn, furn)
-      spawns = append(spawns, furn)
+      hv.temp_drawables = append(hv.temp_drawables, spawn)
+      hv.spawns = append(hv.spawns, spawn)
     }
     if hv.Temp.Spawn != nil {
-      hv.Temp.Spawn.Furniture().X -= rx
-      hv.Temp.Spawn.Furniture().Y -= ry
-      all_furn = append(all_furn, hv.Temp.Spawn.Furniture())
-      spawns = append(spawns, hv.Temp.Spawn.Furniture())
+      hv.temp_drawables = append(hv.temp_drawables, hv.Temp.Spawn)
+      hv.spawns = append(hv.spawns, hv.Temp.Spawn)
     }
-    drawFurniture(rx, ry, m_floor, hv.zoom, all_furn, nil, drawables, cstack, hv.Los_tex, los_alpha)
-    for i := range spawns {
-      spawns[i].X += rx
-      spawns[i].Y += ry
+    hv.floor_drawers = hv.floor_drawers[0:0]
+    if hv.Floor_drawer != nil {
+      hv.floor_drawers = append(hv.floor_drawers, hv.Floor_drawer)
+    }
+    for _, sp := range hv.spawns {
+      hv.floor_drawers = append(hv.floor_drawers, sp)
+    }
+    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, hv.floor_drawers)
+    for i := range hv.spawns {
+      hv.spawns[i].X -= rx
+      hv.spawns[i].Y -= ry
+    }
+    drawFurniture(rx, ry, m_floor, hv.zoom, hv.all_furn, nil, hv.temp_drawables, cstack, hv.Los_tex, los_alpha)
+    for i := range hv.spawns {
+      hv.spawns[i].X += rx
+      hv.spawns[i].Y += ry
     }
     // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
   }

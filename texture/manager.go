@@ -9,9 +9,11 @@ import (
   "runtime"
   "sync"
   "github.com/runningwild/glop/render"
+  "github.com/runningwild/glop/memory"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/opengl/glu"
+  "github.com/runningwild/mathgl"
 )
 
 type Object struct {
@@ -67,12 +69,52 @@ func setupTextureList() {
 }
 // Renders the texture on a quad at the texture's natural size.
 func (d *Data) RenderNatural(x, y int) {
+  d.Render(float64(x), float64(y), float64(d.dx), float64(d.dy))
+}
+
+func (d *Data) Render(x, y, dx, dy float64) {
   if textureList != 0 {
+    var run, op mathgl.Mat4
+    run.Identity()
+    op.Translation(float32(x), float32(y), 0)
+    run.Multiply(&op)
+    op.Scaling(float32(dx), float32(dy), 1)
+    run.Multiply(&op)
+
     gl.PushMatrix()
     gl.Enable(gl.TEXTURE_2D)
     d.Bind()
-    gl.Translated(float64(x), float64(y), 0)
-    gl.Scaled(float64(d.dx), float64(d.dy), 1)
+    gl.MultMatrixf(&run[0])
+    gl.CallList(textureList)
+    gl.PopMatrix()
+  }
+}
+
+func (d *Data) RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
+  if textureList != 0 {
+    var run, op mathgl.Mat4
+    run.Identity()
+    op.Translation(float32(x), float32(y), 0)
+    run.Multiply(&op)
+    op.Translation(float32(dx/2), float32(dy/2), 0)
+    run.Multiply(&op)
+    op.RotationZ(float32(rot))
+    run.Multiply(&op)
+    if flip {
+      op.Translation(float32(-dx/2), float32(-dy/2), 0)
+      run.Multiply(&op)
+      op.Scaling(float32(dx), float32(dy), 1)
+      run.Multiply(&op)
+    } else {
+      op.Translation(float32(dx/2), float32(-dy/2), 0)
+      run.Multiply(&op)
+      op.Scaling(float32(-dx), float32(dy), 1)
+      run.Multiply(&op)
+    }
+    gl.PushMatrix()
+    gl.MultMatrixf(&run[0])
+    gl.Enable(gl.TEXTURE_2D)
+    d.Bind()
     gl.CallList(textureList)
     gl.PopMatrix()
   }
@@ -127,11 +169,106 @@ func finalizeData(d *Data) {
   })
 }
 
+type loadRequest struct {
+  path string
+  data *Data
+}
+var load_requests chan loadRequest
+var load_count int
+var load_mutex sync.Mutex
+const load_threshold = 1000*1000
+func init() {
+  load_requests = make(chan loadRequest, 100)
+  for i := 0; i < 4; i++ {
+    go loadTextureRoutine()
+  }
+}
+
+// This routine waits for a filename and a data object, then loads the texture
+// in that file into that object.  This is so that only one texture is being
+// loaded at a time, it prevents us from hammering the filesystem and also
+// makes sure we aren't using up a ton of memory all at once.
+func loadTextureRoutine() {
+  for req := range load_requests {
+    handleLoadRequest(req)
+  }
+}
+
+func handleLoadRequest(req loadRequest) {
+  f,_ := os.Open(req.path)
+  im,_,err := image.Decode(f)
+  f.Close()
+  if err != nil {
+    base.Warn().Printf("Unable to decode texture '%s': %v", req.path, err)
+    return
+  }
+  gray := true
+  dx := im.Bounds().Dx()
+  dy := im.Bounds().Dy()
+  for i := 0; i < dx; i++ {
+    for j := 0; j < dy; j++ {
+      r, g, b, _ := im.At(i, j).RGBA()
+      if r != g || g != b {
+        gray = false
+        break
+      }
+    }
+    if !gray {
+      break
+    }
+  }
+  var canvas draw.Image
+  var pix []byte
+  if gray {
+    ga := NewGrayAlpha(im.Bounds())
+    pix = ga.Pix
+    canvas = ga
+  } else {
+    pix = memory.GetBlock(4*req.data.dx*req.data.dy)
+    canvas = &image.RGBA{pix, 4*req.data.dx, im.Bounds()}
+  }
+  draw.Draw(canvas, im.Bounds(), im, image.Point{}, draw.Src)
+  load_mutex.Lock()
+  load_count += len(pix)
+  manual_unlock := false
+  // This prevents us from trying to send too much to opengl in a single
+  // frame.  If we go over the threshold then we hold the lock until we're
+  // done sending data to opengl, then other requests will be free to
+  // queue up and they will run on the next frame.
+  if load_count < load_threshold {
+    load_mutex.Unlock()
+  } else {
+    manual_unlock = true
+  }
+  render.Queue(func() {
+    gl.Enable(gl.TEXTURE_2D)
+    req.data.texture = gl.GenTexture()
+    req.data.texture.Bind(gl.TEXTURE_2D)
+    gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    if gray {
+      glu.Build2DMipmaps(gl.TEXTURE_2D, gl.LUMINANCE_ALPHA, req.data.dx, req.data.dy, gl.LUMINANCE_ALPHA, pix)
+    } else {
+      glu.Build2DMipmaps(gl.TEXTURE_2D, gl.RGBA, req.data.dx, req.data.dy, gl.RGBA, pix)
+    }
+    memory.FreeBlock(pix)
+    if manual_unlock {
+      load_count = 0
+      load_mutex.Unlock()
+    }
+    runtime.SetFinalizer(req.data, finalizeData)
+  })
+}
+
 func (m *Manager) LoadFromPath(path string) *Data {
   setupTextureList()
   if data,ok := m.registry[path]; ok {
     return data
   }
+  base.Log().Printf("Loading %s\n", path)
   var data Data
   m.registry[path] = &data
 
@@ -142,33 +279,9 @@ func (m *Manager) LoadFromPath(path string) *Data {
   }
   config,_,err := image.DecodeConfig(f)
   f.Close()
-  f,_ = os.Open(path)
   data.dx = config.Width
   data.dy = config.Height
 
-  go func() {
-    im,_,err := image.Decode(f)
-    f.Close()
-    if err != nil {
-      base.Warn().Printf("Unable to decode texture '%s': %v", path, err)
-      return
-    }
-
-    rgba := image.NewRGBA(image.Rect(0, 0, data.dx, data.dy))
-    draw.Draw(rgba, im.Bounds(), im, image.Point{0, 0}, draw.Over)
-    render.Queue(func() {
-      gl.Enable(gl.TEXTURE_2D)
-      data.texture = gl.GenTexture()
-      data.texture.Bind(gl.TEXTURE_2D)
-      gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-      glu.Build2DMipmaps(gl.TEXTURE_2D, 4, data.dx, data.dy, gl.RGBA, rgba.Pix)
-    })
-    runtime.SetFinalizer(&data, finalizeData)
-  } ()
-
+  load_requests <- loadRequest{path, &data}
   return &data
 }

@@ -178,11 +178,11 @@ func (p *Path) GobDecode(data []byte) error {
   return nil
 }
 func (p Path) MarshalJSON() ([]byte, error) {
-  val := TryRelative(datadir, string(p))
+  val := filepath.ToSlash(TryRelative(datadir, string(p)))
   return []byte("\"" + val + "\""), nil
 }
 func (p *Path) UnmarshalJSON(data []byte) error {
-  rel := string(data[1 : len(data) - 1])
+  rel := filepath.FromSlash(string(data[1 : len(data) - 1]))
   *p = Path(filepath.Join(datadir, rel))
   return nil
 }

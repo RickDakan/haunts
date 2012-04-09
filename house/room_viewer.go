@@ -88,6 +88,9 @@ type RoomViewer struct {
 
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
+
+  // Keeping some things here to avoid unnecessary allocations elsewhere
+  cstack base.ColorStack
 }
 
 func (rv *RoomViewer) SetEditMode(mode editMode) {
@@ -340,6 +343,17 @@ func drawPrep() {
   gl.Clear(gl.STENCIL_BUFFER_BIT)
 }
 
+// A single slice of WallTextures that can be reused again and again so we can
+// avoid reallocations.  Since only one drawWall or drawFloor function will
+// ever execute at a time this is safe.
+var g_texs []WallTexture
+
+// Same kind of thing as g_texs but for doors
+var g_doors []*Door
+
+// And one for RectObjects
+var g_stuff []RectObject
+
 // room: the wall to draw
 // wall: the texture to render on the wall
 // temp: an additional texture to render along with the other detail textures
@@ -361,12 +375,12 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   gl.LoadIdentity()
   gl.MultMatrixf(&floor[0])
 
-  var texs []WallTexture
+  g_texs = g_texs[0:0]
   if temp_tex != nil {
-    texs = append(texs, *temp_tex)
+    g_texs = append(g_texs, *temp_tex)
   }
   for _,tex := range room.WallTextures {
-    texs = append(texs, *tex)
+    g_texs = append(g_texs, *tex)
   }
 
   do_right_wall := func() {
@@ -382,18 +396,18 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     gl.End()
   }
 
-  var doors []*Door
+  g_doors = g_doors[0:0]
   for _,door := range room.Doors {
-    doors = append(doors, door)
+    g_doors = append(g_doors, door)
   }
   if temp_door.Door != nil {
-    doors = append(doors, temp_door.Door)
+    g_doors = append(g_doors, temp_door.Door)
   }
 
   alpha := 0.2
 
   do_right_doors := func(opened bool) {
-    for _,door := range doors {
+    for _,door := range g_doors {
       if door.Facing != FarRight { continue }
       if door.Opened != opened { continue }
       door.TextureData().Bind()
@@ -452,7 +466,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     gl.PushMatrix()
     gl.LoadIdentity()
     gl.MultMatrixf(&right[0])
-    for i,tex := range texs {
+    for i,tex := range g_texs {
       dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
       if tex.Y > dy {
         tex.X, tex.Y = dx + tex.Y - dy, dy + dx - tex.X
@@ -522,7 +536,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 
   do_left_doors := func(opened bool) {
-    for _,door := range doors {
+    for _,door := range g_doors {
       if door.Facing != FarLeft { continue }
       if door.Opened != opened { continue }
       door.TextureData().Bind()
@@ -579,7 +593,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
     gl.PushMatrix()
     gl.LoadIdentity()
     gl.MultMatrixf(&left[0])
-    for i,tex := range texs {
+    for i,tex := range g_texs {
       dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
       if tex.X > dx {
         tex.X, tex.Y = dx + dy - tex.Y, dy + tex.X - dx
@@ -632,7 +646,7 @@ func drawWall(room *Room, floor,left,right mathgl.Mat4, temp_tex *WallTexture, t
   }
 }
 
-func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer FloorDrawer) {
+func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64, floor_drawer []FloorDrawer) {
   gl.MatrixMode(gl.MODELVIEW)
   gl.PushMatrix()
   gl.LoadIdentity()
@@ -656,18 +670,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   // Draw the floor
   gl.Enable(gl.TEXTURE_2D)
-  room.Floor.Data().Bind()
   cstack.ApplyWithAlpha(los_alpha)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2i(0, 0)
-    gl.Vertex2i(0, 0)
-    gl.TexCoord2i(0, -1)
-    gl.Vertex2i(0, room.Size.Dy)
-    gl.TexCoord2i(1, -1)
-    gl.Vertex2i(room.Size.Dx, room.Size.Dy)
-    gl.TexCoord2i(1, 0)
-    gl.Vertex2i(room.Size.Dx, 0)
-  gl.End()
+  room.Floor.Data().Render(0, 0, float64(room.Size.Dx), float64(room.Size.Dy))
 
   if los_tex != nil {
     los_tex.Bind()
@@ -687,14 +691,14 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
   }
   cstack.ApplyWithAlpha(los_alpha)
   {
-    var texs []WallTexture
+    g_texs = g_texs[0:0]
     if temp != nil {
-      texs = append(texs, *temp)
+      g_texs = append(g_texs, *temp)
     }
     for _,tex := range room.WallTextures {
-      texs = append(texs, *tex)
+      g_texs = append(g_texs, *tex)
     }
-    for i,tex := range texs {
+    for i,tex := range g_texs {
       if tex.X >= float32(room.Size.Dx) {
         tex.Rot -= 3.1415926535 / 2
       }
@@ -711,8 +715,8 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
 
   gl.PushMatrix()
   gl.Translated(-float64(room.X), -float64(room.Y), 0)
-  if floor_drawer != nil {
-    floor_drawer.RenderOnFloor()
+  for _, fd := range floor_drawer {
+    fd.RenderOnFloor()
   }
   gl.PopMatrix()
 
@@ -815,20 +819,20 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
     return
   }
 
-  var stuff []RectObject
+  g_stuff = g_stuff[0:0]
   for i := range furniture {
-    stuff = append(stuff, furniture[i])
+    g_stuff = append(g_stuff, furniture[i])
   }
   if temp_furniture != nil {
-    stuff = append(stuff, temp_furniture)
+    g_stuff = append(g_stuff, temp_furniture)
   }
   for i := range extras {
-    stuff = append(stuff, extras[i])
+    g_stuff = append(g_stuff, extras[i])
   }
-  stuff = OrderRectObjects(stuff)
+  g_stuff = OrderRectObjects(g_stuff)
 
-  for i := len(stuff) - 1; i >= 0; i-- {
-    f := stuff[i]
+  for i := len(g_stuff) - 1; i >= 0; i-- {
+    f := g_stuff[i]
     var near_x,near_y,dx,dy float32
 
 
@@ -886,7 +890,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
-    botx,boty := board_to_window(near_x, near_y)
+    _,boty := board_to_window(near_x, near_y)
     if f == temp_furniture {
       cstack.Push(1, 0, 0, 0.4)
     } else {
@@ -905,7 +909,8 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
 
       case Drawable:
       gl.Enable(gl.TEXTURE_2D)
-      d.Render(mathgl.Vec2{botx, boty}, rightx - leftx)
+      x := (leftx + rightx) / 2
+      d.Render(mathgl.Vec2{x, boty}, rightx - leftx)
     }
   }
   gl.PopMatrix()
@@ -920,19 +925,20 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.makeMat()
   }
 
-  var cstack base.ColorStack
-  cstack.Push(1, 1, 1, 1)
+  rv.cstack.Push(1, 1, 1, 1)
+  defer rv.cstack.Pop()
   drawPrep()
-  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, cstack, nil, 1.0)
-  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, cstack, nil, 1.0, nil)
+  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, rv.cstack, nil, 1.0)
+  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, rv.cstack, nil, 1.0, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
-    cstack.Pop()
-    cstack.Push(1, 1, 1, 0.1)
+    rv.cstack.Pop()
+    rv.cstack.Push(1, 1, 1, 0.1)
   } else {
-    cstack.Push(1, 1, 1, 1)
+    rv.cstack.Push(1, 1, 1, 1)
+    defer rv.cstack.Pop()
   }
-  drawFurniture(0, 0, rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, cstack, nil, 1.0)
+  drawFurniture(0, 0, rv.mat, rv.zoom, rv.room.Furniture, rv.Temp.Furniture, nil, rv.cstack, nil, 1.0)
 }
 
 func (rv *RoomViewer) SetEventHandler(handler gin.EventHandler) {

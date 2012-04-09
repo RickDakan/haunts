@@ -1,4 +1,4 @@
-rm GEN_*
+rm -f GEN_*
 
 cd tools
 go run version.go

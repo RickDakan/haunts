@@ -4,6 +4,7 @@ import (
   "sort"
   "github.com/runningwild/GoLLRB/llrb"
   "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/haunts/base"
 )
 
 type endpoint struct {
@@ -70,6 +71,9 @@ func (a adag) Successors(n int) []int {
 
 func OrderRectObjects(ra []RectObject) []RectObject {
   p := order(ra)
+  if p == nil {
+    return ra
+  }
   r := make([]RectObject, len(ra))
   for i := range p {
     r[i] = ra[p[i]]
@@ -78,6 +82,11 @@ func OrderRectObjects(ra []RectObject) []RectObject {
 }
 
 func order(input []RectObject) []int {
+  defer func() {
+    if err := recover(); err != nil {
+      base.Error().Printf("Failure in sorting: %v", err)
+    }
+  } ()
   var minx,miny int
   for _,r := range input {
     x,y := r.Pos()

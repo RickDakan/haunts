@@ -1,0 +1,10 @@
+{
+  "Name": "Relic",
+  "Display_name": "Take Relic",
+  "Ap": 3,
+  "Range": 3,
+  "Animation": "Ranged",
+  "Texture": {
+    "Path": "fudgecake"
+  }
+}

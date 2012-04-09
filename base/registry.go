@@ -54,23 +54,23 @@ func RemoveRegistry(name string) {
 // Registers a registry which must be a map from string to pointers to something
 func RegisterRegistry(name string, registry interface{}) {
   if strings.Contains(name, " ") {
-    Error().Fatalf("Registry name, '%s', cannot contain spaces", name)
+    Error().Printf("Registry name, '%s', cannot contain spaces", name)
   }
   mr := reflect.ValueOf(registry)
   if mr.Kind() != reflect.Map {
-    Error().Fatalf("Registries must be map[string]*struct, not %v", mr.Kind())
+    Error().Printf("Registries must be map[string]*struct, not %v", mr.Kind())
   }
   if mr.Type().Key().Kind() != reflect.String {
-    Error().Fatalf("Registry must be a map that uses strings as keys, not %v", mr.Type().Key())
+    Error().Printf("Registry must be a map that uses strings as keys, not %v", mr.Type().Key())
   }
   if mr.Type().Elem().Kind() != reflect.Ptr {
-    Error().Fatalf("Registry must be a map that uses pointers as values, not %v", mr.Type().Elem())
+    Error().Printf("Registry must be a map that uses pointers as values, not %v", mr.Type().Elem())
   }
   if field,ok := mr.Type().Elem().Elem().FieldByName("Name"); !ok || field.Type.Kind() != reflect.String {
-    Error().Fatalf("Registry must store values that have a Name field of type string")
+    Error().Printf("Registry must store values that have a Name field of type string")
   }
   if _,ok := registry_registry[name]; ok {
-    Error().Fatalf("Cannot register two registries with the same name '%s'", name)
+    Error().Printf("Cannot register two registries with the same name '%s'", name)
   }
   registry_registry[name] = mr
 }
@@ -81,15 +81,15 @@ func RegisterRegistry(name string, registry interface{}) {
 func RegisterObject(registry_name string, object interface{}) {
   reg,ok := registry_registry[registry_name]
   if !ok {
-    Error().Fatalf("Tried to register an object into an unknown registry '%s'", registry_name)
+    Error().Printf("Tried to register an object into an unknown registry '%s'", registry_name)
   }
 
   obj_val := reflect.ValueOf(object)
   if obj_val.Kind() != reflect.Ptr {
-    Error().Fatalf("Can only register objects as pointers, not %v", obj_val.Kind())
+    Error().Printf("Can only register objects as pointers, not %v", obj_val.Kind())
   }
   if obj_val.Elem().Type() != reg.Type().Elem().Elem() {
-    Error().Fatalf("Tried to register an object of type %v into the registry '%s' which stores objects of type %v", obj_val.Elem(), registry_name, reg.Type().Elem().Elem())
+    Error().Printf("Tried to register an object of type %v into the registry '%s' which stores objects of type %v", obj_val.Elem(), registry_name, reg.Type().Elem().Elem())
   }
 
   // At this point we know we have the right type, and since registries can only
@@ -98,7 +98,7 @@ func RegisterObject(registry_name string, object interface{}) {
   object_name := obj_val.Elem().FieldByName("Name").String()
   cur_val := reg.MapIndex(reflect.ValueOf(object_name))
   if cur_val.IsValid() {
-    Error().Fatalf("Tried to register an object called '%s' more than once in the registry '%s'", object_name, registry_name)
+    Error().Printf("Tried to register an object called '%s' more than once in the registry '%s'", object_name, registry_name)
   }
   reg.SetMapIndex(reflect.ValueOf(object_name), obj_val)
 }
@@ -110,7 +110,7 @@ func RegisterObject(registry_name string, object interface{}) {
 func GetObject(registry_name string, object interface{})  {
   reg,ok := registry_registry[registry_name]
   if !ok {
-    Error().Fatalf("Tried to load an object from an unknown registry '%s'", registry_name)
+    Error().Printf("Tried to load an object from an unknown registry '%s'", registry_name)
   }
 
   object_val := reflect.ValueOf(object)
@@ -120,16 +120,16 @@ func GetObject(registry_name string, object interface{})  {
 
   object_name := object_val.Elem().FieldByName("Defname")
   if !object_name.IsValid() || object_name.Kind() != reflect.String {
-    Error().Fatalf("Tried to load into an object that didn't have a field called Defname of type string")
+    Error().Printf("Tried to load into an object that didn't have a field called Defname of type string")
   }
 
   cur_val := reg.MapIndex(object_name)
   if !cur_val.IsValid() {
-    Error().Fatalf("Tried to load an object, '%s', that doesn't exist in the registry '%s'", object_name.String(), registry_name)
+    Error().Printf("Tried to load an object, '%s', that doesn't exist in the registry '%s'", object_name.String(), registry_name)
   }
   field := object_val.Elem().FieldByName(cur_val.Elem().Type().Name())
   if !field.IsValid() {
-    Error().Fatalf("Expected type %v to embed a %v", object_val.Elem().Type(), cur_val.Type())
+    Error().Printf("Expected type %v to embed a %v", object_val.Elem().Type(), cur_val.Type())
   }
   field.Set(cur_val)
 }
@@ -138,7 +138,7 @@ func GetObject(registry_name string, object interface{})  {
 func GetAllNamesInRegistry(registry_name string) []string {
   reg,ok := registry_registry[registry_name]
   if !ok {
-    Error().Fatalf("Requested names from an unknown registry '%s'", registry_name)
+    Error().Printf("Requested names from an unknown registry '%s'", registry_name)
   }
   keys := reg.MapKeys()
   var names []string
@@ -163,7 +163,7 @@ func LoadAndProcessObject(path,format string, target interface{}) error {
     err = LoadGob(path, target)
 
   default:
-    Error().Fatalf("Can only load with format 'json' and 'gob', not '%s'", format)
+    Error().Printf("Can only load with format 'json' and 'gob', not '%s'", format)
   }
   if err != nil {
     return err
@@ -225,7 +225,7 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
   Log().Printf("Registering directory: '%s'", dir)
   reg,ok := registry_registry[registry_name]
   if !ok {
-    Error().Fatalf("Tried to load objects into an unknown registry '%s'", registry_name)
+    Error().Printf("Tried to load objects into an unknown registry '%s'", registry_name)
   }
   filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
     _,filename := filepath.Split(path)
@@ -242,7 +242,7 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
         if err == nil {
           RegisterObject(registry_name, target.Interface())
         } else {
-          Error().Fatalf("Error loading files in '%s': %v", dir, err)
+          Error().Printf("Error loading files in '%s': %v", dir, err)
         }
       }
     }

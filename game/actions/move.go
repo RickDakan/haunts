@@ -199,7 +199,7 @@ func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
       return game.Complete
     }
     a.path = a.path[1:]
-    dist = a.ent.DoAdvance(float32(dt) / 200, a.path[0][0], a.path[0][1])
+    dist = a.ent.DoAdvance(dist, a.path[0][0], a.path[0][1])
   }
   return game.InProgress
 }

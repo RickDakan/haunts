@@ -19,6 +19,9 @@ type Button struct {
 
   // Function to run whenever the button is clicked
   f func(interface{})
+
+  // Key that can be bound to have the same effect as clicking this button
+  key gin.KeyId
 }
 
 // If x,y is inside the button's region then it will run its function and
@@ -30,6 +33,14 @@ func (b *Button) handleClick(x,y int, data interface{}) bool {
   }
   b.f(data)
   return true
+}
+
+func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
+  if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
+    b.f(data)
+    return true
+  }
+  return false
 }
 
 func (b *Button) RenderAt(x,y,mx,my int) {
@@ -177,7 +188,9 @@ func buttonFuncActionRight(mbi interface{}) {
 }
 func buttonFuncUnitLeft(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.SetCurrentAction(nil)
+  if !mb.game.SetCurrentAction(nil) {
+    return
+  }
   start_index := len(mb.game.Ents) - 1
   for i := 0; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i] == mb.ent {
@@ -187,20 +200,22 @@ func buttonFuncUnitLeft(mbi interface{}) {
   }
   for i := start_index - 1; i >= 0; i-- {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
   for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
 }
 func buttonFuncUnitRight(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.SetCurrentAction(nil)
+  if !mb.game.SetCurrentAction(nil) {
+    return
+  }
   start_index := 0
   for i := 0; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i] == mb.ent {
@@ -210,13 +225,13 @@ func buttonFuncUnitRight(mbi interface{}) {
   }
   for i := start_index + 1; i < len(mb.game.Ents); i++ {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
   for i := 0; i <= start_index; i++ {
     if mb.game.Ents[i].Side() == mb.game.Side {
-      mb.game.selected_ent = mb.game.Ents[i]
+      mb.game.SelectEnt(mb.game.Ents[i])
       return
     }
   }
@@ -237,8 +252,10 @@ func MakeMainBar(game *Game) (*MainBar, error) {
     &mb.layout.ActionRight,
   }
   mb.layout.EndTurn.f = buttonFuncEndTurn
-  mb.layout.UnitLeft.f = buttonFuncUnitLeft
   mb.layout.UnitRight.f = buttonFuncUnitRight
+  mb.layout.UnitRight.key = gin.Tab
+  mb.layout.UnitLeft.f = buttonFuncUnitLeft
+  mb.layout.UnitLeft.key = gin.ShiftTab
   mb.layout.ActionLeft.f = buttonFuncActionLeft
   mb.layout.ActionRight.f = buttonFuncActionRight
   mb.game = game
@@ -362,6 +379,12 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
+  }
+
+  for _, button := range m.buttons {
+    if button.Respond(group, m) {
+      return true
+    }
   }
 
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
