@@ -13,8 +13,9 @@
     "Summon Angry Shade"
   ],
   "HauntEnt": {
-    "Cost": 1,
-    "Level": "Minion"
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
   },
   "Base": {
     "Ap_max": 8,
