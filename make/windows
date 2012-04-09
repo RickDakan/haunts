@@ -9,5 +9,5 @@ rm -rf haunts_app
 mkdir -p haunts_app/openme
 mv haunts.exe haunts_app/openme/
 cp -r data/* haunts_app/
-cp ../glop/gos/windows/lib/* haunts_app/openme
+cp lib/windows/* haunts_app/openme
 cp lib/windows/* haunts_app/openme
