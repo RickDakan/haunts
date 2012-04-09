@@ -205,16 +205,17 @@ func main() {
   } ()
   base.Log().Printf("Version %s", Version())
   sys.Startup()
-  err := gl.Init()
-  if err != nil {
-    panic(err)
-  }
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
+    err := gl.Init()
+    if err != nil {
+      panic(err)
+    }
   })
   runtime.GOMAXPROCS(8)
+  var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
