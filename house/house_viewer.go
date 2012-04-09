@@ -19,16 +19,22 @@ type doorInfo struct {
 
 type HouseViewer struct {
   gui.Childless
-  gui.EmbeddedWidget
   gui.BasicZone
   gui.NonFocuser
-  gui.NonResponder
-  gui.NonThinker
 
   house *HouseDef
 
   zoom,angle,fx,fy float32
   floor,ifloor mathgl.Mat4
+
+  // target[xy] are the values that f[xy] approach, this gives us a nice way
+  // to change what the camera is looking at
+  targetx, targety float32
+  target_on bool
+
+  // Need to keep track of time so we can measure time between thinks
+  last_timestamp int64
+
 
   drawables    []Drawable
   Los_tex      *LosTexture
@@ -55,7 +61,6 @@ type HouseViewer struct {
 
 func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   var hv HouseViewer
-  hv.EmbeddedWidget = &gui.BasicWidget{ CoreWidget: &hv }
   hv.Request_dims.Dx = 100
   hv.Request_dims.Dy = 100
   hv.Ex = true
@@ -64,6 +69,28 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.angle = angle
   hv.Zoom(1)
   return &hv
+}
+
+func (hv *HouseViewer) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  return false
+}
+
+func (hv *HouseViewer) Think(g *gui.Gui, t int64) {
+  dt := t - hv.last_timestamp
+  if hv.last_timestamp == 0 {
+    dt = 0
+  }
+  hv.last_timestamp = t
+  if hv.target_on {
+    f := mathgl.Vec2{hv.fx, hv.fy}
+    v := mathgl.Vec2{hv.targetx, hv.targety}
+    v.Subtract(&f)
+    scale := 1 - float32(math.Pow(0.005, float64(dt)/1000))
+    v.Scale(scale)
+    f.Add(&v)
+    hv.fx = f.X
+    hv.fy = f.Y
+  }
 }
 
 func (hv *HouseViewer) AddDrawable(d Drawable) {
@@ -124,6 +151,14 @@ func (hv *HouseViewer) Drag(dx, dy float64) {
   v.Z = d2p(hv.floor, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
   v.Transform(&hv.ifloor)
   hv.fx, hv.fy = v.X, v.Y
+
+  hv.target_on = false
+}
+
+func (hv *HouseViewer) Focus(bx, by float64) {
+  hv.targetx = float32(bx)
+  hv.targety = float32(by)
+  hv.target_on = true
 }
 
 func (hv *HouseViewer) String() string {
