@@ -134,7 +134,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
 // action cannot be selected (because it is invalid or the entity has
 // insufficient Ap), or if there is an action currently executing.
 func (g *Game) SetCurrentAction(action Action) bool {
-  if g.action_state != noAction {
+  if g.action_state != noAction && g.action_state != preppingAction {
     return false
   }
   // the action should be one that belongs to the current entity, if not then
@@ -202,7 +202,8 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if found,_ := group.FindEvent(gin.Escape); found {
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    base.Log().Printf("Found an escape!: %p %v", gp.game.selected_ent, gp.game.action_state)
     if gp.game.selected_ent != nil {
       switch gp.game.action_state {
       case noAction:
