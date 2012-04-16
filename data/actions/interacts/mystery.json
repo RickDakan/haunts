@@ -5,6 +5,6 @@
   "Range": 3,
   "Animation": "Ranged",
   "Texture": {
-    "Path": "fudgecake"
+    "Path": "actions/icons/interact.png"
   }
 }
