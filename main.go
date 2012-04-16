@@ -16,6 +16,7 @@ import (
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/house"
 
   // Need to pull in all of the actions we define here and not in
@@ -209,6 +210,15 @@ func main() {
   if err != nil {
     panic(err)
   }
+
+  // Startup audio
+  err = base.InitAudio()
+  if err != nil {
+    panic(err)
+  }
+
+  sound.Init()
+  sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)

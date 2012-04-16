@@ -121,6 +121,9 @@ func (sc *spriteContainer) Sprite() *sprite.Sprite {
 }
 func (sc *spriteContainer) Load(path string) {
   sc.sp, sc.err = sprite.LoadSprite(path)
+  if sc.err != nil {
+    base.Error().Printf("Unable to load sprite: %s:%v", path, sc.err)
+  }
 }
 
 // Allows the Ai system to signal to us under certain circumstance

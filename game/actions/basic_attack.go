@@ -4,8 +4,10 @@ import (
   "encoding/gob"
   "path/filepath"
   "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
@@ -50,6 +52,7 @@ type BasicAttackDef struct {
   Animation  string
   Conditions []string
   Texture    texture.Object
+  Sounds     map[string]string
 }
 type basicAttackInst struct {
   ent *game.Entity
@@ -104,6 +107,10 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   a.ent = ent
   a.targets = a.findTargets(ent, g)
+  if a.Sounds != nil {
+    base.Log().Printf("Map %s: %v", a.Name, a.Sounds)
+    sound.MapSounds(a.Sounds)
+  }
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
@@ -154,21 +161,22 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
   if a.ent.Sprite.Sprite().State() == "ready" && a.target.Sprite.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
-    a.ent.Sprite.Sprite().Command(a.Animation)
-    a.target.Sprite.Sprite().Command("defend")
+    var defender_cmds []string
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
       }
       a.target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
       if a.target.Stats.HpCur() <= 0 {
-        a.target.Sprite.Sprite().Command("killed")
+        defender_cmds = []string{"defend", "killed"}
       } else {
-        a.target.Sprite.Sprite().Command("damaged")
+        defender_cmds = []string{"defend", "damaged"}
       }
     } else {
-      a.target.Sprite.Sprite().Command("undamaged")
+      defender_cmds = []string{"defend", "undamaged"}
     }
+    sprites := []*sprite.Sprite{a.ent.Sprite.Sprite(), a.target.Sprite.Sprite()}
+    sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
     return game.Complete
   }
   return game.InProgress

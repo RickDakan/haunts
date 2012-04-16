@@ -5,12 +5,13 @@ go run version.go
 cd ..
 
 go build .
+install_name_tool -change  ./libfmodex.dylib @executable_path/../lib/libfmodex.dylib ./haunts
 
 rm -rf haunts.app
 mkdir -p haunts.app/Contents/MacOS
 mkdir -p haunts.app/Contents/lib
 
 mv haunts haunts.app/Contents/MacOS/haunts
-cp lib/libglop.so haunts.app/Contents/lib/
+cp lib/darwin/* haunts.app/Contents/lib/
 
 cp -r data/* haunts.app/Contents/

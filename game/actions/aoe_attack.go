@@ -150,19 +150,18 @@ func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
   }
   a.ent.Sprite.Sprite().Command(a.Animation)
   for _,target := range a.targets {
-    target.Sprite.Sprite().Command("defend")
     if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {
         target.Stats.ApplyCondition(status.MakeCondition(name))
       }
       target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
       if target.Stats.HpCur() <= 0 {
-        target.Sprite.Sprite().Command("killed")
+        target.Sprite.Sprite().CommandN([]string{"defend", "killed"})
       } else {
-        target.Sprite.Sprite().Command("damaged")
+        target.Sprite.Sprite().CommandN([]string{"defend", "damaged"})
       }
     } else {
-      target.Sprite.Sprite().Command("undamaged")
+      target.Sprite.Sprite().CommandN([]string{"defend", "undamaged"})
     }
   }
   return game.Complete

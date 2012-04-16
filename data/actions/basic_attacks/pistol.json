@@ -8,5 +8,9 @@
   "Ap"       : 3,
   "Strength" : 5,
   "Damage"   : 2,
-  "Range"    : 10
+  "Range"    : 10,
+  "Sounds"   : {
+    "load": "1-up.mp3",
+    "fire": "jaguar.wav"
+  }
 }
