@@ -229,7 +229,6 @@ func main() {
     }
   })
   runtime.GOMAXPROCS(8)
-  var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
@@ -264,7 +263,6 @@ func main() {
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
   render.Queue(func() {
-    sys.Think()
     ui.Draw()
   })
   render.Purge()
@@ -275,8 +273,8 @@ func main() {
   heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
+    sys.Think()
     render.Queue(func() {
-      sys.Think()
       sys.SwapBuffers()
       ui.Draw()
     })
