@@ -51,7 +51,7 @@ time:2500</attribute>
 		<section name="node">
 			<attribute key="id" type="int">2</attribute>
 			<attribute key="label" type="String">curse_01
-func:fire</attribute>
+func:load</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">43.0</attribute>
 				<attribute key="y" type="double">173.78955078125</attribute>
@@ -63,7 +63,7 @@ func:fire</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">curse_01
-func:fire</attribute>
+func:load</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -110,7 +110,8 @@ func:fire</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
-			<attribute key="label" type="String">curse_02</attribute>
+			<attribute key="label" type="String">curse_02
+func:fire</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">43.0</attribute>
 				<attribute key="y" type="double">232.78955078125</attribute>
@@ -121,7 +122,8 @@ func:fire</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">curse_02</attribute>
+				<attribute key="text" type="String">curse_02
+func:fire</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

@@ -10,7 +10,7 @@
   "Damage"   : 2,
   "Range"    : 10,
   "Sounds"   : {
-    "load": "1-up.mp3",
-    "fire": "jaguar.wav"
+    "load": "gun_load.wav",
+    "fire": "gun_fire.wav"
   }
 }
