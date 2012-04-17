@@ -925,6 +925,18 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.makeMat()
   }
 
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  defer gl.PopMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.mat[0])
+
+  if rv.room.vbuffer == 0 {
+    rv.room.setupGlStuff()
+  }
+  rv.room.render(rv.left_wall_mat, rv.right_wall_mat, rv.mat)
+  return
+
   rv.cstack.Push(1, 1, 1, 1)
   defer rv.cstack.Pop()
   drawPrep()

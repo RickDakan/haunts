@@ -252,7 +252,7 @@ func main() {
       editor.Load(path)
     }
   }
-  editor_name = "house"
+  editor_name = "room"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))

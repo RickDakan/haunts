@@ -6,8 +6,11 @@ import (
   "io"
   "os"
   "path/filepath"
+  "unsafe"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/mathgl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 func GetAllRoomNames() []string {
@@ -58,7 +61,6 @@ type Tags struct {
   Decor      []string
 }
 
-
 type roomDef struct {
   Name string
   Size RoomSize
@@ -80,6 +82,155 @@ type roomDef struct {
 
   // What kinds of decorations are appropriate in this room
   Decor map[string]bool
+
+  // opengl stuff
+  // vertex buffer for all of the vertices in the walls and floor
+  vbuffer uint32
+
+  // index buffers
+  left_buffer  uint32
+  right_buffer uint32
+  floor_buffer uint32
+}
+
+type roomVertex struct {
+  x,y,z float32
+  u,v float32
+}
+
+type plane struct {
+  index_buffer uint32
+  texture      texture.Object
+  mat          *mathgl.Mat4
+}
+
+// Need floor, right wall, and left wall matrices to draw the details
+func (room *roomDef) render(left,right,floor mathgl.Mat4) {
+  if room.vbuffer == 0 {
+    return
+  }
+  gl.Enable(gl.STENCIL_TEST)
+  defer gl.Disable(gl.STENCIL_TEST)
+
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Enable(gl.BLEND)
+  gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+  gl.Enable(gl.ALPHA_TEST)
+  gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+
+  gl.EnableClientState(gl.VERTEX_ARRAY)
+  gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+
+  var vert roomVertex
+  gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+  gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+
+  planes := []plane{
+    {room.left_buffer, room.Wall, &left},
+    {room.right_buffer, room.Wall, &right},
+    {room.floor_buffer, room.Floor, &floor},
+  }
+
+  gl.Color4ub(255, 255, 255, 255)
+  gl.PushMatrix()
+  for _, plane := range planes {
+    gl.LoadMatrixf(&floor[0])
+    plane.texture.Data().Bind()
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
+    gl.ClearStencil(0)
+    gl.Clear(gl.STENCIL_BUFFER_BIT)
+    gl.StencilFunc(gl.ALWAYS, 1, 1)
+    gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
+    gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
+    gl.StencilFunc(gl.EQUAL, 1, 1)
+    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    gl.LoadMatrixf(&(*plane.mat)[0])
+    for i := range room.WallTextures {
+      wt := *room.WallTextures[i]
+      dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
+      switch plane.mat {
+      case &floor:
+
+      case &left:
+      if wt.X > dx {
+        wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
+      }
+      wt.Y -= dy
+
+      case &right:
+      if wt.Y > dy {
+        wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
+      }
+      if wt.X > dx {
+        wt.Rot -= 3.1415926535 / 2
+      }
+      wt.X -= dx
+
+      }
+      wt.Render()
+    }
+  }
+  gl.PopMatrix()
+
+  gl.DisableClientState(gl.VERTEX_ARRAY)
+  gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
+
+}
+
+func (room *roomDef) setupGlStuff() {
+  if room.vbuffer != 0 {
+    gl.DeleteBuffers(1, &room.vbuffer)
+    gl.DeleteBuffers(1, &room.left_buffer)
+    gl.DeleteBuffers(1, &room.right_buffer)
+    gl.DeleteBuffers(1, &room.floor_buffer)
+  }
+  dx := float32(room.Size.Dx)
+  dy := float32(room.Size.Dy)
+  var dz float32
+  if room.Wall.Data().Dx() > 0 {
+    dz = -float32(room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy)) / float32(room.Wall.Data().Dx())
+  }
+
+  // c is the u-texcoord of the corner of the room
+  c := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
+
+  vs := []roomVertex{
+    // Walls
+    { 0,  dy,  0, 0, 1},
+    {dx,  dy,  0, c, 1},
+    {dx,   0,  0, 1, 1},
+    { 0,  dy, dz, 0, 0},
+    {dx,  dy, dz, c, 0},
+    {dx,   0, dz, 1, 0},
+
+    // Floor
+    { 0,  0, 0, 0, 1},
+    { 0, dy, 0, 0, 0},
+    {dx, dy, 0, 1, 0},
+    {dx,  0, 0, 1, 1},
+  }
+  gl.GenBuffers(1, &room.vbuffer)
+  gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+  size := int(unsafe.Sizeof(roomVertex{}))
+  gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
+
+  // left wall indices
+  is := []uint16{0, 3, 4, 0, 4, 1}
+  gl.GenBuffers(1, &room.left_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.left_buffer)
+  gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+
+  // right wall indices
+  is = []uint16{1, 4, 5, 1, 5, 2}
+  gl.GenBuffers(1, &room.right_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.right_buffer)
+  gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+
+  // floor indices
+  is = []uint16{6, 7, 8, 6, 8, 9}
+  gl.GenBuffers(1, &room.floor_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.floor_buffer)
+  gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
 }
 
 func (room *roomDef) Dims() (dx,dy int) {

@@ -3,6 +3,7 @@ package house
 import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 func MakeWallTexture(name string) *WallTexture {
@@ -38,6 +39,10 @@ type WallTexture struct {
 
   // Whether or not to flip the texture about one of its axes
   Flip bool
+
+  // If this is currently being dragged around it will be marked as temporary
+  // so that it will be drawn differently
+  temporary bool
 }
 
 type wallTextureDef struct {
@@ -51,5 +56,10 @@ type wallTextureDef struct {
 func (wt *WallTexture) Render() {
   dx2 := float32(wt.Texture.Data().Dx()) / 100 / 2
   dy2 := float32(wt.Texture.Data().Dy()) / 100 / 2
+  if wt.temporary {
+    gl.Color4ub(255, 128, 128, 200)
+  } else {
+    gl.Color4ub(255, 255, 255, 255)
+  }
   wt.Texture.Data().RenderAdvanced(float64(wt.X-dx2), float64(wt.Y-dy2), float64(2*dx2), float64(2*dy2), float64(wt.Rot), wt.Flip)
 }
