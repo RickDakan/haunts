@@ -3,7 +3,7 @@ package house
 import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  // "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
 )
 
@@ -32,9 +32,9 @@ func MakeWallPanel(room *roomDef, viewer *RoomViewer) *WallPanel {
     tex_table.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       wt := MakeWallTexture(name)
       if wt == nil { return }
-      wp.viewer.Temp.WallTexture = wt
-      wp.viewer.Temp.WallTexture.X = 5
-      wp.viewer.Temp.WallTexture.Y = 5
+      wp.wall_texture = wt
+      wp.wall_texture.temporary = true
+      wp.room.WallTextures = append(wp.room.WallTextures, wp.wall_texture)
       wp.drag_anchor.X = 0
       wp.drag_anchor.Y = 0
     }))
@@ -67,23 +67,34 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
   }
+
+  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
+      return wt != w.wall_texture
+    })
+    w.wall_texture = nil
+    w.prev_wall_texture = nil
+    return true
+  }
+
+  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+    if w.wall_texture != nil {
+      if w.prev_wall_texture != nil {
+        *w.wall_texture = *w.prev_wall_texture
+      } else {
+        algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
+          return wt != w.wall_texture
+        })
+      }
+    }
+    w.wall_texture = nil
+    w.prev_wall_texture = nil
+    return true
+  }
+
   if found,event := group.FindEvent(base.GetDefaultKeyMap()["flip"].Id()); found && event.Type == gin.Press {
     if w.wall_texture != nil {
       w.wall_texture.Flip = !w.wall_texture.Flip
-    }
-    return true
-  }
-  if found,event := group.FindEvent(gin.KeyDelete); found && event.Type == gin.Press {
-    if w.wall_texture != nil {
-      for i := range w.room.WallTextures {
-        if w.room.WallTextures[i] == w.wall_texture {
-          size := len(w.room.WallTextures)
-          w.room.WallTextures[i] = w.room.WallTextures[size - 1]
-          w.room.WallTextures = w.room.WallTextures[0 : size - 1]
-          break
-        }
-      }
-      w.wall_texture = nil
     }
     return true
   }

@@ -57,7 +57,7 @@ func (wt *WallTexture) Render() {
   dx2 := float32(wt.Texture.Data().Dx()) / 100 / 2
   dy2 := float32(wt.Texture.Data().Dy()) / 100 / 2
   if wt.temporary {
-    gl.Color4ub(255, 128, 128, 200)
+    gl.Color4ub(128, 128, 255, 200)
   } else {
     gl.Color4ub(255, 255, 255, 255)
   }

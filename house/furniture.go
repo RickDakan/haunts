@@ -4,6 +4,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 func MakeFurniture(name string) *Furniture {
@@ -31,6 +32,13 @@ type Furniture struct {
 
   // Index into furnitureDef.Texture_paths
   Rotation int
+
+  // If this is currently being dragged around it will be marked as temporary
+  // so that it will be drawn differently
+  temporary bool
+
+  // Used to determine how this is drawn as it is being moved in the editor
+  invalid bool
 }
 
 // Changes the position of this object such that it fits within the specified
@@ -84,5 +92,14 @@ func (f *Furniture) Dims() (int, int) {
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
+  if f.temporary {
+    if f.invalid {
+      gl.Color4ub(255, 128, 128, 200)
+    } else {
+      gl.Color4ub(128, 128, 255, 200)
+    }
+  } else {
+    gl.Color4ub(255, 255, 255, 255)
+  }
   orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
 }

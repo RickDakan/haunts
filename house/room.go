@@ -104,13 +104,31 @@ type plane struct {
   mat          *mathgl.Mat4
 }
 
+func (room *roomDef) renderFurniture(floor mathgl.Mat4) {
+  board_to_window := func(mx,my float32) (x,y float32) {
+    v := mathgl.Vec4{X: mx, Y: my, W: 1}
+    v.Transform(&floor)
+    x, y = v.X, v.Y
+    return
+  }
+  for _, furn := range room.Furniture {
+    ix,iy := furn.Pos()
+    near_x, near_y := float32(ix), float32(iy)
+    idx, idy := furn.Dims()
+    dx, dy := float32(idx), float32(idy)
+    leftx,_ := board_to_window(near_x, near_y + dy)
+    rightx,_ := board_to_window(near_x + dx, near_y)
+    _,boty := board_to_window(near_x, near_y)
+    furn.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+  }
+}
+
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *roomDef) render(left,right,floor mathgl.Mat4) {
   if room.vbuffer == 0 {
     return
   }
   gl.Enable(gl.STENCIL_TEST)
-  defer gl.Disable(gl.STENCIL_TEST)
 
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
@@ -120,6 +138,8 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
 
   gl.EnableClientState(gl.VERTEX_ARRAY)
   gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+  defer gl.DisableClientState(gl.VERTEX_ARRAY)
+  defer gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
 
   var vert roomVertex
   gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
@@ -131,10 +151,11 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
     {room.floor_buffer, room.Floor, &floor},
   }
 
-  gl.Color4ub(255, 255, 255, 255)
   gl.PushMatrix()
+  defer gl.PopMatrix()
   for _, plane := range planes {
     gl.LoadMatrixf(&floor[0])
+    gl.Color4ub(255, 255, 255, 255)
     plane.texture.Data().Bind()
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
     gl.ClearStencil(0)
@@ -145,6 +166,8 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
     gl.StencilFunc(gl.EQUAL, 1, 1)
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     gl.LoadMatrixf(&(*plane.mat)[0])
+
+    // All wall textures need to be drawn three times, once for each wall.
     for i := range room.WallTextures {
       wt := *room.WallTextures[i]
       dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
@@ -170,11 +193,9 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
       wt.Render()
     }
   }
-  gl.PopMatrix()
-
-  gl.DisableClientState(gl.VERTEX_ARRAY)
-  gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
-
+  gl.Disable(gl.STENCIL_TEST)
+  gl.LoadIdentity()
+  room.renderFurniture(floor)
 }
 
 func (room *roomDef) setupGlStuff() {
