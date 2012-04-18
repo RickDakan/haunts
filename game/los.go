@@ -657,6 +657,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   maxy := ey + ent.Stats.Sight()
   line := make([][2]int, ent.Stats.Sight())
   for x := minx; x <= maxx; x++ {
+    line = line[0:0]
     bresenham(ex, ey, x, miny, &line)
     g.doLos(ent.Stats.Sight(), line, ent.los.grid)
     line = line[0:0]
