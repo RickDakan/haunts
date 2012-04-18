@@ -941,7 +941,8 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   if rv.room.vbuffer == 0 {
     rv.room.setupGlStuff()
   }
-  rv.room.render(rv.left_wall_mat, rv.right_wall_mat, rv.mat)
+  // rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
+  (&Room{roomDef:rv.room}).render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
   return
 
   rv.cstack.Push(1, 1, 1, 1)

@@ -3,6 +3,7 @@ package house
 import (
   "math"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/mathgl"
@@ -71,7 +72,12 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   return &hv
 }
 
+
+var version bool
 func (hv *HouseViewer) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  if found, event := group.FindEvent(gin.Space); found && event.Type == gin.Press {
+    version = !version
+  }
   return false
 }
 
@@ -264,6 +270,10 @@ func (hv *HouseViewer) Draw(region gui.Region) {
   defer region.PopClipPlanes()
   hv.Render_region = region
 
+  if version {
+    hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom)
+    return
+  }
   current_floor := 0
 
   hv.rooms = hv.rooms[0:0]

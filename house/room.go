@@ -124,7 +124,7 @@ func (room *roomDef) renderFurniture(floor mathgl.Mat4) {
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *roomDef) render(left,right,floor mathgl.Mat4) {
+func (room *Room) render(floor,left,right mathgl.Mat4) {
   if room.vbuffer == 0 {
     return
   }
@@ -154,16 +154,58 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
   gl.PushMatrix()
   defer gl.PopMatrix()
   for _, plane := range planes {
-    gl.LoadMatrixf(&floor[0])
     gl.Color4ub(255, 255, 255, 255)
-    plane.texture.Data().Bind()
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
     gl.ClearStencil(0)
     gl.Clear(gl.STENCIL_BUFFER_BIT)
-    gl.StencilFunc(gl.ALWAYS, 1, 1)
+    gl.StencilFunc(gl.ALWAYS, 3, 3)
     gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
+    gl.LoadMatrixf(&floor[0])
+    switch plane.mat {
+      case &left:
+      for _, door := range room.Doors {
+        door.TextureData().Bind()
+        if door.Facing != FarLeft { continue }
+
+        var mul, run mathgl.Mat4
+        run.Assign(&floor)
+        mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
+        run.Multiply(&mul)
+        mul.RotationX(-3.1415926535 / 2)
+        run.Multiply(&mul)
+        gl.LoadMatrixf(&run[0])
+
+        dx := float64(door.Width)
+        dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        door.TextureData().Render(0, 0, dx, dy)
+      }
+
+      case &right:
+      for _, door := range room.Doors {
+        door.TextureData().Bind()
+        if door.Facing != FarRight { continue }
+
+        var mul, run mathgl.Mat4
+        run.Assign(&floor)
+        mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
+        run.Multiply(&mul)
+        mul.RotationX(-3.1415926535 / 2)
+        run.Multiply(&mul)
+        mul.RotationY(-3.1415926535 / 2)
+        run.Multiply(&mul)
+        gl.LoadMatrixf(&run[0])
+
+        dx := float64(door.Width)
+        dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        door.TextureData().Render(0, 0, dx, dy)
+      }
+    }
+    gl.LoadMatrixf(&floor[0])
+    gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+    gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
+    plane.texture.Data().Bind()
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
-    gl.StencilFunc(gl.EQUAL, 1, 1)
+    gl.StencilFunc(gl.EQUAL, 1, 3)
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     gl.LoadMatrixf(&(*plane.mat)[0])
 
@@ -172,23 +214,20 @@ func (room *roomDef) render(left,right,floor mathgl.Mat4) {
       wt := *room.WallTextures[i]
       dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
       switch plane.mat {
-      case &floor:
+        case &left:
+        if wt.X > dx {
+          wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
+        }
+        wt.Y -= dy
 
-      case &left:
-      if wt.X > dx {
-        wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
-      }
-      wt.Y -= dy
-
-      case &right:
-      if wt.Y > dy {
-        wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
-      }
-      if wt.X > dx {
-        wt.Rot -= 3.1415926535 / 2
-      }
-      wt.X -= dx
-
+        case &right:
+        if wt.Y > dy {
+          wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
+        }
+        if wt.X > dx {
+          wt.Rot -= 3.1415926535 / 2
+        }
+        wt.X -= dx
       }
       wt.Render()
     }

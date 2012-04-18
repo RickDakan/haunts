@@ -243,6 +243,22 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room_def *roomDef, furn, spawn boo
   return
 }
 
+func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32) {
+  var ros []RectObject
+  algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
+  ros = OrderRectObjects(ros)
+  for i := len(ros) - 1; i >= 0; i-- {
+    room := ros[i].(*Room)
+    fx := focusx - float32(room.X)
+    fy := focusy - float32(room.Y)
+    floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
+    if room.vbuffer == 0 {
+      room.setupGlStuff()
+    }
+    room.render(floor, left, right)
+  }
+}
+
 type HouseDef struct {
   Name string
 
@@ -704,6 +720,7 @@ func MakeHouseEditorPanel() Editor {
 // Manually pass all events to the tabs, regardless of location, since the tabs
 // need to know where the user clicks.
 func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  he.viewer.Respond(ui, group)
   return he.widgets[he.tab.SelectedTab()].Respond(ui, group)
 }
 
