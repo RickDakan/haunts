@@ -198,9 +198,12 @@ func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom flo
 
 // Transforms a cursor position in window coordinates to board coordinates.
 func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
-  fx,fy,fdist := rv.modelviewToBoard(float32(wx), float32(wy))
-  lbx,lby,ldist := rv.modelviewToLeftWall(float32(wx), float32(wy))
-  rbx,rby,rdist := rv.modelviewToRightWall(float32(wx), float32(wy))
+  return rv.WindowToBoardf(float32(wx), float32(wy))
+}
+func (rv *RoomViewer) WindowToBoardf(wx, wy float32) (float32, float32) {
+  fx,fy,fdist := rv.modelviewToBoard(wx, wy)
+  lbx,lby,ldist := rv.modelviewToLeftWall(wx, wy)
+  rbx,rby,rdist := rv.modelviewToRightWall(wx, wy)
   if fdist < ldist && fdist < rdist {
     if fx > float32(rv.room.Size.Dx) {
       fx = float32(rv.room.Size.Dx)
@@ -217,16 +220,20 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
 }
 
 func (rv *RoomViewer) BoardToWindow(bx,by float32) (int, int) {
+  x,y := rv.BoardToWindowf(bx, by)
+  return int(x), int(y)
+}
+func (rv *RoomViewer) BoardToWindowf(bx,by float32) (float32, float32) {
   fx,fy,fz := rv.boardToModelview(float32(bx), float32(by))
   lbx,lby,lz := rv.leftWallToModelview(float32(bx), float32(by))
   rbx,rby,rz := rv.rightWallToModelview(float32(bx), float32(by))
   if fz < lz && fz < rz {
-    return int(fx), int(fy)
+    return fx, fy
   }
   if lz < rz {
-    return int(lbx), int(lby)
+    return lbx, lby
   }
-  return int(rbx), int(rby)
+  return rbx, rby
 }
 
 func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {

@@ -114,10 +114,10 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         *w.prev_wall_texture = *w.wall_texture
         w.wall_texture.temporary = true
 
-        wx,wy := w.viewer.BoardToWindow(w.wall_texture.X, w.wall_texture.Y)
+        wx,wy := w.viewer.BoardToWindowf(w.wall_texture.X, w.wall_texture.Y)
         px,py := event.Key.Cursor().Point()
-        w.drag_anchor.X = float32(px) - float32(wx) - 0.5
-        w.drag_anchor.Y = float32(py) - float32(wy) - 0.5
+        w.drag_anchor.X = float32(px) - wx
+        w.drag_anchor.Y = float32(py) - wy
       }
     }
     return true
@@ -130,7 +130,7 @@ func (w *WallPanel) Think(ui *gui.Gui, t int64) {
     px,py := gin.In().GetCursor("Mouse").Point()
     tx := float32(px) - w.drag_anchor.X
     ty := float32(py) - w.drag_anchor.Y
-    bx,by := w.viewer.WindowToBoard(int(tx), int(ty))
+    bx,by := w.viewer.WindowToBoardf(tx, ty)
     w.wall_texture.X = bx
     w.wall_texture.Y = by
   }
