@@ -3,7 +3,6 @@ package house
 import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
-  gl "github.com/chsc/gogl/gl21"
 )
 
 func MakeWallTexture(name string) *WallTexture {
@@ -53,13 +52,15 @@ type wallTextureDef struct {
   Texture texture.Object
 }
 
+func (wt *WallTexture) GetColor() (r,g,b,a byte) {
+  if wt.temporary {
+    return 127, 127, 255, 200
+  }
+  return 255, 255, 255, 255
+}
+
 func (wt *WallTexture) Render() {
   dx2 := float32(wt.Texture.Data().Dx()) / 100 / 2
   dy2 := float32(wt.Texture.Data().Dy()) / 100 / 2
-  if wt.temporary {
-    gl.Color4ub(128, 128, 255, 200)
-  } else {
-    gl.Color4ub(255, 255, 255, 255)
-  }
   wt.Texture.Data().RenderAdvanced(float64(wt.X-dx2), float64(wt.Y-dy2), float64(2*dx2), float64(2*dy2), float64(wt.Rot), wt.Flip)
 }

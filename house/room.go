@@ -104,7 +104,7 @@ type plane struct {
   mat          *mathgl.Mat4
 }
 
-func (room *roomDef) renderFurniture(floor mathgl.Mat4) {
+func (room *roomDef) renderFurniture(floor mathgl.Mat4, base_alpha byte) {
   board_to_window := func(mx,my float32) (x,y float32) {
     v := mathgl.Vec4{X: mx, Y: my, W: 1}
     v.Transform(&floor)
@@ -119,15 +119,12 @@ func (room *roomDef) renderFurniture(floor mathgl.Mat4) {
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
     _,boty := board_to_window(near_x, near_y)
-    furn.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    furn.Render(mathgl.Vec2{leftx, boty}, rightx - leftx, base_alpha)
   }
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4) {
-  if room.vbuffer == 0 {
-    return
-  }
+func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte) {
   gl.Enable(gl.STENCIL_TEST)
 
   gl.Enable(gl.TEXTURE_2D)
@@ -153,21 +150,23 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
 
   gl.PushMatrix()
   defer gl.PopMatrix()
+
+  var mul, run mathgl.Mat4
   for _, plane := range planes {
-    gl.Color4ub(255, 255, 255, 255)
     gl.ClearStencil(0)
     gl.Clear(gl.STENCIL_BUFFER_BIT)
     gl.StencilFunc(gl.ALWAYS, 3, 3)
     gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
     gl.LoadMatrixf(&floor[0])
+    run.Assign(&floor)
+    // Render the doors and cut out the stencil buffer so we leave them empty
+    // if they're open
     switch plane.mat {
       case &left:
       for _, door := range room.Doors {
         door.TextureData().Bind()
         if door.Facing != FarLeft { continue }
 
-        var mul, run mathgl.Mat4
-        run.Assign(&floor)
         mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
         run.Multiply(&mul)
         mul.RotationX(-3.1415926535 / 2)
@@ -176,6 +175,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        gl.Color4ub(255, 255, 255, room.far_left.door_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
 
@@ -184,8 +184,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
         door.TextureData().Bind()
         if door.Facing != FarRight { continue }
 
-        var mul, run mathgl.Mat4
-        run.Assign(&floor)
         mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
         run.Multiply(&mul)
         mul.RotationX(-3.1415926535 / 2)
@@ -196,9 +194,21 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        gl.Color4ub(255, 255, 255, room.far_right.door_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
     }
+
+    // Now draw the walls
+    current_alpha := base_alpha
+    switch plane.mat {
+      case &left:
+      current_alpha = byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
+
+      case &right:
+      current_alpha = byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
+    }
+    gl.Color4ub(255, 255, 255, current_alpha)
     gl.LoadMatrixf(&floor[0])
     gl.StencilFunc(gl.NOTEQUAL, 1, 1)
     gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
@@ -209,7 +219,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     gl.LoadMatrixf(&(*plane.mat)[0])
 
-    // All wall textures need to be drawn three times, once for each wall.
+    // All wall textures need to be drawn three times, once for each wall and
+    // once for the floor.
     for i := range room.WallTextures {
       wt := *room.WallTextures[i]
       dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
@@ -229,12 +240,14 @@ func (room *Room) render(floor,left,right mathgl.Mat4) {
         }
         wt.X -= dx
       }
+      R, G, B, A := wt.GetColor()
+      gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
       wt.Render()
     }
   }
   gl.Disable(gl.STENCIL_TEST)
   gl.LoadIdentity()
-  room.renderFurniture(floor)
+  room.renderFurniture(floor, base_alpha)
 }
 
 func (room *roomDef) setupGlStuff() {

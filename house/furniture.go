@@ -89,17 +89,28 @@ func (f *Furniture) Dims() (int, int) {
   return orientation.Dx, orientation.Dy
 }
 
-func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
+func (f *Furniture) GetColor() (r,g,b,a byte) {
+  if f.temporary {
+    if f.invalid {
+      return 255, 127, 127, 200
+    } else {
+      return 127, 127, 255, 200
+    }
+  }
+  return 255, 255, 255, 255
+}
+
+func (f *Furniture) Render(pos mathgl.Vec2, width float32, base_alpha byte) {
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
   if f.temporary {
     if f.invalid {
-      gl.Color4ub(255, 128, 128, 200)
+      gl.Color4ub(255, 128, 128, base_alpha / 2)
     } else {
-      gl.Color4ub(128, 128, 255, 200)
+      gl.Color4ub(128, 128, 255, base_alpha / 2)
     }
   } else {
-    gl.Color4ub(255, 255, 255, 255)
+    gl.Color4ub(255, 255, 255, base_alpha)
   }
   orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
 }

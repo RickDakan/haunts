@@ -912,7 +912,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
     cstack.Pop()
     switch d := f.(type) {
       case *Furniture:
-      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx, 255)
 
       case Drawable:
       gl.Enable(gl.TEXTURE_2D)
@@ -942,7 +942,11 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.room.setupGlStuff()
   }
   // rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
-  (&Room{roomDef:rv.room}).render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
+  troom := Room{roomDef: rv.room}
+  troom.far_left.wall_alpha = 255
+  troom.far_left.door_alpha = 255
+  troom.far_right.wall_alpha = 255
+  troom.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255)
   return
 
   rv.cstack.Push(1, 1, 1, 1)
