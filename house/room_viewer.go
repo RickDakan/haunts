@@ -27,6 +27,7 @@ type Drawable interface {
   RectObject
   FPos() (float64,float64)
   Render(pos mathgl.Vec2, width float32)
+  Color() (r,g,b,a byte)
 }
 
 type editMode int
@@ -912,7 +913,7 @@ func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*
     cstack.Pop()
     switch d := f.(type) {
       case *Furniture:
-      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx, 255)
+      d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
 
       case Drawable:
       gl.Enable(gl.TEXTURE_2D)
@@ -946,7 +947,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   troom.far_left.wall_alpha = 255
   troom.far_left.door_alpha = 255
   troom.far_right.wall_alpha = 255
-  troom.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255)
+  troom.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil)
   return
 
   rv.cstack.Push(1, 1, 1, 1)

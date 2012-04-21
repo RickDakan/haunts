@@ -52,7 +52,7 @@ type wallTextureDef struct {
   Texture texture.Object
 }
 
-func (wt *WallTexture) GetColor() (r,g,b,a byte) {
+func (wt *WallTexture) Color() (r,g,b,a byte) {
   if wt.temporary {
     return 127, 127, 255, 200
   }

@@ -254,7 +254,7 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room_def *roomDef, furn, spawn boo
   return
 }
 
-func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32) {
+func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, drawables []Drawable) {
   var ros []RectObject
   algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
   ros = OrderRectObjects(ros)
@@ -333,7 +333,7 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32) {
     fy := focusy - float32(room.Y)
     floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
     v := alpha_map[room]
-    room.render(floor, left, right, v)
+    room.render(floor, left, right, v, drawables)
   }
 }
 

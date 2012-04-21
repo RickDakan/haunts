@@ -104,27 +104,46 @@ type plane struct {
   mat          *mathgl.Mat4
 }
 
-func (room *roomDef) renderFurniture(floor mathgl.Mat4, base_alpha byte) {
+func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables []Drawable) {
   board_to_window := func(mx,my float32) (x,y float32) {
     v := mathgl.Vec4{X: mx, Y: my, W: 1}
     v.Transform(&floor)
     x, y = v.X, v.Y
     return
   }
-  for _, furn := range room.Furniture {
-    ix,iy := furn.Pos()
-    near_x, near_y := float32(ix), float32(iy)
-    idx, idy := furn.Dims()
+
+  var all []RectObject
+  for _, d := range drawables {
+    x, y := d.Pos()
+    if x < room.X { continue }
+    if y < room.Y { continue }
+    if x >= room.X + room.Size.Dx { continue }
+    if y >= room.Y + room.Size.Dy { continue }
+    all = append(all, offsetDrawable{d, -room.X, -room.Y})
+  }
+  for _, f := range room.Furniture {
+    all = append(all, f)
+  }
+  all = OrderRectObjects(all)
+
+  for i := len(all) - 1; i >= 0; i-- {
+    d := all[i].(Drawable)
+    fx,fy := d.FPos()
+    near_x, near_y := float32(fx), float32(fy)
+    idx, idy := d.Dims()
     dx, dy := float32(idx), float32(idy)
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
     _,boty := board_to_window(near_x, near_y)
-    furn.Render(mathgl.Vec2{leftx, boty}, rightx - leftx, base_alpha)
+    r, g, b, a := d.Color()
+    a = byte((int(base_alpha) * int(a)) >> 8)
+    gl.Color4ub(r, g, b, a)
+    d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte) {
+func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable) {
   gl.Enable(gl.STENCIL_TEST)
 
   gl.Enable(gl.TEXTURE_2D)
@@ -240,14 +259,14 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte) {
         }
         wt.X -= dx
       }
-      R, G, B, A := wt.GetColor()
+      R, G, B, A := wt.Color()
       gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
       wt.Render()
     }
   }
   gl.Disable(gl.STENCIL_TEST)
   gl.LoadIdentity()
-  room.renderFurniture(floor, base_alpha)
+  room.renderFurniture(floor, base_alpha, drawables)
 }
 
 func (room *roomDef) setupGlStuff() {

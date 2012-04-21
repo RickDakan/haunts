@@ -374,6 +374,9 @@ func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
   gl.End()
 }
 
+func (e *Entity) Color() (r,g,b,a byte) {
+  return 255, 255, 255, 255
+}
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
@@ -384,13 +387,13 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
     tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
     gl.Begin(gl.QUADS)
     gl.TexCoord2d(tx, -ty)
-    gl.Vertex2f(pos.X - width/2, pos.Y)
+    gl.Vertex2f(pos.X, pos.Y)
     gl.TexCoord2d(tx, -ty2)
-    gl.Vertex2f(pos.X - width/2, pos.Y + dy * width / dx)
+    gl.Vertex2f(pos.X, pos.Y + dy * width / dx)
     gl.TexCoord2d(tx2, -ty2)
-    gl.Vertex2f(pos.X + width/2, pos.Y + dy * width / dx)
+    gl.Vertex2f(pos.X + width, pos.Y + dy * width / dx)
     gl.TexCoord2d(tx2, -ty)
-    gl.Vertex2f(pos.X + width/2, pos.Y)
+    gl.Vertex2f(pos.X + width, pos.Y)
     gl.End()
   }
 }

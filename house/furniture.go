@@ -4,7 +4,6 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
 )
 
 func MakeFurniture(name string) *Furniture {
@@ -57,6 +56,10 @@ func (f *Furniture) Pos() (int, int) {
   return f.X, f.Y
 }
 
+func (f *Furniture) FPos() (float64, float64) {
+  return float64(f.X), float64(f.Y)
+}
+
 func (f *Furniture) RotateLeft() {
   f.Rotation = (f.Rotation + 1) % len(f.Orientations)
 }
@@ -89,7 +92,7 @@ func (f *Furniture) Dims() (int, int) {
   return orientation.Dx, orientation.Dy
 }
 
-func (f *Furniture) GetColor() (r,g,b,a byte) {
+func (f *Furniture) Color() (r,g,b,a byte) {
   if f.temporary {
     if f.invalid {
       return 255, 127, 127, 200
@@ -100,17 +103,8 @@ func (f *Furniture) GetColor() (r,g,b,a byte) {
   return 255, 255, 255, 255
 }
 
-func (f *Furniture) Render(pos mathgl.Vec2, width float32, base_alpha byte) {
+func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
-  if f.temporary {
-    if f.invalid {
-      gl.Color4ub(255, 128, 128, base_alpha / 2)
-    } else {
-      gl.Color4ub(128, 128, 255, base_alpha / 2)
-    }
-  } else {
-    gl.Color4ub(255, 255, 255, base_alpha)
-  }
   orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
 }

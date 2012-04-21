@@ -271,7 +271,7 @@ func (hv *HouseViewer) Draw(region gui.Region) {
   hv.Render_region = region
 
   if version {
-    hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom)
+    hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables)
     return
   }
   current_floor := 0
