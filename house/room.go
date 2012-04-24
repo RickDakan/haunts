@@ -170,6 +170,69 @@ func (room *Room) getNearWallAlpha(los_tex *LosTexture) (left, right byte) {
   return
 }
 
+var src_alpha gl.Enum
+var dst_alpha gl.Enum
+func init() {
+  src_alpha = gl.DST_COLOR
+  dst_alpha = gl.ZERO
+}
+func DstAlphaChange() {
+  switch dst_alpha {
+    case gl.ZERO:
+      dst_alpha = gl.ONE_MINUS_DST_ALPHA    
+      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_DST_ALPHA")
+    case gl.ONE:
+      dst_alpha = gl.ZERO
+      base.Log().Printf("Dst alpha set to gl.ZERO")
+    case gl.ONE_MINUS_SRC_COLOR:
+      dst_alpha = gl.ONE
+      base.Log().Printf("Dst alpha set to gl.SCR_COLOR")
+    case gl.ONE_MINUS_SRC_ALPHA:
+      dst_alpha = gl.ONE_MINUS_SRC_COLOR
+      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_SRC_COLOR")
+    case gl.SRC_ALPHA:
+      dst_alpha = gl.ONE_MINUS_SRC_ALPHA
+      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_SRC_ALPHA")
+    case gl.DST_ALPHA:
+      dst_alpha = gl.SRC_ALPHA
+      base.Log().Printf("Dst alpha set to gl.SRC_ALPHA")
+    case gl.ONE_MINUS_DST_ALPHA:
+      dst_alpha = gl.DST_ALPHA
+      base.Log().Printf("Dst alpha set to gl.DST_ALPHA")
+  }
+}
+func SrcAlphaChange() {
+  switch src_alpha {
+    case gl.ZERO:
+      src_alpha = gl.SRC_ALPHA_SATURATE
+      base.Log().Printf("Src alpha set to gl.SRC_ALPHA_SATURATE")
+    case gl.ONE:
+      src_alpha = gl.ZERO
+      base.Log().Printf("Src alpha set to gl.ZERO")
+    case gl.DST_COLOR:
+      src_alpha = gl.ONE
+      base.Log().Printf("Src alpha set to gl.ONE")
+    case gl.ONE_MINUS_DST_COLOR:
+      src_alpha = gl.DST_COLOR
+      base.Log().Printf("Src alpha set to gl.DST_COLOR")
+    case gl.SRC_ALPHA:
+      src_alpha = gl.ONE_MINUS_DST_COLOR
+      base.Log().Printf("Src alpha set to gl.ONE_MINUS_DST_COLOR")
+    case gl.ONE_MINUS_SRC_COLOR:
+      src_alpha = gl.SRC_ALPHA
+      base.Log().Printf("Src alpha set to gl.SRC_ALPHA")
+    case gl.DST_ALPHA:
+      src_alpha = gl.ONE_MINUS_SRC_COLOR
+      base.Log().Printf("Src alpha set to gl.ONE_MINUS_SRC_COLOR")
+    case gl.ONE_MINUS_DST_ALPHA:
+      src_alpha = gl.DST_ALPHA
+      base.Log().Printf("Src alpha set to gl.DST_ALPHA")
+    case gl.SRC_ALPHA_SATURATE:
+      src_alpha = gl.ONE_MINUS_DST_ALPHA
+      base.Log().Printf("Src alpha set to gl.ONE_MINUS_DST_ALPHA")
+  }
+}
+
 func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
   if los_tex == nil {
     return 255
@@ -315,9 +378,17 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     // Now we need to darken everything in shadows by applying the los texture
     // This needs to be done slightly different for each plane
 
-    if los_tex != nil && plane.mat == &floor {
+    if los_tex != nil {
+      switch plane.mat {
+        case &left:
+        current_alpha = byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
+
+        case &right:
+        current_alpha = byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
+      }
       gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
-      gl.Color4ub(0, 0, 0, 255)
+      gl.BlendFunc(src_alpha, dst_alpha)
+      gl.Color4ub(255, 255, 255, current_alpha)
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
       gl.LoadMatrixf(&floor[0])
       gl.StencilFunc(gl.ALWAYS, 1, 1)
@@ -372,12 +443,12 @@ func (room *Room) setupGlStuff() {
 
   vs := []roomVertex{
     // Walls
-    { 0,  dy,  0, 0, 1, 0, 0},
-    {dx,  dy,  0, c, 1, 0, 0},
-    {dx,   0,  0, 1, 1, 0, 0},
-    { 0,  dy, dz, 0, 0, 0, 0},
-    {dx,  dy, dz, c, 0, 0, 0},
-    {dx,   0, dz, 1, 0, 0, 0},
+    { 0,  dy,  0, 0, 1, lt_ury, lt_llx},
+    {dx,  dy,  0, c, 1, lt_ury, lt_urx},
+    {dx,   0,  0, 1, 1, lt_lly, lt_urx},
+    { 0,  dy, dz, 0, 0, lt_ury, lt_llx},
+    {dx,  dy, dz, c, 0, lt_ury, lt_urx},
+    {dx,   0, dz, 1, 0, lt_lly, lt_urx},
 
     // Floor
     { 0,  0, 0, 0, 1, lt_lly, lt_llx},

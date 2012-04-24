@@ -540,7 +540,7 @@ func (g *Game) Think(dt int64) {
   for _,ent := range g.Ents {
     state := ent.Sprite.Sprite().State()
     if state != "ready" && state != "killed" {
-      base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
+      // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
       return
     }
   }

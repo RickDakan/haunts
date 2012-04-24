@@ -329,6 +329,12 @@ func main() {
       }
       edit_mode = !edit_mode
     }
+    if key_map["src_alpha"].FramePressCount() > 0 {
+      house.SrcAlphaChange()
+    }
+    if key_map["dst_alpha"].FramePressCount() > 0 {
+      house.DstAlphaChange()
+    }
 
     if edit_mode {
       editMode()

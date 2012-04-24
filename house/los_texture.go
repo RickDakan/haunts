@@ -52,7 +52,7 @@ func MakeLosTexture() *LosTexture {
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
     gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    gl.TexImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, len(lt.p2d), len(lt.p2d), 0, gl.ALPHA, gl.BYTE, lt.pix)
+    gl.TexImage2D(gl.TEXTURE_2D, 0, 1, len(lt.p2d), len(lt.p2d), 0, gl.LUMINANCE, gl.BYTE, lt.pix)
     lt.rec <- tex
     runtime.SetFinalizer(&lt, losTextureFinalize)
   })
@@ -79,7 +79,7 @@ func (lt *LosTexture) Remap() {
   render.Queue(func() {
     gl.Enable(gl.TEXTURE_2D)
     lt.tex.Bind(gl.TEXTURE_2D)
-    gl.TexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, len(lt.p2d), len(lt.p2d), gl.ALPHA, lt.pix)
+    gl.TexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, len(lt.p2d), len(lt.p2d), gl.LUMINANCE, lt.pix)
   })
 }
 
