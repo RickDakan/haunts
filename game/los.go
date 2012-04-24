@@ -464,7 +464,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.los_full_merger = make([]bool, house.LosTextureSizeSquared)
   g.los_merger = make([][]bool, house.LosTextureSize)
   for i := range g.los_merger {
-    g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
+    g.los_merger[i] = g.los_full_merger[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {

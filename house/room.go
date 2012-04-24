@@ -343,11 +343,33 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.StencilFunc(gl.NOTEQUAL, 1, 1)
     gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
     plane.texture.Data().Bind()
+    if los_tex != nil {
+      gl.ClientActiveTexture(gl.TEXTURE1)
+      gl.ActiveTexture(gl.TEXTURE1)
+      gl.Enable(gl.TEXTURE_2D)
+      gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+      los_tex.Bind()
+//      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
+      gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+      gl.ClientActiveTexture(gl.TEXTURE0)
+      gl.ActiveTexture(gl.TEXTURE0)
+      base.EnableShader(true)
+    }
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
     gl.StencilFunc(gl.EQUAL, 1, 3)
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     gl.LoadMatrixf(&(*plane.mat)[0])
+    if los_tex != nil {
+      base.EnableShader(false)
+      gl.ActiveTexture(gl.TEXTURE1)
+      gl.Disable(gl.TEXTURE_2D)
+      gl.ActiveTexture(gl.TEXTURE0)
+      gl.ClientActiveTexture(gl.TEXTURE1)
+      gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
+      gl.ClientActiveTexture(gl.TEXTURE0)
+    }
 
     // All wall textures need to be drawn three times, once for each wall and
     // once for the floor.
@@ -378,7 +400,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     // Now we need to darken everything in shadows by applying the los texture
     // This needs to be done slightly different for each plane
 
-    if los_tex != nil {
+    if false && los_tex != nil {
       switch plane.mat {
         case &left:
         current_alpha = byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)

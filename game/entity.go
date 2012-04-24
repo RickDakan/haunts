@@ -97,10 +97,10 @@ func MakeEntity(name string, g *Game) *Entity {
 
   if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
     ent.los = &losData{}
-    full_los := make([]bool, 256*256)
-    ent.los.grid = make([][]bool, 256)
+    full_los := make([]bool, house.LosTextureSizeSquared)
+    ent.los.grid = make([][]bool, house.LosTextureSize)
     for i := range ent.los.grid {
-      ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
+      ent.los.grid[i] = full_los[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
     }
     stats := status.MakeInst(ent.Base)
     ent.Stats = &stats
