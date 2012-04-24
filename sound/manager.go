@@ -83,4 +83,14 @@ func SetBackgroundMusic(file string) {
     base.Error().Printf("Unable to play %s: %v", file, err)
     return
   }
+  cg, err := system.GetMasterChannelGroup()
+  if err != nil {
+    base.Error().Printf("Unable to set volume: %v", err)
+    return
+  }
+  cg.SetVolume(0.1)
 }
+
+
+
+

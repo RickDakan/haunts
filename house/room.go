@@ -170,69 +170,6 @@ func (room *Room) getNearWallAlpha(los_tex *LosTexture) (left, right byte) {
   return
 }
 
-var src_alpha gl.Enum
-var dst_alpha gl.Enum
-func init() {
-  src_alpha = gl.DST_COLOR
-  dst_alpha = gl.ZERO
-}
-func DstAlphaChange() {
-  switch dst_alpha {
-    case gl.ZERO:
-      dst_alpha = gl.ONE_MINUS_DST_ALPHA    
-      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_DST_ALPHA")
-    case gl.ONE:
-      dst_alpha = gl.ZERO
-      base.Log().Printf("Dst alpha set to gl.ZERO")
-    case gl.ONE_MINUS_SRC_COLOR:
-      dst_alpha = gl.ONE
-      base.Log().Printf("Dst alpha set to gl.SCR_COLOR")
-    case gl.ONE_MINUS_SRC_ALPHA:
-      dst_alpha = gl.ONE_MINUS_SRC_COLOR
-      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_SRC_COLOR")
-    case gl.SRC_ALPHA:
-      dst_alpha = gl.ONE_MINUS_SRC_ALPHA
-      base.Log().Printf("Dst alpha set to gl.ONE_MINUS_SRC_ALPHA")
-    case gl.DST_ALPHA:
-      dst_alpha = gl.SRC_ALPHA
-      base.Log().Printf("Dst alpha set to gl.SRC_ALPHA")
-    case gl.ONE_MINUS_DST_ALPHA:
-      dst_alpha = gl.DST_ALPHA
-      base.Log().Printf("Dst alpha set to gl.DST_ALPHA")
-  }
-}
-func SrcAlphaChange() {
-  switch src_alpha {
-    case gl.ZERO:
-      src_alpha = gl.SRC_ALPHA_SATURATE
-      base.Log().Printf("Src alpha set to gl.SRC_ALPHA_SATURATE")
-    case gl.ONE:
-      src_alpha = gl.ZERO
-      base.Log().Printf("Src alpha set to gl.ZERO")
-    case gl.DST_COLOR:
-      src_alpha = gl.ONE
-      base.Log().Printf("Src alpha set to gl.ONE")
-    case gl.ONE_MINUS_DST_COLOR:
-      src_alpha = gl.DST_COLOR
-      base.Log().Printf("Src alpha set to gl.DST_COLOR")
-    case gl.SRC_ALPHA:
-      src_alpha = gl.ONE_MINUS_DST_COLOR
-      base.Log().Printf("Src alpha set to gl.ONE_MINUS_DST_COLOR")
-    case gl.ONE_MINUS_SRC_COLOR:
-      src_alpha = gl.SRC_ALPHA
-      base.Log().Printf("Src alpha set to gl.SRC_ALPHA")
-    case gl.DST_ALPHA:
-      src_alpha = gl.ONE_MINUS_SRC_COLOR
-      base.Log().Printf("Src alpha set to gl.ONE_MINUS_SRC_COLOR")
-    case gl.ONE_MINUS_DST_ALPHA:
-      src_alpha = gl.DST_ALPHA
-      base.Log().Printf("Src alpha set to gl.DST_ALPHA")
-    case gl.SRC_ALPHA_SATURATE:
-      src_alpha = gl.ONE_MINUS_DST_ALPHA
-      base.Log().Printf("Src alpha set to gl.ONE_MINUS_DST_ALPHA")
-  }
-}
-
 func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
   if los_tex == nil {
     return 255
@@ -258,7 +195,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   gl.Enable(gl.ALPHA_TEST)
-  gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
 
   gl.EnableClientState(gl.VERTEX_ARRAY)
   gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
@@ -266,7 +202,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   defer gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
 
   var vert roomVertex
-  gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
 
   planes := []plane{
     {room.left_buffer, room.Wall, &left},
@@ -279,6 +214,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
   var mul, run mathgl.Mat4
   for _, plane := range planes {
+    gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+    gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
     gl.ClearStencil(0)
     gl.Clear(gl.STENCIL_BUFFER_BIT)
@@ -361,6 +298,43 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.StencilFunc(gl.EQUAL, 1, 3)
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     gl.LoadMatrixf(&(*plane.mat)[0])
+
+    // All wall textures need to be drawn three times, once for each wall and
+    // once for the floor.
+    for _, wt := range room.getWallTextures() {
+      wt.setupGlStuff(room)
+      if plane.mat == &floor {
+        gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+        gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+        println("nums ", wt.gl.floor_buffer, wt.gl.floor_count)
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+        gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+        wt.Texture.Data().Bind()
+        gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
+      }
+      // dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
+      // switch plane.mat {
+      //   case &left:
+      //   if wt.X > dx {
+      //     wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
+      //   }
+      //   wt.Y -= dy
+
+      //   case &right:
+      //   if wt.Y > dy {
+      //     wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
+      //   }
+      //   if wt.X > dx {
+      //     wt.Rot -= 3.1415926535 / 2
+      //   }
+      //   wt.X -= dx
+      // }
+      // R, G, B, A := wt.Color()
+      // gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
+      // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floo)
+      // gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
+      // wt.Render()
+    }
     if los_tex != nil {
       base.EnableShader(false)
       gl.ActiveTexture(gl.TEXTURE1)
@@ -369,57 +343,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
       gl.ClientActiveTexture(gl.TEXTURE1)
       gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
       gl.ClientActiveTexture(gl.TEXTURE0)
-    }
-
-    // All wall textures need to be drawn three times, once for each wall and
-    // once for the floor.
-    for i := range room.WallTextures {
-      wt := *room.WallTextures[i]
-      dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
-      switch plane.mat {
-        case &left:
-        if wt.X > dx {
-          wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
-        }
-        wt.Y -= dy
-
-        case &right:
-        if wt.Y > dy {
-          wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
-        }
-        if wt.X > dx {
-          wt.Rot -= 3.1415926535 / 2
-        }
-        wt.X -= dx
-      }
-      R, G, B, A := wt.Color()
-      gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
-      wt.Render()
-    }
-
-    // Now we need to darken everything in shadows by applying the los texture
-    // This needs to be done slightly different for each plane
-
-    if false && los_tex != nil {
-      switch plane.mat {
-        case &left:
-        current_alpha = byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
-
-        case &right:
-        current_alpha = byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
-      }
-      gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
-      gl.BlendFunc(src_alpha, dst_alpha)
-      gl.Color4ub(255, 255, 255, current_alpha)
-      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
-      gl.LoadMatrixf(&floor[0])
-      gl.StencilFunc(gl.ALWAYS, 1, 1)
-      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-      los_tex.Bind()
-      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
-      gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
-      gl.LoadMatrixf(&(*plane.mat)[0])
-      gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     }
   }
   gl.Disable(gl.STENCIL_TEST)

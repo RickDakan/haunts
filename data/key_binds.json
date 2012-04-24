@@ -16,7 +16,5 @@
   "room editor"  : "os+1",
   "house editor" : "os+2",
   "game mode"    : "os+g",
-  "finish round" : "os+t",
-  "src_alpha"    : "alt+s",
-  "dst_alpha"    : "alt+d"
+  "finish round" : "os+t"
 }

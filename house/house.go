@@ -19,6 +19,9 @@ type Room struct {
   // The placement of doors in this room
   Doors []*Door  `registry:"loadfrom-doors"`
 
+  // Need a local copy of wall textures so that we can make opengl buffers
+  wallTextures []*WallTexture
+
   // The offset of this room on this floor
   X,Y int
 
@@ -47,6 +50,16 @@ type Room struct {
   gl struct {
     x, y, dx, dy int
   }
+}
+
+func (r *Room) getWallTextures() []*WallTexture {
+  if r.wallTextures == nil {
+    for _, rdwt := range r.roomDef.WallTextures {
+      wt := *rdwt
+      r.wallTextures = append(r.wallTextures, &wt)
+    }
+  }
+  return r.wallTextures
 }
 
 type WallFacing int
