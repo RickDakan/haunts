@@ -22,12 +22,30 @@ type Room struct {
   // The offset of this room on this floor
   X,Y int
 
+
   // whether or not to draw the walls transparent
   far_left struct {
     wall_alpha, door_alpha byte
   }
   far_right struct {
     wall_alpha, door_alpha byte
+  }
+
+  // opengl stuff
+  // Vertex buffer storing the vertices of the room as well as the texture
+  // coordinates for the los texture.
+  vbuffer uint32
+
+  // index buffers
+  left_buffer  uint32
+  right_buffer uint32
+  floor_buffer uint32
+
+  // we don't want to redo all of the vertex and index buffers unless we
+  // need to, so we keep track of the position and size of the room when they
+  // were made so we don't have to.
+  gl struct {
+    x, y, dx, dy int
   }
 }
 
@@ -254,7 +272,7 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room_def *roomDef, furn, spawn boo
   return
 }
 
-func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, drawables []Drawable) {
+func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, drawables []Drawable, los_tex *LosTexture) {
   var ros []RectObject
   algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
   ros = OrderRectObjects(ros)
@@ -265,9 +283,8 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
   // the doors of adjacent rooms.
   for i := len(ros) - 1; i >= 0; i-- {
     room := ros[i].(*Room)
-    if room.vbuffer == 0 {
-      room.setupGlStuff()
-    }
+    los_alpha := room.getMaxLosAlpha(los_tex)
+    room.setupGlStuff()
     tx := (focusx + 3) - float32(room.X + room.Size.Dx)
     if tx < 0 { tx = 0 }
     ty := (focusy + 3) - float32(room.Y + room.Size.Dy)
@@ -281,45 +298,53 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     if v > 255 {
       v = 255
     }
-    alpha_map[room] = byte(255 - byte(v))
+    bv := 255 - byte(v)
+    alpha_map[room] = byte((int(bv) * int(los_alpha)) >> 8)
     // room.render(floor, left, right, , 255)
   }
 
   // Second pass - this time we fill in the alpha that we should use for the
   // doors, using the values we've already calculated in the first pass.
   for _, r1 := range f.Rooms {
-    r1.far_left.wall_alpha = 255
     // It is possible that we get two doors to different rooms on one wall,
     // and we might display them with the same alpha even though the rooms
     // they are attached to have different alpha.  This is probably not a
     // big deal so we'll just ignore it.
     for _, door := range r1.Doors {
       r2, _ := f.findMatchingDoor(r1, door)
-      alpha := alpha_map[r2]
+      if r2 == nil { continue }
+      // alpha := alpha_map[r2]
       // base.Log().Printf("%p %p %d %d", r1, r2, alpha, door.Facing)
-      if r2 != nil {
-        switch door.Facing {
-        case FarLeft:
-          r1.far_left.door_alpha = alpha
-        case FarRight:
-          r1.far_right.door_alpha = alpha
-        }
+      left, right := r2.getNearWallAlpha(los_tex)
+      switch door.Facing {
+      case FarLeft:
+        // if left > alpha {
+          r1.far_left.door_alpha = left
+        // } else {
+        //   r1.far_left.door_alpha = alpha
+        // }
+      case FarRight:
+        // if right > alpha {
+          r1.far_right.door_alpha = right
+        // } else {
+        //   r1.far_right.door_alpha = alpha
+        // }
       }
     }
+
     r1.far_right.wall_alpha = 255
     r1.far_left.wall_alpha = 255
     for _, r2 := range f.Rooms {
       if r1 == r2 { continue }
+      left, right := r2.getNearWallAlpha(los_tex)
       r1_rect := image.Rect(r1.X, r1.Y + r1.Size.Dy, r1.X + r1.Size.Dx, r1.Y + r1.Size.Dy + 1)
       r2_rect := image.Rect(r2.X, r2.Y, r2.X + r2.Size.Dx, r2.Y + r2.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_left.wall_alpha = 127
-        // r1.far_left.door_alpha = 127
+        r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
       }
       r1_rect = image.Rect(r1.X + r1.Size.Dx, r1.Y, r1.X + r1.Size.Dx + 1, r1.Y + r1.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_right.wall_alpha = 127
-        // r1.far_right.door_alpha = 127
+        r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
       }
     }
   }
@@ -333,7 +358,7 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     fy := focusy - float32(room.Y)
     floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
     v := alpha_map[room]
-    room.render(floor, left, right, v, drawables)
+    room.render(floor, left, right, v, drawables, los_tex)
   }
 }
 

@@ -46,7 +46,7 @@ type RoomViewer struct {
   gui.NonResponder
   gui.NonThinker
 
-  room *roomDef
+  room *Room
 
   // In case the size of the room changes we will need to update the matrices
   size RoomSize
@@ -105,7 +105,7 @@ func (rv *RoomViewer) String() string {
 func MakeRoomViewer(room *roomDef, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
-  rv.room = room
+  rv.room = &Room{roomDef:room}
   rv.angle = angle
   rv.fx = float32(rv.room.Size.Dx / 2)
   rv.fy = float32(rv.room.Size.Dy / 2)
@@ -138,7 +138,7 @@ func (rv *RoomViewer) Drag(dx,dy float64) {
 }
 
 func (rv *RoomViewer) makeMat() {
-  rv.mat, rv.imat, rv.left_wall_mat, rv.left_wall_imat, rv.right_wall_mat, rv.right_wall_imat = makeRoomMats(rv.room, rv.Render_region, rv.fx, rv.fy, rv.angle, rv.zoom)
+  rv.mat, rv.imat, rv.left_wall_mat, rv.left_wall_imat, rv.right_wall_mat, rv.right_wall_imat = makeRoomMats(rv.room.roomDef, rv.Render_region, rv.fx, rv.fy, rv.angle, rv.zoom)
 }
 
 func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom float32) (floor,ifloor,left,ileft,right,iright mathgl.Mat4) {
@@ -939,22 +939,19 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   gl.LoadIdentity()
   gl.MultMatrixf(&rv.mat[0])
 
-  if rv.room.vbuffer == 0 {
-    rv.room.setupGlStuff()
-  }
   // rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
-  troom := Room{roomDef: rv.room}
-  troom.far_left.wall_alpha = 255
-  troom.far_left.door_alpha = 255
-  troom.far_right.wall_alpha = 255
-  troom.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil)
+  rv.room.setupGlStuff()
+  rv.room.far_left.wall_alpha = 255
+  rv.room.far_left.door_alpha = 255
+  rv.room.far_right.wall_alpha = 255
+  rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil, nil)
   return
 
   rv.cstack.Push(1, 1, 1, 1)
   defer rv.cstack.Pop()
   drawPrep()
-  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, rv.cstack, nil, 1.0)
-  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, rv.cstack, nil, 1.0, nil)
+  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, rv.cstack, nil, 1.0)
+  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture, rv.cstack, nil, 1.0, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
     rv.cstack.Pop()

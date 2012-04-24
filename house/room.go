@@ -82,20 +82,14 @@ type roomDef struct {
 
   // What kinds of decorations are appropriate in this room
   Decor map[string]bool
-
-  // opengl stuff
-  // vertex buffer for all of the vertices in the walls and floor
-  vbuffer uint32
-
-  // index buffers
-  left_buffer  uint32
-  right_buffer uint32
-  floor_buffer uint32
 }
 
 type roomVertex struct {
   x,y,z float32
   u,v float32
+
+  // Texture coordinates for the los texture
+  los_u, los_v float32
 }
 
 type plane struct {
@@ -142,8 +136,59 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
   }
 }
 
+func (room *Room) getNearWallAlpha(los_tex *LosTexture) (left, right byte) {
+  if los_tex == nil {
+    return 255, 255
+  }
+  pix := los_tex.Pix()
+  v1, v2 := 0, 0
+  for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+    if pix[room.X][y] > LosVisibilityThreshold {
+      v1++
+    }
+    if pix[room.X - 1][y] > LosVisibilityThreshold {
+      v2++
+    }
+  }
+  if v1 < v2 {
+    v1 = v2
+  }
+  right = byte((v1 * 255) / room.Size.Dy)
+  v1, v2 = 0, 0
+  for x := room.X; x < room.X + room.Size.Dx; x++ {
+    if pix[x][room.Y] > LosVisibilityThreshold {
+      v1++
+    }
+    if pix[x][room.Y - 1] > LosVisibilityThreshold {
+      v2++
+    }
+  }
+  if v1 < v2 {
+    v1 = v2
+  }
+  left = byte((v1 * 255) / room.Size.Dy)
+  return
+}
+
+func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
+  if los_tex == nil {
+    return 255
+  }
+  var max_room_alpha byte = 0
+  pix := los_tex.Pix()
+  for x := room.X; x < room.X + room.Size.Dx; x++ {
+    for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+      if pix[x][y] > max_room_alpha {
+        max_room_alpha = pix[x][y]
+      }
+    }
+  }
+  max_room_alpha = byte(255 * (float64(max_room_alpha - LosMinVisibility) / float64(255 - LosMinVisibility)))
+  return max_room_alpha
+}
+
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable) {
+func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
   gl.Enable(gl.STENCIL_TEST)
 
   gl.Enable(gl.TEXTURE_2D)
@@ -159,7 +204,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
   var vert roomVertex
   gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-  gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
 
   planes := []plane{
     {room.left_buffer, room.Wall, &left},
@@ -172,12 +216,14 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
   var mul, run mathgl.Mat4
   for _, plane := range planes {
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
     gl.ClearStencil(0)
     gl.Clear(gl.STENCIL_BUFFER_BIT)
     gl.StencilFunc(gl.ALWAYS, 3, 3)
     gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
     gl.LoadMatrixf(&floor[0])
     run.Assign(&floor)
+
     // Render the doors and cut out the stencil buffer so we leave them empty
     // if they're open
     switch plane.mat {
@@ -194,7 +240,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
-        gl.Color4ub(255, 255, 255, room.far_left.door_alpha)
+        current_alpha := byte((int(room.far_left.door_alpha) * int(base_alpha)) >> 8)
+        gl.Color4ub(255, 255, 255, current_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
 
@@ -213,7 +260,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
-        gl.Color4ub(255, 255, 255, room.far_right.door_alpha)
+        current_alpha := byte((int(room.far_right.door_alpha) * int(base_alpha)) >> 8)
+        gl.Color4ub(255, 255, 255, current_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
     }
@@ -263,13 +311,38 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
       gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
       wt.Render()
     }
+
+    // Now we need to darken everything in shadows by applying the los texture
+    // This needs to be done slightly different for each plane
+
+    if los_tex != nil && plane.mat == &floor {
+      gl.BlendFunc(gl.SRC_ALPHA_SATURATE, gl.SRC_ALPHA)
+      gl.Color4ub(0, 0, 0, 255)
+      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+      gl.LoadMatrixf(&floor[0])
+      gl.StencilFunc(gl.ALWAYS, 1, 1)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+      los_tex.Bind()
+      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
+      gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
+      gl.LoadMatrixf(&(*plane.mat)[0])
+      gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    }
   }
   gl.Disable(gl.STENCIL_TEST)
   gl.LoadIdentity()
   room.renderFurniture(floor, base_alpha, drawables)
 }
 
-func (room *roomDef) setupGlStuff() {
+func (room *Room) setupGlStuff() {
+  if room.X == room.gl.x && room.Y == room.gl.y && room.Size.Dx == room.gl.dx && room.Size.Dy == room.gl.dy {
+    return
+  }
+  base.Log().Printf("SETUP GL")
+  room.gl.x = room.X
+  room.gl.y = room.Y
+  room.gl.dx = room.Size.Dx
+  room.gl.dy = room.Size.Dy
   if room.vbuffer != 0 {
     gl.DeleteBuffers(1, &room.vbuffer)
     gl.DeleteBuffers(1, &room.left_buffer)
@@ -283,23 +356,34 @@ func (room *roomDef) setupGlStuff() {
     dz = -float32(room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy)) / float32(room.Wall.Data().Dx())
   }
 
+  // Conveniently casted values
+  frx := float32(room.X)
+  fry := float32(room.Y)
+  frdx := float32(room.Size.Dx)
+  frdy := float32(room.Size.Dy)
+
   // c is the u-texcoord of the corner of the room
-  c := float32(room.Size.Dx) / float32(room.Size.Dx + room.Size.Dy)
+  c := frdx / (frdx + frdy)
+
+  lt_llx := frx / LosTextureSize
+  lt_lly := fry / LosTextureSize
+  lt_urx := (frx + frdx) / LosTextureSize
+  lt_ury := (fry + frdy) / LosTextureSize
 
   vs := []roomVertex{
     // Walls
-    { 0,  dy,  0, 0, 1},
-    {dx,  dy,  0, c, 1},
-    {dx,   0,  0, 1, 1},
-    { 0,  dy, dz, 0, 0},
-    {dx,  dy, dz, c, 0},
-    {dx,   0, dz, 1, 0},
+    { 0,  dy,  0, 0, 1, 0, 0},
+    {dx,  dy,  0, c, 1, 0, 0},
+    {dx,   0,  0, 1, 1, 0, 0},
+    { 0,  dy, dz, 0, 0, 0, 0},
+    {dx,  dy, dz, c, 0, 0, 0},
+    {dx,   0, dz, 1, 0, 0, 0},
 
     // Floor
-    { 0,  0, 0, 0, 1},
-    { 0, dy, 0, 0, 0},
-    {dx, dy, 0, 1, 0},
-    {dx,  0, 0, 1, 1},
+    { 0,  0, 0, 0, 1, lt_lly, lt_llx},
+    { 0, dy, 0, 0, 0, lt_ury, lt_llx},
+    {dx, dy, 0, 1, 0, lt_ury, lt_urx},
+    {dx,  0, 0, 1, 1, lt_lly, lt_urx},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
