@@ -98,7 +98,46 @@ type plane struct {
   mat          *mathgl.Mat4
 }
 
-func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables []Drawable) {
+func visibilityOfObject(xoff, yoff int, ro RectObject, los_tex *LosTexture) byte {
+  if los_tex == nil {
+    return 255
+  }
+  x, y := ro.Pos()
+  x += xoff
+  y += yoff
+  dx, dy := ro.Dims()
+  count := 0
+  pix := los_tex.Pix()
+  for i := x; i < x + dx; i++ {
+    if y - 1 >= 0 && pix[i][y-1] > LosVisibilityThreshold {
+      count++
+    }
+    if y + dy + 1 < LosTextureSize && pix[i][y+dy+1] > LosVisibilityThreshold {
+      count++
+    }
+  }
+  for j := y; j < y + dy; j++ {
+    if x - 1 > 0 && pix[x-1][j] > LosVisibilityThreshold {
+      count++
+    }
+    if x + dx + 1 < LosTextureSize && pix[x+dx+1][j] > LosVisibilityThreshold {
+      count++
+    }
+  }
+  if count >= dx + dy {
+    return 255
+  }
+  v := 256 * float64(count) / float64(dx + dy)
+  if v < 0 {
+    v = 0
+  }
+  if v > 255 {
+    v = 255
+  }
+  return byte(v)
+}
+
+func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
   board_to_window := func(mx,my float32) (x,y float32) {
     v := mathgl.Vec4{X: mx, Y: my, W: 1}
     v.Transform(&floor)
@@ -129,8 +168,13 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
     leftx,_ := board_to_window(near_x, near_y + dy)
     rightx,_ := board_to_window(near_x + dx, near_y)
     _,boty := board_to_window(near_x, near_y)
+    vis := visibilityOfObject(room.X, room.Y, d, los_tex)
     r, g, b, a := d.Color()
-    a = byte((int(base_alpha) * int(a)) >> 8)
+    r = alphaMult(r, vis)
+    g = alphaMult(g, vis)
+    b = alphaMult(b, vis)
+    a = alphaMult(a, vis)
+    a = alphaMult(a, base_alpha)
     gl.Color4ub(r, g, b, a)
     d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
   }
@@ -331,7 +375,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   }
   gl.Color4ub(255, 255, 255, 255)
   gl.LoadIdentity()
-  room.renderFurniture(floor, base_alpha, drawables)
+  room.renderFurniture(floor, base_alpha, drawables, los_tex)
 }
 
 func (room *Room) setupGlStuff() {

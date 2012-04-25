@@ -9,7 +9,7 @@ import (
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  "github.com/runningwild/opengl/gl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 type Ai interface {
@@ -344,15 +344,19 @@ type Entity struct {
   EntityInst
 }
 
-func (e *Entity) drawReticle(pos mathgl.Vec2) {
+func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
   if !e.hovered && !e.selected {
     return
   }
   gl.PushAttrib(gl.CURRENT_BIT)
+  r := byte(rgba[0] * 255)
+  g := byte(rgba[1] * 255)
+  b := byte(rgba[2] * 255)
+  a := byte(rgba[3] * 255)
   if e.selected {
-    gl.Color4ub(255, 255, 255, 255)
+    gl.Color4ub(r, g, b, a)
   } else {
-    gl.Color4ub(255, 255, 255, 180)
+    gl.Color4ub(r, g, b, byte((int(a) * 200) >> 8))
   }
   glow := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "ui", "glow.png"))
   dx := float64(e.last_render_width + 0.5)
@@ -365,9 +369,12 @@ func (e *Entity) Color() (r,g,b,a byte) {
   return 255, 255, 255, 255
 }
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
+  var rgba [4]float64
+  gl.GetDoublev(gl.CURRENT_COLOR, &rgba[0])
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
-  e.drawReticle(pos)
+  base.Log().Printf("Queried: %v", rgba)
+  e.drawReticle(pos, rgba)
   if e.Sprite.sp != nil {
     dxi,dyi := e.Sprite.sp.Dims()
     dx := float32(dxi)

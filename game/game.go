@@ -208,6 +208,8 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     if gp.game.selected_ent != nil {
       switch gp.game.action_state {
       case noAction:
+        gp.game.selected_ent.selected = false
+        gp.game.selected_ent.hovered = false
         gp.game.selected_ent = nil
         return true
 
