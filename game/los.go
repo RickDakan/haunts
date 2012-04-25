@@ -92,7 +92,14 @@ func (g *Game) SelectEnt(ent *Entity) bool {
   if !found {
     return false
   }
+  if g.selected_ent != nil {
+    g.selected_ent.selected = false
+    g.selected_ent.hovered = false
+  }
   g.selected_ent = ent
+  if g.selected_ent != nil {
+    g.selected_ent.selected = true
+  }
   g.viewer.Focus(ent.FPos())
   return true
 }
@@ -273,6 +280,14 @@ func (g *Game) OnRound() {
     if g.Ents[i].Side() == g.Side {
       g.Ents[i].OnRound()
     }
+  }
+  if g.selected_ent != nil {
+    g.selected_ent.hovered = false
+    g.selected_ent.selected = false
+  }
+  if g.hovered_ent != nil {
+    g.hovered_ent.hovered = false
+    g.hovered_ent.selected = false
   }
   g.selected_ent = nil
   g.hovered_ent = nil

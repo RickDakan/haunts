@@ -95,12 +95,6 @@ func (gp *GamePanel) Draw(region gui.Region) {
   // Do heads-up stuff
   region.PushClipPlanes()
   defer region.PopClipPlanes()
-  if gp.game.selected_ent != nil {
-    gp.game.selected_ent.DrawReticle(gp.viewer, gp.game.selected_ent.Side() == gp.game.Side, true)
-  }
-  if gp.game.hovered_ent != nil {
-    gp.game.hovered_ent.DrawReticle(gp.viewer, gp.game.hovered_ent.Side() == gp.game.Side, false)
-  }
 }
 
 func (g *Game) SpawnEntity(spawn *Entity, x,y int) {
@@ -187,6 +181,9 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
+    if gp.game.hovered_ent != nil {
+      gp.game.hovered_ent.hovered = false
+    }
     gp.game.hovered_ent = nil
     mx,my := cursor.Point()
     for i := range gp.game.Ents {
@@ -197,7 +194,11 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       x2 := wx + int(gp.game.Ents[i].last_render_width / 2)
       y2 := wy + int(150 * gp.game.Ents[i].last_render_width / 100)
       if mx >= x && mx <= x2 && my >= y && my <= y2 {
+        if gp.game.hovered_ent != nil {
+          gp.game.hovered_ent.hovered = false
+        }
         gp.game.hovered_ent = gp.game.Ents[i]
+        gp.game.hovered_ent.hovered = true
       }
     }
   }
@@ -223,7 +224,11 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
       if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {
+        if gp.game.selected_ent != nil {
+          gp.game.selected_ent.selected = false
+        }
         gp.game.selected_ent = gp.game.hovered_ent
+        gp.game.selected_ent.selected = true
       }
       return true
     }

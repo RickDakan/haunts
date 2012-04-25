@@ -263,6 +263,10 @@ type EntityInst struct {
 
   los *losData
 
+  // so we know if we should draw a reticle around it
+  hovered  bool
+  selected bool
+
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
   last_render_width float32
@@ -340,38 +344,21 @@ type Entity struct {
   EntityInst
 }
 
-func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
-  bx,by := e.FPos()
-  wx,wy := viewer.BoardToWindow(float32(bx), float32(by))
-  gl.Disable(gl.TEXTURE_2D)
-
-  if ally {
-    if selected {
-      gl.Color4d(0, 1, 0, 0.8)
-    } else {
-      gl.Color4d(0, 1, 0, 0.3)
-    }
-  } else {
-    if selected {
-      gl.Color4d(1, 0, 0, 0.8)
-    } else {
-      gl.Color4d(1, 0, 0, 0.3)
-    }
+func (e *Entity) drawReticle(pos mathgl.Vec2) {
+  if !e.hovered && !e.selected {
+    return
   }
-
-  dxi,dyi := e.Sprite.sp.Dims()
-  dx := float32(dxi)
-  dy := float32(dyi)
-  gl.Begin(gl.LINES)
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
-  gl.End()
+  gl.PushAttrib(gl.CURRENT_BIT)
+  if e.selected {
+    gl.Color4ub(255, 255, 255, 255)
+  } else {
+    gl.Color4ub(255, 255, 255, 180)
+  }
+  glow := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "ui", "glow.png"))
+  dx := float64(e.last_render_width + 0.5)
+  dy := float64(e.last_render_width * 150 / 100)
+  glow.Render(float64(pos.X), float64(pos.Y), dx, dy)
+  gl.PopAttrib()
 }
 
 func (e *Entity) Color() (r,g,b,a byte) {
@@ -380,6 +367,7 @@ func (e *Entity) Color() (r,g,b,a byte) {
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
+  e.drawReticle(pos)
   if e.Sprite.sp != nil {
     dxi,dyi := e.Sprite.sp.Dims()
     dx := float32(dxi)

@@ -187,6 +187,10 @@ func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
   return max_room_alpha
 }
 
+func alphaMult(a, b byte) byte {
+  return byte((int(a) * int(b)) >> 8)
+}
+
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
   gl.Enable(gl.TEXTURE_2D)
@@ -292,6 +296,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.LoadMatrixf(&floor[0])
     if wt.gl.vbuffer != 0 {
       wt.Texture.Data().Bind()
+      R, G, B, A := wt.Color()
       gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
       gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
@@ -300,17 +305,17 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
       gl.ClientActiveTexture(gl.TEXTURE0)
       if wt.gl.floor_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
-        gl.Color4ub(255, 255, 255, current_alpha)
+        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
         gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
       }
       if wt.gl.left_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
-        gl.Color4ub(255, 255, 255, left_alpha)
+        gl.Color4ub(R, G, B, alphaMult(A, left_alpha))
         gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
       }
       if wt.gl.right_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
-        gl.Color4ub(255, 255, 255, right_alpha)
+        gl.Color4ub(R, G, B, alphaMult(A, right_alpha))
         gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
       }
     }
