@@ -138,10 +138,20 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   var vs []roomVertex
 
   // Conveniently casted values
+  frx := float32(room.X)
+  fry := float32(room.Y)
   frdx := float32(room.Size.Dx)
   frdy := float32(room.Size.Dy)
   tdx := float32(wt.Texture.Data().Dx()) / 100
   tdy := float32(wt.Texture.Data().Dy()) / 100
+
+  wtx := wt.X
+  wty := wt.Y
+  wtr := wt.Rot
+
+  if wtx > frdx {
+    wtr -= 3.1415926535 / 2
+  }
 
   // Floor
   verts := []mathgl.Vec2{
@@ -152,9 +162,9 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   }
   var m, run mathgl.Mat3
   run.Identity()
-  m.Translation(wt.X, wt.Y)
+  m.Translation(wtx, wty)
   run.Multiply(&m)
-  m.RotationZ(wt.Rot)
+  m.RotationZ(wtr)
   run.Multiply(&m)
   if wt.gl.flip {
     m.Scaling(-1, 1)
@@ -204,9 +214,9 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
     { tdx / 2, -tdy / 2},
   }
   run.Identity()
-  m.Translation(wt.X, wt.Y)
+  m.Translation(wtx, wty)
   run.Multiply(&m)
-  m.RotationZ(wt.Rot)
+  m.RotationZ(wtr)
   run.Multiply(&m)
   if wt.gl.flip {
     m.Scaling(-1, 1)
@@ -242,7 +252,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
         z: frdy - p[i].Y,
         u: v.X / tdx + 0.5,
         v: -(v.Y / tdy + 0.5),
-        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
+        los_u: (fry + frdy - 0.5) / LosTextureSize,
         los_v: (p[i].X + float32(room.X)) / LosTextureSize,
       })
     }
@@ -257,9 +267,9 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
     { tdx / 2, -tdy / 2},
   }
   run.Identity()
-  m.Translation(wt.X, wt.Y)
+  m.Translation(wtx, wty)
   run.Multiply(&m)
-  m.RotationZ(wt.Rot)
+  m.RotationZ(wtr)
   run.Multiply(&m)
   if wt.gl.flip {
     m.Scaling(-1, 1)
@@ -296,7 +306,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
         u: v.X / tdx + 0.5,
         v: -(v.Y / tdy + 0.5),
         los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
-        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+        los_v: (frx + frdx - 0.5) / LosTextureSize,
       })
     }
   }

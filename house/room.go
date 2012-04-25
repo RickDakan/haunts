@@ -189,8 +189,6 @@ func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
 
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
-  // gl.Enable(gl.STENCIL_TEST)
-
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -212,15 +210,30 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   gl.PushMatrix()
   defer gl.PopMatrix()
 
+  if los_tex != nil {
+    gl.LoadMatrixf(&floor[0])
+    gl.ClientActiveTexture(gl.TEXTURE1)
+    gl.ActiveTexture(gl.TEXTURE1)
+    gl.Enable(gl.TEXTURE_2D)
+    gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+    los_tex.Bind()
+//      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
+    gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+    gl.ClientActiveTexture(gl.TEXTURE0)
+    gl.ActiveTexture(gl.TEXTURE0)
+    base.EnableShader(true)
+  }
+
+  current_alpha := base_alpha
+  left_alpha := byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
+  right_alpha := byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
+
   var mul, run mathgl.Mat4
   for _, plane := range planes {
     gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
     gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
-    gl.ClearStencil(0)
-    gl.Clear(gl.STENCIL_BUFFER_BIT)
-    gl.StencilFunc(gl.ALWAYS, 3, 3)
-    gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
     gl.LoadMatrixf(&floor[0])
     run.Assign(&floor)
 
@@ -228,6 +241,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     // if they're open
     switch plane.mat {
       case &left:
+      gl.Color4ub(255, 255, 255, left_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
         if door.Facing != FarLeft { continue }
@@ -240,12 +254,11 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
-        current_alpha := byte((int(room.far_left.door_alpha) * int(base_alpha)) >> 8)
-        gl.Color4ub(255, 255, 255, current_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
 
       case &right:
+      gl.Color4ub(255, 255, 255, right_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
         if door.Facing != FarRight { continue }
@@ -260,154 +273,52 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
-        current_alpha := byte((int(room.far_right.door_alpha) * int(base_alpha)) >> 8)
-        gl.Color4ub(255, 255, 255, current_alpha)
         door.TextureData().Render(0, 0, dx, dy)
       }
+
+      case &floor:
+      gl.Color4ub(255, 255, 255, current_alpha)
     }
 
     // Now draw the walls
-    current_alpha := base_alpha
-    switch plane.mat {
-      case &left:
-      current_alpha = byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
-
-      case &right:
-      current_alpha = byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
-    }
-    gl.Color4ub(255, 255, 255, current_alpha)
     gl.LoadMatrixf(&floor[0])
-    gl.StencilFunc(gl.NOTEQUAL, 1, 1)
-    gl.StencilOp(gl.KEEP, gl.REPLACE, gl.REPLACE)
     plane.texture.Data().Bind()
-    if los_tex != nil {
-      gl.ClientActiveTexture(gl.TEXTURE1)
-      gl.ActiveTexture(gl.TEXTURE1)
-      gl.Enable(gl.TEXTURE_2D)
-      gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
-      los_tex.Bind()
-//      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
-      gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
-      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
-      gl.ClientActiveTexture(gl.TEXTURE0)
-      gl.ActiveTexture(gl.TEXTURE0)
-      base.EnableShader(true)
-    }
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
-    gl.StencilFunc(gl.EQUAL, 1, 3)
-    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-    gl.LoadMatrixf(&(*plane.mat)[0])
+  }
 
-    // All wall textures need to be drawn three times, once for each wall and
-    // once for the floor.
-    for _, wt := range room.getWallTextures() {
-      wt.setupGlStuff(room)
-      if plane.mat == &floor {
-        if wt.gl.vbuffer != 0 && wt.gl.floor_buffer != 0 {
-          gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
-          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
-          wt.Texture.Data().Bind()
-          if los_tex != nil {
-            gl.ClientActiveTexture(gl.TEXTURE1)
-            gl.ActiveTexture(gl.TEXTURE1)
-            gl.Enable(gl.TEXTURE_2D)
-            gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
-            los_tex.Bind()
-      //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
-            gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-            gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
-            gl.ClientActiveTexture(gl.TEXTURE0)
-            gl.ActiveTexture(gl.TEXTURE0)
-            base.EnableShader(true)
-          }
-          gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
-        }
-      }
-      if plane.mat == &floor {
-        if wt.gl.vbuffer != 0 && wt.gl.left_buffer != 0 {
-          base.Log().Printf("Drawing on left wall")
-          gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
-          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
-          wt.Texture.Data().Bind()
-          if los_tex != nil {
-            gl.ClientActiveTexture(gl.TEXTURE1)
-            gl.ActiveTexture(gl.TEXTURE1)
-            gl.Enable(gl.TEXTURE_2D)
-            gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
-            los_tex.Bind()
-      //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
-            gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-            gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
-            gl.ClientActiveTexture(gl.TEXTURE0)
-            gl.ActiveTexture(gl.TEXTURE0)
-            base.EnableShader(true)
-          }
-          gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
-        }
-      }
-      if plane.mat == &floor {
-        if wt.gl.vbuffer != 0 && wt.gl.right_buffer != 0 {
-          base.Log().Printf("Drawing on right wall")
-          gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
-          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
-          wt.Texture.Data().Bind()
-          if los_tex != nil {
-            gl.ClientActiveTexture(gl.TEXTURE1)
-            gl.ActiveTexture(gl.TEXTURE1)
-            gl.Enable(gl.TEXTURE_2D)
-            gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
-            los_tex.Bind()
-      //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
-            gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-            gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
-            gl.ClientActiveTexture(gl.TEXTURE0)
-            gl.ActiveTexture(gl.TEXTURE0)
-            base.EnableShader(true)
-          }
-          gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
-        }
-      }
-      // dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
-      // switch plane.mat {
-      //   case &left:
-      //   if wt.X > dx {
-      //     wt.X, wt.Y = dx + dy - wt.Y, dy + wt.X - dx
-      //   }
-      //   wt.Y -= dy
-
-      //   case &right:
-      //   if wt.Y > dy {
-      //     wt.X, wt.Y = dx + wt.Y - dy, dy + dx - wt.X
-      //   }
-      //   if wt.X > dx {
-      //     wt.Rot -= 3.1415926535 / 2
-      //   }
-      //   wt.X -= dx
-      // }
-      // R, G, B, A := wt.Color()
-      // gl.Color4ub(R, G, B, byte((int(current_alpha) * int(A)) >> 8))
-      // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floo)
-      // gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
-      // wt.Render()
-    }
-    if los_tex != nil {
-      base.EnableShader(false)
-      gl.ActiveTexture(gl.TEXTURE1)
-      gl.Disable(gl.TEXTURE_2D)
-      gl.ActiveTexture(gl.TEXTURE0)
+  for _, wt := range room.getWallTextures() {
+    wt.setupGlStuff(room)
+    gl.LoadMatrixf(&floor[0])
+    if wt.gl.vbuffer != 0 {
+      wt.Texture.Data().Bind()
+      gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+      gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
       gl.ClientActiveTexture(gl.TEXTURE1)
-      gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
+      gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
       gl.ClientActiveTexture(gl.TEXTURE0)
+      gl.Color4ub(255, 255, 255, current_alpha)
+      gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
+      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+      gl.Color4ub(255, 255, 255, left_alpha)
+      gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
+      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+      gl.Color4ub(255, 255, 255, right_alpha)
+      gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
     }
   }
-  gl.Disable(gl.STENCIL_TEST)
+  if los_tex != nil {
+    base.EnableShader(false)
+    gl.ActiveTexture(gl.TEXTURE1)
+    gl.Disable(gl.TEXTURE_2D)
+    gl.ActiveTexture(gl.TEXTURE0)
+    gl.ClientActiveTexture(gl.TEXTURE1)
+    gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
+    gl.ClientActiveTexture(gl.TEXTURE0)
+  }
+  gl.Color4ub(255, 255, 255, 255)
   gl.LoadIdentity()
   room.renderFurniture(floor, base_alpha, drawables)
 }
