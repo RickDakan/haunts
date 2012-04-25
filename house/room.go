@@ -294,19 +294,25 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
       wt.Texture.Data().Bind()
       gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
       gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
       gl.ClientActiveTexture(gl.TEXTURE1)
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
       gl.ClientActiveTexture(gl.TEXTURE0)
-      gl.Color4ub(255, 255, 255, current_alpha)
-      gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
-      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
-      gl.Color4ub(255, 255, 255, left_alpha)
-      gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
-      gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
-      gl.Color4ub(255, 255, 255, right_alpha)
-      gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
+      if wt.gl.floor_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+        gl.Color4ub(255, 255, 255, current_alpha)
+        gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
+      }
+      if wt.gl.left_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+        gl.Color4ub(255, 255, 255, left_alpha)
+        gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
+      }
+      if wt.gl.right_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+        gl.Color4ub(255, 255, 255, right_alpha)
+        gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
+      }
     }
   }
   if los_tex != nil {

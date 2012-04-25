@@ -126,12 +126,6 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
     wt.gl.right_buffer = 0
     wt.gl.floor_buffer = 0
   }
-  // dx := float32(room.Size.Dx)
-  // dy := float32(room.Size.Dy)
-  // var dz float32
-  // if room.Wall.Data().Dx() > 0 {
-  //   dz = -float32(room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy)) / float32(room.Wall.Data().Dx())
-  // }
 
   // All vertices for both walls and the floor will go here and get sent to
   // opengl all at once
