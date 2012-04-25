@@ -133,12 +133,17 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   //   dz = -float32(room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy)) / float32(room.Wall.Data().Dx())
   // }
 
+  // All vertices for both walls and the floor will go here and get sent to
+  // opengl all at once
+  var vs []roomVertex
+
   // Conveniently casted values
   frdx := float32(room.Size.Dx)
   frdy := float32(room.Size.Dy)
-
   tdx := float32(wt.Texture.Data().Dx()) / 100
   tdy := float32(wt.Texture.Data().Dy()) / 100
+
+  // Floor
   verts := []mathgl.Vec2{
     {-tdx / 2, -tdy / 2},
     {-tdx / 2,  tdy / 2},
@@ -163,75 +168,145 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   p.Clip(&mathgl.Seg2{A: mathgl.Vec2{0, frdy}, B: mathgl.Vec2{frdx, frdy}})
   p.Clip(&mathgl.Seg2{A: mathgl.Vec2{frdx, frdy}, B: mathgl.Vec2{frdx, 0}})
   p.Clip(&mathgl.Seg2{A: mathgl.Vec2{frdx, 0}, B: mathgl.Vec2{0, 0}})
-  if len(p) < 3 {
-    return
+  if len(p) >= 3 {
+    // floor indices
+    var is []uint16
+    for i := 1; i < len(p) - 1; i++ {
+      is = append(is, uint16(len(vs) + 0))
+      is = append(is, uint16(len(vs) + i))
+      is = append(is, uint16(len(vs) + i + 1))
+    }
+    gl.GenBuffers(1, &wt.gl.floor_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+    wt.gl.floor_count = gl.Sizei(len(is))
+
+    run.Inverse()
+    for i := range p {
+      v := mathgl.Vec2{p[i].X, p[i].Y}
+      v.Transform(&run)
+      vs = append(vs, roomVertex{
+        x: p[i].X,
+        y: p[i].Y,
+        u: v.X / tdx + 0.5,
+        v: -(v.Y / tdy + 0.5),
+        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
+        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+      })
+    }
   }
-  var vs []roomVertex
-  run.Inverse()
-  for i := range p {
-    v := mathgl.Vec2{p[i].X, p[i].Y}
-    v.Transform(&run)
-    vs = append(vs, roomVertex{
-      x: p[i].X,
-      y: p[i].Y,
-      u: v.X / tdx + 0.5,
-      v: -(v.Y / tdy + 0.5),
-      los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
-      los_v: (p[i].X + float32(room.X)) / LosTextureSize,
-    })
+
+  // Left Wall
+  verts = []mathgl.Vec2{
+    {-tdx / 2, -tdy / 2},
+    {-tdx / 2,  tdy / 2},
+    { tdx / 2,  tdy / 2},
+    { tdx / 2, -tdy / 2},
+  }
+  run.Identity()
+  m.Translation(wt.X, wt.Y)
+  run.Multiply(&m)
+  m.RotationZ(wt.Rot)
+  run.Multiply(&m)
+  if wt.gl.flip {
+    m.Scaling(-1, 1)
+    run.Multiply(&m)
+  }
+  for i := range verts {
+    verts[i].Transform(&run)
+  }
+  p = mathgl.Poly(verts)
+  p.Clip(&mathgl.Seg2{A: mathgl.Vec2{0, 0}, B: mathgl.Vec2{0, frdy}})
+  p.Clip(&mathgl.Seg2{B: mathgl.Vec2{0, frdy}, A: mathgl.Vec2{frdx, frdy}})
+  p.Clip(&mathgl.Seg2{A: mathgl.Vec2{frdx, frdy}, B: mathgl.Vec2{frdx, 0}})
+  if len(p) >= 3 {
+    // floor indices
+    var is []uint16
+    for i := 1; i < len(p) - 1; i++ {
+      is = append(is, uint16(len(vs) + 0))
+      is = append(is, uint16(len(vs) + i))
+      is = append(is, uint16(len(vs) + i + 1))
+    }
+    gl.GenBuffers(1, &wt.gl.left_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+    wt.gl.left_count = gl.Sizei(len(is))
+
+    run.Inverse()
+    for i := range p {
+      v := mathgl.Vec2{p[i].X, p[i].Y}
+      v.Transform(&run)
+      vs = append(vs, roomVertex{
+        x: p[i].X,
+        y: frdy,
+        z: frdy - p[i].Y,
+        u: v.X / tdx + 0.5,
+        v: -(v.Y / tdy + 0.5),
+        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
+        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+      })
+    }
   }
 
-  // vs := []roomVertex{
-  //   {verts[0].X, verts[0].Y, 0, 0, 1, (verts[0].X + frx) / LosTextureSize, (verts[0].Y + fry) / LosTextureSize},
-  //   {verts[1].X, verts[1].Y, 0, 0, 0, (verts[1].X + frx) / LosTextureSize, (verts[1].Y + fry) / LosTextureSize},
-  //   {verts[2].X, verts[2].Y, 0, 1, 0, (verts[2].X + frx) / LosTextureSize, (verts[2].Y + fry) / LosTextureSize},
-  //   {verts[3].X, verts[3].Y, 0, 1, 1, (verts[3].X + frx) / LosTextureSize, (verts[3].Y + fry) / LosTextureSize},
-  // }
 
-
-  // vs := []roomVertex{
-  //   // Walls
-  //   // { 0,  dy,  0, 0, 1, lt_ury, lt_llx},
-  //   // {dx,  dy,  0, c, 1, lt_ury, lt_urx},
-  //   // {dx,   0,  0, 1, 1, lt_lly, lt_urx},
-  //   // { 0,  dy, dz, 0, 0, lt_ury, lt_llx},
-  //   // {dx,  dy, dz, c, 0, lt_ury, lt_urx},
-  //   // {dx,   0, dz, 1, 0, lt_lly, lt_urx},
-
-  //   // Floor
-  //   { 0,  0, 0, 0, 1, lt_lly, lt_llx},
-  //   { 0, dy, 0, 0, 0, lt_ury, lt_llx},
-  //   {dx, dy, 0, 1, 0, lt_ury, lt_urx},
-  //   {dx,  0, 0, 1, 1, lt_lly, lt_urx},
-  // }
-  gl.GenBuffers(1, &wt.gl.vbuffer)
-  gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
-  size := int(unsafe.Sizeof(roomVertex{}))
-  gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
-
-  // left wall indices
-  // is := []uint16{0, 3, 4, 0, 4, 1}
-  // gl.GenBuffers(1, &room.left_buffer)
-  // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.left_buffer)
-  // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-
-  // // right wall indices
-  // is = []uint16{1, 4, 5, 1, 5, 2}
-  // gl.GenBuffers(1, &room.right_buffer)
-  // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.right_buffer)
-  // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-
-  // floor indices
-  var is []uint16
-  for i := 1; i < len(p) - 1; i++ {
-    is = append(is, 0)
-    is = append(is, uint16(i))
-    is = append(is, uint16(i+1))
+  // Right Wall
+  verts = []mathgl.Vec2{
+    {-tdx / 2, -tdy / 2},
+    {-tdx / 2,  tdy / 2},
+    { tdx / 2,  tdy / 2},
+    { tdx / 2, -tdy / 2},
   }
-  gl.GenBuffers(1, &wt.gl.floor_buffer)
-  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
-  gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-  wt.gl.floor_count = gl.Sizei(len(is))
+  run.Identity()
+  m.Translation(wt.X, wt.Y)
+  run.Multiply(&m)
+  m.RotationZ(wt.Rot)
+  run.Multiply(&m)
+  if wt.gl.flip {
+    m.Scaling(-1, 1)
+    run.Multiply(&m)
+  }
+  for i := range verts {
+    verts[i].Transform(&run)
+  }
+  p = mathgl.Poly(verts)
+  p.Clip(&mathgl.Seg2{A: mathgl.Vec2{0, frdy}, B: mathgl.Vec2{frdx, frdy}})
+  p.Clip(&mathgl.Seg2{B: mathgl.Vec2{frdx, frdy}, A: mathgl.Vec2{frdx, 0}})
+  p.Clip(&mathgl.Seg2{A: mathgl.Vec2{frdx, 0}, B: mathgl.Vec2{0, 0}})
+  if len(p) >= 3 {
+    // floor indices
+    var is []uint16
+    for i := 1; i < len(p) - 1; i++ {
+      is = append(is, uint16(len(vs) + 0))
+      is = append(is, uint16(len(vs) + i))
+      is = append(is, uint16(len(vs) + i + 1))
+    }
+    gl.GenBuffers(1, &wt.gl.right_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+    wt.gl.right_count = gl.Sizei(len(is))
+
+    run.Inverse()
+    for i := range p {
+      v := mathgl.Vec2{p[i].X, p[i].Y}
+      v.Transform(&run)
+      vs = append(vs, roomVertex{
+        x: frdx,
+        y: p[i].Y,
+        z: frdx - p[i].X,
+        u: v.X / tdx + 0.5,
+        v: -(v.Y / tdy + 0.5),
+        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
+        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+      })
+    }
+  }
+
+  if len(vs) > 0 {
+    gl.GenBuffers(1, &wt.gl.vbuffer)
+    gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+    size := int(unsafe.Sizeof(roomVertex{}))
+    gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
+  }
 }
 
 

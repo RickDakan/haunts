@@ -304,7 +304,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     for _, wt := range room.getWallTextures() {
       wt.setupGlStuff(room)
       if plane.mat == &floor {
-        if wt.gl.vbuffer != 0 {
+        if wt.gl.vbuffer != 0 && wt.gl.floor_buffer != 0 {
           gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
           gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
           gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
@@ -324,6 +324,54 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
             base.EnableShader(true)
           }
           gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
+        }
+      }
+      if plane.mat == &floor {
+        if wt.gl.vbuffer != 0 && wt.gl.left_buffer != 0 {
+          base.Log().Printf("Drawing on left wall")
+          gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+          wt.Texture.Data().Bind()
+          if los_tex != nil {
+            gl.ClientActiveTexture(gl.TEXTURE1)
+            gl.ActiveTexture(gl.TEXTURE1)
+            gl.Enable(gl.TEXTURE_2D)
+            gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+            los_tex.Bind()
+      //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
+            gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+            gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+            gl.ClientActiveTexture(gl.TEXTURE0)
+            gl.ActiveTexture(gl.TEXTURE0)
+            base.EnableShader(true)
+          }
+          gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
+        }
+      }
+      if plane.mat == &floor {
+        if wt.gl.vbuffer != 0 && wt.gl.right_buffer != 0 {
+          base.Log().Printf("Drawing on right wall")
+          gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+          wt.Texture.Data().Bind()
+          if los_tex != nil {
+            gl.ClientActiveTexture(gl.TEXTURE1)
+            gl.ActiveTexture(gl.TEXTURE1)
+            gl.Enable(gl.TEXTURE_2D)
+            gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
+            los_tex.Bind()
+      //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
+            gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+            gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+            gl.ClientActiveTexture(gl.TEXTURE0)
+            gl.ActiveTexture(gl.TEXTURE0)
+            base.EnableShader(true)
+          }
+          gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
         }
       }
       // dx, dy := float32(room.Size.Dx), float32(room.Size.Dy)
