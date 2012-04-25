@@ -53,10 +53,25 @@ type Room struct {
 }
 
 func (r *Room) getWallTextures() []*WallTexture {
-  if r.wallTextures == nil {
+  dirty := r.wallTextures == nil
+  dirty = dirty || len(r.wallTextures) != len(r.WallTextures)
+  for i := 0; i < len(r.wallTextures) && i < len(r.WallTextures); i++ {
+    if r.wallTextures[i].wallTextureDef != r.WallTextures[i].wallTextureDef {
+      dirty = true
+    }
+  }
+  if dirty {
+    r.wallTextures = r.wallTextures[0:0]
     for _, rdwt := range r.roomDef.WallTextures {
       wt := *rdwt
       r.wallTextures = append(r.wallTextures, &wt)
+    }
+  } else {
+    for i := range r.wallTextures {
+      r.wallTextures[i].X = r.WallTextures[i].X
+      r.wallTextures[i].Y = r.WallTextures[i].Y
+      r.wallTextures[i].Rot = r.WallTextures[i].Rot
+      r.wallTextures[i].Flip = r.WallTextures[i].Flip
     }
   }
   return r.wallTextures

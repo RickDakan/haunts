@@ -6,7 +6,7 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
-const LosMinVisibility = 16
+const LosMinVisibility = 32
 const LosVisibilityThreshold = 200
 const LosTextureSize = 64
 const LosTextureSizeSquared = LosTextureSize * LosTextureSize
