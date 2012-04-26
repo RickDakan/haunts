@@ -240,7 +240,10 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-  gl.Enable(gl.ALPHA_TEST)
+  gl.Enable(gl.STENCIL_TEST)
+  gl.ClearStencil(0)
+  gl.Clear(gl.STENCIL_BUFFER_BIT)
+
 
   gl.EnableClientState(gl.VERTEX_ARRAY)
   gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
@@ -287,6 +290,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
     // Render the doors and cut out the stencil buffer so we leave them empty
     // if they're open
+    gl.StencilFunc(gl.ALWAYS, 1, 1)
+    gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
     switch plane.mat {
       case &left:
       gl.Color4ub(255, 255, 255, left_alpha)
@@ -327,6 +332,9 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
       case &floor:
       gl.Color4ub(255, 255, 255, current_alpha)
     }
+
+    gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
     // Now draw the walls
     gl.LoadMatrixf(&floor[0])
@@ -375,6 +383,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
   }
   gl.Color4ub(255, 255, 255, 255)
   gl.LoadIdentity()
+  gl.Disable(gl.STENCIL_TEST)
   room.renderFurniture(floor, base_alpha, drawables, los_tex)
 }
 
