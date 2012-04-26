@@ -78,8 +78,23 @@ func (g *Game) HoveredEnt() *Entity {
   return g.hovered_ent
 }
 
-func (g *Game) SelectedEnt() *Entity {
-  return g.selected_ent
+func (g *Game) SelectEnt(ent *Entity) bool {
+  if g.action_state != noAction {
+    return false
+  }
+  found := false
+  for i := range g.Ents {
+    if g.Ents[i] == ent {
+      found = true
+      break
+    }
+  }
+  if !found {
+    return false
+  }
+  g.selected_ent = ent
+  g.viewer.Focus(ent.FPos())
+  return true
 }
 
 func (g *Game) OnBegin() {

@@ -129,12 +129,19 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 
-func (g *Game) SetCurrentAction(action Action) {
+// Returns true iff the action was set
+// This function will return false if there is no selected entity, if the
+// action cannot be selected (because it is invalid or the entity has
+// insufficient Ap), or if there is an action currently executing.
+func (g *Game) SetCurrentAction(action Action) bool {
+  if g.action_state != noAction {
+    return false
+  }
   // the action should be one that belongs to the current entity, if not then
   // we need to bail out immediately
   if g.selected_ent == nil {
     base.Warn().Printf("Tried to SetCurrentAction() without a selected entity.")
-    return
+    return action == nil
   }
   if action != nil {
     valid := false
@@ -146,7 +153,7 @@ func (g *Game) SetCurrentAction(action Action) {
     }
     if !valid {
       base.Warn().Printf("Tried to SetCurrentAction() with an action that did not belong to the selected entity.")
-      return
+      return action == nil
     }
   }
   if g.current_action != nil {
@@ -158,6 +165,7 @@ func (g *Game) SetCurrentAction(action Action) {
     g.action_state = preppingAction
   }
   g.current_action = action
+  return true
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {

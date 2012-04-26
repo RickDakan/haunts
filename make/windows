@@ -1,9 +1,13 @@
-gb -m
+rm GEN_*
+cd tools
+go run version.go
+cd ..
 
-rm -rf example
-mkdir -p example/openme
-mv example.exe example/openme/example.exe
-cp ../gos/windows/lib/libglop.dll example/openme/libglop.dll
-cp libs/* example/openme/
-cp -r data/* example/
+go build .
 
+rm -rf haunts_app
+mkdir -p haunts_app/openme
+mv haunts.exe haunts_app/openme/
+cp -r data/* haunts_app/
+cp lib/windows/* haunts_app/openme
+cp lib/windows/* haunts_app/openme

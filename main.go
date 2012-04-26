@@ -7,6 +7,7 @@ import (
   "runtime"
   "runtime/debug"
   "runtime/pprof"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
@@ -208,6 +209,10 @@ func main() {
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
+    err := gl.Init()
+    if err != nil {
+      panic(err)
+    }
   })
   runtime.GOMAXPROCS(8)
   var err error
@@ -245,6 +250,7 @@ func main() {
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
   render.Queue(func() {
+    sys.Think()
     ui.Draw()
   })
   render.Purge()
@@ -255,8 +261,8 @@ func main() {
   heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
-    sys.Think()
     render.Queue(func() {
+      sys.Think()
       sys.SwapBuffers()
       ui.Draw()
     })
