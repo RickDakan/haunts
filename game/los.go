@@ -435,6 +435,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
+      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -452,6 +453,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
+      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }

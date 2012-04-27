@@ -20,7 +20,7 @@ type RectObject interface {
 type FloorDrawer interface {
   // Draws stuff on the floor.  This will be called after the floor and all
   // textures on it have been drawn, but before furniture has been drawn.
-  RenderOnFloor()
+  RenderOnFloor(*Room)
 }
 
 type Drawable interface {
@@ -724,7 +724,7 @@ func drawFloor(room *Room, floor mathgl.Mat4, temp *WallTexture, cstack base.Col
   gl.PushMatrix()
   gl.Translated(-float64(room.X), -float64(room.Y), 0)
   for _, fd := range floor_drawer {
-    fd.RenderOnFloor()
+    fd.RenderOnFloor(nil)
   }
   gl.PopMatrix()
 
@@ -944,7 +944,7 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   rv.room.far_left.wall_alpha = 255
   rv.room.far_left.door_alpha = 255
   rv.room.far_right.wall_alpha = 255
-  rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil, nil)
+  rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil, nil, nil)
   return
 
   rv.cstack.Push(1, 1, 1, 1)

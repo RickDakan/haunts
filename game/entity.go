@@ -373,7 +373,6 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   gl.GetDoublev(gl.CURRENT_COLOR, &rgba[0])
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
-  base.Log().Printf("Queried: %v", rgba)
   e.drawReticle(pos, rgba)
   if e.Sprite.sp != nil {
     dxi,dyi := e.Sprite.sp.Dims()

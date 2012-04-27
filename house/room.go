@@ -236,7 +236,7 @@ func alphaMult(a, b byte) byte {
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
+func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawer FloorDrawer) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -290,10 +290,10 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
 
     // Render the doors and cut out the stencil buffer so we leave them empty
     // if they're open
-    gl.StencilFunc(gl.ALWAYS, 1, 1)
-    gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
     switch plane.mat {
       case &left:
+      gl.StencilFunc(gl.ALWAYS, 1, 1)
+      gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       gl.Color4ub(255, 255, 255, left_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
@@ -309,8 +309,12 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         door.TextureData().Render(0, 0, dx, dy)
       }
+      gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
       case &right:
+      gl.StencilFunc(gl.ALWAYS, 1, 1)
+      gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       gl.Color4ub(255, 255, 255, right_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
@@ -328,13 +332,15 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         door.TextureData().Render(0, 0, dx, dy)
       }
+      gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+      gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
       case &floor:
+      gl.StencilFunc(gl.ALWAYS, 2, 2)
+      gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       gl.Color4ub(255, 255, 255, current_alpha)
     }
 
-    gl.StencilFunc(gl.NOTEQUAL, 1, 1)
-    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
     // Now draw the walls
     gl.LoadMatrixf(&floor[0])
@@ -380,6 +386,11 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.ClientActiveTexture(gl.TEXTURE1)
     gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
     gl.ClientActiveTexture(gl.TEXTURE0)
+  }
+  if floor_drawer != nil {
+    gl.StencilFunc(gl.EQUAL, 2, 2)
+    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+    floor_drawer.RenderOnFloor(room)
   }
   gl.Color4ub(255, 255, 255, 255)
   gl.LoadIdentity()

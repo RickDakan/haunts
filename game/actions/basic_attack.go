@@ -9,6 +9,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
@@ -139,7 +140,7 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
   }
   return game.NotConsumed
 }
-func (a *BasicAttack) RenderOnFloor() {
+func (a *BasicAttack) RenderOnFloor(room *house.Room) {
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
   gl.Color4d(1.0, 0.2, 0.2, 0.8)

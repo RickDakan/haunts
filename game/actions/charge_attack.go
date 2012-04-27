@@ -5,6 +5,7 @@ import (
   "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
@@ -66,7 +67,7 @@ func (a *ChargeAttack) Prep(ent *game.Entity, g *game.Game) bool {
 func (a *ChargeAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
   return game.NotConsumed
 }
-func (a *ChargeAttack) RenderOnFloor() {
+func (a *ChargeAttack) RenderOnFloor(room *house.Room) {
 }
 func (a *ChargeAttack) Cancel() {
 }

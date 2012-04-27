@@ -72,25 +72,34 @@ func (d *Data) RenderNatural(x, y int) {
   d.Render(float64(x), float64(y), float64(d.dx), float64(d.dy))
 }
 
+func Render(x, y, dx, dy float64) {
+  var run, op mathgl.Mat4
+  run.Identity()
+  op.Translation(float32(x), float32(y), 0)
+  run.Multiply(&op)
+  op.Scaling(float32(dx), float32(dy), 1)
+  run.Multiply(&op)
+
+  gl.PushMatrix()
+  gl.Enable(gl.TEXTURE_2D)
+  gl.MultMatrixf(&run[0])
+  gl.CallList(textureList)
+  gl.PopMatrix()
+}
+
 func (d *Data) Render(x, y, dx, dy float64) {
   if textureList != 0 {
-    var run, op mathgl.Mat4
-    run.Identity()
-    op.Translation(float32(x), float32(y), 0)
-    run.Multiply(&op)
-    op.Scaling(float32(dx), float32(dy), 1)
-    run.Multiply(&op)
-
-    gl.PushMatrix()
-    gl.Enable(gl.TEXTURE_2D)
     d.Bind()
-    gl.MultMatrixf(&run[0])
-    gl.CallList(textureList)
-    gl.PopMatrix()
+    Render(x, y, dx, dy)
   }
 }
 
 func (d *Data) RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
+  d.Bind()
+  RenderAdvanced(x, y, dx, dy, rot, flip)
+}
+
+func RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
   if textureList != 0 {
     var run, op mathgl.Mat4
     run.Identity()
@@ -114,7 +123,6 @@ func (d *Data) RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
     gl.PushMatrix()
     gl.MultMatrixf(&run[0])
     gl.Enable(gl.TEXTURE_2D)
-    d.Bind()
     gl.CallList(textureList)
     gl.PopMatrix()
   }

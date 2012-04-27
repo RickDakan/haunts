@@ -113,7 +113,7 @@ func (sp *SpawnPoint) Render(pos mathgl.Vec2, width float32) {
     gl.Vertex2f(pos.X+width/2, pos.Y)
   gl.End()
 }
-func (sp *SpawnPoint) RenderOnFloor() {
+func (sp *SpawnPoint) RenderOnFloor(room *Room) {
   gl.Disable(gl.TEXTURE_2D)
   switch sp.Type() {
   case SpawnRelic:

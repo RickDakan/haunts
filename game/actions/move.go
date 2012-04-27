@@ -7,10 +7,11 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/opengl/gl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -29,6 +30,8 @@ func registerMoves() map[string]func() game.Action {
   }
   return makers
 }
+
+var path_tex *house.LosTexture
 
 func init() {
   game.RegisterActionMakers(registerMoves)
@@ -138,6 +141,19 @@ func (a *Move) findPath(g *game.Game, x,y int) {
       return [2]int{ int(x), int(y) }
     }).([][2]int)
     a.cost = int(cost)
+
+    if path_tex != nil {
+      pix := path_tex.Pix()
+      for i := range pix {
+        for j := range pix[i] {
+          pix[i][j] = 0
+        }
+      }
+      for _, v := range a.path {
+        pix[v[1]][v[0]] = 255
+      }
+      path_tex.Remap()
+    }
   }
 }
 
@@ -170,19 +186,21 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus 
   }
   return game.NotConsumed
 }
-func (a *Move) RenderOnFloor() {
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.LINES)
+func (a *Move) RenderOnFloor(room *house.Room) {
+  if room == nil || a.ent == nil {
+    return
+  }
+  if path_tex == nil {
+    path_tex = house.MakeLosTexture()
+  }
+  path_tex.Remap()
+  path_tex.Bind()
   if a.cost <= a.ent.Stats.ApCur() {
-    gl.Color4d(0.2, 0.5, 0.9, 0.8)
+    gl.Color4ub(25, 255, 100, 255)
   } else {
-    gl.Color4d(0.9, 0.5, 0.2, 0.8)
+    gl.Color4ub(255, 25, 25, 255)
   }
-  for i := 1; i < len(a.path); i++ {
-    gl.Vertex2d(float64(a.path[i-1][0]) + 0.5, float64(a.path[i-1][1]) + 0.5)
-    gl.Vertex2d(float64(a.path[i][0]) + 0.5, float64(a.path[i][1]) + 0.5)
-  }
-  gl.End()
+  texture.RenderAdvanced(float64(-room.X), float64(-room.Y), house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
 }
 func (a *Move) Cancel() {
   a.ent = nil
