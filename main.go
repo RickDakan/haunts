@@ -201,6 +201,7 @@ func main() {
     if r := recover(); r != nil {
       data := debug.Stack()
       base.Error().Printf("PANIC: %s\n", string(data))
+      base.CloseLog()
       fmt.Printf("PANIC: %s\n", string(data))
     }
   } ()

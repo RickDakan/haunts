@@ -26,14 +26,14 @@ type Console struct {
 }
 
 func MakeConsole() *Console {
-  if log_reader == nil {
+  if log_console == nil {
     panic("Cannot make a console until the logging system has been set up.")
   }
   var c Console
   c.BasicZone.Ex = true
   c.BasicZone.Ey = true
   c.BasicZone.Request_dims = gui.Dims{ 1000, 1000 }
-  c.input = bufio.NewReaderSize(log_reader, 1024)
+  c.input = bufio.NewReader(log_console)
   c.dict = GetDictionary(12)
   return &c
 }
