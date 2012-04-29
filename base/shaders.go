@@ -1,94 +1,136 @@
 package base
 
 import (
-  "sync"
+  "fmt"
   "unsafe"
+  "path/filepath"
+  "io/ioutil"
   "github.com/runningwild/glop/render"
   gl "github.com/chsc/gogl/gl21"
 )
 
-const vertex_shader = `
-  void main() {
-    gl_Position = ftransform();
-    gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
-    gl_FrontColor = gl_Color;
-    gl_TexCoord[0].st = gl_MultiTexCoord0.st;
-    gl_TexCoord[1].st = gl_MultiTexCoord1.st;
-  }
-`
-const fragment_shader = `
-  uniform sampler2D tex1;
-  uniform sampler2D tex2;
-  void main() {
-    vec4 value1 = texture2D(tex1, gl_TexCoord[0].st);
-    vec4 value2 = texture2D(tex2, gl_TexCoord[1].st);
-    gl_FragColor = value1 * vec4(value2.w, value2.w, value2.w, gl_Color.w);
-  }
-`
+type Shader struct {
+  Defname string
+  *shaderDef
+}
 
-var vertex_shader_object uint32
-var fragment_shader_object uint32
-var program_object uint32
+type shaderDef struct {
+  // Name of this texture as it appears in the editor, should be unique among
+  // all WallTextures
+  Name string
 
-func EnableShader(enable bool) {
-  if enable {
-    gl.UseProgram(program_object)
+  // Paths to the vertex and fragment shaders
+  Vertex_path string
+  Fragment_path string
+}
+
+// Mappings from vertex shader name, fragment shader name, and shader program
+// name to their respective opengl ids.
+var vertex_shaders map[string]uint32
+var fragment_shaders map[string]uint32
+var shader_progs map[string]uint32
+
+var warned_names map[string]bool
+
+func EnableShader(name string) {
+  prog_obj, ok := shader_progs[name]
+  if ok {
+    gl.UseProgram(prog_obj)
   } else {
     gl.UseProgram(0)
+    if name != "" && !warned_names[name] {
+      Warn().Printf("Tried to use unknown shader '%s'", name)
+      warned_names[name] = true
+    }
   }
 }
 
-var shaders_once sync.Once
+func SetUniformI(shader, variable string, n int) {
+  prog, ok := shader_progs[shader]
+  if !ok {
+    if !warned_names[shader] {
+      Warn().Printf("Tried to set a uniform in an unknown shader '%s'", shader)
+      warned_names[shader] = true
+    }
+    return
+  }
+  bvariable := []byte(fmt.Sprintf("%s\x00", variable))
+  loc := gl.GetUniformLocation(prog, (*gl.Char)(unsafe.Pointer(&bvariable[0])))
+  gl.Uniform1i(loc, int32(n))
+}
+
 func InitShaders() {
-  shaders_once.Do(func() {
-    render.Queue(func() {
-      vertex_shader_object = gl.CreateShader(gl.VERTEX_SHADER)
-      var prog []gl.Char
-      for i := range vertex_shader {
-        prog = append(prog, gl.Char(vertex_shader[i]))
+  render.Queue(func() {
+    vertex_shaders = make(map[string]uint32)
+    fragment_shaders = make(map[string]uint32)
+    shader_progs = make(map[string]uint32)
+    warned_names = make(map[string]bool)
+    RemoveRegistry("shaders")
+    RegisterRegistry("shaders", make(map[string]*shaderDef))
+    RegisterAllObjectsInDir("shaders", filepath.Join(GetDataDir(), "shaders"), ".json", "json")
+    names := GetAllNamesInRegistry("shaders")
+    for _, name := range names {
+      // Load the shader files
+      shader := Shader{ Defname: name }
+      GetObject("shaders", &shader)
+      vdata, err := ioutil.ReadFile(filepath.Join(GetDataDir(), shader.Vertex_path))
+      if err != nil {
+        Error().Printf("Unable to load vertex shader '%s': %v", shader.Vertex_path, err)
+        continue
       }
-      pointer := &prog[0]
-      length := int32(len(vertex_shader))
-      gl.ShaderSource(vertex_shader_object, 1, (**gl.Char)(unsafe.Pointer(&pointer)), &length)
-      gl.CompileShader(vertex_shader_object)
-      var param int32
-      gl.GetShaderiv(vertex_shader_object, gl.COMPILE_STATUS, &param)
-      if param == 0 {
-        Error().Printf("Failed to compile vertex shader")
-        return
+      fdata, err := ioutil.ReadFile(filepath.Join(GetDataDir(), shader.Fragment_path))
+      if err != nil {
+        Error().Printf("Unable to load fragment shader '%s': %v", shader.Fragment_path, err)
+        continue
       }
 
-      fragment_shader_object = gl.CreateShader(gl.FRAGMENT_SHADER)
-      prog = prog[0:0]
-      for i := range fragment_shader {
-        prog = append(prog, gl.Char(fragment_shader[i]))
+      // Create the vertex shader
+      vertex_id, ok := vertex_shaders[shader.Vertex_path]
+      if !ok {
+        vertex_id = gl.CreateShader(gl.VERTEX_SHADER)
+        pointer := &vdata[0]
+        length := int32(len(vdata))
+        gl.ShaderSource(vertex_id, 1, (**gl.Char)(unsafe.Pointer(&pointer)), &length)
+        gl.CompileShader(vertex_id)
+        var param int32
+        gl.GetShaderiv(vertex_id, gl.COMPILE_STATUS, &param)
+        if param == 0 {
+          Error().Printf("Failed to compile vertex shader '%s': %v", shader.Vertex_path, param)
+          continue
+        }
       }
-      pointer = &prog[0]
-      length = int32(len(fragment_shader))
-      gl.ShaderSource(fragment_shader_object, 1, (**gl.Char)(unsafe.Pointer(&pointer)), &length)
-      gl.CompileShader(fragment_shader_object)
-      gl.GetShaderiv(fragment_shader_object, gl.COMPILE_STATUS, &param)
-      if param == 0 {
-        Error().Printf("Failed to compile fragment shader")
-        return
+
+      // Create the fragment shader
+      fragment_id, ok := fragment_shaders[shader.Fragment_path]
+      if !ok {
+        fragment_id = gl.CreateShader(gl.FRAGMENT_SHADER)
+        pointer := &fdata[0]
+        length := int32(len(fdata))
+        gl.ShaderSource(fragment_id, 1, (**gl.Char)(unsafe.Pointer(&pointer)), &length)
+        gl.CompileShader(fragment_id)
+        var param int32
+        gl.GetShaderiv(fragment_id, gl.COMPILE_STATUS, &param)
+        if param == 0 {
+          Error().Printf("Failed to compile fragment shader '%s': %v", shader.Fragment_path, param)
+          continue
+        }
       }
 
       // shader successfully compiled - now link
-      program_object = gl.CreateProgram()
-      gl.AttachShader(program_object, vertex_shader_object)
-      gl.AttachShader(program_object, fragment_shader_object)
-      gl.LinkProgram(program_object)
-      gl.GetProgramiv(program_object, gl.LINK_STATUS, &param)
+      program_id := gl.CreateProgram()
+      gl.AttachShader(program_id, vertex_id)
+      gl.AttachShader(program_id, fragment_id)
+      gl.LinkProgram(program_id)
+      var param int32
+      gl.GetProgramiv(program_id, gl.LINK_STATUS, &param)
       if param == 0 {
-        Error().Printf("Failed to link shader")
-        return
+        Error().Printf("Failed to link shader '%s': %v", shader.Name, param)
+        continue
       }
 
-      gl.UseProgram(program_object)
-      name := []byte("tex2\x00")
-      tex2_loc := gl.GetUniformLocation(program_object, (*gl.Char)(unsafe.Pointer(&name[0])))
-      gl.Uniform1i(tex2_loc, 1)
-      gl.UseProgram(0)
-    })
+      vertex_shaders[shader.Vertex_path] = vertex_id
+      fragment_shaders[shader.Fragment_path] = fragment_id
+      shader_progs[shader.Name] = program_id
+    }
   })
 }

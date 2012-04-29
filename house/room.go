@@ -273,7 +273,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
     gl.ClientActiveTexture(gl.TEXTURE0)
     gl.ActiveTexture(gl.TEXTURE0)
-    base.EnableShader(true)
+    base.EnableShader("los")
+    base.SetUniformI("los", "tex2", 1)
   }
 
   current_alpha := base_alpha
@@ -379,7 +380,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     }
   }
   if los_tex != nil {
-    base.EnableShader(false)
+    base.EnableShader("")
     gl.ActiveTexture(gl.TEXTURE1)
     gl.Disable(gl.TEXTURE_2D)
     gl.ActiveTexture(gl.TEXTURE0)
