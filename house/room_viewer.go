@@ -158,8 +158,8 @@ func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom flo
 
   // Move the viewer so that the focus is at the origin, and hence becomes centered
   // in the window
-  xoff := focusx + 0.5
-  yoff := focusy + 0.5
+  xoff := focusx
+  yoff := focusy
   m.Translation(-xoff, -yoff, 0)
   floor.Multiply(&m)
 
