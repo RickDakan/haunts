@@ -128,12 +128,14 @@ func (rv *RoomViewer) AdjAngle(ang float32) {
 }
 
 func (rv *RoomViewer) Drag(dx,dy float64) {
-  x,y,_ := rv.boardToModelview(rv.fx, rv.fy)
-  x += float32(dx)
-  y += float32(dy)
-  rv.fx, rv.fy, _ = rv.modelviewToBoard(x, y)
-  rv.fx = clamp(rv.fx, -2, float32(rv.room.Size.Dx) + 2)
-  rv.fy = clamp(rv.fy, -2, float32(rv.room.Size.Dy) + 2)
+  v := mathgl.Vec4{X: rv.fx, Y: rv.fy, W: 1}
+  v.Transform(&rv.mat)
+  v.X += float32(dx)
+  v.Y += float32(dy)
+
+  v.Z = d2p(rv.mat, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
+  v.Transform(&rv.imat)
+  rv.fx, rv.fy = v.X, v.Y
   rv.makeMat()
 }
 
@@ -158,9 +160,7 @@ func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom flo
 
   // Move the viewer so that the focus is at the origin, and hence becomes centered
   // in the window
-  xoff := focusx
-  yoff := focusy
-  m.Translation(-xoff, -yoff, 0)
+  m.Translation(-focusx, -focusy, 0)
   floor.Multiply(&m)
 
   ifloor.Assign(&floor)
