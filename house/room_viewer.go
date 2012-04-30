@@ -128,13 +128,15 @@ func (rv *RoomViewer) AdjAngle(ang float32) {
 }
 
 func (rv *RoomViewer) Drag(dx,dy float64) {
-  v := mathgl.Vec4{X: rv.fx, Y: rv.fy, W: 1}
-  v.Transform(&rv.mat)
-  v.X += float32(dx)
-  v.Y += float32(dy)
-
-  v.Z = d2p(rv.mat, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
-  v.Transform(&rv.imat)
+  v := mathgl.Vec3{X: rv.fx, Y: rv.fy}
+  vx := mathgl.Vec3{1, -1, 0}
+  vx.Normalize()
+  vy := mathgl.Vec3{1, 1, 0}
+  vy.Normalize()
+  vx.Scale(float32(dx) / rv.zoom * 2)
+  vy.Scale(float32(dy) / rv.zoom * 2)
+  v.Add(&vx)
+  v.Add(&vy)
   rv.fx, rv.fy = v.X, v.Y
   rv.makeMat()
 }
@@ -269,7 +271,10 @@ func (rv *RoomViewer) rightWallToModelview(bx,by float32) (x, y, z float32) {
   return v.X, v.Y, v.Z
 }
 
-func d2p(mat mathgl.Mat4, point,ray mathgl.Vec3) float32{
+// Distance to Plane(Point?)?  WTF IS THIS!?
+func d2p(tmat mathgl.Mat4, point,ray mathgl.Vec3) float32 {
+  var mat mathgl.Mat4
+  mat.Assign(&tmat)
   var sub mathgl.Vec3
   sub.X = mat[12]
   sub.Y = mat[13]
@@ -280,14 +285,10 @@ func d2p(mat mathgl.Mat4, point,ray mathgl.Vec3) float32{
   ray.Normalize()
   dist := point.Dot(mat.GetForwardVec3())
 
-  var n,r mathgl.Vec3
-  n.X = mat.GetForwardVec3().X
-  n.Y = mat.GetForwardVec3().Y
-  n.Z = mat.GetForwardVec3().Z
-  r.Assign(&ray)
-  cos := n.Dot(&r) / (n.Length() * r.Length())
-  R := dist / float32(math.Sin(math.Pi/2 - math.Acos(float64(cos))))
-  return R
+  var forward mathgl.Vec3
+  forward.Assign(mat.GetForwardVec3())
+  cos := float64(forward.Dot(&ray))
+  return dist / float32(cos)
 }
 
 func (rv *RoomViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
@@ -313,21 +314,6 @@ func clamp(f, min, max float32) float32 {
     return max
   }
   return f
-}
-
-// The change in x and y screen coordinates to apply to point on the viewer the is in
-// focus.  These coordinates will be scaled by the current zoom.
-func (rv *RoomViewer) Move(dx, dy float64) {
-  if dx == 0 && dy == 0 {
-    return
-  }
-  dy /= math.Sin(float64(rv.angle) * math.Pi / 180)
-  dx, dy = dy+dx, dy-dx
-  rv.fx += float32(dx) / rv.zoom
-  rv.fy += float32(dy) / rv.zoom
-  rv.fx = clamp(rv.fx, -2, float32(rv.room.Size.Dx) + 2)
-  rv.fy = clamp(rv.fy, -2, float32(rv.room.Size.Dy) + 2)
-  rv.makeMat()
 }
 
 // Changes the current zoom from e^(zoom) to e^(zoom+dz)

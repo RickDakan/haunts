@@ -147,17 +147,16 @@ func (hv *HouseViewer) Zoom(dz float64) {
 }
 
 func (hv *HouseViewer) Drag(dx, dy float64) {
-  hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
-
-  v := mathgl.Vec4{X: hv.fx, Y: hv.fy, W: 1}
-  v.Transform(&hv.floor)
-  v.X += float32(dx)
-  v.Y += float32(dy)
-
-  v.Z = d2p(hv.floor, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
-  v.Transform(&hv.ifloor)
+  v := mathgl.Vec3{X: hv.fx, Y: hv.fy}
+  vx := mathgl.Vec3{1, -1, 0}
+  vx.Normalize()
+  vy := mathgl.Vec3{1, 1, 0}
+  vy.Normalize()
+  vx.Scale(float32(dx) / hv.zoom * 2)
+  vy.Scale(float32(dy) / hv.zoom * 2)
+  v.Add(&vx)
+  v.Add(&vy)
   hv.fx, hv.fy = v.X, v.Y
-
   hv.target_on = false
 }
 
