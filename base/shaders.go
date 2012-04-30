@@ -59,6 +59,20 @@ func SetUniformI(shader, variable string, n int) {
   gl.Uniform1i(loc, int32(n))
 }
 
+func SetUniformF(shader, variable string, f float32) {
+  prog, ok := shader_progs[shader]
+  if !ok {
+    if !warned_names[shader] {
+      Warn().Printf("Tried to set a uniform in an unknown shader '%s'", shader)
+      warned_names[shader] = true
+    }
+    return
+  }
+  bvariable := []byte(fmt.Sprintf("%s\x00", variable))
+  loc := gl.GetUniformLocation(prog, (*gl.Char)(unsafe.Pointer(&bvariable[0])))
+  gl.Uniform1f(loc, f)
+}
+
 func InitShaders() {
   render.Queue(func() {
     vertex_shaders = make(map[string]uint32)

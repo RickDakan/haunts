@@ -386,7 +386,7 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     fy := focusy - float32(room.Y)
     floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
     v := alpha_map[room]
-    room.render(floor, left, right, v, drawables, los_tex, floor_drawer)
+    room.render(floor, left, right, zoom, v, drawables, los_tex, floor_drawer)
   }
 }
 

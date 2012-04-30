@@ -6,6 +6,8 @@ import (
   "io"
   "os"
   "path/filepath"
+  "math"
+  "strings"
   "unsafe"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -236,7 +238,7 @@ func alphaMult(a, b byte) byte {
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawer FloorDrawer) {
+func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawer FloorDrawer) {
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -347,7 +349,27 @@ func (room *Room) render(floor,left,right mathgl.Mat4, base_alpha byte, drawable
     gl.LoadMatrixf(&floor[0])
     plane.texture.Data().Bind()
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
+    if (plane.mat == &left || plane.mat == &right) && strings.Contains(string(room.Wall.Path), "gradient.png") {
+      base.EnableShader("gorey")
+      base.SetUniformI("gorey", "tex", 0)
+      zexp := math.Log(float64(zoom))
+      frac := 1 - 1 / zexp
+      base.SetUniformF("gorey", "frac", float32(frac))
+    }
+    if plane.mat == &floor && strings.Contains(string(room.Floor.Path), "gradient.png") {
+      base.EnableShader("gorey")
+      base.SetUniformI("gorey", "tex", 0)
+      zexp := math.Log(float64(zoom))
+      frac := 1 - 1 / zexp
+      base.Log().Printf("frac: %f", frac)
+      base.SetUniformF("gorey", "frac", float32(frac))
+    }
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
+    if los_tex != nil {
+      base.EnableShader("los")
+    } else {
+      base.EnableShader("")
+    }
   }
 
   for _, wt := range room.getWallTextures() {
