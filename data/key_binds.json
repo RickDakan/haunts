@@ -12,6 +12,8 @@
   "rotate right" : "e",
   "load"         : "os+l",
   "save"         : "os+s",
+  "load game"    : "shift+l",
+  "save game"    : "shift+s",
   "quit"         : "os+q",
   "room editor"  : "os+1",
   "house editor" : "os+2",

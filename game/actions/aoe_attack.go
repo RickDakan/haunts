@@ -141,15 +141,15 @@ func (a *AoeAttack) Cancel() {
   a.aoeAttackInst = aoeAttackInst{}
 }
 func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
-  if a.ent.Sprite.Sprite().State() != "ready" { return game.InProgress }
+  if a.ent.Sprite().State() != "ready" { return game.InProgress }
   for _,target := range a.targets {
-    if target.Stats.HpCur() > 0 && target.Sprite.Sprite().State() != "ready" { return game.InProgress }
+    if target.Stats.HpCur() > 0 && target.Sprite().State() != "ready" { return game.InProgress }
   }
   a.ent.TurnToFace(a.tx, a.ty)
   for _,target := range a.targets {
     target.TurnToFace(a.tx, a.ty)
   }
-  a.ent.Sprite.Sprite().Command(a.Animation)
+  a.ent.Sprite().Command(a.Animation)
   for _,target := range a.targets {
     if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {
@@ -157,12 +157,12 @@ func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
       }
       target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
       if target.Stats.HpCur() <= 0 {
-        target.Sprite.Sprite().CommandN([]string{"defend", "killed"})
+        target.Sprite().CommandN([]string{"defend", "killed"})
       } else {
-        target.Sprite.Sprite().CommandN([]string{"defend", "damaged"})
+        target.Sprite().CommandN([]string{"defend", "damaged"})
       }
     } else {
-      target.Sprite.Sprite().CommandN([]string{"defend", "undamaged"})
+      target.Sprite().CommandN([]string{"defend", "undamaged"})
     }
   }
   return game.Complete

@@ -174,8 +174,7 @@ func (a *Interact) Cancel() {
   a.interactInst = interactInst{}
 }
 func (a *Interact) Maintain(dt int64) game.MaintenanceStatus {
-
-  a.target.Sprite.Sprite().Command("inspect")
+  a.target.Sprite().Command("inspect")
   return game.Complete
 }
 func (a *Interact) Interrupt() bool {

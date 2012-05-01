@@ -150,7 +150,7 @@ func (hs *hauntSetup) servitorToMinion() {
   hs.AnchorBox.RemoveChild(hs.roster_chooser)
   ents := getAllEntsWithSideAndLevel(hs.game, SideHaunt, LevelMinion)
 
-  spawns := hs.game.house.Floors[0].Spawns
+  spawns := hs.game.House.Floors[0].Spawns
   spawns = algorithm.Choose(spawns, func(a interface{}) bool {
     return a.(*house.SpawnPoint).Type() == house.SpawnHaunts
   }).([]*house.SpawnPoint)

@@ -159,7 +159,7 @@ func (a *BasicAttack) Cancel() {
   a.basicAttackInst = basicAttackInst{}
 }
 func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
-  if a.ent.Sprite.Sprite().State() == "ready" && a.target.Sprite.Sprite().State() == "ready" {
+  if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
     var defender_cmds []string
@@ -176,7 +176,7 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
     } else {
       defender_cmds = []string{"defend", "undamaged"}
     }
-    sprites := []*sprite.Sprite{a.ent.Sprite.Sprite(), a.target.Sprite.Sprite()}
+    sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
     return game.Complete
   }

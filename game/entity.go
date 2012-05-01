@@ -41,7 +41,7 @@ func (g *Game) placeEntity(initial bool) bool {
   }
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
-  r, f, _ := g.house.Floors[0].RoomFurnSpawnAtPos(ix, iy)
+  r, f, _ := g.House.Floors[0].RoomFurnSpawnAtPos(ix, iy)
 
   if r == nil || f { return false }
   for _,e := range g.Ents {
@@ -58,7 +58,7 @@ func (g *Game) placeEntity(initial bool) bool {
   if initial {
     haunt := g.new_ent.HauntEnt
     if haunt != nil {
-      for _, spawn := range g.house.Floors[0].Spawns {
+      for _, spawn := range g.House.Floors[0].Spawns {
         if spawn.Type() != house.SpawnHaunts { continue }
         if haunt.Level == LevelMinion && !spawn.Haunt.Minions { continue }
         if haunt.Level == LevelServitor && !spawn.Haunt.Servitors { continue }
@@ -89,10 +89,10 @@ func MakeEntity(name string, g *Game) *Entity {
   for _,action_name := range ent.Action_names {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
-  ent.Sprite.Load(ent.Sprite_path.String())
+  ent.sprite.Load(ent.Sprite_path.String())
 
   if ent.Ai_path.String() != "" {
-    ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
+    ent.ai = ai_maker(ent.Ai_path.String(), &ent)
   }
 
   if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
@@ -259,7 +259,7 @@ type losData struct {
 type EntityInst struct {
   X,Y float64
 
-  Sprite spriteContainer
+  sprite spriteContainer
 
   los *losData
 
@@ -283,7 +283,7 @@ type EntityInst struct {
 
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
-  Ai Ai
+  ai Ai
   // The ready flag is set to true at the start of every turn - this lets us
   // keep easy track of whether or not an entity's Ai has executed yet, since
   // an entity might not do anything else obvious, like run out of Ap.
@@ -302,6 +302,9 @@ const (
 )
 func (e *Entity) Game() *Game {
   return e.game
+}
+func (e *Entity) Sprite() *sprite.Sprite {
+  return e.sprite.sp
 }
 func (e *Entity) HasLos(x,y,dx,dy int) bool {
   if e.los == nil {
@@ -374,11 +377,11 @@ func (e *Entity) Render(pos mathgl.Vec2, width float32) {
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
   e.drawReticle(pos, rgba)
-  if e.Sprite.sp != nil {
-    dxi,dyi := e.Sprite.sp.Dims()
+  if e.sprite.sp != nil {
+    dxi,dyi := e.sprite.sp.Dims()
     dx := float32(dxi)
     dy := float32(dyi)
-    tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
+    tx,ty,tx2,ty2 := e.sprite.sp.Bind()
     gl.Begin(gl.QUADS)
     gl.TexCoord2d(tx, -ty)
     gl.Vertex2f(pos.X, pos.Y)
@@ -422,18 +425,18 @@ func (e *Entity) TurnToFace(x,y int) {
   seg.Assign(&target)
   seg.Subtract(&source)
   target_facing := facing(seg)
-  f_diff := target_facing - e.Sprite.sp.Facing()
+  f_diff := target_facing - e.sprite.sp.Facing()
   if f_diff != 0 {
     f_diff = (f_diff + 6) % 6
     if f_diff > 3 {
       f_diff -= 6
     }
     for f_diff < 0 {
-      e.Sprite.sp.Command("turn_left")
+      e.sprite.sp.Command("turn_left")
       f_diff++
     }
     for f_diff > 0 {
-      e.Sprite.sp.Command("turn_right")
+      e.sprite.sp.Command("turn_right")
       f_diff--
     }
   }
@@ -443,10 +446,10 @@ func (e *Entity) TurnToFace(x,y int) {
 // traveled.
 func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
   if dist <= 0 {
-    e.Sprite.sp.Command("stop")
+    e.sprite.sp.Command("stop")
     return 0
   }
-  e.Sprite.sp.Command("move")
+  e.sprite.sp.Command("move")
 
   source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
   target := mathgl.Vec2{ float32(x), float32(y) }
@@ -469,8 +472,8 @@ func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
 }
 
 func (e *Entity) Think(dt int64) {
-  if e.Sprite.sp != nil {
-    e.Sprite.sp.Think(dt)
+  if e.sprite.sp != nil {
+    e.sprite.sp.Think(dt)
   }
 }
 
@@ -478,8 +481,8 @@ func (e *Entity) OnRound() {
   if e.Stats != nil {
     e.Stats.OnRound()
     if e.Stats.HpCur() <= 0 {
-      e.Sprite.Sprite().Command("defend")
-      e.Sprite.Sprite().Command("killed")
+      e.sprite.Sprite().Command("defend")
+      e.sprite.Sprite().Command("killed")
     }
   }
 }

@@ -336,6 +336,12 @@ func main() {
       editMode()
     } else {
       gameMode()
+      if key_map["save game"].FramePressCount() > 0 {
+        game_panel.SaveGame()
+      }
+      if key_map["load game"].FramePressCount() > 0 {
+        game_panel.LoadGame()
+      }
     }
   }
 }

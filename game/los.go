@@ -17,11 +17,29 @@ const(
 )
 
 type Game struct {
-  Defname string
-
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
-  house *house.HouseDef
+  House *house.HouseDef
+  Ents []*Entity  `registry:"loadfrom-entities"`
+
+  // Current player
+  Side Side
+
+  // Current turn number - incremented on each OnRound() so every two
+  // indicates that a complete round has happened.
+  Turn int
+
+  // The purpose that the explorers have for entering the house, chosen at the
+  // beginning of the game.
+  Purpose Purpose
+
+  // The active cleanse points - when interacted with they will be removed
+  // from this list, so in a Cleanse scenario the mission is accomplished
+  // when this list is empty.  In other scenarios this list is always empty.
+  Active_cleanses []*Entity
+
+
+  // Transient data - none of the following are exported
 
   viewer *house.HouseViewer
 
@@ -41,21 +59,8 @@ type Game struct {
   los_full_merger []bool
   los_merger [][]bool
 
-  Ents []*Entity  `registry:"loadfrom-entities"`
-
   selected_ent *Entity
   hovered_ent *Entity
-
-  // Current player
-  Side Side
-
-  // Current turn number - incremented on each OnRound() so every two
-  // indicates that a complete round has happened.
-  Turn int
-
-  // The purpose that the explorers have for entering the house, chosen at the
-  // beginning of the game.
-  Purpose Purpose
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
@@ -67,11 +72,6 @@ type Game struct {
 
   // Defaults to the zero value which is NoSide
   winner Side
-
-  // The active cleanse points - when interacted with they will be removed
-  // from this list, so in a Cleanse scenario the mission is accomplished
-  // when this list is empty.  In other scenarios this list is always empty.
-  Active_cleanses []*Entity
 }
 
 func (g *Game) HoveredEnt() *Entity {
@@ -119,7 +119,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
 
   var sp *house.SpawnPoint
-  for _, s := range g.house.Floors[0].Spawns {
+  for _, s := range g.House.Floors[0].Spawns {
     if s.Type() == house.SpawnExplorers {
       sp = s
       break
@@ -306,13 +306,13 @@ func (g *Game) GetViewer() *house.HouseViewer {
 
 func (g *Game) NumVertex() int {
   total := 0
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     total += room.Size.Dx * room.Size.Dy
   }
   return total
 }
 func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     size := room.Size.Dx * room.Size.Dy
     if v >= size {
       v -= size
@@ -324,7 +324,7 @@ func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
 }
 func (g *Game) ToVertex(x, y int) int {
   v := 0
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
       x -= room.X
       y -= room.Y
@@ -402,7 +402,7 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
 }
 
 func (g *Game) IsCellOccupied(x,y int) bool {
-  r := roomAt(g.house.Floors[0], x, y)
+  r := roomAt(g.House.Floors[0], x, y)
   if r == nil { return true }
   f := furnitureAt(r, x - r.X, y - r.Y)
   if f != nil { return true }
@@ -473,8 +473,8 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   var g Game
   g.Side = SideExplorers
-  g.house = h
-  g.house.Normalize()
+  g.House = h
+  g.House.Normalize()
   g.viewer = viewer
 
   g.los_tex = house.MakeLosTexture()
@@ -555,7 +555,7 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
-    state := ent.Sprite.Sprite().State()
+    state := ent.sprite.Sprite().State()
     if state != "ready" && state != "killed" {
       // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
       return
@@ -569,14 +569,14 @@ func (g *Game) Think(dt int64) {
         if ent.Side() != g.Side { continue }
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
-        g.ai_ent.Ai.Eval()
+        g.ai_ent.ai.Eval()
         g.ai_ent.ai_status = aiRunning
         break
       }
     }
     if g.ai_ent != nil {
       select {
-      case act := <-g.ai_ent.Ai.Actions():
+      case act := <-g.ai_ent.ai.Actions():
         if act != nil {
           g.current_action = act
           g.action_state = doingAction
@@ -595,19 +595,19 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
   los[x][y] = true
-  room = roomAt(g.house.Floors[0], x, y)
+  room = roomAt(g.House.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
     x,y = p[0], p[1]
     room0 = room
-    room = roomAt(g.house.Floors[0], x, y)
+    room = roomAt(g.House.Floors[0], x, y)
     if room == nil { return }
     if x == x0 || y == y0 {
       if room0 != nil && room0 != room && !connected(room, room0, x, y, x0, y0) { return }
     } else {
-      roomA := roomAt(g.house.Floors[0], x0, y0)
-      roomB := roomAt(g.house.Floors[0], x, y0)
-      roomC := roomAt(g.house.Floors[0], x0, y)
+      roomA := roomAt(g.House.Floors[0], x0, y0)
+      roomB := roomAt(g.House.Floors[0], x, y0)
+      roomC := roomAt(g.House.Floors[0], x0, y)
       if roomA != nil && roomB != nil && roomA != roomB && !connected(roomA, roomB, x0, y0, x, y0) { return }
       if roomA != nil && roomC != nil && roomA != roomC && !connected(roomA, roomC, x0, y0, x0, y) { return }
       if roomB != nil && room != roomB && !connected(room, roomB, x, y, x, y0) { return }

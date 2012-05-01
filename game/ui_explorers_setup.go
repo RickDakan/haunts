@@ -63,9 +63,9 @@ func (e *entityLabel) Draw(hovered, selected, selectable bool, region gui.Region
 }
 func (e *entityLabel) Think(dt int64) {
   if e.hovered && e.selectable {
-    e.ent.Sprite.Sprite().Command("move")
+    e.ent.sprite.Sprite().Command("move")
   } else {
-    e.ent.Sprite.Sprite().Command("stop")
+    e.ent.sprite.Sprite().Command("stop")
   }
   if e.selected || e.selectable {
     e.ent.Think(dt)
@@ -254,7 +254,7 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     for i := range game.Ents {
       // Something might still be walking, so lets just stop everything before
       // we move on.
-      game.Ents[i].Sprite.sp.Command("stop")
+      game.Ents[i].sprite.sp.Command("stop")
     }
   },
   )

@@ -3,6 +3,7 @@ package game
 import (
   "math/rand"
   "sort"
+  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -41,6 +42,23 @@ func MakeGamePanel() *GamePanel {
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
   return &gp
 }
+
+func (gp *GamePanel) SaveGame() {
+  err := base.SaveGob(filepath.Join(base.GetDataDir(), "fudge.game"), gp.game)
+  base.Log().Printf("Saving!")
+  if err != nil {
+    base.Warn().Printf("Failed to save: %v", err)
+  }
+}
+
+func (gp *GamePanel) LoadGame() {
+  err := base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), &gp.game)
+  base.Log().Printf("Loading!")
+  if err != nil {
+    base.Warn().Printf("Failed to load: %v", err)
+  }
+}
+
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   switch gp.game.Turn {
   case 0:
@@ -341,7 +359,7 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   }
 }
 func spawnAllRelics(g *Game) {
-  relic_spawns := algorithm.Choose(g.house.Floors[0].Spawns, func(a interface{}) bool {
+  relic_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
     return a.(*house.SpawnPoint).Type() == house.SpawnRelic
   }).([]*house.SpawnPoint)
 
@@ -357,7 +375,7 @@ func spawnAllRelics(g *Game) {
   spawnEnts(g, relic_ents, relic_spawns)
 }
 func spawnAllCleanses(g *Game) {
-  cleanse_spawns := algorithm.Choose(g.house.Floors[0].Spawns, func(a interface{}) bool {
+  cleanse_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
     return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
   }).([]*house.SpawnPoint)
 

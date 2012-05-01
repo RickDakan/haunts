@@ -39,7 +39,7 @@ func init() {
 type SummonAction struct {
   Defname string
   *SummonActionDef
-  SummonActionInst
+  summonActionInst
 }
 type SummonActionDef struct {
   Name         string
@@ -52,7 +52,7 @@ type SummonActionDef struct {
   Conditions   []string
   Texture      texture.Object
 }
-type SummonActionInst struct {
+type summonActionInst struct {
   ent *game.Entity
   cx,cy int
   spawn *game.Entity
@@ -118,12 +118,12 @@ func (a *SummonAction) RenderOnFloor(room *house.Room) {
   gl.End()
 }
 func (a *SummonAction) Cancel() {
-  a.SummonActionInst = SummonActionInst{}
+  a.summonActionInst = summonActionInst{}
 }
 func (a *SummonAction) Maintain(dt int64) game.MaintenanceStatus {
-  if a.ent.Sprite.Sprite().State() == "ready" {
+  if a.ent.Sprite().State() == "ready" {
     a.ent.TurnToFace(a.cx, a.cy)
-    a.ent.Sprite.Sprite().Command(a.Animation)
+    a.ent.Sprite().Command(a.Animation)
     a.spawn.Stats.OnBegin()
     a.ent.Game().SpawnEntity(a.spawn, a.cx, a.cy)
     return game.Complete
