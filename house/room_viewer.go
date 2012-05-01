@@ -83,10 +83,6 @@ type RoomViewer struct {
     WallTexture *WallTexture
   }
 
-  Selected struct {
-    Cells map[CellPos]bool
-  }
-
   // This tells us what to highlight based on the mouse position
   edit_mode editMode
 
@@ -116,8 +112,6 @@ func MakeRoomViewer(room *roomDef, angle float32) *RoomViewer {
   rv.Request_dims.Dy = 100
   rv.Ex = true
   rv.Ey = true
-
-  rv.Selected.Cells = make(map[CellPos]bool)
 
   return &rv
 }
@@ -736,18 +730,6 @@ func (rv *RoomViewer) drawFloor() {
   gl.LoadIdentity()
   gl.MultMatrixf(&rv.mat[0])
   defer gl.PopMatrix()
-  if rv.edit_mode == editCells {
-    gl.Disable(gl.TEXTURE_2D)
-    gl.Color4d(0.3, 1, 0.3, 0.7)
-    gl.Begin(gl.QUADS)
-      for pos := range rv.Selected.Cells {
-        gl.Vertex2i(pos.X, pos.Y)
-        gl.Vertex2i(pos.X, pos.Y + 1)
-        gl.Vertex2i(pos.X + 1, pos.Y + 1)
-        gl.Vertex2i(pos.X + 1, pos.Y)
-      }
-    gl.End()
-  }
 
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4f(1, 0, 1, 0.9)
@@ -791,13 +773,6 @@ func (rv *RoomViewer) drawFloor() {
   }
 
   gl.Disable(gl.STENCIL_TEST)
-  if rv.edit_mode == editCells {
-    for i := range rv.room.Cell_data {
-      for j := range rv.room.Cell_data[i] {
-        rv.room.Cell_data[i][j].Render(i, j, rv.room.Size.Dx, rv.room.Size.Dy)
-      }
-    }
-  }
 }
 
 func drawFurniture(roomx,roomy int, mat mathgl.Mat4, zoom float32, furniture []*Furniture, temp_furniture *Furniture, extras []Drawable, cstack base.ColorStack, los_tex *LosTexture, los_alpha float64) {

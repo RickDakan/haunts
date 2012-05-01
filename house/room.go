@@ -74,8 +74,6 @@ type roomDef struct {
   Floor texture.Object
   Wall  texture.Object
 
-  Cell_data [][]CellData
-
   // What house themes this room is appropriate for
   Themes map[string]bool
 
@@ -501,20 +499,6 @@ func (room *roomDef) Dims() (dx,dy int) {
 }
 
 func (r *roomDef) Resize(size RoomSize) {
-  if len(r.Cell_data) > size.Dx {
-    r.Cell_data = r.Cell_data[0 : size.Dx]
-  }
-  for len(r.Cell_data) < size.Dx {
-    r.Cell_data = append(r.Cell_data, []CellData{})
-  }
-  for i := range r.Cell_data {
-    if len(r.Cell_data[i]) > size.Dy {
-      r.Cell_data[i] = r.Cell_data[i][0 : size.Dy]
-    }
-    for len(r.Cell_data[i]) < size.Dy {
-      r.Cell_data[i] = append(r.Cell_data[i], CellData{})
-    }
-  }
   r.Size = size
 }
 
@@ -597,7 +581,6 @@ type RoomEditorPanel struct {
   panels struct {
     furniture *FurniturePanel
     wall      *WallPanel
-    cell      *CellPanel
   }
 
   room   roomDef
@@ -667,10 +650,6 @@ func MakeRoomEditorPanel() Editor {
   rep.panels.wall = MakeWallPanel(&rep.room, rep.viewer)
   tabs = append(tabs, rep.panels.wall)
   rep.widgets = append(rep.widgets, rep.panels.wall)
-
-  rep.panels.cell = MakeCellPanel(&rep.room, rep.viewer)
-  tabs = append(tabs, rep.panels.cell)
-  rep.widgets = append(rep.widgets, rep.panels.cell)
 
   rep.tab = gui.MakeTabFrame(tabs)
   rep.AddChild(rep.tab)

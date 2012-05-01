@@ -169,27 +169,12 @@ func (room *Room) canAddDoor(door *Door) bool {
     return false
   }
 
-  // Make sure that the door only occupies valid cells and only cells that have
-  // CanHaveDoor set to true
+  // Make sure that the door only occupies valid cells
   if door.Facing == FarLeft || door.Facing == NearRight {
     if door.Pos + door.Width >= room.Size.Dx { return false }
-    y := 0
-    if door.Facing == FarLeft {
-      y = room.Size.Dy - 1
-    }
-    for pos := door.Pos; pos <= door.Pos + door.Width; pos++ {
-      if !room.Cell_data[pos][y].CanHaveDoor { return false }
-    }
   }
   if door.Facing == FarRight || door.Facing == NearLeft {
     if door.Pos + door.Width >= room.Size.Dy { return false }
-    x := 0
-    if door.Facing == FarRight {
-      x = room.Size.Dx - 1
-    }
-    for pos := door.Pos; pos <= door.Pos + door.Width; pos++ {
-      if !room.Cell_data[x][pos].CanHaveDoor { return false }
-    }
   }
 
   // Now make sure that the door doesn't overlap any other doors
