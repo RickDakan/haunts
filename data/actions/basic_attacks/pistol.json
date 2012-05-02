@@ -8,5 +8,9 @@
   "Ap"       : 3,
   "Strength" : 5,
   "Damage"   : 2,
-  "Range"    : 10
+  "Range"    : 10,
+  "Sounds"   : {
+    "load": "gun_load.wav",
+    "fire": "gun_fire.wav"
+  }
 }

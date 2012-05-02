@@ -1,6 +1,7 @@
 package house
 
 import (
+  "image"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -24,10 +25,8 @@ type FurniturePanel struct {
   // Distance from the mouse to the center of the object, in board coordinates
   drag_anchor struct{ x,y float32 }
 
-  // True iff the selected object should be placed when the mouse button is
-  // released.  If false this object will be placed when the mouse button is
-  // clicked.
-  drop_on_release bool
+  // The piece of furniture that we are currently dragging around
+  furniture *Furniture
 
   key_map base.KeyMap
 }
@@ -37,7 +36,7 @@ func (w *FurniturePanel) Collapse() {
     return a.(*Furniture) != w.prev_object
   }).([]*Furniture)
   w.prev_object = nil
-  w.RoomViewer.Temp.Furniture = nil
+  w.furniture = nil
 }
 func (w *FurniturePanel) Expand() {
   w.RoomViewer.SetEditMode(editFurniture)
@@ -86,9 +85,10 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
     furn_table.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       f := MakeFurniture(name)
       if f == nil { return }
-      fp.RoomViewer.Temp.Furniture = f
-      fp.drop_on_release = false
-      dx,dy := fp.RoomViewer.Temp.Furniture.Dims()
+      fp.furniture = f
+      fp.furniture.temporary = true
+      fp.Room.Furniture = append(fp.Room.Furniture, fp.furniture)
+      dx,dy := fp.furniture.Dims()
       fp.drag_anchor.x = float32(dx - 1) / 2
       fp.drag_anchor.y = float32(dy - 1) / 2
     }))
@@ -102,55 +102,67 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
   }
+
+  // On escape we want to revert the furniture we're moving back to where it was
+  // and what state it was in before we selected it.  If we don't have any
+  // furniture selected then we don't do anything.
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    w.RoomViewer.Temp.Furniture = nil
+    if w.furniture != nil {
+      if w.prev_object != nil {
+        *w.furniture = *w.prev_object
+        w.prev_object = nil
+      } else {
+        algorithm.Choose2(&w.Room.Furniture, func(f *Furniture) bool {
+          return f != w.furniture
+        })
+      }
+      w.furniture = nil
+    }
     return true
   }
+
+  // If we hit delete then we want to remove the furniture we're moving around
+  // from the room.  If we're not moving anything around then nothing happens.
+  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    algorithm.Choose2(&w.Room.Furniture, func(f *Furniture) bool {
+      return f != w.furniture
+    })
+    w.furniture = nil
+    w.prev_object = nil
+    return true
+  }
+
   if found,event := group.FindEvent(w.key_map["rotate left"].Id()); found && event.Type == gin.Press {
-    if w.RoomViewer.Temp.Furniture != nil {
-      w.RoomViewer.Temp.Furniture.RotateLeft()
+    if w.furniture != nil {
+      w.furniture.RotateLeft()
     }
   }
   if found,event := group.FindEvent(w.key_map["rotate right"].Id()); found && event.Type == gin.Press {
-    if w.RoomViewer.Temp.Furniture != nil {
-      w.RoomViewer.Temp.Furniture.RotateRight()
+    if w.furniture != nil {
+      w.furniture.RotateRight()
     }
   }
-  if found,event := group.FindEvent(gin.MouseLButton); found {
-    if w.RoomViewer.Temp.Furniture != nil && (event.Type == gin.Press || (event.Type == gin.Release && w.drop_on_release)) {
-      fx := w.RoomViewer.Temp.Furniture.X
-      fy := w.RoomViewer.Temp.Furniture.Y
-      fdx,fdy := w.RoomViewer.Temp.Furniture.Dims()
-
-      if fx >= 0 && fy >= 0 && fx + fdx <= w.RoomViewer.room.Size.Dx && fy + fdy <= w.RoomViewer.room.Size.Dy {
-        w.Room.Furniture = append(w.Room.Furniture, w.RoomViewer.Temp.Furniture)
+  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    if w.furniture != nil {
+      if !w.furniture.invalid {
+        w.furniture.temporary = false
+        w.furniture = nil
       }
-      w.RoomViewer.Temp.Furniture = nil
-    } else if w.RoomViewer.Temp.Furniture == nil && event.Type == gin.Press {
+    } else if w.furniture == nil {
       bx,by := w.RoomViewer.WindowToBoard(event.Key.Cursor().Point())
-      w.RoomViewer.Temp.Furniture = nil
       for i := range w.Room.Furniture {
         x,y := w.Room.Furniture[i].Pos()
         dx,dy := w.Room.Furniture[i].Dims()
         if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
-          w.RoomViewer.Temp.Furniture = w.Room.Furniture[i]
-          w.Room.Furniture[i] = w.Room.Furniture[len(w.Room.Furniture) - 1]
-          w.Room.Furniture = w.Room.Furniture[0 : len(w.Room.Furniture) - 1]
+          w.furniture = w.Room.Furniture[i]
+          w.prev_object = new(Furniture)
+          *w.prev_object = *w.furniture
+          w.furniture.temporary = true
+          px,py := w.furniture.Pos()
+          w.drag_anchor.x = bx - float32(px) - 0.5
+          w.drag_anchor.y = by - float32(py) - 0.5
           break
         }
-      }
-      if w.RoomViewer.Temp.Furniture != nil {
-        w.prev_object = new(Furniture)
-        *w.prev_object = *w.RoomViewer.Temp.Furniture
-      }
-      w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
-        return a.(*Furniture) != w.RoomViewer.Temp.Furniture
-      }).([]*Furniture)
-      w.drop_on_release = true
-      if w.RoomViewer.Temp.Furniture != nil {
-        px,py := w.RoomViewer.Temp.Furniture.Pos()
-        w.drag_anchor.x = bx - float32(px) - 0.5
-        w.drag_anchor.y = by - float32(py) - 0.5
       }
     }
     return true
@@ -171,11 +183,27 @@ func (w *FurniturePanel) Reload() {
 }
 
 func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
-  if w.RoomViewer.Temp.Furniture != nil {
+  if w.furniture != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := w.RoomViewer.WindowToBoard(mx, my)
-    w.RoomViewer.Temp.Furniture.X = int(bx - w.drag_anchor.x)
-    w.RoomViewer.Temp.Furniture.Y = int(by - w.drag_anchor.y)
+    f := w.furniture
+    f.X = int(bx - w.drag_anchor.x)
+    f.Y = int(by - w.drag_anchor.y)
+    fdx, fdy := f.Dims()
+    f.invalid = false
+    if f.X < 0 { f.invalid = true }
+    if f.Y < 0 { f.invalid = true }
+    if f.X + fdx > w.Room.Size.Dx { f.invalid = true }
+    if f.Y + fdy > w.Room.Size.Dy { f.invalid = true }
+    for _, t := range w.Room.Furniture {
+      if t == f { continue }
+      tdx, tdy := t.Dims()
+      r1 := image.Rect(t.X, t.Y, t.X + tdx, t.Y + tdy)
+      r2 := image.Rect(f.X, f.Y, f.X + fdx, f.Y + fdy)
+      if r1.Overlaps(r2) {
+        f.invalid = true
+      }
+    }
   }
 
   w.VerticalTable.Think(ui, t)

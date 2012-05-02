@@ -38,6 +38,10 @@ type WallTexture struct {
 
   // Whether or not to flip the texture about one of its axes
   Flip bool
+
+  // If this is currently being dragged around it will be marked as temporary
+  // so that it will be drawn differently
+  temporary bool
 }
 
 type wallTextureDef struct {
@@ -46,6 +50,13 @@ type wallTextureDef struct {
   Name string
 
   Texture texture.Object
+}
+
+func (wt *WallTexture) Color() (r,g,b,a byte) {
+  if wt.temporary {
+    return 127, 127, 255, 200
+  }
+  return 255, 255, 255, 255
 }
 
 func (wt *WallTexture) Render() {

@@ -460,9 +460,9 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.house.Normalize()
   g.viewer = viewer
 
-  g.los_tex = house.MakeLosTexture(256)
-  g.los_full_merger = make([]bool, 256*256)
-  g.los_merger = make([][]bool, 256)
+  g.los_tex = house.MakeLosTexture()
+  g.los_full_merger = make([]bool, house.LosTextureSizeSquared)
+  g.los_merger = make([][]bool, house.LosTextureSize)
   for i := range g.los_merger {
     g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
   }
@@ -538,8 +538,9 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
-    state := ent.Sprite.Sprite().AnimState()
+    state := ent.Sprite.Sprite().State()
     if state != "ready" && state != "killed" {
+      base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
       return
     }
   }
@@ -656,6 +657,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   maxy := ey + ent.Stats.Sight()
   line := make([][2]int, ent.Stats.Sight())
   for x := minx; x <= maxx; x++ {
+    line = line[0:0]
     bresenham(ex, ey, x, miny, &line)
     g.doLos(ent.Stats.Sight(), line, ent.los.grid)
     line = line[0:0]

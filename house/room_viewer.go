@@ -27,6 +27,7 @@ type Drawable interface {
   RectObject
   FPos() (float64,float64)
   Render(pos mathgl.Vec2, width float32)
+  Color() (r,g,b,a byte)
 }
 
 type editMode int
@@ -45,7 +46,7 @@ type RoomViewer struct {
   gui.NonResponder
   gui.NonThinker
 
-  room *roomDef
+  room *Room
 
   // In case the size of the room changes we will need to update the matrices
   size RoomSize
@@ -104,7 +105,7 @@ func (rv *RoomViewer) String() string {
 func MakeRoomViewer(room *roomDef, angle float32) *RoomViewer {
   var rv RoomViewer
   rv.EmbeddedWidget = &gui.BasicWidget{CoreWidget: &rv}
-  rv.room = room
+  rv.room = &Room{roomDef:room}
   rv.angle = angle
   rv.fx = float32(rv.room.Size.Dx / 2)
   rv.fy = float32(rv.room.Size.Dy / 2)
@@ -137,7 +138,7 @@ func (rv *RoomViewer) Drag(dx,dy float64) {
 }
 
 func (rv *RoomViewer) makeMat() {
-  rv.mat, rv.imat, rv.left_wall_mat, rv.left_wall_imat, rv.right_wall_mat, rv.right_wall_imat = makeRoomMats(rv.room, rv.Render_region, rv.fx, rv.fy, rv.angle, rv.zoom)
+  rv.mat, rv.imat, rv.left_wall_mat, rv.left_wall_imat, rv.right_wall_mat, rv.right_wall_imat = makeRoomMats(rv.room.roomDef, rv.Render_region, rv.fx, rv.fy, rv.angle, rv.zoom)
 }
 
 func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom float32) (floor,ifloor,left,ileft,right,iright mathgl.Mat4) {
@@ -198,9 +199,12 @@ func makeRoomMats(room *roomDef, region gui.Region, focusx,focusy,angle,zoom flo
 
 // Transforms a cursor position in window coordinates to board coordinates.
 func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
-  fx,fy,fdist := rv.modelviewToBoard(float32(wx), float32(wy))
-  lbx,lby,ldist := rv.modelviewToLeftWall(float32(wx), float32(wy))
-  rbx,rby,rdist := rv.modelviewToRightWall(float32(wx), float32(wy))
+  return rv.WindowToBoardf(float32(wx), float32(wy))
+}
+func (rv *RoomViewer) WindowToBoardf(wx, wy float32) (float32, float32) {
+  fx,fy,fdist := rv.modelviewToBoard(wx, wy)
+  lbx,lby,ldist := rv.modelviewToLeftWall(wx, wy)
+  rbx,rby,rdist := rv.modelviewToRightWall(wx, wy)
   if fdist < ldist && fdist < rdist {
     if fx > float32(rv.room.Size.Dx) {
       fx = float32(rv.room.Size.Dx)
@@ -217,16 +221,20 @@ func (rv *RoomViewer) WindowToBoard(wx, wy int) (float32, float32) {
 }
 
 func (rv *RoomViewer) BoardToWindow(bx,by float32) (int, int) {
+  x,y := rv.BoardToWindowf(bx, by)
+  return int(x), int(y)
+}
+func (rv *RoomViewer) BoardToWindowf(bx,by float32) (float32, float32) {
   fx,fy,fz := rv.boardToModelview(float32(bx), float32(by))
   lbx,lby,lz := rv.leftWallToModelview(float32(bx), float32(by))
   rbx,rby,rz := rv.rightWallToModelview(float32(bx), float32(by))
   if fz < lz && fz < rz {
-    return int(fx), int(fy)
+    return fx, fy
   }
   if lz < rz {
-    return int(lbx), int(lby)
+    return lbx, lby
   }
-  return int(rbx), int(rby)
+  return rbx, rby
 }
 
 func (rv *RoomViewer) modelviewToLeftWall(mx, my float32) (x,y,dist float32) {
@@ -925,11 +933,25 @@ func (rv *RoomViewer) Draw(region gui.Region) {
     rv.makeMat()
   }
 
+  gl.MatrixMode(gl.MODELVIEW)
+  gl.PushMatrix()
+  defer gl.PopMatrix()
+  gl.LoadIdentity()
+  gl.MultMatrixf(&rv.mat[0])
+
+  // rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
+  rv.room.setupGlStuff()
+  rv.room.far_left.wall_alpha = 255
+  rv.room.far_left.door_alpha = 255
+  rv.room.far_right.wall_alpha = 255
+  rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, 255, nil, nil)
+  return
+
   rv.cstack.Push(1, 1, 1, 1)
   defer rv.cstack.Pop()
   drawPrep()
-  drawWall(&Room{ roomDef: rv.room}, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, rv.cstack, nil, 1.0)
-  drawFloor(&Room{ roomDef: rv.room}, rv.mat, rv.Temp.WallTexture, rv.cstack, nil, 1.0, nil)
+  drawWall(rv.room, rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.Temp.WallTexture, doorInfo{}, rv.cstack, nil, 1.0)
+  drawFloor(rv.room, rv.mat, rv.Temp.WallTexture, rv.cstack, nil, 1.0, nil)
   rv.drawFloor()
   if rv.edit_mode == editCells {
     rv.cstack.Pop()

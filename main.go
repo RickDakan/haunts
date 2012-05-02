@@ -16,6 +16,7 @@ import (
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/house"
 
   // Need to pull in all of the actions we define here and not in
@@ -205,6 +206,19 @@ func main() {
   } ()
   base.Log().Printf("Version %s", Version())
   sys.Startup()
+  err := gl.Init()
+  if err != nil {
+    panic(err)
+  }
+
+  // Startup audio
+  err = base.InitAudio()
+  if err != nil {
+    panic(err)
+  }
+
+  sound.Init()
+  sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
@@ -215,7 +229,6 @@ func main() {
     }
   })
   runtime.GOMAXPROCS(8)
-  var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
@@ -239,7 +252,7 @@ func main() {
       editor.Load(path)
     }
   }
-  editor_name = "house"
+  editor_name = "room"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
   game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
@@ -250,7 +263,6 @@ func main() {
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
   render.Queue(func() {
-    sys.Think()
     ui.Draw()
   })
   render.Purge()
@@ -261,8 +273,8 @@ func main() {
   heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
+    sys.Think()
     render.Queue(func() {
-      sys.Think()
       sys.SwapBuffers()
       ui.Draw()
     })

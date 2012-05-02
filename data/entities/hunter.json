@@ -15,7 +15,7 @@
   "ExplorerEnt": {},
   "Base": {
     "Ap_max": 6,
-    "Hp_max": 20,
+    "Hp_max": 2000,
     "Corpus": 12,
     "Ego": 8,
     "Sight": 30

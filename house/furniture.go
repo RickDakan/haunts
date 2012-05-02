@@ -31,6 +31,13 @@ type Furniture struct {
 
   // Index into furnitureDef.Texture_paths
   Rotation int
+
+  // If this is currently being dragged around it will be marked as temporary
+  // so that it will be drawn differently
+  temporary bool
+
+  // Used to determine how this is drawn as it is being moved in the editor
+  invalid bool
 }
 
 // Changes the position of this object such that it fits within the specified
@@ -47,6 +54,10 @@ func (f *Furniture) Constrain(dx,dy int) {
 
 func (f *Furniture) Pos() (int, int) {
   return f.X, f.Y
+}
+
+func (f *Furniture) FPos() (float64, float64) {
+  return float64(f.X), float64(f.Y)
 }
 
 func (f *Furniture) RotateLeft() {
@@ -79,6 +90,17 @@ type furnitureDef struct {
 func (f *Furniture) Dims() (int, int) {
   orientation := f.Orientations[f.Rotation]
   return orientation.Dx, orientation.Dy
+}
+
+func (f *Furniture) Color() (r,g,b,a byte) {
+  if f.temporary {
+    if f.invalid {
+      return 255, 127, 127, 200
+    } else {
+      return 127, 127, 255, 200
+    }
+  }
+  return 255, 255, 255, 255
 }
 
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {

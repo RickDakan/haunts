@@ -2,7 +2,9 @@ package house
 
 import (
   "fmt"
+  "math"
   "path/filepath"
+  "image"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -19,6 +21,32 @@ type Room struct {
 
   // The offset of this room on this floor
   X,Y int
+
+
+  // whether or not to draw the walls transparent
+  far_left struct {
+    wall_alpha, door_alpha byte
+  }
+  far_right struct {
+    wall_alpha, door_alpha byte
+  }
+
+  // opengl stuff
+  // Vertex buffer storing the vertices of the room as well as the texture
+  // coordinates for the los texture.
+  vbuffer uint32
+
+  // index buffers
+  left_buffer  uint32
+  right_buffer uint32
+  floor_buffer uint32
+
+  // we don't want to redo all of the vertex and index buffers unless we
+  // need to, so we keep track of the position and size of the room when they
+  // were made so we don't have to.
+  gl struct {
+    x, y, dx, dy int
+  }
 }
 
 type WallFacing int
@@ -146,7 +174,7 @@ func (room *Room) canAddDoor(door *Door) bool {
   return true
 }
 
-func (f *Floor) findMatchingDoor(room *Room, door *Door) *Door {
+func (f *Floor) findMatchingDoor(room *Room, door *Door) (*Room, *Door) {
   for _,other_room := range f.Rooms {
     if other_room == room { continue }
     for _,other_door := range other_room.Doors {
@@ -160,17 +188,17 @@ func (f *Floor) findMatchingDoor(room *Room, door *Door) *Door {
       if door.Facing == NearLeft && room.X != other_room.X + other_room.Size.Dx { continue }
       if door.Facing == FarLeft || door.Facing == NearRight {
         if door.Pos == other_door.Pos - (room.X - other_room.X) {
-          return other_door
+          return other_room, other_door
         }
       }
       if door.Facing == FarRight || door.Facing == NearLeft {
         if door.Pos == other_door.Pos - (room.Y - other_room.Y) {
-          return other_door
+          return other_room, other_door
         }
       }
     }
   }
-  return nil
+  return nil, nil
 }
 
 func (f *Floor) findRoomForDoor(target *Room, door *Door) (*Room, *Door) {
@@ -210,7 +238,8 @@ func (f *Floor) canAddDoor(target *Room, door *Door) bool {
 func (f *Floor) removeInvalidDoors() {
   for _,room := range f.Rooms {
     room.Doors = algorithm.Choose(room.Doors, func(a interface{}) bool {
-      return f.findMatchingDoor(room, a.(*Door)) != nil
+      _, other_door := f.findMatchingDoor(room, a.(*Door))
+      return other_door != nil
     }).([]*Door)
   }
 }
@@ -241,6 +270,96 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room_def *roomDef, furn, spawn boo
     return
   }
   return
+}
+
+func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, drawables []Drawable, los_tex *LosTexture) {
+  var ros []RectObject
+  algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
+  ros = OrderRectObjects(ros)
+  alpha_map := make(map[*Room]byte)
+
+  // First pass over the rooms - this will determine at what alpha the rooms
+  // should be draw.  We will use this data later to determine the alpha for
+  // the doors of adjacent rooms.
+  for i := len(ros) - 1; i >= 0; i-- {
+    room := ros[i].(*Room)
+    los_alpha := room.getMaxLosAlpha(los_tex)
+    room.setupGlStuff()
+    tx := (focusx + 3) - float32(room.X + room.Size.Dx)
+    if tx < 0 { tx = 0 }
+    ty := (focusy + 3) - float32(room.Y + room.Size.Dy)
+    if ty < 0 { ty = 0 }
+    if tx < ty {
+      tx = ty
+    }
+    // z := math.Log10(float64(zoom))
+    z := float64(zoom) / 10
+    v := math.Pow(z, float64(2 * tx) / 3)
+    if v > 255 {
+      v = 255
+    }
+    bv := 255 - byte(v)
+    alpha_map[room] = byte((int(bv) * int(los_alpha)) >> 8)
+    // room.render(floor, left, right, , 255)
+  }
+
+  // Second pass - this time we fill in the alpha that we should use for the
+  // doors, using the values we've already calculated in the first pass.
+  for _, r1 := range f.Rooms {
+    // It is possible that we get two doors to different rooms on one wall,
+    // and we might display them with the same alpha even though the rooms
+    // they are attached to have different alpha.  This is probably not a
+    // big deal so we'll just ignore it.
+    for _, door := range r1.Doors {
+      r2, _ := f.findMatchingDoor(r1, door)
+      if r2 == nil { continue }
+      // alpha := alpha_map[r2]
+      // base.Log().Printf("%p %p %d %d", r1, r2, alpha, door.Facing)
+      left, right := r2.getNearWallAlpha(los_tex)
+      switch door.Facing {
+      case FarLeft:
+        // if left > alpha {
+          r1.far_left.door_alpha = left
+        // } else {
+        //   r1.far_left.door_alpha = alpha
+        // }
+      case FarRight:
+        // if right > alpha {
+          r1.far_right.door_alpha = right
+        // } else {
+        //   r1.far_right.door_alpha = alpha
+        // }
+      }
+    }
+
+    r1.far_right.wall_alpha = 255
+    r1.far_left.wall_alpha = 255
+    for _, r2 := range f.Rooms {
+      if r1 == r2 { continue }
+      left, right := r2.getNearWallAlpha(los_tex)
+      r1_rect := image.Rect(r1.X, r1.Y + r1.Size.Dy, r1.X + r1.Size.Dx, r1.Y + r1.Size.Dy + 1)
+      r2_rect := image.Rect(r2.X, r2.Y, r2.X + r2.Size.Dx, r2.Y + r2.Size.Dy)
+      if r1_rect.Overlaps(r2_rect) {
+        r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
+      }
+      r1_rect = image.Rect(r1.X + r1.Size.Dx, r1.Y, r1.X + r1.Size.Dx + 1, r1.Y + r1.Size.Dy)
+      if r1_rect.Overlaps(r2_rect) {
+        r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
+      }
+    }
+  }
+
+  // Third pass - now that we know what alpha to use on the rooms, walls, and
+  // doors we can actually render everything.  We still need to go back to
+  // front though.
+  for i := len(ros) - 1; i >= 0; i-- {
+    room := ros[i].(*Room)
+    fx := focusx - float32(room.X)
+    fy := focusy - float32(room.Y)
+    floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
+    v := alpha_map[room]
+    room.render(floor, left, right, v, drawables, los_tex)
+  }
 }
 
 type HouseDef struct {
@@ -704,6 +823,7 @@ func MakeHouseEditorPanel() Editor {
 // Manually pass all events to the tabs, regardless of location, since the tabs
 // need to know where the user clicks.
 func (he *HouseEditor) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  he.viewer.Respond(ui, group)
   return he.widgets[he.tab.SelectedTab()].Respond(ui, group)
 }
 

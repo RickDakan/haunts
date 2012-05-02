@@ -100,6 +100,9 @@ func (sp *SpawnPoint) Pos() (int,int) {
 func (sp *SpawnPoint) FPos() (float64,float64) {
   return float64(sp.X), float64(sp.Y)
 }
+func (sp *SpawnPoint) Color() (r,g,b,a byte) {
+  return 255, 255, 255, 255
+}
 func (sp *SpawnPoint) Render(pos mathgl.Vec2, width float32) {
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 0.1)
