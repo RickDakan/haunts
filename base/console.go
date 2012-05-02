@@ -21,7 +21,8 @@ type Console struct {
   xscroll float64
 
   input *bufio.Reader
-  cmd []byte
+  cmd   []byte
+  dict  *gui.Dictionary
 }
 
 func MakeConsole() *Console {
@@ -33,6 +34,7 @@ func MakeConsole() *Console {
   c.BasicZone.Ey = true
   c.BasicZone.Request_dims = gui.Dims{ 1000, 1000 }
   c.input = bufio.NewReaderSize(log_reader, 1024)
+  c.dict = GetDictionary(12)
   return &c
 }
 
@@ -98,8 +100,7 @@ func (c *Console) DrawFocused(region gui.Region) {
     gl.Vertex2i(region.X + region.Dx, region.Y)
   gl.End()
   gl.Color4d(1, 1, 1, 1)
-  d := GetDictionary(12)
-  y := float64(region.Y) + float64(len(c.lines)) * d.MaxHeight()
+  y := float64(region.Y) + float64(len(c.lines)) * c.dict.MaxHeight()
   do_color := func(line string) {
     if strings.HasPrefix(line, "LOG") {
       gl.Color4d(1, 1, 1, 1)
@@ -114,20 +115,20 @@ func (c *Console) DrawFocused(region gui.Region) {
   if c.start > c.end {
     for i := c.start; i < len(c.lines); i++ {
       do_color(c.lines[i])
-      d.RenderString(c.lines[i], c.xscroll, y, 0, d.MaxHeight(), gui.Left)
-      y -= d.MaxHeight()
+      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
+      y -= c.dict.MaxHeight()
     }
     for i := 0; i < c.end; i++ {
       do_color(c.lines[i])
-      d.RenderString(c.lines[i], c.xscroll, y, 0, d.MaxHeight(), gui.Left)
-      y -= d.MaxHeight()
+      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
+      y -= c.dict.MaxHeight()
     }
   } else {
     for i := c.start; i < c.end && i < len(c.lines); i++ {
       do_color(c.lines[i])
-      d.RenderString(c.lines[i], c.xscroll, y, 0, d.MaxHeight(), gui.Left)
-      y -= d.MaxHeight()
+      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
+      y -= c.dict.MaxHeight()
     }
   }
-  d.RenderString(string(c.cmd), c.xscroll, y, 0, d.MaxHeight(), gui.Left)
+  c.dict.RenderString(string(c.cmd), c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
 }
