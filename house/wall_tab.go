@@ -81,6 +81,10 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     if w.wall_texture != nil {
       if w.prev_wall_texture != nil {
         *w.wall_texture = *w.prev_wall_texture
+
+        // // Just need to change something in the WT's cache to force it to redo
+        // // its opengl stuff
+        // w.wall_texture.gl.flip = !w.wall_texture.Flip
       } else {
         algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
           return wt != w.wall_texture

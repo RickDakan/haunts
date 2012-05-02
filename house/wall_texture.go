@@ -28,6 +28,27 @@ func (wt *WallTexture) Load() {
   base.GetObject("wall_textures", wt)
 }
 
+type wallTextureGlIds struct {
+  vbuffer uint32
+
+  left_buffer uint32
+  left_count gl.Sizei
+  right_buffer uint32
+  right_count gl.Sizei
+  floor_buffer uint32
+  floor_count gl.Sizei
+}
+
+type wallTextureState struct {
+  // for tracking whether the buffers are dirty
+  x, y, rot float32
+  flip bool
+  room struct {
+    x, y, dx, dy int
+  }
+}
+
+
 type WallTexture struct {
   Defname string
   *wallTextureDef
@@ -45,28 +66,6 @@ type WallTexture struct {
   // If this is currently being dragged around it will be marked as temporary
   // so that it will be drawn differently
   temporary bool
-
-  // we don't want to redo all of the vertex and index buffers unless we
-  // need to, so we keep track of the position and size of the room when they
-  // were made so we don't have to.
-  // TODO: We need to have finalizers on WallTextures to release opengl memory
-  gl struct {
-    vbuffer uint32
-
-    left_buffer uint32
-    left_count gl.Sizei
-    right_buffer uint32
-    right_count gl.Sizei
-    floor_buffer uint32
-    floor_count gl.Sizei
-
-    // for tracking whether the buffers are dirty
-    x, y, rot float32
-    flip bool
-    room struct {
-      x, y, dx, dy int
-    }
-  }
 }
 
 type wallTextureDef struct {
@@ -92,39 +91,17 @@ func (wt *WallTexture) Render() {
 
 
 
-func (wt *WallTexture) setupGlStuff(room *Room) {
-  dirty := false
-  if wt.gl.room.x != room.X { dirty = true }
-  if wt.gl.room.y != room.Y { dirty = true }
-  if wt.gl.room.dx != room.Size.Dx { dirty = true }
-  if wt.gl.room.dy != room.Size.Dy { dirty = true }
-  if wt.gl.x != wt.X { dirty = true }
-  if wt.gl.y != wt.Y { dirty = true }
-  if wt.gl.rot != wt.Rot { dirty = true }
-  if wt.gl.flip != wt.Flip { dirty = true }
-  if wt.gl.vbuffer == 0 { dirty = true }
-  if !dirty {
-    return
-  }
+func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) {
   base.Log().Printf("Wall texture setup gl")
-  wt.gl.room.x = room.X
-  wt.gl.room.y = room.Y
-  wt.gl.room.dx = room.Size.Dx
-  wt.gl.room.dy = room.Size.Dy
-  wt.gl.x = wt.X
-  wt.gl.y = wt.Y
-  wt.gl.rot = wt.Rot
-  wt.gl.flip = wt.Flip
-
-  if wt.gl.vbuffer != 0 {
-    gl.DeleteBuffers(1, &wt.gl.vbuffer)
-    gl.DeleteBuffers(1, &wt.gl.left_buffer)
-    gl.DeleteBuffers(1, &wt.gl.right_buffer)
-    gl.DeleteBuffers(1, &wt.gl.floor_buffer)
-    wt.gl.vbuffer = 0
-    wt.gl.left_buffer = 0
-    wt.gl.right_buffer = 0
-    wt.gl.floor_buffer = 0
+  if gl_ids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &gl_ids.vbuffer)
+    gl.DeleteBuffers(1, &gl_ids.left_buffer)
+    gl.DeleteBuffers(1, &gl_ids.right_buffer)
+    gl.DeleteBuffers(1, &gl_ids.floor_buffer)
+    gl_ids.vbuffer = 0
+    gl_ids.left_buffer = 0
+    gl_ids.right_buffer = 0
+    gl_ids.floor_buffer = 0
   }
 
   // All vertices for both walls and the floor will go here and get sent to
@@ -132,10 +109,10 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   var vs []roomVertex
 
   // Conveniently casted values
-  frx := float32(room.X)
-  fry := float32(room.Y)
-  frdx := float32(room.Size.Dx)
-  frdy := float32(room.Size.Dy)
+  frx := float32(x)
+  fry := float32(y)
+  frdx := float32(dx)
+  frdy := float32(dy)
   tdx := float32(wt.Texture.Data().Dx()) / 100
   tdy := float32(wt.Texture.Data().Dy()) / 100
 
@@ -160,7 +137,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   run.Multiply(&m)
   m.RotationZ(wtr)
   run.Multiply(&m)
-  if wt.gl.flip {
+  if wt.Flip {
     m.Scaling(-1, 1)
     run.Multiply(&m)
   }
@@ -180,10 +157,10 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
       is = append(is, uint16(len(vs) + i))
       is = append(is, uint16(len(vs) + i + 1))
     }
-    gl.GenBuffers(1, &wt.gl.floor_buffer)
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+    gl.GenBuffers(1, &gl_ids.floor_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.floor_buffer)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-    wt.gl.floor_count = gl.Sizei(len(is))
+    gl_ids.floor_count = gl.Sizei(len(is))
 
     run.Inverse()
     for i := range p {
@@ -194,8 +171,8 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
         y: p[i].Y,
         u: v.X / tdx + 0.5,
         v: -(v.Y / tdy + 0.5),
-        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
-        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+        los_u: (fry + p[i].Y) / LosTextureSize,
+        los_v: (frx + p[i].X) / LosTextureSize,
       })
     }
   }
@@ -212,7 +189,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   run.Multiply(&m)
   m.RotationZ(wtr)
   run.Multiply(&m)
-  if wt.gl.flip {
+  if wt.Flip {
     m.Scaling(-1, 1)
     run.Multiply(&m)
   }
@@ -231,10 +208,10 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
       is = append(is, uint16(len(vs) + i))
       is = append(is, uint16(len(vs) + i + 1))
     }
-    gl.GenBuffers(1, &wt.gl.left_buffer)
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+    gl.GenBuffers(1, &gl_ids.left_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.left_buffer)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-    wt.gl.left_count = gl.Sizei(len(is))
+    gl_ids.left_count = gl.Sizei(len(is))
 
     run.Inverse()
     for i := range p {
@@ -247,7 +224,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
         u: v.X / tdx + 0.5,
         v: -(v.Y / tdy + 0.5),
         los_u: (fry + frdy - 0.5) / LosTextureSize,
-        los_v: (p[i].X + float32(room.X)) / LosTextureSize,
+        los_v: (frx + p[i].X) / LosTextureSize,
       })
     }
   }
@@ -265,7 +242,7 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
   run.Multiply(&m)
   m.RotationZ(wtr)
   run.Multiply(&m)
-  if wt.gl.flip {
+  if wt.Flip {
     m.Scaling(-1, 1)
     run.Multiply(&m)
   }
@@ -284,10 +261,10 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
       is = append(is, uint16(len(vs) + i))
       is = append(is, uint16(len(vs) + i + 1))
     }
-    gl.GenBuffers(1, &wt.gl.right_buffer)
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+    gl.GenBuffers(1, &gl_ids.right_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.right_buffer)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-    wt.gl.right_count = gl.Sizei(len(is))
+    gl_ids.right_count = gl.Sizei(len(is))
 
     run.Inverse()
     for i := range p {
@@ -299,15 +276,15 @@ func (wt *WallTexture) setupGlStuff(room *Room) {
         z: frdx - p[i].X,
         u: v.X / tdx + 0.5,
         v: -(v.Y / tdy + 0.5),
-        los_u: (p[i].Y + float32(room.Y)) / LosTextureSize,
+        los_u: (fry + p[i].Y) / LosTextureSize,
         los_v: (frx + frdx - 0.5) / LosTextureSize,
       })
     }
   }
 
   if len(vs) > 0 {
-    gl.GenBuffers(1, &wt.gl.vbuffer)
-    gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+    gl.GenBuffers(1, &gl_ids.vbuffer)
+    gl.BindBuffer(gl.ARRAY_BUFFER, gl_ids.vbuffer)
     size := int(unsafe.Sizeof(roomVertex{}))
     gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
   }

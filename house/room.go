@@ -370,32 +370,51 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     }
   }
 
-  for _, wt := range room.getWallTextures() {
-    wt.setupGlStuff(room)
+  for _, wt := range room.WallTextures {
+    if room.wall_texture_gl_map == nil {
+      room.wall_texture_gl_map = make(map[*WallTexture]wallTextureGlIds)
+      room.wall_texture_state_map = make(map[*WallTexture]wallTextureState)
+    }
+    ids := room.wall_texture_gl_map[wt]
+    state := room.wall_texture_state_map[wt]
+    var new_state wallTextureState
+    new_state.flip = wt.Flip
+    new_state.rot = wt.Rot
+    new_state.x = wt.X
+    new_state.y = wt.Y
+    new_state.room.x = room.X
+    new_state.room.y = room.Y
+    new_state.room.dx = room.Size.Dx
+    new_state.room.dy = room.Size.Dy
+    if new_state != state {
+      wt.setupGlStuff(room.X, room.Y, room.Size.Dx, room.Size.Dy, &ids)
+      room.wall_texture_gl_map[wt] = ids
+      room.wall_texture_state_map[wt] = new_state
+    }
     gl.LoadMatrixf(&floor[0])
-    if wt.gl.vbuffer != 0 {
+    if ids.vbuffer != 0 {
       wt.Texture.Data().Bind()
       R, G, B, A := wt.Color()
-      gl.BindBuffer(gl.ARRAY_BUFFER, wt.gl.vbuffer)
+      gl.BindBuffer(gl.ARRAY_BUFFER, ids.vbuffer)
       gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
       gl.ClientActiveTexture(gl.TEXTURE1)
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
       gl.ClientActiveTexture(gl.TEXTURE0)
-      if wt.gl.floor_buffer != 0 {
-        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.floor_buffer)
+      if ids.floor_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.floor_buffer)
         gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
-        gl.DrawElements(gl.TRIANGLES, wt.gl.floor_count, gl.UNSIGNED_SHORT, nil)
+        gl.DrawElements(gl.TRIANGLES, ids.floor_count, gl.UNSIGNED_SHORT, nil)
       }
-      if wt.gl.left_buffer != 0 {
-        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.left_buffer)
+      if ids.left_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.left_buffer)
         gl.Color4ub(R, G, B, alphaMult(A, left_alpha))
-        gl.DrawElements(gl.TRIANGLES, wt.gl.left_count, gl.UNSIGNED_SHORT, nil)
+        gl.DrawElements(gl.TRIANGLES, ids.left_count, gl.UNSIGNED_SHORT, nil)
       }
-      if wt.gl.right_buffer != 0 {
-        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, wt.gl.right_buffer)
+      if ids.right_buffer != 0 {
+        gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.right_buffer)
         gl.Color4ub(R, G, B, alphaMult(A, right_alpha))
-        gl.DrawElements(gl.TRIANGLES, wt.gl.right_count, gl.UNSIGNED_SHORT, nil)
+        gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
       }
     }
   }
