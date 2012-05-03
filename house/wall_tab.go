@@ -63,6 +63,20 @@ func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
   return nil
 }
 
+func (w *WallPanel) onEscape() {
+  if w.wall_texture != nil {
+    if w.prev_wall_texture != nil {
+      *w.wall_texture = *w.prev_wall_texture
+    } else {
+      algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
+        return wt != w.wall_texture
+      })
+    }
+  }
+  w.wall_texture = nil
+  w.prev_wall_texture = nil
+}
+
 func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
@@ -78,21 +92,7 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.wall_texture != nil {
-      if w.prev_wall_texture != nil {
-        *w.wall_texture = *w.prev_wall_texture
-
-        // // Just need to change something in the WT's cache to force it to redo
-        // // its opengl stuff
-        // w.wall_texture.gl.flip = !w.wall_texture.Flip
-      } else {
-        algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
-          return wt != w.wall_texture
-        })
-      }
-    }
-    w.wall_texture = nil
-    w.prev_wall_texture = nil
+    w.onEscape()
     return true
   }
 
@@ -142,16 +142,13 @@ func (w *WallPanel) Think(ui *gui.Gui, t int64) {
 }
 
 func (w *WallPanel) Collapse() {
-  if w.viewer.Temp.WallTexture != nil && w.prev_wall_texture != nil {
-    w.room.WallTextures = append(w.room.WallTextures, w.prev_wall_texture)
-  }
-  w.prev_wall_texture = nil
-  w.viewer.Temp.WallTexture = nil
+  w.onEscape()
 }
 
 func (w *WallPanel) Expand() {
 }
 
 func (w *WallPanel) Reload() {
+  w.onEscape()
 }
 

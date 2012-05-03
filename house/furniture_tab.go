@@ -32,11 +32,7 @@ type FurniturePanel struct {
 }
 
 func (w *FurniturePanel) Collapse() {
-  w.Room.Furniture = algorithm.Choose(w.Room.Furniture, func(a interface{}) bool {
-    return a.(*Furniture) != w.prev_object
-  }).([]*Furniture)
-  w.prev_object = nil
-  w.furniture = nil
+  w.onEscape()
 }
 func (w *FurniturePanel) Expand() {
   w.RoomViewer.SetEditMode(editFurniture)
@@ -98,6 +94,20 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
   return &fp
 }
 
+func (w *FurniturePanel) onEscape() {
+  if w.furniture != nil {
+    if w.prev_object != nil {
+      *w.furniture = *w.prev_object
+      w.prev_object = nil
+    } else {
+      algorithm.Choose2(&w.Room.Furniture, func(f *Furniture) bool {
+        return f != w.furniture
+      })
+    }
+    w.furniture = nil
+  }
+}
+
 func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
@@ -107,17 +117,7 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   // and what state it was in before we selected it.  If we don't have any
   // furniture selected then we don't do anything.
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.furniture != nil {
-      if w.prev_object != nil {
-        *w.furniture = *w.prev_object
-        w.prev_object = nil
-      } else {
-        algorithm.Choose2(&w.Room.Furniture, func(f *Furniture) bool {
-          return f != w.furniture
-        })
-      }
-      w.furniture = nil
-    }
+    w.onEscape()
     return true
   }
 
@@ -180,6 +180,7 @@ func (w *FurniturePanel) Reload() {
   w.name.SetText(w.Room.Name)
   w.floor_path.SetPath(w.Room.Floor.Path.String())
   w.wall_path.SetPath(w.Room.Wall.Path.String())
+  w.onEscape()
 }
 
 func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {

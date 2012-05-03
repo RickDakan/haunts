@@ -182,13 +182,10 @@ func roomOverlap(a,b *Room) bool {
   return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
 }
 
-func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, Door) {
+func (hv *HouseViewer) FindClosestDoorPos(door *Door, bx,by float32) (*Room) {
   current_floor := 0
   best := 1.0e9  // If this is unsafe then the house is larger than earth
   var best_room *Room
-  var best_door Door
-  best_door.Defname = ddef.Name
-  best_door.doorDef = ddef
 
   clamp_int := func(n, min, max int) int {
     if n < min { return min }
@@ -215,17 +212,17 @@ func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, 
     switch {
       case fl < fr:
         best = fl
-        best_door.Facing = FarLeft
-        best_door.Pos = clamp_int(int(bx - float32(room.X) - float32(ddef.Width) / 2), 0, room.Size.Dx - ddef.Width)
+        door.Facing = FarLeft
+        door.Pos = clamp_int(int(bx - float32(room.X) - float32(door.Width) / 2), 0, room.Size.Dx - door.Width)
 
 //      case fr < fl:  this case must be true, so we just call it default here
       default:
         best = fr
-        best_door.Facing = FarRight
-        best_door.Pos = clamp_int(int(by - float32(room.Y) - float32(ddef.Width) / 2), 0, room.Size.Dy - ddef.Width)
+        door.Facing = FarRight
+        door.Pos = clamp_int(int(by - float32(room.Y) - float32(door.Width) / 2), 0, room.Size.Dy - door.Width)
     }
   }
-  return best_room, best_door
+  return best_room
 }
 
 func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {

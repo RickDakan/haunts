@@ -104,6 +104,8 @@ type Door struct {
 
   // Whether or not the door is opened - determines what texture to use
   Opened bool
+
+  temporary, invalid bool
 }
 
 func (d *Door) TextureData() *texture.Data {
@@ -111,6 +113,17 @@ func (d *Door) TextureData() *texture.Data {
     return d.Opened_texture.Data()
   }
   return d.Closed_texture.Data()
+}
+
+func (d *Door) Color() (r,g,b,a byte) {
+  if d.temporary {
+    if d.invalid {
+      return 255, 127, 127, 200
+    } else {
+      return 127, 127, 255, 200
+    }
+  }
+  return 255, 255, 255, 255
 }
 
 func (r *Room) Pos() (x,y int) {
@@ -140,9 +153,7 @@ func (f *Floor) canAddRoom(add *Room) bool {
 }
 
 func (room *Room) canAddDoor(door *Door) bool {
-  if door.Pos < 0 {
-    return false
-  }
+  if door.Pos < 0 { return false }
 
   // Make sure that the door only occupies valid cells
   if door.Facing == FarLeft || door.Facing == NearRight {
@@ -155,6 +166,7 @@ func (room *Room) canAddDoor(door *Door) bool {
   // Now make sure that the door doesn't overlap any other doors
   for _,other := range room.Doors {
     if other.Facing != door.Facing { continue }
+    if other.temporary { continue }
     if other.Pos >= door.Pos && other.Pos - door.Pos < door.Width { return false }
     if door.Pos >= other.Pos && door.Pos - other.Pos < other.Width { return false }
   }
@@ -227,7 +239,7 @@ func (f *Floor) removeInvalidDoors() {
   for _,room := range f.Rooms {
     room.Doors = algorithm.Choose(room.Doors, func(a interface{}) bool {
       _, other_door := f.findMatchingDoor(room, a.(*Door))
-      return other_door != nil
+      return other_door != nil && !other_door.temporary
     }).([]*Door)
   }
 }
@@ -535,6 +547,12 @@ type houseDoorTab struct {
 
   // Which floor we are viewing and editing
   current_floor int
+
+  // board pos of the cursor
+  bx, by float32
+
+  room, prev_room *Room
+  door, prev_door *Door
 }
 func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   var hdt houseDoorTab
@@ -546,7 +564,13 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   for _,name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      hdt.viewer.Temp.Door_info.Door = MakeDoor(n)
+      if len(hdt.house.Floors[0].Rooms) < 2 {
+        return
+      }
+      hdt.door = MakeDoor(n)
+      hdt.door.temporary = true
+      hdt.door.invalid = true
+      hdt.room = hdt.house.Floors[0].Rooms[0]
     }))
   }
 
@@ -554,44 +578,77 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
 }
 func (hdt *houseDoorTab) Think(ui *gui.Gui, t int64) {
 }
+func (hdt *houseDoorTab) onEscape() {
+  if hdt.door != nil {
+    if hdt.room != nil {
+      algorithm.Choose2(&hdt.room.Doors, func(d *Door) bool {
+        return d != hdt.door
+      })
+    }
+    if hdt.prev_door != nil {
+      hdt.prev_room.Doors = append(hdt.prev_room.Doors, hdt.prev_door)
+      hdt.prev_door = nil
+      hdt.prev_room = nil
+    }
+    hdt.door = nil
+    hdt.room = nil
+  }
+}
 func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if hdt.VerticalTable.Respond(ui, group) {
     return true
   }
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    hdt.viewer.Temp.Door_info.Door = nil
+    hdt.onEscape()
     return true
   }
 
   cursor := group.Events[0].Key.Cursor()
-  if cursor != nil && hdt.viewer.Temp.Door_info.Door != nil {
-    bx,by := hdt.viewer.WindowToBoard(cursor.Point())
-    room, door_inst := hdt.viewer.FindClosestDoorPos(hdt.viewer.Temp.Door_info.Door.doorDef, bx, by)
-    hdt.viewer.Temp.Door_room = room
-    hdt.viewer.Temp.Door_info.Door = &door_inst
+  if cursor != nil {
+    hdt.bx, hdt.by = hdt.viewer.WindowToBoard(cursor.Point())
+  }
+  if cursor != nil && hdt.door != nil {
+    room := hdt.viewer.FindClosestDoorPos(hdt.door, hdt.bx, hdt.by)
+    if room != hdt.room {
+      algorithm.Choose2(&hdt.room.Doors, func(d *Door) bool {
+        return d != hdt.door
+      })
+      hdt.room = room
+      hdt.door.invalid = (hdt.room == nil)
+      hdt.room.Doors = append(hdt.room.Doors, hdt.door)
+    }
+    if hdt.room == nil {
+      hdt.door.invalid = true
+    } else {
+      other_room, _ := hdt.house.Floors[0].findRoomForDoor(hdt.room, hdt.door)
+      hdt.door.invalid = (other_room == nil)
+    }
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if hdt.viewer.Temp.Door_info.Door != nil {
-      other_room, other_door := floor.findRoomForDoor(hdt.viewer.Temp.Door_room, hdt.viewer.Temp.Door_info.Door)
+    if hdt.door != nil {
+      other_room, other_door := floor.findRoomForDoor(hdt.room, hdt.door)
       if other_room != nil {
         other_room.Doors = append(other_room.Doors, other_door)
-        hdt.viewer.Temp.Door_room.Doors = append(hdt.viewer.Temp.Door_room.Doors, hdt.viewer.Temp.Door_info.Door)
-        hdt.viewer.Temp.Door_room = nil
-        hdt.viewer.Temp.Door_info.Door = nil
+        hdt.door.temporary = false
+        hdt.door = nil
+        hdt.prev_door = nil
       }
     } else {
-      bx,by := hdt.viewer.WindowToBoard(cursor.Point())
-      r,d := hdt.viewer.FindClosestExistingDoor(bx, by)
-      if r != nil {
-        r.Doors = algorithm.Choose(r.Doors, func(a interface{}) bool {
-          return a.(*Door) != d
-        }).([]*Door)
-        hdt.viewer.Temp.Door_room = r
-        hdt.viewer.Temp.Door_info.Door = d
-        floor.removeInvalidDoors()
+      hdt.room, hdt.door = hdt.viewer.FindClosestExistingDoor(hdt.bx, hdt.by)
+      if hdt.door != nil {
+        hdt.prev_door = new(Door)
+        *hdt.prev_door = *hdt.door
+        hdt.prev_room = hdt.room
+        hdt.door.temporary = true
+        room, door := hdt.house.Floors[0].findMatchingDoor(hdt.room, hdt.door)
+        if room != nil {
+          algorithm.Choose2(&room.Doors, func(d *Door) bool {
+            return d != door
+          })
+        }
       }
     }
     return true
@@ -599,9 +656,13 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   return false
 }
-func (hdt *houseDoorTab) Collapse() {}
+func (hdt *houseDoorTab) Collapse() {
+  hdt.onEscape()
+}
 func (hdt *houseDoorTab) Expand() {}
-func (hdt *houseDoorTab) Reload() {}
+func (hdt *houseDoorTab) Reload() {
+  hdt.onEscape()
+}
 
 type houseRelicsTab struct {
   *gui.VerticalTable
@@ -838,5 +899,8 @@ func (he *HouseEditor) Reload() {
     for i := range floor.Rooms {
       base.GetObject("rooms", floor.Rooms[i])
     }
+  }
+  for _,tab := range he.widgets {
+    tab.Reload()
   }
 }

@@ -295,11 +295,11 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       case &left:
       gl.StencilFunc(gl.ALWAYS, 1, 1)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-      gl.Color4ub(255, 255, 255, left_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
         if door.Facing != FarLeft { continue }
 
+        run.Assign(&floor)
         mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
         run.Multiply(&mul)
         mul.RotationX(-3.1415926535 / 2)
@@ -308,6 +308,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        R, G, B, A := door.Color()
+        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
         door.TextureData().Render(0, 0, dx, dy)
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
@@ -321,6 +323,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
         door.TextureData().Bind()
         if door.Facing != FarRight { continue }
 
+        run.Assign(&floor)
         mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
         run.Multiply(&mul)
         mul.RotationX(-3.1415926535 / 2)
@@ -331,6 +334,8 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
+        R, G, B, A := door.Color()
+        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
         door.TextureData().Render(0, 0, dx, dy)
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
@@ -344,6 +349,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
 
 
     // Now draw the walls
+    gl.Color4ub(255, 255, 255, left_alpha)
     gl.LoadMatrixf(&floor[0])
     plane.texture.Data().Bind()
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
@@ -696,6 +702,9 @@ func (rep *RoomEditorPanel) Save() (string, error) {
 }
 
 func (rep *RoomEditorPanel) Reload() {
+  for _,tab := range rep.widgets {
+    tab.Reload()
+  }
 }
 
 type selectMode int
