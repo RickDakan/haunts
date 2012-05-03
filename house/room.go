@@ -237,6 +237,11 @@ func alphaMult(a, b byte) byte {
 
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawer FloorDrawer) {
+  do_color := func(r, g, b, a byte) {
+    R, G, B, A := room.Color()
+    A = alphaMult(A, base_alpha)
+    gl.Color4ub(alphaMult(R, r), alphaMult(G, g), alphaMult(B, b), alphaMult(A, a))
+  }
   gl.Enable(gl.TEXTURE_2D)
   gl.Enable(gl.BLEND)
   gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -309,7 +314,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         R, G, B, A := door.Color()
-        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
+        do_color(R, G, B, alphaMult(A, current_alpha))
         door.TextureData().Render(0, 0, dx, dy)
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
@@ -335,7 +340,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
         dx := float64(door.Width)
         dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         R, G, B, A := door.Color()
-        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
+        do_color(R, G, B, alphaMult(A, current_alpha))
         door.TextureData().Render(0, 0, dx, dy)
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
@@ -344,12 +349,12 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       case &floor:
       gl.StencilFunc(gl.ALWAYS, 2, 2)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-      gl.Color4ub(255, 255, 255, current_alpha)
+      do_color(255, 255, 255, current_alpha)
     }
 
 
     // Now draw the walls
-    gl.Color4ub(255, 255, 255, left_alpha)
+    do_color(255, 255, 255, left_alpha)
     gl.LoadMatrixf(&floor[0])
     plane.texture.Data().Bind()
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
@@ -409,17 +414,17 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       gl.ClientActiveTexture(gl.TEXTURE0)
       if ids.floor_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.floor_buffer)
-        gl.Color4ub(R, G, B, alphaMult(A, current_alpha))
+        do_color(R, G, B, alphaMult(A, current_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.floor_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.left_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.left_buffer)
-        gl.Color4ub(R, G, B, alphaMult(A, left_alpha))
+        do_color(R, G, B, alphaMult(A, left_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.left_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.right_buffer != 0 {
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.right_buffer)
-        gl.Color4ub(R, G, B, alphaMult(A, right_alpha))
+        do_color(R, G, B, alphaMult(A, right_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
       }
     }
@@ -438,7 +443,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
     floor_drawer.RenderOnFloor(room)
   }
-  gl.Color4ub(255, 255, 255, 255)
+  do_color(255, 255, 255, 255)
   gl.LoadIdentity()
   gl.Disable(gl.STENCIL_TEST)
   room.renderFurniture(floor, base_alpha, drawables, los_tex)
