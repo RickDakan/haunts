@@ -9,6 +9,7 @@ import (
   "math"
   "strings"
   "unsafe"
+  "image"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
@@ -414,16 +415,19 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
       gl.ClientActiveTexture(gl.TEXTURE0)
       if ids.floor_buffer != 0 {
+        gl.StencilFunc(gl.ALWAYS, 2, 2)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.floor_buffer)
         do_color(R, G, B, alphaMult(A, current_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.floor_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.left_buffer != 0 {
+        gl.StencilFunc(gl.NOTEQUAL, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.left_buffer)
         do_color(R, G, B, alphaMult(A, left_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.left_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.right_buffer != 0 {
+        gl.StencilFunc(gl.NOTEQUAL, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.right_buffer)
         do_color(R, G, B, alphaMult(A, right_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
@@ -439,33 +443,22 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
     gl.ClientActiveTexture(gl.TEXTURE0)
   }
-  // do_color(100,200,50,200)
-  // base.EnableShader("box")
-  // base.SetUniformF("box", "dx", 3.0)
-  // base.SetUniformF("box", "dy", 5.0)
-  // (&texture.Object{}).Data().Render(1, 2, 3, 5)
-  // base.SetUniformF("box", "dx", 7.0)
-  // base.SetUniformF("box", "dy", 2.0)
-  // (&texture.Object{}).Data().Render(4, 1, 7, 2)
-  // base.EnableShader("")
+
   run.Assign(&floor)
   mul.Translation(float32(-room.X), float32(-room.Y), 0)
   run.Multiply(&mul)
   gl.LoadMatrixf(&run[0])
-  gl.StencilFunc(gl.EQUAL, 2, 2)
+  gl.StencilFunc(gl.EQUAL, 2, 3)
   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+  room_rect := image.Rect(room.X, room.Y, room.X + room.Size.Dx, room.Y + room.Size.Dy)
   for _, fd := range floor_drawers {
     x, y := fd.Pos()
-    if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
+    dx, dy := fd.Dims()
+    if room_rect.Overlaps(image.Rect(x, y, x + dx, y + dy)) {
       fd.RenderOnFloor()
     }
   }
 
-  // if floor_drawer != nil {
-  //   gl.StencilFunc(gl.EQUAL, 2, 2)
-  //   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-  //   floor_drawer.RenderOnFloor(room)
-  // }
   do_color(255, 255, 255, 255)
   gl.LoadIdentity()
   gl.Disable(gl.STENCIL_TEST)

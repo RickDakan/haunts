@@ -64,10 +64,13 @@ func (a *Move) AP() int {
   return a.cost
 }
 func (a *Move) Pos() (int, int) {
-  return 0, 0
+  if a.ent == nil {
+    return 0, 0
+  }
+  return a.ent.Pos()
 }
 func (a *Move) Dims() (int, int) {
-  return 0, 0
+  return house.LosTextureSize, house.LosTextureSize
 }
 func (a *Move) String() string {
   return a.Name
