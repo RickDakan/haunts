@@ -6,7 +6,6 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
@@ -60,6 +59,12 @@ type summonActionInst struct {
 func (a *SummonAction) AP() int {
   return a.Ap
 }
+func (a *SummonAction) Pos() (int, int) {
+  return 0, 0
+}
+func (a *SummonAction) Dims() (int, int) {
+  return 0, 0
+}
 func (a *SummonAction) String() string {
   return a.Name
 }
@@ -107,7 +112,7 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) game.Inpu
   }
   return game.NotConsumed
 }
-func (a *SummonAction) RenderOnFloor(room *house.Room) {
+func (a *SummonAction) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
   gl.Color4d(1.0, 0.2, 0.2, 0.8)

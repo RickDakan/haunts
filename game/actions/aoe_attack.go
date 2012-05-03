@@ -7,7 +7,6 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
@@ -67,6 +66,12 @@ type aoeAttackInst struct {
 func (a *AoeAttack) AP() int {
   return a.Ap
 }
+func (a *AoeAttack) Pos() (int, int) {
+  return 0, 0
+}
+func (a *AoeAttack) Dims() (int, int) {
+  return 0, 0
+}
 func (a *AoeAttack) String() string {
   return a.Name
 }
@@ -122,7 +127,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
   }
   return game.NotConsumed
 }
-func (a *AoeAttack) RenderOnFloor(room *house.Room) {
+func (a *AoeAttack) RenderOnFloor() {
   ex,ey := a.ent.Pos()
   if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
     gl.Color4d(1.0, 0.2, 0.2, 0.8)

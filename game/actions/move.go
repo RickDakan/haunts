@@ -63,6 +63,12 @@ type MoveDef struct {
 func (a *Move) AP() int {
   return a.cost
 }
+func (a *Move) Pos() (int, int) {
+  return 0, 0
+}
+func (a *Move) Dims() (int, int) {
+  return 0, 0
+}
 func (a *Move) String() string {
   return a.Name
 }
@@ -186,8 +192,8 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus 
   }
   return game.NotConsumed
 }
-func (a *Move) RenderOnFloor(room *house.Room) {
-  if room == nil || a.ent == nil {
+func (a *Move) RenderOnFloor() {
+  if a.ent == nil {
     return
   }
   if path_tex == nil {
@@ -200,7 +206,7 @@ func (a *Move) RenderOnFloor(room *house.Room) {
   } else {
     gl.Color4ub(255, 25, 25, 255)
   }
-  texture.RenderAdvanced(float64(-room.X), float64(-room.Y), house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
+  texture.RenderAdvanced(0, 0, house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
 }
 func (a *Move) Cancel() {
   a.ent = nil

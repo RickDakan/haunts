@@ -236,7 +236,7 @@ func alphaMult(a, b byte) byte {
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawer FloorDrawer) {
+func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
   do_color := func(r, g, b, a byte) {
     R, G, B, A := room.Color()
     A = alphaMult(A, base_alpha)
@@ -319,6 +319,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+      do_color(255, 255, 255, left_alpha)
 
       case &right:
       gl.StencilFunc(gl.ALWAYS, 1, 1)
@@ -345,6 +346,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+      do_color(255, 255, 255, right_alpha)
 
       case &floor:
       gl.StencilFunc(gl.ALWAYS, 2, 2)
@@ -354,7 +356,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
 
 
     // Now draw the walls
-    do_color(255, 255, 255, left_alpha)
     gl.LoadMatrixf(&floor[0])
     plane.texture.Data().Bind()
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.index_buffer)
@@ -438,11 +439,33 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     gl.DisableClientState(gl.TEXTURE_COORD_ARRAY)
     gl.ClientActiveTexture(gl.TEXTURE0)
   }
-  if floor_drawer != nil {
-    gl.StencilFunc(gl.EQUAL, 2, 2)
-    gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-    floor_drawer.RenderOnFloor(room)
+  // do_color(100,200,50,200)
+  // base.EnableShader("box")
+  // base.SetUniformF("box", "dx", 3.0)
+  // base.SetUniformF("box", "dy", 5.0)
+  // (&texture.Object{}).Data().Render(1, 2, 3, 5)
+  // base.SetUniformF("box", "dx", 7.0)
+  // base.SetUniformF("box", "dy", 2.0)
+  // (&texture.Object{}).Data().Render(4, 1, 7, 2)
+  // base.EnableShader("")
+  run.Assign(&floor)
+  mul.Translation(float32(-room.X), float32(-room.Y), 0)
+  run.Multiply(&mul)
+  gl.LoadMatrixf(&run[0])
+  gl.StencilFunc(gl.EQUAL, 2, 2)
+  gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+  for _, fd := range floor_drawers {
+    x, y := fd.Pos()
+    if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
+      fd.RenderOnFloor()
+    }
   }
+
+  // if floor_drawer != nil {
+  //   gl.StencilFunc(gl.EQUAL, 2, 2)
+  //   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
+  //   floor_drawer.RenderOnFloor(room)
+  // }
   do_color(255, 255, 255, 255)
   gl.LoadIdentity()
   gl.Disable(gl.STENCIL_TEST)

@@ -7,7 +7,6 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
@@ -59,6 +58,12 @@ type interactInst struct {
 }
 func (a *Interact) AP() int {
   return a.Ap
+}
+func (a *Interact) Pos() (int, int) {
+  return 0, 0
+}
+func (a *Interact) Dims() (int, int) {
+  return 0, 0
 }
 func (a *Interact) String() string {
   return a.Display_name
@@ -155,7 +160,7 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) game.InputSta
   }
   return game.NotConsumed
 }
-func (a *Interact) RenderOnFloor(room *house.Room) {
+func (a *Interact) RenderOnFloor() {
   // gl.Disable(gl.TEXTURE_2D)
   // gl.Begin(gl.QUADS)
   // gl.Color4d(1.0, 0.2, 0.2, 0.8)

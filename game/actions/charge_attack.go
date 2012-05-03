@@ -5,7 +5,6 @@ import (
   "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
@@ -49,6 +48,12 @@ type ChargeAttackDef struct {
 func (a *ChargeAttack) AP() int {
   return a.Ap
 }
+func (a *ChargeAttack) Pos() (int, int) {
+  return 0, 0
+}
+func (a *ChargeAttack) Dims() (int, int) {
+  return 0, 0
+}
 func (a *ChargeAttack) String() string {
   return a.Name
 }
@@ -67,7 +72,7 @@ func (a *ChargeAttack) Prep(ent *game.Entity, g *game.Game) bool {
 func (a *ChargeAttack) HandleInput(gui.EventGroup, *game.Game) game.InputStatus {
   return game.NotConsumed
 }
-func (a *ChargeAttack) RenderOnFloor(room *house.Room) {
+func (a *ChargeAttack) RenderOnFloor() {
 }
 func (a *ChargeAttack) Cancel() {
 }

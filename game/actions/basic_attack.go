@@ -9,7 +9,6 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
@@ -77,6 +76,12 @@ func dist(x,y,x2,y2 int) int {
 func (a *BasicAttack) AP() int {
   return a.Ap
 }
+func (a *BasicAttack) Pos() (int, int) {
+  return 0, 0
+}
+func (a *BasicAttack) Dims() (int, int) {
+  return 0, 0
+}
 func (a *BasicAttack) String() string {
   return a.Name
 }
@@ -140,7 +145,7 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
   }
   return game.NotConsumed
 }
-func (a *BasicAttack) RenderOnFloor(room *house.Room) {
+func (a *BasicAttack) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
   gl.Color4d(1.0, 0.2, 0.2, 0.8)
