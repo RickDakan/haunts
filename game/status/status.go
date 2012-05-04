@@ -252,5 +252,6 @@ func (si Inst) GobEncode() ([]byte, error) {
 
 func (si *Inst) GobDecode(data []byte) error {
   dec := gob.NewDecoder(bytes.NewBuffer(data))
-  return dec.Decode(&si.inst)
+  err := dec.Decode(&si.inst)
+  return err
 }

@@ -470,13 +470,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
   return adj, weight
 }
 
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
-  var g Game
-  g.Side = SideExplorers
-  g.House = h
-  g.House.Normalize()
-  g.viewer = viewer
-
+func (g *Game) setup() {
   g.los_tex = house.MakeLosTexture()
   g.los_full_merger = make([]bool, house.LosTextureSizeSquared)
   g.los_merger = make([][]bool, house.LosTextureSize)
@@ -490,6 +484,16 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   }
 
   g.MergeLos(g.Ents)
+}
+
+func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
+  var g Game
+  g.Side = SideExplorers
+  g.House = h
+  g.House.Normalize()
+  g.viewer = viewer
+
+  g.setup()
 
   g.explorer_selection = gui.MakeVerticalTable()
   g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))

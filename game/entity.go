@@ -83,30 +83,41 @@ func (g *Game) placeEntity(initial bool) bool {
   return true
 }
 
+// Does some basic setup that is common to both creating a new entity and to
+// loading one from a saved game.
+func (e *Entity) Load(g *Game) {
+  e.sprite.Load(e.Sprite_path.String())
+
+  if e.Ai_path.String() != "" {
+    e.ai = ai_maker(e.Ai_path.String(), e)
+  }
+
+  if e.Side() == SideHaunt || e.Side() == SideExplorers {
+    e.los = &losData{}
+    full_los := make([]bool, house.LosTextureSizeSquared)
+    e.los.grid = make([][]bool, house.LosTextureSize)
+    for i := range e.los.grid {
+      e.los.grid[i] = full_los[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
+    }
+  }
+
+  e.game = g
+}
+
 func MakeEntity(name string, g *Game) *Entity {
   ent := Entity{ Defname: name }
   base.GetObject("entities", &ent)
+  ent.Load(g)
+
   for _,action_name := range ent.Action_names {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
-  ent.sprite.Load(ent.Sprite_path.String())
-
-  if ent.Ai_path.String() != "" {
-    ent.ai = ai_maker(ent.Ai_path.String(), &ent)
-  }
 
   if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
-    ent.los = &losData{}
-    full_los := make([]bool, house.LosTextureSizeSquared)
-    ent.los.grid = make([][]bool, house.LosTextureSize)
-    for i := range ent.los.grid {
-      ent.los.grid[i] = full_los[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
-    }
     stats := status.MakeInst(ent.Base)
     ent.Stats = &stats
   }
 
-  ent.game = g
   return &ent
 }
 

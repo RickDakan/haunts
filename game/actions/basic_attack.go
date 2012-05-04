@@ -108,6 +108,7 @@ func (a *BasicAttack) Preppable(ent *game.Entity, g *game.Game) bool {
   return ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
 }
 func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
+  base.Log().Printf("%p Prepping basic attack for %p", a, ent)
   if !a.Preppable(ent, g) {
     return false
   }

@@ -2,7 +2,7 @@
   "Name": "Poison Debuff Attack 2",
   "Strength": 4,
   "Kind": "Poison",
-  "Time": 3,
+  "Duration": 3,
   "Dynamic": {
     "Hp": -2
   },

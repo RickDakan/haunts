@@ -168,13 +168,13 @@ func LoadAndProcessObject(path,format string, target interface{}) error {
   if err != nil {
     return err
   }
-  processObject(path, reflect.ValueOf(target), "")
+  ProcessObject(reflect.ValueOf(target), "")
   return  nil
 }
 
 // Recursively decends through a value's type hierarchy and applies processing
 // according to any tags that have been set on those types
-func processObject(dir string, val reflect.Value, tag string) {
+func ProcessObject(val reflect.Value, tag string) {
   switch val.Type().Kind() {
   case reflect.Ptr:
     if !val.IsNil() {
@@ -186,21 +186,24 @@ func processObject(dir string, val reflect.Value, tag string) {
       loadfrom_tag := "loadfrom-"
       if strings.HasPrefix(tag, loadfrom_tag) {
         source := tag[len(loadfrom_tag) : ]
+        Log().Printf("Source: %s, %s", source, val.String())
         GetObject(source, val.Interface())
       }
-      processObject(dir, val.Elem(), tag)
+      ProcessObject(val.Elem(), tag)
     }
 
   case reflect.Struct:
     for i := 0; i < val.NumField(); i++ {
-      processObject(dir, val.Field(i), val.Type().Field(i).Tag.Get("registry"))
+      Log().Printf("by struct: %v", val.Field(i).String())
+      ProcessObject(val.Field(i), val.Type().Field(i).Tag.Get("registry"))
     }
 
   case reflect.Array:
     fallthrough
   case reflect.Slice:
     for i := 0; i < val.Len(); i++ {
-      processObject(dir, val.Index(i), tag)
+      Log().Printf("by slice: %v", val.Index(i).String())
+      ProcessObject(val.Index(i), tag)
     }
   }
 

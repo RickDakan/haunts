@@ -64,10 +64,7 @@ func (a *Move) AP() int {
   return a.cost
 }
 func (a *Move) Pos() (int, int) {
-  if a.ent == nil {
-    return 0, 0
-  }
-  return a.ent.Pos()
+  return 0, 0
 }
 func (a *Move) Dims() (int, int) {
   return house.LosTextureSize, house.LosTextureSize
@@ -142,6 +139,9 @@ func (a *Move) findPath(g *game.Game, x,y int) {
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
     cost,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
+    base.Log().Printf("%d -> %d", src, dst)
+    base.Log().Printf("cost: %f", cost)
+    base.Log().Printf("path: %v", path)
     if len(path) <= 1 {
       return
     }

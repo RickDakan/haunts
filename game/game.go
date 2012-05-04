@@ -1,6 +1,7 @@
 package game
 
 import (
+  "reflect"
   "math/rand"
   "sort"
   "path/filepath"
@@ -44,7 +45,7 @@ func MakeGamePanel() *GamePanel {
 }
 
 func (gp *GamePanel) SaveGame() {
-  err := base.SaveGob(filepath.Join(base.GetDataDir(), "fudge.game"), gp.game)
+  err := base.SaveGob(filepath.Join(base.GetDataDir(), "fudge.game"), *gp.game)
   base.Log().Printf("Saving!")
   if err != nil {
     base.Warn().Printf("Failed to save: %v", err)
@@ -52,11 +53,44 @@ func (gp *GamePanel) SaveGame() {
 }
 
 func (gp *GamePanel) LoadGame() {
-  err := base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), &gp.game)
+  var err error
+  gp.game = &Game{}
+
+  // err := base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), &gp.game)
   base.Log().Printf("Loading!")
+
+  err = base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), gp.game)
   if err != nil {
     base.Warn().Printf("Failed to load: %v", err)
+    return
   }
+  base.ProcessObject(reflect.ValueOf(gp.game.House), "")
+  base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
+  base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
+
+  gp.game.viewer = house.MakeHouseViewer(gp.house, 62)
+  gp.house = gp.game.House
+  gp.viewer = gp.game.viewer
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
+
+  for i := range gp.game.Ents {
+    gp.game.Ents[i].Load(gp.game)
+    gp.viewer.AddDrawable(gp.game.Ents[i])
+  }
+  for i := range gp.game.Active_cleanses {
+    gp.game.Active_cleanses[i].Load(gp.game)
+    gp.viewer.AddDrawable(gp.game.Active_cleanses[i])
+  }
+
+  gp.game.setup()
+  gp.game.viewer.Los_tex = gp.game.los_tex
+  gp.main_bar,err = MakeMainBar(gp.game)
+  if err != nil {
+    base.Warn().Printf("Failed to make main bar: %v", err)
+    return
+  }
+  gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
@@ -110,7 +144,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 func (gp *GamePanel) Draw(region gui.Region) {
   gp.AnchorBox.Draw(region)
 
-  // Do heads-up stuff
   region.PushClipPlanes()
   defer region.PopClipPlanes()
 }
