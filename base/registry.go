@@ -186,7 +186,6 @@ func ProcessObject(val reflect.Value, tag string) {
       loadfrom_tag := "loadfrom-"
       if strings.HasPrefix(tag, loadfrom_tag) {
         source := tag[len(loadfrom_tag) : ]
-        Log().Printf("Source: %s, %s", source, val.String())
         GetObject(source, val.Interface())
       }
       ProcessObject(val.Elem(), tag)
@@ -194,7 +193,6 @@ func ProcessObject(val reflect.Value, tag string) {
 
   case reflect.Struct:
     for i := 0; i < val.NumField(); i++ {
-      Log().Printf("by struct: %v", val.Field(i).String())
       ProcessObject(val.Field(i), val.Type().Field(i).Tag.Get("registry"))
     }
 
@@ -202,7 +200,6 @@ func ProcessObject(val reflect.Value, tag string) {
     fallthrough
   case reflect.Slice:
     for i := 0; i < val.Len(); i++ {
-      Log().Printf("by slice: %v", val.Index(i).String())
       ProcessObject(val.Index(i), tag)
     }
   }

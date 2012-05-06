@@ -85,8 +85,8 @@ func makeFurniturePanel(room *roomDef, viewer *RoomViewer) *FurniturePanel {
       fp.furniture.temporary = true
       fp.Room.Furniture = append(fp.Room.Furniture, fp.furniture)
       dx,dy := fp.furniture.Dims()
-      fp.drag_anchor.x = float32(dx - 1) / 2
-      fp.drag_anchor.y = float32(dy - 1) / 2
+      fp.drag_anchor.x = float32(dx) / 2
+      fp.drag_anchor.y = float32(dy) / 2
     }))
   }
   fp.VerticalTable.AddChild(gui.MakeScrollFrame(furn_table, 300, 600))
@@ -159,8 +159,8 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
           *w.prev_object = *w.furniture
           w.furniture.temporary = true
           px,py := w.furniture.Pos()
-          w.drag_anchor.x = bx - float32(px) - 0.5
-          w.drag_anchor.y = by - float32(py) - 0.5
+          w.drag_anchor.x = bx - float32(px)
+          w.drag_anchor.y = by - float32(py)
           break
         }
       }
@@ -188,8 +188,8 @@ func (w *FurniturePanel) Think(ui *gui.Gui, t int64) {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := w.RoomViewer.WindowToBoard(mx, my)
     f := w.furniture
-    f.X = int(bx - w.drag_anchor.x)
-    f.Y = int(by - w.drag_anchor.y)
+    f.X = roundDown(bx - w.drag_anchor.x + 0.5)
+    f.Y = roundDown(by - w.drag_anchor.y + 0.5)
     fdx, fdy := f.Dims()
     f.invalid = false
     if f.X < 0 { f.invalid = true }

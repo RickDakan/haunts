@@ -91,6 +91,7 @@ type SpawnPoint struct {
   *SpawnPointDef
   Dx,Dy int
   X,Y   int
+  temporary, invalid bool
 }
 func (sp *SpawnPoint) Dims() (int,int) {
   return sp.Dx, sp.Dy
@@ -144,6 +145,13 @@ func (sp *SpawnPoint) RenderOnFloor() {
   base.EnableShader("box")
   base.SetUniformF("box", "dx", float32(sp.Dx))
   base.SetUniformF("box", "dy", float32(sp.Dy))
+  if !sp.temporary {
+    base.SetUniformI("box", "temp_invalid", 0)
+  } else if !sp.invalid {
+    base.SetUniformI("box", "temp_invalid", 1)
+  } else {
+    base.SetUniformI("box", "temp_invalid", 2)
+  }
   (&texture.Object{}).Data().Render(float64(sp.X), float64(sp.Y), float64(sp.Dx), float64(sp.Dy))
   base.EnableShader("")
   gl.PopAttrib()
