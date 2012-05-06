@@ -492,8 +492,15 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
   if hdt.temp_room != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := hdt.viewer.WindowToBoard(mx, my)
+    cx,cy := hdt.temp_room.Pos()
     hdt.temp_room.X = int(bx - hdt.drag_anchor.x)
     hdt.temp_room.Y = int(by - hdt.drag_anchor.y)
+    dx := hdt.temp_room.X - cx
+    dy := hdt.temp_room.Y - cy
+    for i := range hdt.temp_spawns {
+      hdt.temp_spawns[i].X += dx
+      hdt.temp_spawns[i].Y += dy
+    }
     hdt.temp_room.invalid = !hdt.house.Floors[0].canAddRoom(hdt.temp_room)
   }
   hdt.VerticalTable.Think(ui, t)
@@ -508,21 +515,50 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
   }
   hdt.house.Name = hdt.name.GetText()
 }
+
+func (hdt *houseDataTab) onEscape() {
+  if hdt.prev_room != nil {
+    dx := hdt.prev_room.X - hdt.temp_room.X
+    dy := hdt.prev_room.Y - hdt.temp_room.Y
+    for i := range hdt.temp_spawns {
+      hdt.temp_spawns[i].X += dx
+      hdt.temp_spawns[i].Y += dy
+    }
+    *hdt.temp_room = *hdt.prev_room
+    hdt.prev_room = nil
+  } else {
+    algorithm.Choose2(&hdt.house.Floors[0].Rooms, func(r *Room) bool {
+      return r != hdt.temp_room
+    })
+  }
+  hdt.temp_room = nil
+}
+
 func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if hdt.VerticalTable.Respond(ui, group) {
     return true
   }
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if hdt.prev_room != nil {
-      *hdt.temp_room = *hdt.prev_room
-      hdt.prev_room = nil
-    } else {
+    hdt.onEscape()
+    return true
+  }
+
+  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    if hdt.temp_room != nil {
+      spawns := make(map[*SpawnPoint]bool)
+      for i := range hdt.temp_spawns {
+        spawns[hdt.temp_spawns[i]] = true
+      }
+      algorithm.Choose2(&hdt.house.Floors[0].Spawns, func(s *SpawnPoint) bool {
+        return !spawns[s]
+      })
       algorithm.Choose2(&hdt.house.Floors[0].Rooms, func(r *Room) bool {
         return r != hdt.temp_room
       })
+      hdt.temp_room = nil
+      hdt.prev_room = nil
     }
-    hdt.temp_room = nil
     return true
   }
 
@@ -549,6 +585,17 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
           hdt.drag_anchor.x = bx - float32(x)
           hdt.drag_anchor.y = by - float32(y)
           break
+        }
+      }
+      if hdt.temp_room != nil {
+        hdt.temp_spawns = hdt.temp_spawns[0:0]
+        for _, sp := range hdt.house.Floors[0].Spawns {
+          x, y := sp.Pos()
+          rx, ry := hdt.temp_room.Pos()
+          rdx, rdy := hdt.temp_room.Dims()
+          if x >= rx && x < rx + rdx && y >= ry && y < ry + rdy {
+            hdt.temp_spawns = append(hdt.temp_spawns, sp)
+          }
         }
       }
     }
