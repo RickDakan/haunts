@@ -457,7 +457,8 @@ type houseDataTab struct {
   // Which floor we are viewing and editing
   current_floor int
 
-  room, prev_room *Room
+  temp_room, prev_room *Room
+  temp_spawns []*SpawnPoint
 }
 func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   var hdt houseDataTab
@@ -476,24 +477,24 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   for _,name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      hdt.room = &Room{ Defname: n }
-      base.GetObject("rooms", hdt.room)
-      hdt.room.temporary = true
-      hdt.room.invalid = true
-      hdt.house.Floors[0].Rooms = append(hdt.house.Floors[0].Rooms, hdt.room)
-      hdt.drag_anchor.x = float32(hdt.room.Size.Dx / 2)
-      hdt.drag_anchor.y = float32(hdt.room.Size.Dy / 2)
+      hdt.temp_room = &Room{ Defname: n }
+      base.GetObject("rooms", hdt.temp_room)
+      hdt.temp_room.temporary = true
+      hdt.temp_room.invalid = true
+      hdt.house.Floors[0].Rooms = append(hdt.house.Floors[0].Rooms, hdt.temp_room)
+      hdt.drag_anchor.x = float32(hdt.temp_room.Size.Dx / 2)
+      hdt.drag_anchor.y = float32(hdt.temp_room.Size.Dy / 2)
     }))
   }
   return &hdt
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
-  if hdt.room != nil {
+  if hdt.temp_room != nil {
     mx,my := gin.In().GetCursor("Mouse").Point()
     bx,by := hdt.viewer.WindowToBoard(mx, my)
-    hdt.room.X = int(bx - hdt.drag_anchor.x)
-    hdt.room.Y = int(by - hdt.drag_anchor.y)
-    hdt.room.invalid = !hdt.house.Floors[0].canAddRoom(hdt.room)
+    hdt.temp_room.X = int(bx - hdt.drag_anchor.x)
+    hdt.temp_room.Y = int(by - hdt.drag_anchor.y)
+    hdt.temp_room.invalid = !hdt.house.Floors[0].canAddRoom(hdt.temp_room)
   }
   hdt.VerticalTable.Think(ui, t)
   num_floors := hdt.num_floors.GetComboedIndex() + 1
@@ -514,24 +515,24 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     if hdt.prev_room != nil {
-      *hdt.room = *hdt.prev_room
+      *hdt.temp_room = *hdt.prev_room
       hdt.prev_room = nil
     } else {
       algorithm.Choose2(&hdt.house.Floors[0].Rooms, func(r *Room) bool {
-        return r != hdt.room
+        return r != hdt.temp_room
       })
     }
-    hdt.room = nil
+    hdt.temp_room = nil
     return true
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if hdt.room != nil {
-      if !hdt.room.invalid {
-        hdt.room.temporary = false
+    if hdt.temp_room != nil {
+      if !hdt.temp_room.invalid {
+        hdt.temp_room.temporary = false
         floor.removeInvalidDoors()
-        hdt.room = nil
+        hdt.temp_room = nil
         hdt.prev_room = nil
       }
     } else {
@@ -541,10 +542,10 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         x,y := floor.Rooms[i].Pos()
         dx,dy := floor.Rooms[i].Dims()
         if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
-          hdt.room = floor.Rooms[i]
+          hdt.temp_room = floor.Rooms[i]
           hdt.prev_room = new(Room)
-          *hdt.prev_room = *hdt.room
-          hdt.room.temporary = true
+          *hdt.prev_room = *hdt.temp_room
+          hdt.temp_room.temporary = true
           hdt.drag_anchor.x = bx - float32(x)
           hdt.drag_anchor.y = by - float32(y)
           break
@@ -576,8 +577,8 @@ type houseDoorTab struct {
   // Which floor we are viewing and editing
   current_floor int
 
-  room, prev_room *Room
-  door, prev_door *Door
+  temp_room, prev_room *Room
+  temp_door, prev_door *Door
 }
 func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   var hdt houseDoorTab
@@ -592,10 +593,10 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
       if len(hdt.house.Floors[0].Rooms) < 2 {
         return
       }
-      hdt.door = MakeDoor(n)
-      hdt.door.temporary = true
-      hdt.door.invalid = true
-      hdt.room = hdt.house.Floors[0].Rooms[0]
+      hdt.temp_door = MakeDoor(n)
+      hdt.temp_door.temporary = true
+      hdt.temp_door.invalid = true
+      hdt.temp_room = hdt.house.Floors[0].Rooms[0]
     }))
   }
 
@@ -604,10 +605,10 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
 func (hdt *houseDoorTab) Think(ui *gui.Gui, t int64) {
 }
 func (hdt *houseDoorTab) onEscape() {
-  if hdt.door != nil {
-    if hdt.room != nil {
-      algorithm.Choose2(&hdt.room.Doors, func(d *Door) bool {
-        return d != hdt.door
+  if hdt.temp_door != nil {
+    if hdt.temp_room != nil {
+      algorithm.Choose2(&hdt.temp_room.Doors, func(d *Door) bool {
+        return d != hdt.temp_door
       })
     }
     if hdt.prev_door != nil {
@@ -615,8 +616,8 @@ func (hdt *houseDoorTab) onEscape() {
       hdt.prev_door = nil
       hdt.prev_room = nil
     }
-    hdt.door = nil
-    hdt.room = nil
+    hdt.temp_door = nil
+    hdt.temp_room = nil
   }
 }
 func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
@@ -629,47 +630,58 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
+  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    algorithm.Choose2(&hdt.temp_room.Doors, func(d *Door) bool {
+      return d != hdt.temp_door
+    })
+    hdt.temp_room = nil
+    hdt.temp_door = nil
+    hdt.prev_room = nil
+    hdt.prev_door = nil
+    return true
+  }
+
   cursor := group.Events[0].Key.Cursor()
   var bx, by float32
   if cursor != nil {
     bx, by = hdt.viewer.WindowToBoard(cursor.Point())
   }
-  if cursor != nil && hdt.door != nil {
-    room := hdt.viewer.FindClosestDoorPos(hdt.door, bx, by)
-    if room != hdt.room {
-      algorithm.Choose2(&hdt.room.Doors, func(d *Door) bool {
-        return d != hdt.door
+  if cursor != nil && hdt.temp_door != nil {
+    room := hdt.viewer.FindClosestDoorPos(hdt.temp_door, bx, by)
+    if room != hdt.temp_room {
+      algorithm.Choose2(&hdt.temp_room.Doors, func(d *Door) bool {
+        return d != hdt.temp_door
       })
-      hdt.room = room
-      hdt.door.invalid = (hdt.room == nil)
-      hdt.room.Doors = append(hdt.room.Doors, hdt.door)
+      hdt.temp_room = room
+      hdt.temp_door.invalid = (hdt.temp_room == nil)
+      hdt.temp_room.Doors = append(hdt.temp_room.Doors, hdt.temp_door)
     }
-    if hdt.room == nil {
-      hdt.door.invalid = true
+    if hdt.temp_room == nil {
+      hdt.temp_door.invalid = true
     } else {
-      other_room, _ := hdt.house.Floors[0].findRoomForDoor(hdt.room, hdt.door)
-      hdt.door.invalid = (other_room == nil)
+      other_room, _ := hdt.house.Floors[0].findRoomForDoor(hdt.temp_room, hdt.temp_door)
+      hdt.temp_door.invalid = (other_room == nil)
     }
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if hdt.door != nil {
-      other_room, other_door := floor.findRoomForDoor(hdt.room, hdt.door)
+    if hdt.temp_door != nil {
+      other_room, other_door := floor.findRoomForDoor(hdt.temp_room, hdt.temp_door)
       if other_room != nil {
         other_room.Doors = append(other_room.Doors, other_door)
-        hdt.door.temporary = false
-        hdt.door = nil
+        hdt.temp_door.temporary = false
+        hdt.temp_door = nil
         hdt.prev_door = nil
       }
     } else {
-      hdt.room, hdt.door = hdt.viewer.FindClosestExistingDoor(bx, by)
-      if hdt.door != nil {
+      hdt.temp_room, hdt.temp_door = hdt.viewer.FindClosestExistingDoor(bx, by)
+      if hdt.temp_door != nil {
         hdt.prev_door = new(Door)
-        *hdt.prev_door = *hdt.door
-        hdt.prev_room = hdt.room
-        hdt.door.temporary = true
-        room, door := hdt.house.Floors[0].findMatchingDoor(hdt.room, hdt.door)
+        *hdt.prev_door = *hdt.temp_door
+        hdt.prev_room = hdt.temp_room
+        hdt.temp_door.temporary = true
+        room, door := hdt.house.Floors[0].findMatchingDoor(hdt.temp_room, hdt.temp_door)
         if room != nil {
           algorithm.Choose2(&room.Doors, func(d *Door) bool {
             return d != door
