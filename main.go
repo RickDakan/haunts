@@ -131,6 +131,37 @@ func gameMode() {
     ui.AddChild(anchor)
     ui.TakeFocus(chooser)
   }
+
+  if key_map["load game"].FramePressCount() > 0 && chooser == nil {
+    callback := func(path string, err error) {
+      ui.DropFocus()
+      ui.RemoveChild(anchor)
+      chooser = nil
+      anchor = nil
+      game_panel.LoadGame(path)
+      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
+    }
+    chooser = gui.MakeFileChooser(filepath.Join(datadir, "games"), callback, gui.MakeFileFilter(fmt.Sprintf(".game")))
+    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    ui.AddChild(anchor)
+    ui.TakeFocus(chooser)
+  }
+
+  if key_map["save game"].FramePressCount() > 0 && chooser == nil {
+    callback := func(filename string) {
+      ui.DropFocus()
+      ui.RemoveChild(anchor)
+      anchor = nil
+      game_panel.SaveGame(filename)
+      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
+    }
+    save_widget := MakeSaveWidget(callback)
+    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+    anchor.AddChild(save_widget, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    ui.AddChild(anchor)
+    ui.TakeFocus(save_widget)
+  }
 }
 
 func editMode() {
@@ -336,12 +367,6 @@ func main() {
       editMode()
     } else {
       gameMode()
-      if key_map["save game"].FramePressCount() > 0 {
-        game_panel.SaveGame()
-      }
-      if key_map["load game"].FramePressCount() > 0 {
-        game_panel.LoadGame()
-      }
     }
   }
 }

@@ -44,22 +44,18 @@ func MakeGamePanel() *GamePanel {
   return &gp
 }
 
-func (gp *GamePanel) SaveGame() {
-  err := base.SaveGob(filepath.Join(base.GetDataDir(), "fudge.game"), *gp.game)
-  base.Log().Printf("Saving!")
+func (gp *GamePanel) SaveGame(filename string) {
+  err := base.SaveGob(filepath.Join(base.GetDataDir(), "games", filename + ".game"), *gp.game)
   if err != nil {
     base.Warn().Printf("Failed to save: %v", err)
   }
 }
 
-func (gp *GamePanel) LoadGame() {
+func (gp *GamePanel) LoadGame(path string) {
   var err error
   gp.game = &Game{}
 
-  // err := base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), &gp.game)
-  base.Log().Printf("Loading!")
-
-  err = base.LoadGob(filepath.Join(base.GetDataDir(), "fudge.game"), gp.game)
+  err = base.LoadGob(filepath.Join(path), gp.game)
   if err != nil {
     base.Warn().Printf("Failed to load: %v", err)
     return
