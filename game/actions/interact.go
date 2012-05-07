@@ -111,19 +111,29 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
     x,y := e.Pos()
     dx,dy := e.Dims()
     if e == ent { continue }
-    if e.ObjectEnt == nil || e.ObjectEnt.Goal != game.GoalCleanse { continue }
+    if e.ObjectEnt == nil { continue }
+    if e.ObjectEnt.Goal != game.ObjectGoal(a.Name) { continue }
     if distBetweenEnts(e, ent) > a.Range { continue }
     if !ent.HasLos(x, y, dx, dy) { continue }
 
     // Make sure it's still active:
     active := false
-    for i := range g.Active_cleanses {
-      if g.Active_cleanses[i] == e {
-        active = true
-        break
+    switch a.Name {
+    case string(game.GoalCleanse):
+      for i := range g.Active_cleanses {
+        if g.Active_cleanses[i] == e {
+          active = true
+          break
+        }
       }
+
+    case string(game.GoalRelic):
+      active = (e == g.Active_relic)
+
+    case string(game.GoalMystery):
     }
     if !active { continue }
+
     targets = append(targets, e)
   }
   return targets
@@ -149,9 +159,17 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) game.InputSta
     for i := range a.targets {
       if a.targets[i] == target {
         a.target = target
-        g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-          return a.(*game.Entity) != target
-        }).([]*game.Entity)
+        switch a.Name {
+        case string(game.GoalCleanse):
+          g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
+            return a.(*game.Entity) != target
+          }).([]*game.Entity)
+    
+        case string(game.GoalRelic):
+          g.Active_relic = nil
+    
+        case string(game.GoalMystery):
+        }
         a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
         return game.ConsumedAndBegin
       }

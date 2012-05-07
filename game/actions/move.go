@@ -139,9 +139,6 @@ func (a *Move) findPath(g *game.Game, x,y int) {
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
     cost,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
-    base.Log().Printf("%d -> %d", src, dst)
-    base.Log().Printf("cost: %f", cost)
-    base.Log().Printf("path: %v", path)
     if len(path) <= 1 {
       return
     }

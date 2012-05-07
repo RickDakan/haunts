@@ -38,6 +38,10 @@ type Game struct {
   // when this list is empty.  In other scenarios this list is always empty.
   Active_cleanses []*Entity
 
+  // The active relics - when interacted it will be nilified
+  // If the scenario is not a Relic mission this is always nil
+  Active_relic *Entity
+
 
   // Transient data - none of the following are exported
 
@@ -158,6 +162,23 @@ func (g *Game) checkWinConditions() {
   explorer_win := false
   switch g.Purpose {
   case PurposeRelic:
+    if g.Active_relic == nil {
+      // If the relic has been taken and at least one explorer is standing in
+      // an exit then the explorers win.
+      for _, ent := range g.Ents {
+        if ent.Side() != SideExplorers { continue }
+        for _, spawn := range g.House.Floors[0].Spawns {
+          if spawn.Type() != house.SpawnExit { continue }
+          x, y := ent.Pos()
+          sx, sy := spawn.Pos()
+          sdx, sdy := spawn.Dims()
+          if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
+            explorer_win = true
+          }
+        }
+      }
+    }
+
   case PurposeMystery:
   case PurposeCleanse:
     if len(g.Active_cleanses) == 0 {
@@ -213,32 +234,43 @@ func (g *Game) OnRound() {
       base.Error().Printf("Explorers have not set a purpose")
 
     case PurposeCleanse:
-    action_name = "Cleanse"
-    // If this is a cleanse scenario we need to choose the active cleanse points
-    cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
-      ent := a.(*Entity)
-      return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
-    }).([]*Entity)
-    count := 3
-    if len(cleanses) < 3 {
-      count = len(cleanses)
-    }
-    for i := 0; i < count; i++ {
-      n := rand.Intn(len(cleanses))
-      active := cleanses[n]
-      cleanses[n] = cleanses[len(cleanses)-1]
-      cleanses = cleanses[0:len(cleanses)-1]
-      g.Active_cleanses = append(g.Active_cleanses, active)
-    }
-    for _, active := range g.Active_cleanses {
-      base.Log().Printf("Active cleanse point: %s", active.Name)
-    }
+      action_name = "Cleanse"
+      // If this is a cleanse scenario we need to choose the active cleanse points
+      cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
+        ent := a.(*Entity)
+        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
+      }).([]*Entity)
+      count := 3
+      if len(cleanses) < 3 {
+        count = len(cleanses)
+      }
+      for i := 0; i < count; i++ {
+        n := rand.Intn(len(cleanses))
+        active := cleanses[n]
+        cleanses[n] = cleanses[len(cleanses)-1]
+        cleanses = cleanses[0:len(cleanses)-1]
+        g.Active_cleanses = append(g.Active_cleanses, active)
+      }
+      for _, active := range g.Active_cleanses {
+        base.Log().Printf("Active cleanse point: %s", active.Name)
+      }
 
     case PurposeMystery:
-    action_name = "Mystery"
+      action_name = "Mystery"
 
     case PurposeRelic:
-    action_name = "Relic"
+      action_name = "Relic"
+      relics := algorithm.Choose(g.Ents, func(a interface{}) bool {
+        ent := a.(*Entity)
+        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalRelic
+      }).([]*Entity)
+      if len(relics) == 0 {
+        base.Warn().Printf("Unable to find any relics for the relic mission")
+      } else {
+        g.Active_relic = relics[rand.Intn(len(relics))]
+        x,y := g.Active_relic.Pos()
+        base.Log().Printf("Chose active relic at position %d %d", x, y)
+      }
     }
     if action_name != "" {
       for i := range g.Ents {

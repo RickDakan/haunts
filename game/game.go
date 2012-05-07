@@ -74,10 +74,6 @@ func (gp *GamePanel) LoadGame(path string) {
     gp.game.Ents[i].Load(gp.game)
     gp.viewer.AddDrawable(gp.game.Ents[i])
   }
-  for i := range gp.game.Active_cleanses {
-    gp.game.Active_cleanses[i].Load(gp.game)
-    gp.viewer.AddDrawable(gp.game.Active_cleanses[i])
-  }
 
   gp.game.setup()
   gp.game.viewer.Los_tex = gp.game.los_tex
@@ -377,7 +373,7 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   if sanity > 0 {
     base.Log().Printf("Placed all objects with %d sanity remaining", sanity)
   } else {
-    base.Log().Printf("Only able to place %d out of %d objects", len(places), len(spawns))
+    base.Warn().Printf("Only able to place %d out of %d objects", len(places), len(spawns))
   }
   for _, place := range places {
     place.ent.X = float64(place.spawn.X + rand.Intn(place.spawn.Dx - place.ent.Dx + 1))

@@ -76,7 +76,7 @@ func (sp *SpawnPointDef) Type() SpawnType {
   case sp.Cleanse != nil:
     return SpawnCleanse
   case sp.Exit != nil:
-    return SpawnClue
+    return SpawnExit
   case sp.Relic != nil:
     return SpawnRelic
   }
