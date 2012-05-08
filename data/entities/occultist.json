@@ -13,7 +13,11 @@
     "Exorcise",
     "First Aid"
   ],
-  "ExplorerEnt": {},
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Cake"
+    ]
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 2000,

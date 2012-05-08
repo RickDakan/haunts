@@ -25,6 +25,11 @@ func registerBasicAttacks() map[string]func() game.Action {
     makers[cname] = func() game.Action {
       a := BasicAttack{ Defname: cname }
       base.GetObject("actions-attack_actions", &a)
+      if a.Ammo > 0 {
+        a.Current_ammo = a.Ammo
+      } else {
+        a.Current_ammo = -1
+      }
       return &a
     }
   }
@@ -40,12 +45,15 @@ func init() {
 type BasicAttack struct {
   Defname string
   *BasicAttackDef
-  basicAttackInst
+  basicAttackTempData
+
+  Current_ammo int
 }
 type BasicAttackDef struct {
   Name       string
   Kind       status.Kind
   Ap         int
+  Ammo       int  // 0 = infinity
   Strength   int
   Range      int
   Damage     int
@@ -54,7 +62,7 @@ type BasicAttackDef struct {
   Texture    texture.Object
   Sounds     map[string]string
 }
-type basicAttackInst struct {
+type basicAttackTempData struct {
   ent *game.Entity
 
   // Potential targets
@@ -105,20 +113,25 @@ func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity
   return targets
 }
 func (a *BasicAttack) Preppable(ent *game.Entity, g *game.Game) bool {
-  return ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
+  return a.Current_ammo != 0 && ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
 }
 func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
-  base.Log().Printf("%p Prepping basic attack for %p", a, ent)
   if !a.Preppable(ent, g) {
     return false
   }
   a.ent = ent
   a.targets = a.findTargets(ent, g)
   if a.Sounds != nil {
-    base.Log().Printf("Map %s: %v", a.Name, a.Sounds)
     sound.MapSounds(a.Sounds)
   }
   return true
+}
+func (a *BasicAttack) attack(target *game.Entity) {
+  a.target = target
+  if a.Current_ammo > 0 {
+    a.Current_ammo--
+  }
+  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
   if ent.Side() == target.Side() { return false }
@@ -127,8 +140,7 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool
   x2,y2 := target.Pos()
   if dist(x,y,x2,y2) > a.Range { return false }
   a.ent = ent
-  a.target = target
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+  a.attack(target)
   return true
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
@@ -138,8 +150,7 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     px, py := target.Pos()
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
-      a.target = target
-      a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+      a.attack(target)
       return game.ConsumedAndBegin
     }
     return game.Consumed
@@ -162,7 +173,7 @@ func (a *BasicAttack) RenderOnFloor() {
   gl.End()
 }
 func (a *BasicAttack) Cancel() {
-  a.basicAttackInst = basicAttackInst{}
+  a.basicAttackTempData = basicAttackTempData{}
 }
 func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {

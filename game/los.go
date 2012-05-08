@@ -6,6 +6,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game/status"
 )
 
 type Purpose int
@@ -110,6 +111,15 @@ func (g *Game) SelectEnt(ent *Entity) bool {
 
 func (g *Game) OnBegin() {
   for i := range g.Ents {
+    if g.Ents[i].ExplorerEnt != nil && g.Ents[i].ExplorerEnt.Gear != nil {
+      gear := g.Ents[i].ExplorerEnt.Gear
+      if gear.Action != "" {
+        g.Ents[i].Actions = append(g.Ents[i].Actions, MakeAction(gear.Action))
+      }
+      if gear.Condition != "" {
+        g.Ents[i].Stats.ApplyCondition(status.MakeCondition(gear.Condition))
+      }
+    }
     if g.Ents[i].Stats != nil {
       g.Ents[i].Stats.OnBegin()
     }
@@ -138,7 +148,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
     return
   }
   x, y := sp.Pos()
-  base.Log().Printf("Starting explorers at (%d, %d)", x, y)
+  base.Log().Printf("Starting %d explorers at (%d, %d)", len(ents), x, y)
   var poss [][2]int
   for dx := 0; dx < sp.Dx; dx++ {
     for dy := 0; dy < sp.Dy; dy++ {

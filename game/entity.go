@@ -228,7 +228,12 @@ type HauntEnt struct {
 
   Level   EntLevel
 }
-type ExplorerEnt struct {}
+type ExplorerEnt struct {
+  Gear_names []string
+
+  // If the explorer has picked a piece of gear it will be listed here.
+  Gear *Gear
+}
 type ObjectEnt struct {
   Goal ObjectGoal
 }

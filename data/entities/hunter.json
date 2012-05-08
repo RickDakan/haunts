@@ -12,7 +12,10 @@
     "Paramagnetic Pulse",
     "EMR Inhibitor"
   ],
-  "ExplorerEnt": {},
+  "ExplorerEnt": {
+    "Gear_names": [
+    ]
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 2000,

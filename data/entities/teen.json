@@ -13,7 +13,14 @@
     "Telepathic Coordination",
     "Psychic Shroud"
   ],
-  "ExplorerEnt": {},
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Pudding",
+      "Pie",
+      "Tart",
+      "Cake"
+    ]
+  },
   "Base": {
     "Ap_max": 6000,
     "Hp_max": 20,

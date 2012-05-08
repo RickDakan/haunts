@@ -217,6 +217,9 @@ type explorerSetup struct {
   purpose_table gui.Widget
 
   roster_chooser *hui.RosterChooser
+  gear_chooser   *hui.RosterChooser
+
+  ents []*Entity
 
   layout explorerSetupLayout
 }
@@ -245,17 +248,13 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   es.roster_chooser = hui.MakeRosterChooser(roster,
   hui.SelectInRange(3,3),
   func(m map[int]bool) {
-    var ents []*Entity
+    es.ents = es.ents[0:0]
     for i := range m {
-      ents = append(ents, roster[i].(*entityLabel).ent)
+      es.ents = append(es.ents, roster[i].(*entityLabel).ent)
     }
-    game.PlaceInitialExplorers(ents)
-    game.OnRound()
-    for i := range game.Ents {
-      // Something might still be walking, so lets just stop everything before
-      // we move on.
-      game.Ents[i].sprite.sp.Command("stop")
-    }
+    es.AnchorBox.RemoveChild(es.roster_chooser)
+    es.gear_chooser = es.makeGearChooser(game, 0)
+    es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   },
   )
 
@@ -290,6 +289,40 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil
+}
+
+func (es *explorerSetup) makeGearChooser(game *Game, explorar_index int) *hui.RosterChooser {
+  ent := es.ents[explorar_index]
+  if len(ent.ExplorerEnt.Gear_names) == 0 {
+    return es.makeGearChooser(game, explorar_index + 1)
+  }
+  var gear []hui.Option
+  for _, name := range ent.ExplorerEnt.Gear_names {
+    g := MakeGear(name)
+    gear = append(gear, &iconWithText{
+      Name: g.Name,
+      Icon: g.Icon,
+      Data: g,
+    })
+  }
+  return hui.MakeRosterChooser(gear, hui.SelectExactlyOne, func(m map[int]bool) {
+    for index := range m {
+      ent.ExplorerEnt.Gear = MakeGear(ent.ExplorerEnt.Gear_names[index])
+    }
+    if explorar_index < 2 {
+      es.AnchorBox.RemoveChild(es.gear_chooser)
+      es.gear_chooser = es.makeGearChooser(game, explorar_index + 1)
+      es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    } else {
+      game.PlaceInitialExplorers(es.ents)
+      game.OnRound()
+      for i := range game.Ents {
+        // Something might still be walking, so lets just stop everything before
+        // we move on.
+        game.Ents[i].sprite.sp.Command("stop")
+      }
+    }
+  })
 }
 
 func (es *explorerSetup) Think(ui *gui.Gui, t int64) {

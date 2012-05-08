@@ -133,7 +133,6 @@ func (bc *BasicCondition) OnRound() (dmg *Damage, complete bool) {
     dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
   }
   bc.Time++
-  base.Log().Printf("Time: %d", bc.Time)
   complete = (bc.Time == bc.Duration)
   return
 }
