@@ -1,6 +1,7 @@
 package actions
 
 import (
+  "math"
   "encoding/gob"
   "path/filepath"
   "github.com/runningwild/glop/gin"
@@ -215,7 +216,8 @@ func (a *Move) Cancel() {
 }
 func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
   // Do stuff
-  dist := a.ent.DoAdvance(float32(dt) / 200, a.path[0][0], a.path[0][1])
+  factor := float32(math.Pow(2, a.ent.Walking_speed))
+  dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)

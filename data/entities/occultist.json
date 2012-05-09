@@ -13,6 +13,7 @@
     "Exorcise",
     "First Aid"
   ],
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
       "Cake"

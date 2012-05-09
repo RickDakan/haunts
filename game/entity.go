@@ -150,6 +150,8 @@ type entityDef struct {
   Dx, Dy int
   Sprite_path base.Path
 
+  Walking_speed float64
+
   // Still frame of the sprite - not necessarily one of the individual frames,
   // but still usable for identifying it.  Should be the same dimensions as
   // any of the frames.
