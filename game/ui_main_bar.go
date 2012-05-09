@@ -123,6 +123,10 @@ type MainBarLayout struct {
     Count int
     Empty texture.Object
   }
+
+  Gear struct {
+    X, Y float64
+  }
 }
 
 type mainBarState struct {
@@ -591,6 +595,16 @@ func (m *MainBar) Draw(region gui.Region) {
       }
 
       r.PopClipPlanes()
+    }
+
+    // Gear
+    if m.ent.ExplorerEnt != nil && m.ent.ExplorerEnt.Gear != nil {
+      gear := m.ent.ExplorerEnt.Gear
+      layout := m.layout.Gear
+      icon := gear.Small_icon.Data()
+      icon.RenderNatural(int(layout.X), int(layout.Y))
+      d := base.GetDictionary(10)
+      d.RenderString("Gear", layout.X + float64(icon.Dx()) / 2, layout.Y - d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
     }
   }
 
