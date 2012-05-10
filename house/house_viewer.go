@@ -274,9 +274,9 @@ func (hv *HouseViewer) Draw(region gui.Region) {
       for _, spawn := range hv.house.Floors[0].Spawns {
         hv.Floor_drawers = append(hv.Floor_drawers, spawn)
       }
-      if hv.Floor_drawer != nil {
-        hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
-      }
+    }
+    if hv.Floor_drawer != nil {
+      hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
     }
     hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.Floor_drawers)
     return
