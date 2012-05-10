@@ -1,7 +1,7 @@
 {
   "Name": "Pre-loaded Playlist",
   "Large_icon": {
-    "Path": "gear/icons/playlist.png"
+    "Path": "gear/icons/playlist_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/playlist.png"

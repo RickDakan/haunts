@@ -1,7 +1,7 @@
 {
   "Name": "Pain Killers",
   "Large_icon": {
-    "Path": "gear/icons/painkillers.png"
+    "Path": "gear/icons/painkillers_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/painkillers.png"

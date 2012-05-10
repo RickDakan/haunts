@@ -1,7 +1,7 @@
 {
   "Name": "Eumenides Codex",
   "Large_icon": {
-    "Path": "gear/icons/codex.png"
+    "Path": "gear/icons/codex_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/codex.png"

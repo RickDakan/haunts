@@ -1,7 +1,7 @@
 {
   "Name": "Nazar Pendant",
   "Large_icon": {
-    "Path": "gear/icons/nazar.png"
+    "Path": "gear/icons/nazar_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/nazar.png"

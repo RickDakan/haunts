@@ -1,7 +1,7 @@
 {
   "Name": "Pick Me Ups",
   "Large_icon": {
-    "Path": "gear/icons/pick-me-ups.png"
+    "Path": "gear/icons/pick-me-ups_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/pick-me-ups.png"

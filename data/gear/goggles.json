@@ -1,7 +1,7 @@
 {
   "Name": "Spectral Goggles v2",
   "Large_icon": {
-    "Path": "gear/icons/goggles.png"
+    "Path": "gear/icons/goggles_large.png"
   },
   "Small_icon": {
     "Path": "gear/icons/goggles.png"
