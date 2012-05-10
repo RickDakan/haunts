@@ -1,0 +1,10 @@
+{
+  "Name": "Experimental Battery",
+  "Large_icon": {
+    "Path": "gear/icons/battery_large.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/battery.png"
+  },
+  "Action": "Cake Machine"
+}

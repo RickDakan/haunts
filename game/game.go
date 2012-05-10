@@ -85,7 +85,16 @@ func (gp *GamePanel) LoadGame(path string) {
   gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
 }
 
+// Returns  true iff the game panel has an active game with a viewer already
+// installed.
+func (gp *GamePanel) Active() bool {
+  return gp.house != nil && gp.viewer != nil
+}
+
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  if !gp.Active() {
+    return
+  }
   switch gp.game.Turn {
   case 0:
   case 1:
@@ -206,6 +215,9 @@ func (g *Game) SetCurrentAction(action Action) bool {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if !gp.Active() {
+    return false
+  }
   if gp.game.winner != SideNone {
     // This is lame - but works for now
     return false
@@ -421,7 +433,7 @@ func (gp *GamePanel) LoadHouse(name string) {
   gp.house, err = house.MakeHouseFromPath(name)
   if err != nil {
     base.Error().Printf("%v", err)
-    panic(err)
+    return
   }
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()

@@ -1,0 +1,25 @@
+{
+  "Name": "Cultist",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/robed_cultist",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Pummel",
+    "Diseased Kiss"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 600,
+    "Hp_max": 6,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 10
+  }
+}

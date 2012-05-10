@@ -9,4 +9,5 @@ GEN*
 openme
 *.gob
 *.log
+data/store
 

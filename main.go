@@ -116,7 +116,9 @@ func draggingAndZooming(dz draggerZoomer) {
 }
 
 func gameMode() {
-  draggingAndZooming(game_panel.GetViewer())
+  if game_panel.Active() {
+    draggingAndZooming(game_panel.GetViewer())
+  }
   if key_map["load"].FramePressCount() > 0 && chooser == nil {
     callback := func(path string, err error) {
       ui.DropFocus()

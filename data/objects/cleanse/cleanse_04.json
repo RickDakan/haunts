@@ -1,7 +1,7 @@
 {
-  "Name": "AltarTart",
-  "Dx": 4,
-  "Dy": 4,
+  "Name": "Altar04",
+  "Dx": 1,
+  "Dy": 1,
   "Sprite_path" : "objects/cleanse/altar",
   "Still": {
   },
