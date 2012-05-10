@@ -56,6 +56,9 @@ type Move struct {
 
   path [][2]int
   cost int
+
+  // Ap remaining before the ability was used
+  threshold int
 }
 type MoveDef struct {
   Name     string
@@ -156,8 +159,18 @@ func (a *Move) findPath(g *game.Game, x,y int) {
           pix[i][j] = 0
         }
       }
-      for _, v := range a.path {
-        pix[v[1]][v[0]] = 255
+      current := 0.0
+      for i := 1; i < len(a.path); i++ {
+        src := g.ToVertex(a.path[i-1][0], a.path[i-1][1])
+        dst := g.ToVertex(a.path[i][0], a.path[i][1])
+        v, cost := g.Adjacent(src)
+        for j := range v {
+          if v[j] == dst {
+            current += cost[j]
+            break
+          }
+        }
+        pix[a.path[i][1]][a.path[i][0]] += byte(current)
       }
       path_tex.Remap()
     }
@@ -171,6 +184,7 @@ func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
   a.findPath(g, int(fx), int(fy))
+  a.threshold = a.ent.Stats.ApCur()
   return true
 }
 func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
@@ -202,12 +216,12 @@ func (a *Move) RenderOnFloor() {
   }
   path_tex.Remap()
   path_tex.Bind()
-  if a.cost <= a.ent.Stats.ApCur() {
-    gl.Color4ub(25, 255, 100, 255)
-  } else {
-    gl.Color4ub(255, 25, 25, 255)
-  }
+  gl.Color4ub(255, 255, 255, 128)
+  base.EnableShader("path")
+  base.SetUniformF("path", "threshold", float32(a.threshold) / 255)
+  base.SetUniformF("path", "size", house.LosTextureSize)
   texture.RenderAdvanced(0, 0, house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
+  base.EnableShader("")
 }
 func (a *Move) Cancel() {
   a.ent = nil
