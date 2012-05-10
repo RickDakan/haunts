@@ -1,0 +1,10 @@
+{
+  "Name": "Pick Me Ups",
+  "Large_icon": {
+    "Path": "gear/icons/pick-me-ups.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/pick-me-ups.png"
+  },
+  "Action": "Cake Machine"
+}

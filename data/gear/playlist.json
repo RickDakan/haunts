@@ -1,0 +1,10 @@
+{
+  "Name": "Pre-loaded Playlist",
+  "Large_icon": {
+    "Path": "gear/icons/playlist.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/playlist.png"
+  },
+  "Action": "Cake Machine"
+}

@@ -1,0 +1,10 @@
+{
+  "Name": "Spectral Goggles v2",
+  "Large_icon": {
+    "Path": "gear/icons/goggles.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/goggles.png"
+  },
+  "Action": "Cake Machine"
+}

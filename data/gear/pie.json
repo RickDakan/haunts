@@ -1,0 +1,10 @@
+{
+  "Name": "Pie",
+  "Large_icon": {
+    "Path": "gear/icons/pie.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/nazar.png"
+  },
+  "Condition": "Mmmm pie...."
+}

@@ -2,7 +2,7 @@
   "Name": "Diseased Kiss",
   "Strength": 5,
   "Kind": "Poison",
-  "Time": 3,
+  "Duration": 3,
   "Dynamic": {
     "Hp": -1
   }

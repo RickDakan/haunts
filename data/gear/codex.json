@@ -1,0 +1,10 @@
+{
+  "Name": "Eumenides Codex",
+  "Large_icon": {
+    "Path": "gear/icons/codex.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/codex.png"
+  },
+  "Action": "Cake Machine"
+}

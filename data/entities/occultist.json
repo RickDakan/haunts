@@ -13,7 +13,14 @@
     "Exorcise",
     "First Aid"
   ],
-  "ExplorerEnt": {},
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Eumenides Codex",
+	  "Nazar Pendant",
+	  "Pain Killers"
+    ]
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 2000,

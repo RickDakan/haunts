@@ -12,7 +12,14 @@
     "Paramagnetic Pulse",
     "EMR Inhibitor"
   ],
-  "ExplorerEnt": {},
+  "Walking_speed": -1,
+  "ExplorerEnt": {
+    "Gear_names": [
+	"Pick Me Ups",
+	"Experimental Battery",
+	"Spectral Goggles v2"
+    ]
+  },
   "Base": {
     "Ap_max": 6,
     "Hp_max": 2000,

@@ -1,0 +1,13 @@
+{
+  "Name"     : "Cake Machine",
+  "Kind"     : "Fire",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/chill_touch.png"
+  },
+  "Ap"       : 3,
+  "Ammo"     : 3,
+  "Strength" : 4,
+  "Damage"   : 2,
+  "Range"    : 1
+}
