@@ -40,6 +40,7 @@ func MakeGamePanel() *GamePanel {
   var gp GamePanel
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
+  gp.viewer.Edit_mode = true
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
   return &gp
 }
@@ -65,6 +66,7 @@ func (gp *GamePanel) LoadGame(path string) {
   base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
 
   gp.game.viewer = house.MakeHouseViewer(gp.house, 62)
+  gp.viewer.Edit_mode = true
   gp.house = gp.game.House
   gp.viewer = gp.game.viewer
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
@@ -118,6 +120,7 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
       gp.AnchorBox.RemoveChild(gp.haunt_setup)
       gp.haunt_setup = nil
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+      gp.viewer.Edit_mode = false
     }
   default:
   }
@@ -439,6 +442,7 @@ func (gp *GamePanel) LoadHouse(name string) {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
+  gp.viewer.Edit_mode = true
   gp.game = makeGame(gp.house, gp.viewer)
 
   spawnAllRelics(gp.game)

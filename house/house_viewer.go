@@ -37,10 +37,11 @@ type HouseViewer struct {
   last_timestamp int64
 
 
-  drawables    []Drawable
-  Los_tex      *LosTexture
-  Floor_drawer FloorDrawer
+  drawables     []Drawable
+  Los_tex       *LosTexture
+  Floor_drawer  FloorDrawer
   Floor_drawers []FloorDrawer
+  Edit_mode     bool
 
   Temp struct {
     Room *Room
@@ -269,11 +270,13 @@ func (hv *HouseViewer) Draw(region gui.Region) {
 
   if version {
     hv.Floor_drawers = hv.Floor_drawers[0:0]
-    for _, spawn := range hv.house.Floors[0].Spawns {
-      hv.Floor_drawers = append(hv.Floor_drawers, spawn)
-    }
-    if hv.Floor_drawer != nil {
-      hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
+    if hv.Edit_mode {
+      for _, spawn := range hv.house.Floors[0].Spawns {
+        hv.Floor_drawers = append(hv.Floor_drawers, spawn)
+      }
+      if hv.Floor_drawer != nil {
+        hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
+      }
     }
     hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.Floor_drawers)
     return
