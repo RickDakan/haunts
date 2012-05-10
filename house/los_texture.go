@@ -8,7 +8,7 @@ import (
 
 const LosMinVisibility = 32
 const LosVisibilityThreshold = 200
-const LosTextureSize = 64
+const LosTextureSize = 128
 const LosTextureSizeSquared = LosTextureSize * LosTextureSize
 
 // A LosTexture is defined over a square portion of a grid, and if a pixel is
