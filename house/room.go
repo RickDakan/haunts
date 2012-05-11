@@ -2,18 +2,18 @@ package house
 
 import (
   "fmt"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
-  "io"
-  "os"
-  "path/filepath"
-  "math"
-  "strings"
-  "unsafe"
-  "image"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
+  "image"
+  "io"
+  "math"
+  "os"
+  "path/filepath"
+  "strings"
+  "unsafe"
 )
 
 func GetAllRoomNames() []string {
@@ -43,9 +43,10 @@ func loadTags() error {
 }
 
 type RoomSize struct {
-  Name  string
-  Dx,Dy int
+  Name   string
+  Dx, Dy int
 }
+
 func (r RoomSize) String() string {
   return fmt.Sprintf(r.format(), r.Name, r.Dx, r.Dy)
 }
@@ -55,7 +56,6 @@ func (r *RoomSize) Scan(str string) {
 func (r *RoomSize) format() string {
   return "%s (%d, %d)"
 }
-
 
 type Tags struct {
   Themes     []string
@@ -68,9 +68,9 @@ type roomDef struct {
   Name string
   Size RoomSize
 
-  Furniture []*Furniture  `registry:"loadfrom-furniture"`
+  Furniture []*Furniture `registry:"loadfrom-furniture"`
 
-  WallTextures []*WallTexture  `registry:"loadfrom-wall_textures"`
+  WallTextures []*WallTexture `registry:"loadfrom-wall_textures"`
 
   Floor texture.Object
   Wall  texture.Object
@@ -86,8 +86,8 @@ type roomDef struct {
 }
 
 type roomVertex struct {
-  x,y,z float32
-  u,v float32
+  x, y, z float32
+  u, v    float32
 
   // Texture coordinates for the los texture
   los_u, los_v float32
@@ -109,26 +109,26 @@ func visibilityOfObject(xoff, yoff int, ro RectObject, los_tex *LosTexture) byte
   dx, dy := ro.Dims()
   count := 0
   pix := los_tex.Pix()
-  for i := x; i < x + dx; i++ {
-    if y - 1 >= 0 && pix[i][y-1] > LosVisibilityThreshold {
+  for i := x; i < x+dx; i++ {
+    if y-1 >= 0 && pix[i][y-1] > LosVisibilityThreshold {
       count++
     }
-    if y + dy + 1 < LosTextureSize && pix[i][y+dy+1] > LosVisibilityThreshold {
-      count++
-    }
-  }
-  for j := y; j < y + dy; j++ {
-    if x - 1 > 0 && pix[x-1][j] > LosVisibilityThreshold {
-      count++
-    }
-    if x + dx + 1 < LosTextureSize && pix[x+dx+1][j] > LosVisibilityThreshold {
+    if y+dy+1 < LosTextureSize && pix[i][y+dy+1] > LosVisibilityThreshold {
       count++
     }
   }
-  if count >= dx + dy {
+  for j := y; j < y+dy; j++ {
+    if x-1 > 0 && pix[x-1][j] > LosVisibilityThreshold {
+      count++
+    }
+    if x+dx+1 < LosTextureSize && pix[x+dx+1][j] > LosVisibilityThreshold {
+      count++
+    }
+  }
+  if count >= dx+dy {
     return 255
   }
-  v := 256 * float64(count) / float64(dx + dy)
+  v := 256 * float64(count) / float64(dx+dy)
   if v < 0 {
     v = 0
   }
@@ -139,7 +139,7 @@ func visibilityOfObject(xoff, yoff int, ro RectObject, los_tex *LosTexture) byte
 }
 
 func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables []Drawable, los_tex *LosTexture) {
-  board_to_window := func(mx,my float32) (x,y float32) {
+  board_to_window := func(mx, my float32) (x, y float32) {
     v := mathgl.Vec4{X: mx, Y: my, W: 1}
     v.Transform(&floor)
     x, y = v.X, v.Y
@@ -149,10 +149,18 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
   var all []RectObject
   for _, d := range drawables {
     x, y := d.Pos()
-    if x < room.X { continue }
-    if y < room.Y { continue }
-    if x >= room.X + room.Size.Dx { continue }
-    if y >= room.Y + room.Size.Dy { continue }
+    if x < room.X {
+      continue
+    }
+    if y < room.Y {
+      continue
+    }
+    if x >= room.X+room.Size.Dx {
+      continue
+    }
+    if y >= room.Y+room.Size.Dy {
+      continue
+    }
     all = append(all, offsetDrawable{d, -room.X, -room.Y})
   }
   for _, f := range room.Furniture {
@@ -162,13 +170,13 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
 
   for i := len(all) - 1; i >= 0; i-- {
     d := all[i].(Drawable)
-    fx,fy := d.FPos()
+    fx, fy := d.FPos()
     near_x, near_y := float32(fx), float32(fy)
     idx, idy := d.Dims()
     dx, dy := float32(idx), float32(idy)
-    leftx,_ := board_to_window(near_x, near_y + dy)
-    rightx,_ := board_to_window(near_x + dx, near_y)
-    _,boty := board_to_window(near_x, near_y)
+    leftx, _ := board_to_window(near_x, near_y+dy)
+    rightx, _ := board_to_window(near_x+dx, near_y)
+    _, boty := board_to_window(near_x, near_y)
     vis := visibilityOfObject(room.X, room.Y, d, los_tex)
     r, g, b, a := d.Color()
     r = alphaMult(r, vis)
@@ -177,7 +185,7 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
     a = alphaMult(a, vis)
     a = alphaMult(a, base_alpha)
     gl.Color4ub(r, g, b, a)
-    d.Render(mathgl.Vec2{leftx, boty}, rightx - leftx)
+    d.Render(mathgl.Vec2{leftx, boty}, rightx-leftx)
   }
 }
 
@@ -187,11 +195,11 @@ func (room *Room) getNearWallAlpha(los_tex *LosTexture) (left, right byte) {
   }
   pix := los_tex.Pix()
   v1, v2 := 0, 0
-  for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+  for y := room.Y; y < room.Y+room.Size.Dy; y++ {
     if pix[room.X][y] > LosVisibilityThreshold {
       v1++
     }
-    if pix[room.X - 1][y] > LosVisibilityThreshold {
+    if pix[room.X-1][y] > LosVisibilityThreshold {
       v2++
     }
   }
@@ -200,11 +208,11 @@ func (room *Room) getNearWallAlpha(los_tex *LosTexture) (left, right byte) {
   }
   right = byte((v1 * 255) / room.Size.Dy)
   v1, v2 = 0, 0
-  for x := room.X; x < room.X + room.Size.Dx; x++ {
+  for x := room.X; x < room.X+room.Size.Dx; x++ {
     if pix[x][room.Y] > LosVisibilityThreshold {
       v1++
     }
-    if pix[x][room.Y - 1] > LosVisibilityThreshold {
+    if pix[x][room.Y-1] > LosVisibilityThreshold {
       v2++
     }
   }
@@ -221,14 +229,14 @@ func (room *Room) getMaxLosAlpha(los_tex *LosTexture) byte {
   }
   var max_room_alpha byte = 0
   pix := los_tex.Pix()
-  for x := room.X; x < room.X + room.Size.Dx; x++ {
-    for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+  for x := room.X; x < room.X+room.Size.Dx; x++ {
+    for y := room.Y; y < room.Y+room.Size.Dy; y++ {
       if pix[x][y] > max_room_alpha {
         max_room_alpha = pix[x][y]
       }
     }
   }
-  max_room_alpha = byte(255 * (float64(max_room_alpha - LosMinVisibility) / float64(255 - LosMinVisibility)))
+  max_room_alpha = byte(255 * (float64(max_room_alpha-LosMinVisibility) / float64(255-LosMinVisibility)))
   return max_room_alpha
 }
 
@@ -237,7 +245,7 @@ func alphaMult(a, b byte) byte {
 }
 
 // Need floor, right wall, and left wall matrices to draw the details
-func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
+func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
   do_color := func(r, g, b, a byte) {
     R, G, B, A := room.Color()
     A = alphaMult(A, base_alpha)
@@ -249,7 +257,6 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
   gl.Enable(gl.STENCIL_TEST)
   gl.ClearStencil(0)
   gl.Clear(gl.STENCIL_BUFFER_BIT)
-
 
   gl.EnableClientState(gl.VERTEX_ARRAY)
   gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
@@ -274,7 +281,7 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     gl.Enable(gl.TEXTURE_2D)
     gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
     los_tex.Bind()
-//      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
+    //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
     gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
     gl.ClientActiveTexture(gl.TEXTURE0)
@@ -298,12 +305,14 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
     // Render the doors and cut out the stencil buffer so we leave them empty
     // if they're open
     switch plane.mat {
-      case &left:
+    case &left:
       gl.StencilFunc(gl.ALWAYS, 1, 1)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       for _, door := range room.Doors {
         door.TextureData().Bind()
-        if door.Facing != FarLeft { continue }
+        if door.Facing != FarLeft {
+          continue
+        }
 
         run.Assign(&floor)
         mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
@@ -322,13 +331,15 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
       do_color(255, 255, 255, left_alpha)
 
-      case &right:
+    case &right:
       gl.StencilFunc(gl.ALWAYS, 1, 1)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       gl.Color4ub(255, 255, 255, right_alpha)
       for _, door := range room.Doors {
         door.TextureData().Bind()
-        if door.Facing != FarRight { continue }
+        if door.Facing != FarRight {
+          continue
+        }
 
         run.Assign(&floor)
         mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
@@ -349,12 +360,11 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
       do_color(255, 255, 255, right_alpha)
 
-      case &floor:
+    case &floor:
       gl.StencilFunc(gl.ALWAYS, 2, 2)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       do_color(255, 255, 255, current_alpha)
     }
-
 
     // Now draw the walls
     gl.LoadMatrixf(&floor[0])
@@ -364,14 +374,14 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
       zexp := math.Log(float64(zoom))
-      frac := 1 - 1 / zexp
+      frac := 1 - 1/zexp
       base.SetUniformF("gorey", "frac", float32(frac))
     }
     if plane.mat == &floor && strings.Contains(string(room.Floor.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
       zexp := math.Log(float64(zoom))
-      frac := 1 - 1 / zexp
+      frac := 1 - 1/zexp
       base.Log().Printf("frac: %f", frac)
       base.SetUniformF("gorey", "frac", float32(frac))
     }
@@ -450,11 +460,11 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
   gl.LoadMatrixf(&run[0])
   gl.StencilFunc(gl.EQUAL, 2, 3)
   gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-  room_rect := image.Rect(room.X, room.Y, room.X + room.Size.Dx, room.Y + room.Size.Dy)
+  room_rect := image.Rect(room.X, room.Y, room.X+room.Size.Dx, room.Y+room.Size.Dy)
   for _, fd := range floor_drawers {
     x, y := fd.Pos()
     dx, dy := fd.Dims()
-    if room_rect.Overlaps(image.Rect(x, y, x + dx, y + dy)) {
+    if room_rect.Overlaps(image.Rect(x, y, x+dx, y+dy)) {
       fd.RenderOnFloor()
     }
   }
@@ -466,7 +476,12 @@ func (room *Room) render(floor,left,right mathgl.Mat4, zoom float32, base_alpha 
 }
 
 func (room *Room) setupGlStuff() {
-  if room.X == room.gl.x && room.Y == room.gl.y && room.Size.Dx == room.gl.dx && room.Size.Dy == room.gl.dy {
+  if room.X == room.gl.x &&
+     room.Y == room.gl.y &&
+     room.Size.Dx == room.gl.dx &&
+     room.Size.Dy == room.gl.dy &&
+     room.Wall.Data().Dx() == room.gl.wall_tex_dx &&
+     room.Wall.Data().Dy() == room.gl.wall_tex_dy {
     return
   }
   base.Log().Printf("SETUP GL")
@@ -474,6 +489,8 @@ func (room *Room) setupGlStuff() {
   room.gl.y = room.Y
   room.gl.dx = room.Size.Dx
   room.gl.dy = room.Size.Dy
+  room.gl.wall_tex_dx = room.Wall.Data().Dx()
+  room.gl.wall_tex_dy = room.Wall.Data().Dy()
   if room.vbuffer != 0 {
     gl.DeleteBuffers(1, &room.vbuffer)
     gl.DeleteBuffers(1, &room.left_buffer)
@@ -484,7 +501,7 @@ func (room *Room) setupGlStuff() {
   dy := float32(room.Size.Dy)
   var dz float32
   if room.Wall.Data().Dx() > 0 {
-    dz = -float32(room.Wall.Data().Dy() * (room.Size.Dx + room.Size.Dy)) / float32(room.Wall.Data().Dx())
+    dz = -float32(room.Wall.Data().Dy()*(room.Size.Dx+room.Size.Dy)) / float32(room.Wall.Data().Dx())
   }
 
   // Conveniently casted values
@@ -503,18 +520,18 @@ func (room *Room) setupGlStuff() {
 
   vs := []roomVertex{
     // Walls
-    { 0,  dy,  0, 0, 1, lt_ury, lt_llx},
-    {dx,  dy,  0, c, 1, lt_ury, lt_urx},
-    {dx,   0,  0, 1, 1, lt_lly, lt_urx},
-    { 0,  dy, dz, 0, 0, lt_ury, lt_llx},
-    {dx,  dy, dz, c, 0, lt_ury, lt_urx},
-    {dx,   0, dz, 1, 0, lt_lly, lt_urx},
+    {0, dy, 0, 0, 1, lt_ury, lt_llx},
+    {dx, dy, 0, c, 1, lt_ury, lt_urx},
+    {dx, 0, 0, 1, 1, lt_lly, lt_urx},
+    {0, dy, dz, 0, 0, lt_ury, lt_llx},
+    {dx, dy, dz, c, 0, lt_ury, lt_urx},
+    {dx, 0, dz, 1, 0, lt_lly, lt_urx},
 
     // Floor
-    { 0,  0, 0, 0, 1, lt_lly, lt_llx},
-    { 0, dy, 0, 0, 0, lt_ury, lt_llx},
+    {0, 0, 0, 0, 1, lt_lly, lt_llx},
+    {0, dy, 0, 0, 0, lt_ury, lt_llx},
     {dx, dy, 0, 1, 0, lt_ury, lt_urx},
-    {dx,  0, 0, 1, 1, lt_lly, lt_urx},
+    {dx, 0, 0, 1, 1, lt_lly, lt_urx},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
@@ -540,7 +557,7 @@ func (room *Room) setupGlStuff() {
   gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
 }
 
-func (room *roomDef) Dims() (dx,dy int) {
+func (room *roomDef) Dims() (dx, dy int) {
   return room.Size.Dx, room.Size.Dy
 }
 
@@ -559,6 +576,7 @@ func imagePathFilter(path string, isdir bool) bool {
 type roomError struct {
   ErrorString string
 }
+
 func (re *roomError) Error() string {
   return re.ErrorString
 }
@@ -569,46 +587,46 @@ func (re *roomError) Error() string {
 // path of the new file relative to prefix.
 func (room *roomDef) ensureRelative(prefix, image_path string, t int64) (string, error) {
   if filepath.HasPrefix(image_path, prefix) {
-    image_path = image_path[len(prefix) : ]
+    image_path = image_path[len(prefix):]
     if filepath.IsAbs(image_path) {
-      image_path = image_path[1 : ]
+      image_path = image_path[1:]
     }
     return image_path, nil
   }
   target_path := filepath.Join(prefix, filepath.Base(image_path))
-  info,err := os.Stat(target_path)
+  info, err := os.Stat(target_path)
   if err == nil {
     if info.IsDir() {
-      return "", &roomError{ fmt.Sprintf("'%s' is a directory, not a file", image_path) }
+      return "", &roomError{fmt.Sprintf("'%s' is a directory, not a file", image_path)}
     }
     base_image := filepath.Base(image_path)
     ext := filepath.Ext(base_image)
     if len(ext) == 0 {
-      return "", &roomError{ fmt.Sprintf("Unexpected filename '%s'", base_image) }
+      return "", &roomError{fmt.Sprintf("Unexpected filename '%s'", base_image)}
     }
-    sans_ext := base_image[0 : len(base_image) - len(ext)]
+    sans_ext := base_image[0 : len(base_image)-len(ext)]
     target_path = filepath.Join(prefix, fmt.Sprintf("%s.%d%s", sans_ext, t, ext))
   }
 
-  source,err := os.Open(image_path)
+  source, err := os.Open(image_path)
   if err != nil {
     return "", err
   }
   defer source.Close()
 
-  target,err := os.Create(target_path)
+  target, err := os.Create(target_path)
   if err != nil {
     return "", err
   }
   defer target.Close()
 
-  _,err = io.Copy(target, source)
+  _, err = io.Copy(target, source)
   if err != nil {
     os.Remove(target_path)
     return "", err
   }
 
-  target_path = target_path[len(prefix) + 1: ]
+  target_path = target_path[len(prefix)+1:]
   return target_path, nil
 }
 
@@ -621,7 +639,7 @@ type tabWidget interface {
 
 type RoomEditorPanel struct {
   *gui.HorizontalTable
-  tab *gui.TabFrame
+  tab     *gui.TabFrame
   widgets []tabWidget
 
   panels struct {
@@ -633,7 +651,6 @@ type RoomEditorPanel struct {
   viewer *RoomViewer
 }
 
-
 // Manually pass all events to the tabs, regardless of location, since the tabs
 // need to know where the user clicks.
 func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
@@ -641,7 +658,9 @@ func (w *RoomEditorPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (w *RoomEditorPanel) SelectTab(n int) {
-  if n < 0 || n >= len(w.widgets) { return }
+  if n < 0 || n >= len(w.widgets) {
+    return
+  }
   if n != w.tab.SelectedTab() {
     w.widgets[w.tab.SelectedTab()].Collapse()
     w.tab.SelectTab(n)
@@ -657,9 +676,9 @@ func (w *RoomEditorPanel) GetViewer() Viewer {
 type Viewer interface {
   gui.Widget
   Zoom(float64)
-  Drag(float64,float64)
-  WindowToBoard(int,int) (float32,float32)
-  BoardToWindow(float32,float32) (int,int)
+  Drag(float64, float64)
+  WindowToBoard(int, int) (float32, float32)
+  BoardToWindow(float32, float32) (int, int)
 }
 
 type Editor interface {
@@ -686,7 +705,6 @@ func MakeRoomEditorPanel() Editor {
   rep.viewer = MakeRoomViewer(&rep.room, 65)
   rep.AddChild(rep.viewer)
 
-
   var tabs []gui.Widget
 
   rep.panels.furniture = makeFurniturePanel(&rep.room, rep.viewer)
@@ -709,7 +727,7 @@ func (rep *RoomEditorPanel) Load(path string) error {
   err := base.LoadAndProcessObject(path, "json", &room)
   if err == nil {
     rep.room = room
-    for _,tab := range rep.widgets {
+    for _, tab := range rep.widgets {
       tab.Reload()
     }
   }
@@ -717,18 +735,19 @@ func (rep *RoomEditorPanel) Load(path string) error {
 }
 
 func (rep *RoomEditorPanel) Save() (string, error) {
-  path := filepath.Join(datadir, "rooms", rep.room.Name + ".room")
+  path := filepath.Join(datadir, "rooms", rep.room.Name+".room")
   err := base.SaveJson(path, rep.room)
   return path, err
 }
 
 func (rep *RoomEditorPanel) Reload() {
-  for _,tab := range rep.widgets {
+  for _, tab := range rep.widgets {
     tab.Reload()
   }
 }
 
 type selectMode int
+
 const (
   modeNoSelect selectMode = iota
   modeSelect

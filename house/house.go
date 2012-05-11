@@ -2,14 +2,14 @@ package house
 
 import (
   "fmt"
-  "math"
-  "path/filepath"
-  "image"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
+  "image"
+  "math"
+  "path/filepath"
 )
 
 type Room struct {
@@ -17,10 +17,10 @@ type Room struct {
   *roomDef
 
   // The placement of doors in this room
-  Doors []*Door  `registry:"loadfrom-doors"`
+  Doors []*Door `registry:"loadfrom-doors"`
 
   // The offset of this room on this floor
-  X,Y int
+  X, Y int
 
   temporary, invalid bool
 
@@ -46,14 +46,15 @@ type Room struct {
   // need to, so we keep track of the position and size of the room when they
   // were made so we don't have to.
   gl struct {
-    x, y, dx, dy int
+    x, y, dx, dy             int
+    wall_tex_dx, wall_tex_dy int
   }
 
-  wall_texture_gl_map map[*WallTexture]wallTextureGlIds
+  wall_texture_gl_map    map[*WallTexture]wallTextureGlIds
   wall_texture_state_map map[*WallTexture]wallTextureState
 }
 
-func (room *Room) Color() (r,g,b,a byte) {
+func (room *Room) Color() (r, g, b, a byte) {
   if room.temporary {
     if room.invalid {
       return 255, 127, 127, 200
@@ -64,8 +65,8 @@ func (room *Room) Color() (r,g,b,a byte) {
   return 255, 255, 255, 255
 }
 
-
 type WallFacing int
+
 const (
   NearLeft WallFacing = iota
   NearRight
@@ -74,7 +75,7 @@ const (
 )
 
 func MakeDoor(name string) *Door {
-  d := Door{ Defname: name }
+  d := Door{Defname: name}
   base.GetObject("doors", &d)
   return &d
 }
@@ -128,7 +129,7 @@ func (d *Door) TextureData() *texture.Data {
   return d.Closed_texture.Data()
 }
 
-func (d *Door) Color() (r,g,b,a byte) {
+func (d *Door) Color() (r, g, b, a byte) {
   if d.temporary {
     if d.invalid {
       return 255, 127, 127, 200
@@ -139,7 +140,7 @@ func (d *Door) Color() (r,g,b,a byte) {
   return 255, 255, 255, 255
 }
 
-func (r *Room) Pos() (x,y int) {
+func (r *Room) Pos() (x, y int) {
   return r.X, r.Y
 }
 
@@ -148,8 +149,8 @@ func getSpawnPointDefName(sp SpawnPoint) string {
 }
 
 type Floor struct {
-  Rooms  []*Room        `registry:"loadfrom-rooms"`
-  Spawns []*SpawnPoint  `registry:"loadfrom-spawns"`
+  Rooms  []*Room       `registry:"loadfrom-rooms"`
+  Spawns []*SpawnPoint `registry:"loadfrom-spawns"`
 }
 
 func (f *Floor) removeSpawn(sp *SpawnPoint) {
@@ -159,54 +160,90 @@ func (f *Floor) removeSpawn(sp *SpawnPoint) {
 }
 
 func (f *Floor) canAddRoom(add *Room) bool {
-  for _,room := range f.Rooms {
-    if room.temporary { continue }
-    if roomOverlap(room, add) { return false }
+  for _, room := range f.Rooms {
+    if room.temporary {
+      continue
+    }
+    if roomOverlap(room, add) {
+      return false
+    }
   }
   return true
 }
 
 func (room *Room) canAddDoor(door *Door) bool {
-  if door.Pos < 0 { return false }
+  if door.Pos < 0 {
+    return false
+  }
 
   // Make sure that the door only occupies valid cells
   if door.Facing == FarLeft || door.Facing == NearRight {
-    if door.Pos + door.Width >= room.Size.Dx { return false }
+    if door.Pos+door.Width >= room.Size.Dx {
+      return false
+    }
   }
   if door.Facing == FarRight || door.Facing == NearLeft {
-    if door.Pos + door.Width >= room.Size.Dy { return false }
+    if door.Pos+door.Width >= room.Size.Dy {
+      return false
+    }
   }
 
   // Now make sure that the door doesn't overlap any other doors
-  for _,other := range room.Doors {
-    if other.Facing != door.Facing { continue }
-    if other.temporary { continue }
-    if other.Pos >= door.Pos && other.Pos - door.Pos < door.Width { return false }
-    if door.Pos >= other.Pos && door.Pos - other.Pos < other.Width { return false }
+  for _, other := range room.Doors {
+    if other.Facing != door.Facing {
+      continue
+    }
+    if other.temporary {
+      continue
+    }
+    if other.Pos >= door.Pos && other.Pos-door.Pos < door.Width {
+      return false
+    }
+    if door.Pos >= other.Pos && door.Pos-other.Pos < other.Width {
+      return false
+    }
   }
 
   return true
 }
 
 func (f *Floor) findMatchingDoor(room *Room, door *Door) (*Room, *Door) {
-  for _,other_room := range f.Rooms {
-    if other_room == room { continue }
-    for _,other_door := range other_room.Doors {
-      if door.Facing == FarLeft && other_door.Facing != NearRight { continue }
-      if door.Facing == FarRight && other_door.Facing != NearLeft { continue }
-      if door.Facing == NearLeft && other_door.Facing != FarRight { continue }
-      if door.Facing == NearRight && other_door.Facing != FarLeft { continue }
-      if door.Facing == FarLeft && other_room.Y != room.Y + room.Size.Dy { continue }
-      if door.Facing == NearRight && room.Y != other_room.Y + other_room.Size.Dy { continue }
-      if door.Facing == FarRight && other_room.X != room.X + room.Size.Dx { continue }
-      if door.Facing == NearLeft && room.X != other_room.X + other_room.Size.Dx { continue }
+  for _, other_room := range f.Rooms {
+    if other_room == room {
+      continue
+    }
+    for _, other_door := range other_room.Doors {
+      if door.Facing == FarLeft && other_door.Facing != NearRight {
+        continue
+      }
+      if door.Facing == FarRight && other_door.Facing != NearLeft {
+        continue
+      }
+      if door.Facing == NearLeft && other_door.Facing != FarRight {
+        continue
+      }
+      if door.Facing == NearRight && other_door.Facing != FarLeft {
+        continue
+      }
+      if door.Facing == FarLeft && other_room.Y != room.Y+room.Size.Dy {
+        continue
+      }
+      if door.Facing == NearRight && room.Y != other_room.Y+other_room.Size.Dy {
+        continue
+      }
+      if door.Facing == FarRight && other_room.X != room.X+room.Size.Dx {
+        continue
+      }
+      if door.Facing == NearLeft && room.X != other_room.X+other_room.Size.Dx {
+        continue
+      }
       if door.Facing == FarLeft || door.Facing == NearRight {
-        if door.Pos == other_door.Pos - (room.X - other_room.X) {
+        if door.Pos == other_door.Pos-(room.X-other_room.X) {
           return other_room, other_door
         }
       }
       if door.Facing == FarRight || door.Facing == NearLeft {
-        if door.Pos == other_door.Pos - (room.Y - other_room.Y) {
+        if door.Pos == other_door.Pos-(room.Y-other_room.Y) {
           return other_room, other_door
         }
       }
@@ -216,11 +253,13 @@ func (f *Floor) findMatchingDoor(room *Room, door *Door) (*Room, *Door) {
 }
 
 func (f *Floor) findRoomForDoor(target *Room, door *Door) (*Room, *Door) {
-  if !target.canAddDoor(door) { return nil, nil }
+  if !target.canAddDoor(door) {
+    return nil, nil
+  }
 
   if door.Facing == FarLeft {
-    for _,room := range f.Rooms {
-      if room.Y == target.Y + target.Size.Dy {
+    for _, room := range f.Rooms {
+      if room.Y == target.Y+target.Size.Dy {
         temp := MakeDoor(door.Defname)
         temp.Pos = door.Pos - (room.X - target.X)
         temp.Facing = NearRight
@@ -230,8 +269,8 @@ func (f *Floor) findRoomForDoor(target *Room, door *Door) (*Room, *Door) {
       }
     }
   } else if door.Facing == FarRight {
-    for _,room := range f.Rooms {
-      if room.X == target.X + target.Size.Dx {
+    for _, room := range f.Rooms {
+      if room.X == target.X+target.Size.Dx {
         temp := MakeDoor(door.Defname)
         temp.Pos = door.Pos - (room.Y - target.Y)
         temp.Facing = NearLeft
@@ -245,12 +284,12 @@ func (f *Floor) findRoomForDoor(target *Room, door *Door) (*Room, *Door) {
 }
 
 func (f *Floor) canAddDoor(target *Room, door *Door) bool {
-  r,_ := f.findRoomForDoor(target, door)
+  r, _ := f.findRoomForDoor(target, door)
   return r != nil
 }
 
 func (f *Floor) removeInvalidDoors() {
-  for _,room := range f.Rooms {
+  for _, room := range f.Rooms {
     room.Doors = algorithm.Choose(room.Doors, func(a interface{}) bool {
       _, other_door := f.findMatchingDoor(room, a.(*Door))
       return other_door != nil && !other_door.temporary
@@ -260,24 +299,30 @@ func (f *Floor) removeInvalidDoors() {
 
 func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn, spawn bool) {
   for _, croom := range f.Rooms {
-    rx,ry := croom.Pos()
-    rdx,rdy := croom.Dims()
-    if x < rx || y < ry || x >= rx + rdx || y >= ry + rdy { continue }
+    rx, ry := croom.Pos()
+    rdx, rdy := croom.Dims()
+    if x < rx || y < ry || x >= rx+rdx || y >= ry+rdy {
+      continue
+    }
     room = croom
     for _, furniture := range room.Furniture {
       tx := x - rx
       ty := y - ry
-      fx,fy := furniture.Pos()
-      fdx,fdy := furniture.Dims()
-      if tx < fx || ty < fy || tx >= fx + fdx || ty >= fy + fdy { continue }
+      fx, fy := furniture.Pos()
+      fdx, fdy := furniture.Dims()
+      if tx < fx || ty < fy || tx >= fx+fdx || ty >= fy+fdy {
+        continue
+      }
       furn = true
       break
     }
     for _, sp := range f.Spawns {
-      if sp.temporary { continue }
+      if sp.temporary {
+        continue
+      }
       sx, sy := sp.Pos()
       sdx, sdy := sp.Dims()
-      if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
+      if x >= sx && x < sx+sdx && y >= sy && y < sy+sdy {
         spawn = true
         break
       }
@@ -287,7 +332,7 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn, spawn bool) {
   return
 }
 
-func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
+func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
   var ros []RectObject
   algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
   ros = OrderRectObjects(ros)
@@ -300,16 +345,20 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     room := ros[i].(*Room)
     los_alpha := room.getMaxLosAlpha(los_tex)
     room.setupGlStuff()
-    tx := (focusx + 3) - float32(room.X + room.Size.Dx)
-    if tx < 0 { tx = 0 }
-    ty := (focusy + 3) - float32(room.Y + room.Size.Dy)
-    if ty < 0 { ty = 0 }
+    tx := (focusx + 3) - float32(room.X+room.Size.Dx)
+    if tx < 0 {
+      tx = 0
+    }
+    ty := (focusy + 3) - float32(room.Y+room.Size.Dy)
+    if ty < 0 {
+      ty = 0
+    }
     if tx < ty {
       tx = ty
     }
     // z := math.Log10(float64(zoom))
     z := float64(zoom) / 10
-    v := math.Pow(z, float64(2 * tx) / 3)
+    v := math.Pow(z, float64(2*tx)/3)
     if v > 255 {
       v = 255
     }
@@ -327,20 +376,22 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     // big deal so we'll just ignore it.
     for _, door := range r1.Doors {
       r2, _ := f.findMatchingDoor(r1, door)
-      if r2 == nil { continue }
+      if r2 == nil {
+        continue
+      }
       // alpha := alpha_map[r2]
       // base.Log().Printf("%p %p %d %d", r1, r2, alpha, door.Facing)
       left, right := r2.getNearWallAlpha(los_tex)
       switch door.Facing {
       case FarLeft:
         // if left > alpha {
-          r1.far_left.door_alpha = left
+        r1.far_left.door_alpha = left
         // } else {
         //   r1.far_left.door_alpha = alpha
         // }
       case FarRight:
         // if right > alpha {
-          r1.far_right.door_alpha = right
+        r1.far_right.door_alpha = right
         // } else {
         //   r1.far_right.door_alpha = alpha
         // }
@@ -350,14 +401,16 @@ func (f *Floor) render(region gui.Region, focusx,focusy,angle,zoom float32, draw
     r1.far_right.wall_alpha = 255
     r1.far_left.wall_alpha = 255
     for _, r2 := range f.Rooms {
-      if r1 == r2 { continue }
+      if r1 == r2 {
+        continue
+      }
       left, right := r2.getNearWallAlpha(los_tex)
-      r1_rect := image.Rect(r1.X, r1.Y + r1.Size.Dy, r1.X + r1.Size.Dx, r1.Y + r1.Size.Dy + 1)
-      r2_rect := image.Rect(r2.X, r2.Y, r2.X + r2.Size.Dx, r2.Y + r2.Size.Dy)
+      r1_rect := image.Rect(r1.X, r1.Y+r1.Size.Dy, r1.X+r1.Size.Dx, r1.Y+r1.Size.Dy+1)
+      r2_rect := image.Rect(r2.X, r2.Y, r2.X+r2.Size.Dx, r2.Y+r2.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
         r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
       }
-      r1_rect = image.Rect(r1.X + r1.Size.Dx, r1.Y, r1.X + r1.Size.Dx + 1, r1.Y + r1.Size.Dy)
+      r1_rect = image.Rect(r1.X+r1.Size.Dx, r1.Y, r1.X+r1.Size.Dx+1, r1.Y+r1.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
         r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
       }
@@ -397,10 +450,10 @@ func (h *HouseDef) Normalize() {
     if len(h.Floors[i].Rooms) == 0 {
       continue
     }
-    var minx,miny int
-    minx,miny = h.Floors[i].Rooms[0].Pos()
+    var minx, miny int
+    minx, miny = h.Floors[i].Rooms[0].Pos()
     for j := range h.Floors[i].Rooms {
-      x,y := h.Floors[i].Rooms[j].Pos()
+      x, y := h.Floors[i].Rooms[j].Pos()
       if x < minx {
         minx = x
       }
@@ -421,7 +474,7 @@ func (h *HouseDef) Normalize() {
 
 type HouseEditor struct {
   *gui.HorizontalTable
-  tab *gui.TabFrame
+  tab     *gui.TabFrame
   widgets []tabWidget
 
   house  HouseDef
@@ -433,7 +486,9 @@ func (he *HouseEditor) GetViewer() Viewer {
 }
 
 func (w *HouseEditor) SelectTab(n int) {
-  if n < 0 || n >= len(w.widgets) { return }
+  if n < 0 || n >= len(w.widgets) {
+    return
+  }
   if n != w.tab.SelectedTab() {
     w.widgets[w.tab.SelectedTab()].Collapse()
     w.tab.SelectTab(n)
@@ -452,14 +507,15 @@ type houseDataTab struct {
   viewer *HouseViewer
 
   // Distance from the mouse to the center of the object, in board coordinates
-  drag_anchor struct{ x,y float32 }
+  drag_anchor struct{ x, y float32 }
 
   // Which floor we are viewing and editing
   current_floor int
 
   temp_room, prev_room *Room
-  temp_spawns []*SpawnPoint
+  temp_spawns          []*SpawnPoint
 }
+
 func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   var hdt houseDataTab
   hdt.VerticalTable = gui.MakeVerticalTable()
@@ -467,17 +523,17 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   hdt.viewer = viewer
 
   hdt.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)
-  num_floors_options := []string{ "1 Floor", "2 Floors", "3 Floors", "4 Floors" }
+  num_floors_options := []string{"1 Floor", "2 Floors", "3 Floors", "4 Floors"}
   hdt.num_floors = gui.MakeComboTextBox(num_floors_options, 300)
 
   hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
-  
+
   names := GetAllRoomNames()
-  for _,name := range names {
+  for _, name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      hdt.temp_room = &Room{ Defname: n }
+      hdt.temp_room = &Room{Defname: n}
       base.GetObject("rooms", hdt.temp_room)
       hdt.temp_room.temporary = true
       hdt.temp_room.invalid = true
@@ -490,9 +546,9 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
   if hdt.temp_room != nil {
-    mx,my := gin.In().GetCursor("Mouse").Point()
-    bx,by := hdt.viewer.WindowToBoard(mx, my)
-    cx,cy := hdt.temp_room.Pos()
+    mx, my := gin.In().GetCursor("Mouse").Point()
+    bx, by := hdt.viewer.WindowToBoard(mx, my)
+    cx, cy := hdt.temp_room.Pos()
     hdt.temp_room.X = int(bx - hdt.drag_anchor.x)
     hdt.temp_room.Y = int(by - hdt.drag_anchor.y)
     dx := hdt.temp_room.X - cx
@@ -510,7 +566,7 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
       hdt.house.Floors = append(hdt.house.Floors, &Floor{})
     }
     if len(hdt.house.Floors) > num_floors {
-      hdt.house.Floors = hdt.house.Floors[0 : num_floors]
+      hdt.house.Floors = hdt.house.Floors[0:num_floors]
     }
   }
   hdt.house.Name = hdt.name.GetText()
@@ -539,12 +595,12 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
-  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     hdt.onEscape()
     return true
   }
 
-  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
     if hdt.temp_room != nil {
       spawns := make(map[*SpawnPoint]bool)
       for i := range hdt.temp_spawns {
@@ -563,7 +619,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.temp_room != nil {
       if !hdt.temp_room.invalid {
         hdt.temp_room.temporary = false
@@ -575,9 +631,9 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       cx, cy := event.Key.Cursor().Point()
       bx, by := hdt.viewer.WindowToBoard(cx, cy)
       for i := range floor.Rooms {
-        x,y := floor.Rooms[i].Pos()
-        dx,dy := floor.Rooms[i].Dims()
-        if int(bx) >= x && int(bx) < x + dx && int(by) >= y && int(by) < y + dy {
+        x, y := floor.Rooms[i].Pos()
+        dx, dy := floor.Rooms[i].Dims()
+        if int(bx) >= x && int(bx) < x+dx && int(by) >= y && int(by) < y+dy {
           hdt.temp_room = floor.Rooms[i]
           hdt.prev_room = new(Room)
           *hdt.prev_room = *hdt.temp_room
@@ -593,7 +649,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
           x, y := sp.Pos()
           rx, ry := hdt.temp_room.Pos()
           rdx, rdy := hdt.temp_room.Dims()
-          if x >= rx && x < rx + rdx && y >= ry && y < ry + rdy {
+          if x >= rx && x < rx+rdx && y >= ry && y < ry+rdy {
             hdt.temp_spawns = append(hdt.temp_spawns, sp)
           }
         }
@@ -605,7 +661,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (hdt *houseDataTab) Collapse() {}
-func (hdt *houseDataTab) Expand() {}
+func (hdt *houseDataTab) Expand()   {}
 func (hdt *houseDataTab) Reload() {
   hdt.name.SetText(hdt.house.Name)
 }
@@ -619,7 +675,7 @@ type houseDoorTab struct {
   viewer *HouseViewer
 
   // Distance from the mouse to the center of the object, in board coordinates
-  drag_anchor struct{ x,y float32 }
+  drag_anchor struct{ x, y float32 }
 
   // Which floor we are viewing and editing
   current_floor int
@@ -627,6 +683,7 @@ type houseDoorTab struct {
   temp_room, prev_room *Room
   temp_door, prev_door *Door
 }
+
 func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   var hdt houseDoorTab
   hdt.VerticalTable = gui.MakeVerticalTable()
@@ -634,7 +691,7 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   hdt.viewer = viewer
 
   names := GetAllDoorNames()
-  for _,name := range names {
+  for _, name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
       if len(hdt.house.Floors[0].Rooms) < 2 {
@@ -672,12 +729,12 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
-  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     hdt.onEscape()
     return true
   }
 
-  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
     algorithm.Choose2(&hdt.temp_room.Doors, func(d *Door) bool {
       return d != hdt.temp_door
     })
@@ -712,7 +769,7 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   floor := hdt.house.Floors[hdt.current_floor]
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.temp_door != nil {
       other_room, other_door := floor.findRoomForDoor(hdt.temp_room, hdt.temp_door)
       if other_room != nil {
@@ -765,8 +822,9 @@ type houseRelicsTab struct {
 
   temp_relic, prev_relic *SpawnPoint
 
-  drag_anchor struct{x, y float32}
+  drag_anchor struct{ x, y float32 }
 }
+
 func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   var hdt houseRelicsTab
   hdt.VerticalTable = gui.MakeVerticalTable()
@@ -776,7 +834,6 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   hdt.VerticalTable.AddChild(gui.MakeTextLine("standard", "Spawns", 300, 1, 1, 1, 1))
   hdt.spawn_name = gui.MakeTextLine("standard", "", 300, 1, 1, 1, 1)
   hdt.VerticalTable.AddChild(hdt.spawn_name)
-
 
   var dims_options []string
   for i := 1; i <= 4; i++ {
@@ -823,7 +880,7 @@ func (hdt *houseRelicsTab) onEscape() {
 
 func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   defer hdt.VerticalTable.Think(ui, t)
-  rbx,rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
+  rbx, rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
   bx := roundDown(rbx - hdt.drag_anchor.x + 0.5)
   by := roundDown(rby - hdt.drag_anchor.y + 0.5)
   if hdt.temp_relic != nil {
@@ -834,7 +891,7 @@ func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
     var room *Room
     for ix := 0; ix < hdt.temp_relic.Dx; ix++ {
       for iy := 0; iy < hdt.temp_relic.Dy; iy++ {
-        room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(bx + ix, by + iy)
+        room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(bx+ix, by+iy)
         if room == nil {
           room = room_at
         }
@@ -847,9 +904,9 @@ func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   } else {
     set := false
     for _, sp := range hdt.house.Floors[0].Spawns {
-      x,y := sp.Pos()
-      dx,dy := sp.Dims()
-      if bx >= x && bx < x + dx && by >= y && by < y + dy {
+      x, y := sp.Pos()
+      dx, dy := sp.Dims()
+      if bx >= x && bx < x+dx && by >= y && by < y+dy {
         hdt.spawn_name.SetText("Hoogabooo")
         set = true
         break
@@ -866,7 +923,7 @@ func roundDown(f float32) int {
   if f >= 0 {
     return int(f)
   }
-  return int(f-1)
+  return int(f - 1)
 }
 
 func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
@@ -874,12 +931,12 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
 
-  if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     hdt.onEscape()
     return true
   }
 
-  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
     algorithm.Choose2(&hdt.house.Floors[0].Spawns, func(s *SpawnPoint) bool {
       return s != hdt.temp_relic
     })
@@ -890,7 +947,7 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   cursor := group.Events[0].Key.Cursor()
   floor := hdt.house.Floors[hdt.current_floor]
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if hdt.temp_relic != nil {
       if !hdt.temp_relic.invalid {
         hdt.temp_relic.temporary = false
@@ -902,7 +959,7 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         bx, by := roundDown(fbx), roundDown(fby)
         x, y := sp.Pos()
         dx, dy := sp.Dims()
-        if bx >= x && bx < x + dx && by >= y && by < y + dy {
+        if bx >= x && bx < x+dx && by >= y && by < y+dy {
           hdt.temp_relic = sp
           hdt.prev_relic = new(SpawnPoint)
           *hdt.prev_relic = *hdt.temp_relic
@@ -940,9 +997,9 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
-  for _,floor := range house.Floors {
-    for _,room := range floor.Rooms {
-      for _,door := range room.Doors {
+  for _, floor := range house.Floors {
+    for _, room := range floor.Rooms {
+      for _, door := range room.Doors {
         door.Opened = true
       }
     }
@@ -971,7 +1028,7 @@ func MakeHouseEditorPanel() Editor {
   he.widgets = append(he.widgets, makeHouseDoorTab(&he.house, he.viewer))
   he.widgets = append(he.widgets, makeHouseRelicsTab(&he.house, he.viewer))
   var tabs []gui.Widget
-  for _,w := range he.widgets {
+  for _, w := range he.widgets {
     tabs = append(tabs, w.(gui.Widget))
   }
   he.tab = gui.MakeTabFrame(tabs)
@@ -993,25 +1050,25 @@ func (he *HouseEditor) Load(path string) error {
     return err
   }
   he.house = *house
-  for _,tab := range he.widgets {
+  for _, tab := range he.widgets {
     tab.Reload()
   }
   return err
 }
 
 func (he *HouseEditor) Save() (string, error) {
-  path := filepath.Join(datadir, "houses", he.house.Name + ".house")
+  path := filepath.Join(datadir, "houses", he.house.Name+".house")
   err := base.SaveJson(path, he.house)
   return path, err
 }
 
 func (he *HouseEditor) Reload() {
-  for _,floor := range he.house.Floors {
+  for _, floor := range he.house.Floors {
     for i := range floor.Rooms {
       base.GetObject("rooms", floor.Rooms[i])
     }
   }
-  for _,tab := range he.widgets {
+  for _, tab := range he.widgets {
     tab.Reload()
   }
 }
