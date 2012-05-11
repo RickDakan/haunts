@@ -530,9 +530,11 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   hdt.VerticalTable.AddChild(hdt.num_floors)
 
   names := GetAllRoomNames()
+  room_buttons := gui.MakeVerticalTable()
   for _, name := range names {
     n := name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+    room_buttons.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+      if hdt.temp_room != nil { return }
       hdt.temp_room = &Room{Defname: n}
       base.GetObject("rooms", hdt.temp_room)
       hdt.temp_room.temporary = true
@@ -542,6 +544,8 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
       hdt.drag_anchor.y = float32(hdt.temp_room.Size.Dy / 2)
     }))
   }
+  scroller := gui.MakeScrollFrame(room_buttons, 300, 700)
+  hdt.VerticalTable.AddChild(scroller)
   return &hdt
 }
 func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
