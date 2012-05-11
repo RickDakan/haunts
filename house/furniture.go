@@ -32,6 +32,8 @@ type Furniture struct {
   // Index into furnitureDef.Texture_paths
   Rotation int
 
+  Flip bool
+
   // If this is currently being dragged around it will be marked as temporary
   // so that it will be drawn differently
   temporary bool
@@ -89,6 +91,9 @@ type furnitureDef struct {
 
 func (f *Furniture) Dims() (int, int) {
   orientation := f.Orientations[f.Rotation]
+  if f.Flip {
+    return orientation.Dy, orientation.Dx
+  }
   return orientation.Dx, orientation.Dy
 }
 
@@ -106,5 +111,6 @@ func (f *Furniture) Color() (r,g,b,a byte) {
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
-  orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
+  // orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
+  orientation.Texture.Data().RenderAdvanced(float64(pos.X), float64(pos.Y), float64(width), float64(dy), 0, !f.Flip)
 }

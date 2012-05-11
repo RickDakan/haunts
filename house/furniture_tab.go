@@ -142,6 +142,11 @@ func (w *FurniturePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       w.furniture.RotateRight()
     }
   }
+  if found,event := group.FindEvent(w.key_map["flip"].Id()); found && event.Type == gin.Press {
+    if w.furniture != nil {
+      w.furniture.Flip = !w.furniture.Flip
+    }
+  }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if w.furniture != nil {
       if !w.furniture.invalid {
