@@ -244,6 +244,11 @@ func alphaMult(a, b byte) byte {
   return byte((int(a) * int(b)) >> 8)
 }
 
+var Num_rows float32 = 1150;
+var Noise_rate float32 = 60;
+var Num_steps float32 = 3;
+
+
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
   do_color := func(r, g, b, a byte) {
@@ -373,17 +378,26 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     if (plane.mat == &left || plane.mat == &right) && strings.Contains(string(room.Wall.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
+      base.SetUniformF("gorey", "num_rows", Num_rows);
+      base.SetUniformF("gorey", "noise_rate", Noise_rate);
+      base.SetUniformF("gorey", "num_steps", Num_steps);
       zexp := math.Log(float64(zoom))
       frac := 1 - 1/zexp
+      frac = (frac - 0.6) * 5.0;
       base.SetUniformF("gorey", "frac", float32(frac))
     }
     if plane.mat == &floor && strings.Contains(string(room.Floor.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
+      base.SetUniformF("gorey", "num_rows", Num_rows);
+      base.SetUniformF("gorey", "noise_rate", Noise_rate);
+      base.SetUniformF("gorey", "num_steps", Num_steps);
       zexp := math.Log(float64(zoom))
       frac := 1 - 1/zexp
+      frac = (frac - 0.6) * 5.0;
       base.Log().Printf("frac: %f", frac)
       base.SetUniformF("gorey", "frac", float32(frac))
+      base.Log().Printf("vals %f %f %f", Num_rows, Noise_rate, Num_steps)
     }
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {

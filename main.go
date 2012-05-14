@@ -366,6 +366,25 @@ func main() {
       edit_mode = !edit_mode
     }
 
+  if key_map["row up"].FramePressCount() > 0 {
+    house.Num_rows += 25;
+  }
+  if key_map["row down"].FramePressCount() > 0 {
+    house.Num_rows -= 25;
+  }
+  if key_map["steps up"].FramePressCount() > 0 {
+    house.Num_steps++
+  }
+  if key_map["steps down"].FramePressCount() > 0 {
+    house.Num_steps--
+  }
+  if key_map["noise up"].FramePressCount() > 0 {
+    house.Noise_rate += 10
+  }
+  if key_map["noise down"].FramePressCount() > 0 {
+    house.Noise_rate -= 10
+  }
+
     if edit_mode {
       editMode()
     } else {
