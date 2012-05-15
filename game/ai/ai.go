@@ -3,6 +3,7 @@ package ai
 import (
   "math/rand"
   "reflect"
+  "encoding/gob"
   "github.com/runningwild/glop/ai"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
@@ -27,6 +28,15 @@ type Ai struct {
 
   // Keep track of the ent since we'll want to reference it regularly
   ent *game.Entity
+
+  State AiState
+}
+
+type AiState struct {
+}
+
+func init() {
+  gob.Register(&Ai{})
 }
 
 func makeAi(path string, ent *game.Entity) game.Ai {

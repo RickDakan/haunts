@@ -615,14 +615,14 @@ func (g *Game) Think(dt int64) {
         if ent.Side() != g.Side { continue }
         if ent.ai_status != aiReady { continue }
         g.ai_ent = ent
-        g.ai_ent.ai.Eval()
+        g.ai_ent.Ai.Eval()
         g.ai_ent.ai_status = aiRunning
         break
       }
     }
     if g.ai_ent != nil {
       select {
-      case act := <-g.ai_ent.ai.Actions():
+      case act := <-g.ai_ent.Ai.Actions():
         if act != nil {
           g.current_action = act
           g.action_state = doingAction

@@ -89,7 +89,7 @@ func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
   if e.Ai_path.String() != "" {
-    e.ai = ai_maker(e.Ai_path.String(), e)
+    e.Ai = ai_maker(e.Ai_path.String(), e)
   }
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
@@ -301,7 +301,7 @@ type EntityInst struct {
 
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
-  ai Ai
+  Ai Ai
   // The ready flag is set to true at the start of every turn - this lets us
   // keep easy track of whether or not an entity's Ai has executed yet, since
   // an entity might not do anything else obvious, like run out of Ap.
