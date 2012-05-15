@@ -89,16 +89,18 @@ func (a *Ai) Actions() <-chan game.Action {
 }
 
 // Does the roll dice-d-sides, like 3d6, and returns the result
-func roll(dice, sides int) int {
+func roll(dice, sides float64) float64 {
   result := 0
-  for i := 0; i < dice; i++ {
-    result += rand.Intn(sides) + 1
+  for i := 0; i < int(dice); i++ {
+    result += rand.Intn(int(sides)) + 1
   }
-  return result
+  return float64(result)
 }
 
 func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
-  polish.AddIntMathContext(context)
+  polish.AddFloat64MathContext(context)
+  polish.AddBooleanContext(context)
+  context.SetParseOrder(polish.Float, polish.String)
 
   // This entity, the one currently taking its turn
   context.SetValue("me", ent)
@@ -106,10 +108,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // All actions that the entity has are available using their names,
   // converted to lower case, and replacing spaces with underscores.
   // For example, "Kiss of Death" -> "kiss_of_death"
-  for _, action := range ent.Actions {
-    name := lowerAndUnderscore(action.String())
-    context.SetValue(name, action)
-  }
 
   // rolls dice, for example "roll 3 6" is a roll of 3d6
   context.AddFunc("roll", roll)
@@ -117,8 +115,8 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // These functions are self-explanitory, they are all relative to the
   // current entity
   context.AddFunc("numVisibleEnemies",
-      func() int {
-        return numVisibleEntities(ent, false)
+      func() float64 {
+        return float64(numVisibleEntities(ent, false))
       })
   context.AddFunc("nearestEnemy",
       func() *game.Entity {
@@ -161,7 +159,8 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     return getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
   })
 
-  context.AddFunc("doBasicAttack", func(target *game.Entity, _attack game.Action) {
+  context.AddFunc("doBasicAttack", func(target *game.Entity, attack_name string) {
+    _attack := getActionByName(ent, attack_name)
     attack := _attack.(*actions.BasicAttack)
     if attack.AiAttackTarget(ent, target) {
       base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, attack)
@@ -172,9 +171,36 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     }
     <-a.pause
   })
+
+  context.AddFunc("corpus", func(target *game.Entity) float64 {
+    return float64(target.Stats.Corpus())
+  })
+  context.AddFunc("ego", func(target *game.Entity) float64 {
+    return float64(target.Stats.Ego())
+  })
+  context.AddFunc("hpMax", func(target *game.Entity) float64 {
+    return float64(target.Stats.HpMax())
+  })
+  context.AddFunc("apMax", func(target *game.Entity) float64 {
+    return float64(target.Stats.ApMax())
+  })
+  context.AddFunc("hpCur", func(target *game.Entity) float64 {
+    return float64(target.Stats.HpCur())
+  })
+  context.AddFunc("apCur", func(target *game.Entity) float64 {
+    return float64(target.Stats.ApCur())
+  })
+  context.AddFunc("hasCondition", func(target *game.Entity, name string) bool {
+    for _, con := range target.Stats.ConditionNames() {
+      if lowerAndUnderscore(con) == name {
+        return true
+      }
+    }
+    return false
+  })
 }
 
-func numVisibleEntities(e *game.Entity, ally bool) int {
+func numVisibleEntities(e *game.Entity, ally bool) float64 {
   count := 0
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
@@ -185,10 +211,10 @@ func numVisibleEntities(e *game.Entity, ally bool) int {
       count++
     }
   }
-  return count
+  return float64(count)
 }
 
-func distBetween(e1,e2 *game.Entity) int {
+func distBetween(e1,e2 *game.Entity) float64 {
   e1x,e1y := e1.Pos()
   e2x,e2y := e2.Pos()
   dx := e1x - e2x
@@ -196,14 +222,14 @@ func distBetween(e1,e2 *game.Entity) int {
   if dx < 0 { dx = -dx }
   if dy < 0 { dy = -dy }
   if dx > dy {
-    return dx
+    return float64(dx)
   }
-  return dy
+  return float64(dy)
 }
 
 func nearestEntity(e *game.Entity, ally bool) *game.Entity {
   var nearest *game.Entity
-  cur_dist := 1000000000
+  cur_dist := 1.0e9
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
