@@ -433,6 +433,8 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
 type HouseDef struct {
   Name string
 
+  Icon texture.Object
+
   Floors []*Floor
 }
 
@@ -502,6 +504,7 @@ type houseDataTab struct {
 
   name       *gui.TextEditLine
   num_floors *gui.ComboBox
+  icon       *gui.FileWidget
 
   house  *HouseDef
   viewer *HouseViewer
@@ -525,9 +528,15 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   hdt.name = gui.MakeTextEditLine("standard", "name", 300, 1, 1, 1, 1)
   num_floors_options := []string{"1 Floor", "2 Floors", "3 Floors", "4 Floors"}
   hdt.num_floors = gui.MakeComboTextBox(num_floors_options, 300)
+  if hdt.house.Icon.Path == "" {
+    hdt.house.Icon.Path = base.Path(filepath.Join(datadir, "houses", "icons"))
+  }
+  hdt.icon = gui.MakeFileWidget(string(hdt.house.Icon.Path), imagePathFilter)
+
 
   hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
+  hdt.VerticalTable.AddChild(hdt.icon)
 
   names := GetAllRoomNames()
   room_buttons := gui.MakeVerticalTable()
@@ -574,6 +583,7 @@ func (hdt *houseDataTab) Think(ui *gui.Gui, t int64) {
     }
   }
   hdt.house.Name = hdt.name.GetText()
+  hdt.house.Icon.Path = base.Path(hdt.icon.GetPath())
 }
 
 func (hdt *houseDataTab) onEscape() {
@@ -668,6 +678,7 @@ func (hdt *houseDataTab) Collapse() {}
 func (hdt *houseDataTab) Expand()   {}
 func (hdt *houseDataTab) Reload() {
   hdt.name.SetText(hdt.house.Name)
+  hdt.icon.SetPath(string(hdt.house.Icon.Path))
 }
 
 type houseDoorTab struct {
@@ -995,29 +1006,36 @@ func LoadAllHousesInDir(dir string) {
   base.RegisterAllObjectsInDir("houses", dir, ".house", "json")
 }
 
-func MakeHouseFromPath(path string) (*HouseDef, error) {
-  var house HouseDef
-  err := base.LoadAndProcessObject(path, "json", &house)
-  if err != nil {
-    return nil, err
-  }
-  for _, floor := range house.Floors {
+func (h *HouseDef) openDoors() {
+  for _, floor := range h.Floors {
     for _, room := range floor.Rooms {
       for _, door := range room.Doors {
         door.Opened = true
       }
     }
   }
-  //   if house.Floors[i].Spawns == nil {
-  //     house.Floors[i].Spawns = make(map[string][]*Furniture)
-  //   } else {
-  //     for _, spawns := range house.Floors[i].Spawns {
-  //       for _, spawn := range spawns {
-  //         spawn.Load()
-  //       }
-  //     }
-  //   }
-  // }
+}
+
+type iamanidiotcontainer struct {
+  Defname string
+  *HouseDef
+}
+
+func MakeHouseFromName(name string) *HouseDef {
+  var idiot iamanidiotcontainer
+  idiot.Defname = name
+  base.GetObject("houses", &idiot)
+  idiot.HouseDef.openDoors()
+  return idiot.HouseDef
+}
+
+func MakeHouseFromPath(path string) (*HouseDef, error) {
+  var house HouseDef
+  err := base.LoadAndProcessObject(path, "json", &house)
+  if err != nil {
+    return nil, err
+  }
+  house.openDoors()
   return &house, nil
 }
 

@@ -42,6 +42,14 @@ func MakeGamePanel() *GamePanel {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+
+  start_menu, err := MakeUiStart(&gp)
+  if err != nil {
+    base.Error().Printf("%v\n", err)
+    panic(err)
+  }
+  gp.AnchorBox.AddChild(start_menu, gui.Anchor{0,0,0,0})
+
   return &gp
 }
 
@@ -90,10 +98,11 @@ func (gp *GamePanel) LoadGame(path string) {
 // Returns  true iff the game panel has an active game with a viewer already
 // installed.
 func (gp *GamePanel) Active() bool {
-  return gp.house != nil && gp.viewer != nil
+  return gp.house != nil && gp.viewer != nil && gp.game != nil
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  gp.AnchorBox.Think(ui, t)
   if !gp.Active() {
     return
   }
@@ -125,7 +134,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   default:
   }
   gp.main_bar.SelectEnt(gp.game.selected_ent)
-  gp.AnchorBox.Think(ui, t)
   if gp.last_think == 0 {
     gp.last_think = t
   }
@@ -218,15 +226,15 @@ func (g *Game) SetCurrentAction(action Action) bool {
 }
 
 func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  if gp.AnchorBox.Respond(ui, group) {
+    return true
+  }
   if !gp.Active() {
     return false
   }
   if gp.game.winner != SideNone {
     // This is lame - but works for now
     return false
-  }
-  if gp.AnchorBox.Respond(ui, group) {
-    return true
   }
 
   if gp.game.Turn <= 1 {
@@ -431,13 +439,8 @@ func spawnAllCleanses(g *Game) {
   spawnEnts(g, cleanse_ents, cleanse_spawns)
 }
 
-func (gp *GamePanel) LoadHouse(name string) {
-  var err error
-  gp.house, err = house.MakeHouseFromPath(name)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    return
-  }
+func (gp *GamePanel) LoadHouse(def *house.HouseDef) {
+  gp.house = def
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
@@ -450,6 +453,7 @@ func (gp *GamePanel) LoadHouse(name string) {
 
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
+  var err error
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Error().Printf("%v", err)
@@ -463,6 +467,15 @@ func (gp *GamePanel) LoadHouse(name string) {
   }
 
   gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5,0.5,0.5,0.5})
+}
+
+func (gp *GamePanel) LoadHouseFromPath(path string) {
+  def, err := house.MakeHouseFromPath(path)
+  if err != nil {
+    base.Error().Printf("%v", err)
+    return
+  }
+  gp.LoadHouse(def)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {

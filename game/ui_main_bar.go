@@ -45,8 +45,8 @@ func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
 
 func (b *Button) RenderAt(x,y,mx,my int) {
   b.Texture.Data().Bind()
-  tdx :=  + b.Texture.Data().Dx()
-  tdy :=  + b.Texture.Data().Dy()
+  tdx := b.Texture.Data().Dx()
+  tdy := b.Texture.Data().Dy()
   if mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy {
     b.shade = b.shade * 0.9 + 0.1
   } else {

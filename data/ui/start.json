@@ -1,0 +1,30 @@
+{
+  "History": {
+    "X": 10,
+    "Y": 10,
+    "Texture": {
+      "Path": "gear/icons/pudding.png"
+    }
+  },
+  "Random": {
+    "X": 400,
+    "Y": 10,
+    "Texture": {
+      "Path": "gear/icons/tart.png"
+    }
+  },
+  "Challenge": {
+    "X": 10,
+    "Y": 400,
+    "Texture": {
+      "Path": "gear/icons/cake.png"
+    }
+  },
+  "Replay": {
+    "X": 400,
+    "Y": 400,
+    "Texture": {
+      "Path": "gear/icons/pie.png"
+    }
+  }
+}
