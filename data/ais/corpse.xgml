@@ -84,7 +84,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">4</attribute>
-			<attribute key="label" type="String">doBasicAttack nearestEnemy getBasicAttack</attribute>
+			<attribute key="label" type="String">doBasicAttack nearestEnemy diseased_kiss</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">89.375</attribute>
 				<attribute key="y" type="double">330.0</attribute>
@@ -95,7 +95,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">doBasicAttack nearestEnemy getBasicAttack</attribute>
+				<attribute key="text" type="String">doBasicAttack nearestEnemy diseased_kiss</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -179,7 +179,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">9</attribute>
-			<attribute key="label" type="String">doBasicAttack lastOffensiveTarget getBasicAttack</attribute>
+			<attribute key="label" type="String">doBasicAttack lastOffensiveTarget pummel</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">547.0</attribute>
 				<attribute key="y" type="double">0.0</attribute>
@@ -190,7 +190,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">doBasicAttack lastOffensiveTarget getBasicAttack</attribute>
+				<attribute key="text" type="String">doBasicAttack lastOffensiveTarget pummel</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

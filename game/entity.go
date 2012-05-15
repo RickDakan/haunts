@@ -107,7 +107,6 @@ func (e *Entity) Load(g *Game) {
 func MakeEntity(name string, g *Game) *Entity {
   ent := Entity{ Defname: name }
   base.GetObject("entities", &ent)
-  ent.Load(g)
 
   for _,action_name := range ent.Action_names {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
@@ -120,6 +119,8 @@ func MakeEntity(name string, g *Game) *Entity {
 
   ent.Id = g.Entity_id
   g.Entity_id++
+
+  ent.Load(g)
 
   return &ent
 }

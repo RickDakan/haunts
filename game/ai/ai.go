@@ -1,6 +1,7 @@
 package ai
 
 import (
+  "strings"
   "math/rand"
   "reflect"
   "encoding/gob"
@@ -99,6 +100,18 @@ func roll(dice, sides int) int {
 func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   polish.AddIntMathContext(context)
 
+  // This entity, the one currently taking its turn
+  context.SetValue("me", ent)
+
+  // All actions that the entity has are available using their names,
+  // converted to lower case, and replacing spaces with underscores.
+  // For example, "Kiss of Death" -> "kiss_of_death"
+  for _, action := range ent.Actions {
+    name := lowerAndUnderscore(action.String())
+    context.SetValue(name, action)
+  }
+
+  // rolls dice, for example "roll 3 6" is a roll of 3d6
   context.AddFunc("roll", roll)
 
   // These functions are self-explanitory, they are all relative to the
@@ -119,17 +132,19 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
         <-a.pause
       })
 
-  // This entity, the one currently taking its turn
-  context.SetValue("me", ent)
-
+  // Checks whether an entity is nil, this is important to check when using
+  // function that returns an entity (like lastOffensiveTarget)
   context.AddFunc("stillExists", func(target *game.Entity) bool {
     return target != nil
   })
 
+  // Returns the last entity that this ai attacked.  If the entity has died
+  // this can return nil, so be sure to check that before using it.
   context.AddFunc("lastOffensiveTarget", func() *game.Entity {
     return ent.Game().EntityById(a.State.Last_offensive_target)
   })
 
+  // Advances as far as possible towards the target entity.
   context.AddFunc("advanceTowards", func(target *game.Entity) {
     move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
     x,y := target.Pos()
@@ -142,9 +157,14 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     x,y = ent.Pos()
   })
 
-  context.AddFunc("attack", func(target *game.Entity) {
-    attack := getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
+  context.AddFunc("getBasicAttack", func() game.Action {
+    return getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
+  })
+
+  context.AddFunc("doBasicAttack", func(target *game.Entity, _attack game.Action) {
+    attack := _attack.(*actions.BasicAttack)
     if attack.AiAttackTarget(ent, target) {
+      base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, attack)
       a.res <- attack
       a.State.Last_offensive_target = target.Id
     } else {
@@ -195,6 +215,25 @@ func nearestEntity(e *game.Entity, ally bool) *game.Entity {
     }
   }
   return nearest
+}
+
+func lowerAndUnderscore(s string) string {
+  b := []byte(strings.ToLower(s))
+  for i := range b {
+    if b[i] == ' ' {
+      b[i] = '_'
+    }
+  }
+  return string(b)
+}
+
+func getActionByName(e *game.Entity, name string) game.Action {
+  for _,action := range e.Actions {
+    if lowerAndUnderscore(action.String()) == name {
+      return action
+    }
+  }
+  return nil
 }
 
 func getAction(e *game.Entity, typ reflect.Type) game.Action {
