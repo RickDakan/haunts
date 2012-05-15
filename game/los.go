@@ -23,6 +23,9 @@ type Game struct {
   House *house.HouseDef
   Ents []*Entity  `registry:"loadfrom-entities"`
 
+  // Next unique EntityId to be assigned
+  Entity_id EntityId
+
   // Current player
   Side Side
 
@@ -77,6 +80,15 @@ type Game struct {
 
   // Defaults to the zero value which is NoSide
   winner Side
+}
+
+func (g *Game) EntityById(id EntityId) *Entity {
+  for i := range g.Ents {
+    if g.Ents[i].Id == id {
+      return g.Ents[i]
+    }
+  }
+  return nil
 }
 
 func (g *Game) HoveredEnt() *Entity {

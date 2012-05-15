@@ -17,9 +17,9 @@ type Ai interface {
   Actions() <-chan Action
 }
 
-var ai_maker func(path string, ent *Entity) Ai
+var ai_maker func(path string, ent *Entity, dst *Ai)
 
-func SetAiMaker(f func(path string, ent *Entity) Ai) {
+func SetAiMaker(f func(path string, ent *Entity, dst *Ai)) {
   ai_maker = f
 }
 
@@ -89,7 +89,7 @@ func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
   if e.Ai_path.String() != "" {
-    e.Ai = ai_maker(e.Ai_path.String(), e)
+    ai_maker(e.Ai_path.String(), e, &e.Ai)
   }
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
@@ -117,6 +117,9 @@ func MakeEntity(name string, g *Game) *Entity {
     stats := status.MakeInst(ent.Base)
     ent.Stats = &stats
   }
+
+  ent.Id = g.Entity_id
+  g.Entity_id++
 
   return &ent
 }
@@ -274,7 +277,11 @@ type losData struct {
   minx,miny,maxx,maxy int
 }
 
+type EntityId int
 type EntityInst struct {
+  // Used to keep track of entities across a save/load
+  Id EntityId
+
   X,Y float64
 
   sprite spriteContainer

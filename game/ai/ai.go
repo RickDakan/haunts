@@ -33,14 +33,20 @@ type Ai struct {
 }
 
 type AiState struct {
+  Last_offensive_target game.EntityId
 }
 
 func init() {
   gob.Register(&Ai{})
 }
 
-func makeAi(path string, ent *game.Entity) game.Ai {
-  var ai_struct Ai
+func makeAi(path string, ent *game.Entity, dst_iface *game.Ai) {
+  var ai_struct *Ai
+  if *dst_iface == nil {
+    ai_struct = new(Ai)
+  } else {
+    ai_struct = (*dst_iface).(*Ai)
+  }
   ai_graph := ai.NewGraph()
   graph,err := yed.ParseFromFile(path)
   if err != nil {
@@ -54,7 +60,7 @@ func makeAi(path string, ent *game.Entity) game.Ai {
   ai_struct.pause = make(chan bool)
   ai_struct.ent = ent
   ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
-  return &ai_struct
+  *dst_iface = ai_struct
 }
 
 func init() {
@@ -116,8 +122,15 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // This entity, the one currently taking its turn
   context.SetValue("me", ent)
 
-  context.AddFunc("advanceTowards", func(target *game.Entity) {
+  context.AddFunc("stillExists", func(target *game.Entity) bool {
+    return target != nil
+  })
 
+  context.AddFunc("lastOffensiveTarget", func() *game.Entity {
+    return ent.Game().EntityById(a.State.Last_offensive_target)
+  })
+
+  context.AddFunc("advanceTowards", func(target *game.Entity) {
     move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
     x,y := target.Pos()
     if move.AiMoveToWithin(ent, x, y, 1) {
@@ -133,6 +146,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     attack := getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
     if attack.AiAttackTarget(ent, target) {
       a.res <- attack
+      a.State.Last_offensive_target = target.Id
     } else {
       a.graph.Term() <- ai.TermError
     }
