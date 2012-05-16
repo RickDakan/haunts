@@ -1,0 +1,9 @@
+{
+  "Name": "Pudding",
+  "Large_icon": {
+    "Path": "gear/icons/pudding.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/codex.png"
+  }
+}

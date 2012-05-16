@@ -2,7 +2,7 @@
   "Name": "Fire Buff",
   "Strength": 3,
   "Kind": "Fire",
-  "Time": 5,
+  "Duration": 5,
   "Dynamic": {
     "Hp": -1,
     "Ap": 1

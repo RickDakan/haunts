@@ -11,7 +11,7 @@ import (
   "path/filepath"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/glop/gui"
-  // "github.com/runningwild/glop/render"
+  "github.com/runningwild/fmod"
   "code.google.com/p/freetype-go/freetype/truetype"
   "log"
   "fmt"
@@ -19,10 +19,29 @@ import (
   "sync"
 )
 
+var audio *fmod.System
+func InitAudio() error {
+  var err error
+  audio, err = fmod.CreateSystem()
+  if err != nil {
+    return err
+  }
+  err = audio.Init(32, fmod.INIT_NORMAL, nil)
+  if err != nil {
+    audio.Release()
+    audio = nil
+  }
+  return err
+}
+func GetAudio() *fmod.System {
+  return audio
+}
+
 var datadir string
 var logger *log.Logger
 var log_reader io.Reader
 var log_out *os.File
+var log_console *bytes.Buffer
 func SetDatadir(_datadir string) {
   datadir = _datadir
   setupLogger()
@@ -43,9 +62,9 @@ func setupLogger() {
     fmt.Printf("Unable to open log file: %v\nLogging to stdout...\n", err.Error())
     log_out = os.Stdout
   }
-  choke := bytes.NewBuffer(nil)
-  log_reader = io.TeeReader(choke, log_out)
-  logger = log.New(choke, "> ", log.Ltime | log.Lshortfile)
+  log_console = bytes.NewBuffer(nil)
+  log_writer := io.MultiWriter(log_console, log_out)
+  logger = log.New(log_writer, "> ", log.Ltime | log.Lshortfile)
 }
 
 // TODO: This probably isn't the best way to do things - different go-routines
@@ -63,6 +82,11 @@ func Warn() *log.Logger {
 func Error() *log.Logger {
   logger.SetPrefix("ERROR> ")
   return logger
+}
+
+func CloseLog() {
+  log_out.WriteString("END OF LOG\n\n\n\n")
+  log_out.Close()
 }
 
 var font_dict map[int]*gui.Dictionary

@@ -48,6 +48,12 @@ type ChargeAttackDef struct {
 func (a *ChargeAttack) AP() int {
   return a.Ap
 }
+func (a *ChargeAttack) Pos() (int, int) {
+  return 0, 0
+}
+func (a *ChargeAttack) Dims() (int, int) {
+  return 0, 0
+}
 func (a *ChargeAttack) String() string {
   return a.Name
 }

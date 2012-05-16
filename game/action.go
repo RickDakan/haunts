@@ -4,6 +4,7 @@ import (
   "fmt"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/haunts/house"
 )
 
 var action_map map[string]func() Action
@@ -92,7 +93,8 @@ type Action interface {
   HandleInput(gui.EventGroup, *Game) InputStatus
 
   // Got to have some way for the user to see what is going on
-  RenderOnFloor()
+  house.FloorDrawer
+//  RenderOnFloor(*house.Room)
 
   // Called if the user cancels the action - done this way so that all actions
   // can be cancelled in the same way instead of each action deciding how to

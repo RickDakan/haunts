@@ -1,16 +1,18 @@
 package actions
 
 import (
+  "math"
   "encoding/gob"
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/opengl/gl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -29,6 +31,8 @@ func registerMoves() map[string]func() game.Action {
   }
   return makers
 }
+
+var path_tex *house.LosTexture
 
 func init() {
   game.RegisterActionMakers(registerMoves)
@@ -52,6 +56,9 @@ type Move struct {
 
   path [][2]int
   cost int
+
+  // Ap remaining before the ability was used
+  threshold int
 }
 type MoveDef struct {
   Name     string
@@ -59,6 +66,12 @@ type MoveDef struct {
 }
 func (a *Move) AP() int {
   return a.cost
+}
+func (a *Move) Pos() (int, int) {
+  return 0, 0
+}
+func (a *Move) Dims() (int, int) {
+  return house.LosTextureSize, house.LosTextureSize
 }
 func (a *Move) String() string {
   return a.Name
@@ -138,6 +151,29 @@ func (a *Move) findPath(g *game.Game, x,y int) {
       return [2]int{ int(x), int(y) }
     }).([][2]int)
     a.cost = int(cost)
+
+    if path_tex != nil {
+      pix := path_tex.Pix()
+      for i := range pix {
+        for j := range pix[i] {
+          pix[i][j] = 0
+        }
+      }
+      current := 0.0
+      for i := 1; i < len(a.path); i++ {
+        src := g.ToVertex(a.path[i-1][0], a.path[i-1][1])
+        dst := g.ToVertex(a.path[i][0], a.path[i][1])
+        v, cost := g.Adjacent(src)
+        for j := range v {
+          if v[j] == dst {
+            current += cost[j]
+            break
+          }
+        }
+        pix[a.path[i][1]][a.path[i][0]] += byte(current)
+      }
+      path_tex.Remap()
+    }
   }
 }
 
@@ -148,6 +184,7 @@ func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
   a.findPath(g, int(fx), int(fy))
+  a.threshold = a.ent.Stats.ApCur()
   return true
 }
 func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
@@ -171,18 +208,20 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus 
   return game.NotConsumed
 }
 func (a *Move) RenderOnFloor() {
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.LINES)
-  if a.cost <= a.ent.Stats.ApCur() {
-    gl.Color4d(0.2, 0.5, 0.9, 0.8)
-  } else {
-    gl.Color4d(0.9, 0.5, 0.2, 0.8)
+  if a.ent == nil {
+    return
   }
-  for i := 1; i < len(a.path); i++ {
-    gl.Vertex2d(float64(a.path[i-1][0]) + 0.5, float64(a.path[i-1][1]) + 0.5)
-    gl.Vertex2d(float64(a.path[i][0]) + 0.5, float64(a.path[i][1]) + 0.5)
+  if path_tex == nil {
+    path_tex = house.MakeLosTexture()
   }
-  gl.End()
+  path_tex.Remap()
+  path_tex.Bind()
+  gl.Color4ub(255, 255, 255, 128)
+  base.EnableShader("path")
+  base.SetUniformF("path", "threshold", float32(a.threshold) / 255)
+  base.SetUniformF("path", "size", house.LosTextureSize)
+  texture.RenderAdvanced(0, 0, house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
+  base.EnableShader("")
 }
 func (a *Move) Cancel() {
   a.ent = nil
@@ -191,7 +230,8 @@ func (a *Move) Cancel() {
 }
 func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
   // Do stuff
-  dist := a.ent.DoAdvance(float32(dt) / 200, a.path[0][0], a.path[0][1])
+  factor := float32(math.Pow(2, a.ent.Walking_speed))
+  dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)

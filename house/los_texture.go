@@ -6,8 +6,10 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
-const LosMinVisibility = 64
+const LosMinVisibility = 32
 const LosVisibilityThreshold = 200
+const LosTextureSize = 128
+const LosTextureSizeSquared = LosTextureSize * LosTextureSize
 
 // A LosTexture is defined over a square portion of a grid, and if a pixel is
 // non-black it indicates that there is visibility to that pixel from the
@@ -32,13 +34,13 @@ func losTextureFinalize(lt *LosTexture) {
 }
 
 // Creates a LosTexture with the specified size, which must be a power of two.
-func MakeLosTexture(size int) *LosTexture {
+func MakeLosTexture() *LosTexture {
   var lt LosTexture
-  lt.pix = make([]byte, size*size)
-  lt.p2d = make([][]byte, size)
+  lt.pix = make([]byte, LosTextureSizeSquared)
+  lt.p2d = make([][]byte, LosTextureSize)
   lt.rec = make(chan gl.Texture, 1)
-  for i := 0; i < size; i++ {
-    lt.p2d[i] = lt.pix[i * size : (i+1) * size]
+  for i := 0; i < LosTextureSize; i++ {
+    lt.p2d[i] = lt.pix[i * LosTextureSize : (i+1) * LosTextureSize]
   }
 
   render.Queue(func() {

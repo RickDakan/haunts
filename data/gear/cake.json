@@ -1,0 +1,10 @@
+{
+  "Name": "Cake",
+  "Large_icon": {
+    "Path": "gear/icons/cake.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/goggles.png"
+  },
+  "Action": "Cake Machine"
+}

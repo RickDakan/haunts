@@ -1,0 +1,9 @@
+{
+  "Name": "Tart",
+  "Large_icon": {
+    "Path": "gear/icons/tart.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/stompers.png"
+  }
+}

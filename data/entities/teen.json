@@ -13,9 +13,15 @@
     "Telepathic Coordination",
     "Psychic Shroud"
   ],
-  "ExplorerEnt": {},
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Curb Stompers",
+      "Tantric Mantra",
+      "Pre-loaded Playlist"
+    ]
+  },
   "Base": {
-    "Ap_max": 6,
+    "Ap_max": 6000,
     "Hp_max": 20,
     "Corpus": 10,
     "Ego": 10,

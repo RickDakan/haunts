@@ -4,8 +4,10 @@ import (
   "encoding/gob"
   "path/filepath"
   "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
@@ -23,6 +25,11 @@ func registerBasicAttacks() map[string]func() game.Action {
     makers[cname] = func() game.Action {
       a := BasicAttack{ Defname: cname }
       base.GetObject("actions-attack_actions", &a)
+      if a.Ammo > 0 {
+        a.Current_ammo = a.Ammo
+      } else {
+        a.Current_ammo = -1
+      }
       return &a
     }
   }
@@ -38,20 +45,24 @@ func init() {
 type BasicAttack struct {
   Defname string
   *BasicAttackDef
-  basicAttackInst
+  basicAttackTempData
+
+  Current_ammo int
 }
 type BasicAttackDef struct {
   Name       string
   Kind       status.Kind
   Ap         int
+  Ammo       int  // 0 = infinity
   Strength   int
   Range      int
   Damage     int
   Animation  string
   Conditions []string
   Texture    texture.Object
+  Sounds     map[string]string
 }
-type basicAttackInst struct {
+type basicAttackTempData struct {
   ent *game.Entity
 
   // Potential targets
@@ -72,6 +83,12 @@ func dist(x,y,x2,y2 int) int {
 }
 func (a *BasicAttack) AP() int {
   return a.Ap
+}
+func (a *BasicAttack) Pos() (int, int) {
+  return 0, 0
+}
+func (a *BasicAttack) Dims() (int, int) {
+  return 0, 0
 }
 func (a *BasicAttack) String() string {
   return a.Name
@@ -96,7 +113,7 @@ func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity
   return targets
 }
 func (a *BasicAttack) Preppable(ent *game.Entity, g *game.Game) bool {
-  return ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
+  return a.Current_ammo != 0 && ent.Stats.ApCur() >= a.Ap && len(a.findTargets(ent, g)) > 0
 }
 func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   if !a.Preppable(ent, g) {
@@ -104,7 +121,17 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   a.ent = ent
   a.targets = a.findTargets(ent, g)
+  if a.Sounds != nil {
+    sound.MapSounds(a.Sounds)
+  }
   return true
+}
+func (a *BasicAttack) attack(target *game.Entity) {
+  a.target = target
+  if a.Current_ammo > 0 {
+    a.Current_ammo--
+  }
+  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
   if ent.Side() == target.Side() { return false }
@@ -113,8 +140,7 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool
   x2,y2 := target.Pos()
   if dist(x,y,x2,y2) > a.Range { return false }
   a.ent = ent
-  a.target = target
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+  a.attack(target)
   return true
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
@@ -124,8 +150,7 @@ func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.Input
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     px, py := target.Pos()
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
-      a.target = target
-      a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+      a.attack(target)
       return game.ConsumedAndBegin
     }
     return game.Consumed
@@ -148,27 +173,28 @@ func (a *BasicAttack) RenderOnFloor() {
   gl.End()
 }
 func (a *BasicAttack) Cancel() {
-  a.basicAttackInst = basicAttackInst{}
+  a.basicAttackTempData = basicAttackTempData{}
 }
 func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
-  if a.ent.Sprite.Sprite().State() == "ready" && a.target.Sprite.Sprite().State() == "ready" {
+  if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
-    a.ent.Sprite.Sprite().Command(a.Animation)
-    a.target.Sprite.Sprite().Command("defend")
+    var defender_cmds []string
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
       }
       a.target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
       if a.target.Stats.HpCur() <= 0 {
-        a.target.Sprite.Sprite().Command("killed")
+        defender_cmds = []string{"defend", "killed"}
       } else {
-        a.target.Sprite.Sprite().Command("damaged")
+        defender_cmds = []string{"defend", "damaged"}
       }
     } else {
-      a.target.Sprite.Sprite().Command("undamaged")
+      defender_cmds = []string{"defend", "undamaged"}
     }
+    sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
+    sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
     return game.Complete
   }
   return game.InProgress

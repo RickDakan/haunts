@@ -4,7 +4,6 @@ import (
   "math"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/haunts/base"
   "github.com/runningwild/mathgl"
 )
 
@@ -36,9 +35,11 @@ type HouseViewer struct {
   last_timestamp int64
 
 
-  drawables    []Drawable
-  Los_tex      *LosTexture
-  Floor_drawer FloorDrawer
+  drawables     []Drawable
+  Los_tex       *LosTexture
+  Floor_drawer  FloorDrawer
+  Floor_drawers []FloorDrawer
+  Edit_mode     bool
 
   Temp struct {
     Room *Room
@@ -141,17 +142,16 @@ func (hv *HouseViewer) Zoom(dz float64) {
 }
 
 func (hv *HouseViewer) Drag(dx, dy float64) {
-  hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
-
-  v := mathgl.Vec4{X: hv.fx, Y: hv.fy, W: 1}
-  v.Transform(&hv.floor)
-  v.X += float32(dx)
-  v.Y += float32(dy)
-
-  v.Z = d2p(hv.floor, mathgl.Vec3{v.X, v.Y, 0}, mathgl.Vec3{0,0,1})
-  v.Transform(&hv.ifloor)
+  v := mathgl.Vec3{X: hv.fx, Y: hv.fy}
+  vx := mathgl.Vec3{1, -1, 0}
+  vx.Normalize()
+  vy := mathgl.Vec3{1, 1, 0}
+  vy.Normalize()
+  vx.Scale(float32(dx) / hv.zoom * 2)
+  vy.Scale(float32(dy) / hv.zoom * 2)
+  v.Add(&vx)
+  v.Add(&vy)
   hv.fx, hv.fy = v.X, v.Y
-
   hv.target_on = false
 }
 
@@ -177,13 +177,10 @@ func roomOverlap(a,b *Room) bool {
   return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
 }
 
-func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, Door) {
+func (hv *HouseViewer) FindClosestDoorPos(door *Door, bx,by float32) (*Room) {
   current_floor := 0
   best := 1.0e9  // If this is unsafe then the house is larger than earth
   var best_room *Room
-  var best_door Door
-  best_door.Defname = ddef.Name
-  best_door.doorDef = ddef
 
   clamp_int := func(n, min, max int) int {
     if n < min { return min }
@@ -210,17 +207,17 @@ func (hv *HouseViewer) FindClosestDoorPos(ddef *doorDef, bx,by float32) (*Room, 
     switch {
       case fl < fr:
         best = fl
-        best_door.Facing = FarLeft
-        best_door.Pos = clamp_int(int(bx - float32(room.X) - float32(ddef.Width) / 2), 0, room.Size.Dx - ddef.Width)
+        door.Facing = FarLeft
+        door.Pos = clamp_int(int(bx - float32(room.X) - float32(door.Width) / 2), 0, room.Size.Dx - door.Width)
 
 //      case fr < fl:  this case must be true, so we just call it default here
       default:
         best = fr
-        best_door.Facing = FarRight
-        best_door.Pos = clamp_int(int(by - float32(room.Y) - float32(ddef.Width) / 2), 0, room.Size.Dy - ddef.Width)
+        door.Facing = FarRight
+        door.Pos = clamp_int(int(by - float32(room.Y) - float32(door.Width) / 2), 0, room.Size.Dy - door.Width)
     }
   }
-  return best_room, best_door
+  return best_room
 }
 
 func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {
@@ -264,122 +261,14 @@ func (hv *HouseViewer) Draw(region gui.Region) {
   defer region.PopClipPlanes()
   hv.Render_region = region
 
-  current_floor := 0
-
-  hv.rooms = hv.rooms[0:0]
-  for _,room := range hv.house.Floors[current_floor].Rooms {
-    hv.rooms = append(hv.rooms, room)
+  hv.Floor_drawers = hv.Floor_drawers[0:0]
+  if hv.Edit_mode {
+    for _, spawn := range hv.house.Floors[0].Spawns {
+      hv.Floor_drawers = append(hv.Floor_drawers, spawn)
+    }
   }
-  if hv.Temp.Room != nil {
-    hv.rooms = append(hv.rooms, hv.Temp.Room)
+  if hv.Floor_drawer != nil {
+    hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
   }
-  hv.rooms = OrderRectObjects(hv.rooms)
-
-  drawPrep()
-  for i := len(hv.rooms) - 1; i >= 0; i-- {
-    room := hv.rooms[i].(*Room)
-    // TODO: Would be better to be able to just get the floor mats alone
-    m_floor,_,m_left,_,m_right,_ := makeRoomMats(room.roomDef, region, hv.fx - float32(room.X), hv.fy - float32(room.Y), hv.angle, hv.zoom)
-
-    var cstack base.ColorStack
-    if room == hv.Temp.Room {
-      valid := true
-      for _,room := range hv.house.Floors[current_floor].Rooms {
-        if roomOverlap(room, hv.Temp.Room) {
-          valid = false
-          break
-        }
-      }
-      if valid {
-        cstack.Push(0.5, 0.5, 1, 0.75)
-      } else {
-        cstack.Push(1.0, 0.2, 0.2, 0.9)
-      }
-    } else {
-      cstack.Push(1, 1, 1, 1)
-    }
-    los_alpha := 1.0
-    if hv.Los_tex != nil {
-      max := hv.Los_tex.Pix()[room.X][room.Y]
-      for x := room.X; x < room.X + room.Size.Dx; x++ {
-        for y := room.Y; y < room.Y + room.Size.Dy; y++ {
-          v := hv.Los_tex.Pix()[x][y]
-          if v > max {
-            max = v
-          }
-        }
-      }
-      if max < LosVisibilityThreshold {
-        los_alpha = float64(max - LosMinVisibility) / float64(LosVisibilityThreshold - LosMinVisibility)
-      }
-    }
-    if los_alpha == 0 { continue }
-    if room == hv.Temp.Door_room && hv.Temp.Door_info.Door != nil {
-      hv.Temp.Door_info.Valid = hv.house.Floors[current_floor].canAddDoor(room, hv.Temp.Door_info.Door)
-      drawWall(room, m_floor, m_left, m_right, nil, hv.Temp.Door_info, cstack, hv.Los_tex, los_alpha)
-    } else {
-      drawWall(room, m_floor, m_left, m_right, nil, doorInfo{}, cstack, hv.Los_tex, los_alpha)
-    }
-    hv.temp_drawables = hv.temp_drawables[0:0]
-    rx,ry := room.Pos()
-    rdx,rdy := room.Dims()
-    for _,d := range hv.drawables {
-      x,y := d.Pos()
-      if x >= rx && y >= ry && x < rx + rdx && y < ry + rdy {
-        hv.temp_drawables = append(hv.temp_drawables, offsetDrawable{ Drawable:d, dx: -rx, dy: -ry})
-      }
-    }
-    hv.all_furn = hv.all_furn[0:0]
-    hv.spawns = hv.spawns[0:0]
-    for _, furn := range room.Furniture {
-      hv.all_furn = append(hv.all_furn, furn)
-    }
-    spawn_points := hv.house.Floors[current_floor].Spawns
-    for _, spawn := range spawn_points {
-      x, y := spawn.Pos()
-      x -= rx
-      y -= ry
-      if x < 0 || y < 0 || x >= rdx || y >= rdy {
-        continue
-      }
-      hv.temp_drawables = append(hv.temp_drawables, spawn)
-      hv.spawns = append(hv.spawns, spawn)
-    }
-    if hv.Temp.Spawn != nil {
-      hv.temp_drawables = append(hv.temp_drawables, hv.Temp.Spawn)
-      hv.spawns = append(hv.spawns, hv.Temp.Spawn)
-    }
-    hv.floor_drawers = hv.floor_drawers[0:0]
-    if hv.Floor_drawer != nil {
-      hv.floor_drawers = append(hv.floor_drawers, hv.Floor_drawer)
-    }
-    for _, sp := range hv.spawns {
-      hv.floor_drawers = append(hv.floor_drawers, sp)
-    }
-    drawFloor(room, m_floor, nil, cstack, hv.Los_tex, los_alpha, hv.floor_drawers)
-    for i := range hv.spawns {
-      hv.spawns[i].X -= rx
-      hv.spawns[i].Y -= ry
-    }
-    drawFurniture(rx, ry, m_floor, hv.zoom, hv.all_furn, nil, hv.temp_drawables, cstack, hv.Los_tex, los_alpha)
-    for i := range hv.spawns {
-      hv.spawns[i].X += rx
-      hv.spawns[i].Y += ry
-    }
-    // drawWall(room *roomDef, wall *texture.Data, left, right mathgl.Mat4, temp *WallTexture)
-  }
+  hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.Floor_drawers)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

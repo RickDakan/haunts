@@ -32,9 +32,9 @@ func MakeWallPanel(room *roomDef, viewer *RoomViewer) *WallPanel {
     tex_table.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(t int64) {
       wt := MakeWallTexture(name)
       if wt == nil { return }
-      wp.viewer.Temp.WallTexture = wt
-      wp.viewer.Temp.WallTexture.X = 5
-      wp.viewer.Temp.WallTexture.Y = 5
+      wp.wall_texture = wt
+      wp.wall_texture.temporary = true
+      wp.room.WallTextures = append(wp.room.WallTextures, wp.wall_texture)
       wp.drag_anchor.X = 0
       wp.drag_anchor.Y = 0
     }))
@@ -63,45 +63,65 @@ func (w *WallPanel) textureNear(wx,wy int) *WallTexture {
   return nil
 }
 
+func (w *WallPanel) onEscape() {
+  if w.wall_texture != nil {
+    if w.prev_wall_texture != nil {
+      *w.wall_texture = *w.prev_wall_texture
+    } else {
+      algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
+        return wt != w.wall_texture
+      })
+    }
+  }
+  w.wall_texture = nil
+  w.prev_wall_texture = nil
+}
+
 func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if w.VerticalTable.Respond(ui, group) {
     return true
   }
-  if found,event := group.FindEvent(base.GetDefaultKeyMap()["flip"].Id()); found && event.Type == gin.Press {
-    if w.viewer.Temp.WallTexture != nil {
-      w.viewer.Temp.WallTexture.Flip = !w.viewer.Temp.WallTexture.Flip
-    }
+
+  if found,event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    algorithm.Choose2(&w.room.WallTextures, func(wt *WallTexture) bool {
+      return wt != w.wall_texture
+    })
+    w.wall_texture = nil
+    w.prev_wall_texture = nil
     return true
   }
+
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    if w.viewer.Temp.WallTexture != nil {
-      w.viewer.Temp.WallTexture = nil
+    w.onEscape()
+    return true
+  }
+
+  if found,event := group.FindEvent(base.GetDefaultKeyMap()["flip"].Id()); found && event.Type == gin.Press {
+    if w.wall_texture != nil {
+      w.wall_texture.Flip = !w.wall_texture.Flip
     }
     return true
   }
   if found,event := group.FindEvent(gin.MouseWheelVertical); found {
-    if w.viewer.Temp.WallTexture != nil {
-      w.viewer.Temp.WallTexture.Rot += float32(event.Key.CurPressAmt() / 100)
+    if w.wall_texture != nil {
+      w.wall_texture.Rot += float32(event.Key.CurPressAmt() / 100)
     }
   }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if w.viewer.Temp.WallTexture != nil {
-      w.room.WallTextures = append(w.room.WallTextures, w.viewer.Temp.WallTexture)
-      w.viewer.Temp.WallTexture = nil
-    } else if w.viewer.Temp.WallTexture == nil {
-      w.viewer.Temp.WallTexture = w.textureNear(event.Key.Cursor().Point())
-      if w.viewer.Temp.WallTexture != nil {
+    if w.wall_texture != nil {
+      w.wall_texture.temporary = false
+      w.wall_texture = nil
+    } else if w.wall_texture == nil {
+      w.wall_texture = w.textureNear(event.Key.Cursor().Point())
+      if w.wall_texture != nil {
         w.prev_wall_texture = new(WallTexture)
-        *w.prev_wall_texture = *w.viewer.Temp.WallTexture
-      }
-      algorithm.Choose2(&w.room.WallTextures, func(a *WallTexture) bool {
-        return a != w.viewer.Temp.WallTexture
-      })
-      if w.viewer.Temp.WallTexture != nil {
-        wx,wy := w.viewer.BoardToWindow(w.viewer.Temp.WallTexture.X, w.viewer.Temp.WallTexture.Y)
+        *w.prev_wall_texture = *w.wall_texture
+        w.wall_texture.temporary = true
+
+        wx,wy := w.viewer.BoardToWindowf(w.wall_texture.X, w.wall_texture.Y)
         px,py := event.Key.Cursor().Point()
-        w.drag_anchor.X = float32(px) - float32(wx) - 0.5
-        w.drag_anchor.Y = float32(py) - float32(wy) - 0.5
+        w.drag_anchor.X = float32(px) - wx
+        w.drag_anchor.Y = float32(py) - wy
       }
     }
     return true
@@ -110,28 +130,25 @@ func (w *WallPanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 }
 
 func (w *WallPanel) Think(ui *gui.Gui, t int64) {
-  if w.viewer.Temp.WallTexture != nil {
+  if w.wall_texture != nil {
     px,py := gin.In().GetCursor("Mouse").Point()
     tx := float32(px) - w.drag_anchor.X
     ty := float32(py) - w.drag_anchor.Y
-    bx,by := w.viewer.WindowToBoard(int(tx), int(ty))
-    w.viewer.Temp.WallTexture.X = bx
-    w.viewer.Temp.WallTexture.Y = by
+    bx,by := w.viewer.WindowToBoardf(tx, ty)
+    w.wall_texture.X = bx
+    w.wall_texture.Y = by
   }
   w.VerticalTable.Think(ui, t)
 }
 
 func (w *WallPanel) Collapse() {
-  if w.viewer.Temp.WallTexture != nil && w.prev_wall_texture != nil {
-    w.room.WallTextures = append(w.room.WallTextures, w.prev_wall_texture)
-  }
-  w.prev_wall_texture = nil
-  w.viewer.Temp.WallTexture = nil
+  w.onEscape()
 }
 
 func (w *WallPanel) Expand() {
 }
 
 func (w *WallPanel) Reload() {
+  w.onEscape()
 }
 

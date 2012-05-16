@@ -63,9 +63,9 @@ func (e *entityLabel) Draw(hovered, selected, selectable bool, region gui.Region
 }
 func (e *entityLabel) Think(dt int64) {
   if e.hovered && e.selectable {
-    e.ent.Sprite.Sprite().Command("move")
+    e.ent.sprite.Sprite().Command("move")
   } else {
-    e.ent.Sprite.Sprite().Command("stop")
+    e.ent.sprite.Sprite().Command("stop")
   }
   if e.selected || e.selectable {
     e.ent.Think(dt)
@@ -217,6 +217,9 @@ type explorerSetup struct {
   purpose_table gui.Widget
 
   roster_chooser *hui.RosterChooser
+  gear_chooser   gui.Widget
+
+  ents []*Entity
 
   layout explorerSetupLayout
 }
@@ -245,16 +248,16 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   es.roster_chooser = hui.MakeRosterChooser(roster,
   hui.SelectInRange(3,3),
   func(m map[int]bool) {
-    var ents []*Entity
+    es.ents = es.ents[0:0]
     for i := range m {
-      ents = append(ents, roster[i].(*entityLabel).ent)
+      es.ents = append(es.ents, roster[i].(*entityLabel).ent)
     }
-    game.PlaceInitialExplorers(ents)
-    game.OnRound()
-    for i := range game.Ents {
-      // Something might still be walking, so lets just stop everything before
-      // we move on.
-      game.Ents[i].Sprite.sp.Command("stop")
+    es.AnchorBox.RemoveChild(es.roster_chooser)
+    es.gear_chooser = es.makeGearChooser(game, 0)
+    if es.gear_chooser == nil {
+      es.startGame(game)
+    } else {
+      es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     }
   },
   )
@@ -290,6 +293,73 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil
+}
+
+type gearChooser struct {
+  *gui.AnchorBox
+
+  ent     *Entity
+  chooser *hui.RosterChooser
+}
+func makeGearChooser(ent *Entity, chooser *hui.RosterChooser) *gearChooser {
+  var gc gearChooser
+  gc.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
+  gc.ent = ent
+  gc.chooser = chooser
+  gc.AnchorBox.AddChild(gc.chooser, gui.Anchor{0.5,0.5,0.5,0.5})
+  return &gc
+}
+func (g *gearChooser) Draw(region gui.Region) {
+  g.AnchorBox.Draw(region)
+  x := region.X + g.chooser.Render_region.X / 2 - 50
+  y := region.Y + region.Dy / 2
+  gl.Color4ub(255, 255, 255, 255)
+  g.ent.Render(mathgl.Vec2{float32(x), float32(y)}, 100)
+  d := base.GetDictionary(15)
+  gl.Color4ub(255, 255, 255, 255)
+  d.RenderString(g.ent.Name, float64(x + 50), float64(y) - d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
+}
+
+func (es *explorerSetup) startGame(game *Game) {
+  game.PlaceInitialExplorers(es.ents)
+  game.OnRound()
+  for i := range game.Ents {
+    // Something might still be walking, so lets just stop everything before
+    // we move on.
+    game.Ents[i].sprite.sp.Command("stop")
+  }
+}
+
+func (es *explorerSetup) makeGearChooser(game *Game, explorer_index int) gui.Widget {
+  if explorer_index > 2 {
+    return nil
+  }
+  ent := es.ents[explorer_index]
+  if len(ent.ExplorerEnt.Gear_names) == 0 {
+    return es.makeGearChooser(game, explorer_index + 1)
+  }
+  var gear []hui.Option
+  for _, name := range ent.ExplorerEnt.Gear_names {
+    g := MakeGear(name)
+    gear = append(gear, &iconWithText{
+      Name: g.Name,
+      Icon: g.Large_icon,
+      Data: g,
+    })
+  }
+  rc := hui.MakeRosterChooser(gear, hui.SelectExactlyOne, func(m map[int]bool) {
+    for index := range m {
+      ent.ExplorerEnt.Gear = MakeGear(ent.ExplorerEnt.Gear_names[index])
+    }
+    if explorer_index < 2 {
+      es.AnchorBox.RemoveChild(es.gear_chooser)
+      es.gear_chooser = es.makeGearChooser(game, explorer_index + 1)
+      es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    } else {
+      es.startGame(game)
+    }
+  })
+  return makeGearChooser(ent, rc)
 }
 
 func (es *explorerSetup) Think(ui *gui.Gui, t int64) {

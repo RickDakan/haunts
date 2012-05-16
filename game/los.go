@@ -6,6 +6,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game/status"
 )
 
 type Purpose int
@@ -17,11 +18,36 @@ const(
 )
 
 type Game struct {
-  Defname string
-
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
-  house *house.HouseDef
+  House *house.HouseDef
+  Ents []*Entity  `registry:"loadfrom-entities"`
+
+  // Next unique EntityId to be assigned
+  Entity_id EntityId
+
+  // Current player
+  Side Side
+
+  // Current turn number - incremented on each OnRound() so every two
+  // indicates that a complete round has happened.
+  Turn int
+
+  // The purpose that the explorers have for entering the house, chosen at the
+  // beginning of the game.
+  Purpose Purpose
+
+  // The active cleanse points - when interacted with they will be removed
+  // from this list, so in a Cleanse scenario the mission is accomplished
+  // when this list is empty.  In other scenarios this list is always empty.
+  Active_cleanses []*Entity
+
+  // The active relics - when interacted it will be nilified
+  // If the scenario is not a Relic mission this is always nil
+  Active_relic *Entity
+
+
+  // Transient data - none of the following are exported
 
   viewer *house.HouseViewer
 
@@ -41,21 +67,8 @@ type Game struct {
   los_full_merger []bool
   los_merger [][]bool
 
-  Ents []*Entity  `registry:"loadfrom-entities"`
-
   selected_ent *Entity
   hovered_ent *Entity
-
-  // Current player
-  Side Side
-
-  // Current turn number - incremented on each OnRound() so every two
-  // indicates that a complete round has happened.
-  Turn int
-
-  // The purpose that the explorers have for entering the house, chosen at the
-  // beginning of the game.
-  Purpose Purpose
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
@@ -67,11 +80,15 @@ type Game struct {
 
   // Defaults to the zero value which is NoSide
   winner Side
+}
 
-  // The active cleanse points - when interacted with they will be removed
-  // from this list, so in a Cleanse scenario the mission is accomplished
-  // when this list is empty.  In other scenarios this list is always empty.
-  Active_cleanses []*Entity
+func (g *Game) EntityById(id EntityId) *Entity {
+  for i := range g.Ents {
+    if g.Ents[i].Id == id {
+      return g.Ents[i]
+    }
+  }
+  return nil
 }
 
 func (g *Game) HoveredEnt() *Entity {
@@ -92,13 +109,29 @@ func (g *Game) SelectEnt(ent *Entity) bool {
   if !found {
     return false
   }
+  if g.selected_ent != nil {
+    g.selected_ent.selected = false
+    g.selected_ent.hovered = false
+  }
   g.selected_ent = ent
+  if g.selected_ent != nil {
+    g.selected_ent.selected = true
+  }
   g.viewer.Focus(ent.FPos())
   return true
 }
 
 func (g *Game) OnBegin() {
   for i := range g.Ents {
+    if g.Ents[i].ExplorerEnt != nil && g.Ents[i].ExplorerEnt.Gear != nil {
+      gear := g.Ents[i].ExplorerEnt.Gear
+      if gear.Action != "" {
+        g.Ents[i].Actions = append(g.Ents[i].Actions, MakeAction(gear.Action))
+      }
+      if gear.Condition != "" {
+        g.Ents[i].Stats.ApplyCondition(status.MakeCondition(gear.Condition))
+      }
+    }
     if g.Ents[i].Stats != nil {
       g.Ents[i].Stats.OnBegin()
     }
@@ -112,7 +145,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
 
   var sp *house.SpawnPoint
-  for _, s := range g.house.Floors[0].Spawns {
+  for _, s := range g.House.Floors[0].Spawns {
     if s.Type() == house.SpawnExplorers {
       sp = s
       break
@@ -127,7 +160,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
     return
   }
   x, y := sp.Pos()
-  base.Log().Printf("Starting explorers at (%d, %d)", x, y)
+  base.Log().Printf("Starting %d explorers at (%d, %d)", len(ents), x, y)
   var poss [][2]int
   for dx := 0; dx < sp.Dx; dx++ {
     for dy := 0; dy < sp.Dy; dy++ {
@@ -151,6 +184,23 @@ func (g *Game) checkWinConditions() {
   explorer_win := false
   switch g.Purpose {
   case PurposeRelic:
+    if g.Active_relic == nil {
+      // If the relic has been taken and at least one explorer is standing in
+      // an exit then the explorers win.
+      for _, ent := range g.Ents {
+        if ent.Side() != SideExplorers { continue }
+        for _, spawn := range g.House.Floors[0].Spawns {
+          if spawn.Type() != house.SpawnExit { continue }
+          x, y := ent.Pos()
+          sx, sy := spawn.Pos()
+          sdx, sdy := spawn.Dims()
+          if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
+            explorer_win = true
+          }
+        }
+      }
+    }
+
   case PurposeMystery:
   case PurposeCleanse:
     if len(g.Active_cleanses) == 0 {
@@ -206,32 +256,43 @@ func (g *Game) OnRound() {
       base.Error().Printf("Explorers have not set a purpose")
 
     case PurposeCleanse:
-    action_name = "Cleanse"
-    // If this is a cleanse scenario we need to choose the active cleanse points
-    cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
-      ent := a.(*Entity)
-      return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
-    }).([]*Entity)
-    count := 3
-    if len(cleanses) < 3 {
-      count = len(cleanses)
-    }
-    for i := 0; i < count; i++ {
-      n := rand.Intn(len(cleanses))
-      active := cleanses[n]
-      cleanses[n] = cleanses[len(cleanses)-1]
-      cleanses = cleanses[0:len(cleanses)-1]
-      g.Active_cleanses = append(g.Active_cleanses, active)
-    }
-    for _, active := range g.Active_cleanses {
-      base.Log().Printf("Active cleanse point: %s", active.Name)
-    }
+      action_name = "Cleanse"
+      // If this is a cleanse scenario we need to choose the active cleanse points
+      cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
+        ent := a.(*Entity)
+        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
+      }).([]*Entity)
+      count := 3
+      if len(cleanses) < 3 {
+        count = len(cleanses)
+      }
+      for i := 0; i < count; i++ {
+        n := rand.Intn(len(cleanses))
+        active := cleanses[n]
+        cleanses[n] = cleanses[len(cleanses)-1]
+        cleanses = cleanses[0:len(cleanses)-1]
+        g.Active_cleanses = append(g.Active_cleanses, active)
+      }
+      for _, active := range g.Active_cleanses {
+        base.Log().Printf("Active cleanse point: %s", active.Name)
+      }
 
     case PurposeMystery:
-    action_name = "Mystery"
+      action_name = "Mystery"
 
     case PurposeRelic:
-    action_name = "Relic"
+      action_name = "Relic"
+      relics := algorithm.Choose(g.Ents, func(a interface{}) bool {
+        ent := a.(*Entity)
+        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalRelic
+      }).([]*Entity)
+      if len(relics) == 0 {
+        base.Warn().Printf("Unable to find any relics for the relic mission")
+      } else {
+        g.Active_relic = relics[rand.Intn(len(relics))]
+        x,y := g.Active_relic.Pos()
+        base.Log().Printf("Chose active relic at position %d %d", x, y)
+      }
     }
     if action_name != "" {
       for i := range g.Ents {
@@ -274,6 +335,14 @@ func (g *Game) OnRound() {
       g.Ents[i].OnRound()
     }
   }
+  if g.selected_ent != nil {
+    g.selected_ent.hovered = false
+    g.selected_ent.selected = false
+  }
+  if g.hovered_ent != nil {
+    g.hovered_ent.hovered = false
+    g.hovered_ent.selected = false
+  }
   g.selected_ent = nil
   g.hovered_ent = nil
 }
@@ -291,13 +360,13 @@ func (g *Game) GetViewer() *house.HouseViewer {
 
 func (g *Game) NumVertex() int {
   total := 0
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     total += room.Size.Dx * room.Size.Dy
   }
   return total
 }
 func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     size := room.Size.Dx * room.Size.Dy
     if v >= size {
       v -= size
@@ -309,7 +378,7 @@ func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
 }
 func (g *Game) ToVertex(x, y int) int {
   v := 0
-  for _,room := range g.house.Floors[0].Rooms {
+  for _,room := range g.House.Floors[0].Rooms {
     if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
       x -= room.X
       y -= room.Y
@@ -387,7 +456,7 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
 }
 
 func (g *Game) IsCellOccupied(x,y int) bool {
-  r := roomAt(g.house.Floors[0], x, y)
+  r := roomAt(g.House.Floors[0], x, y)
   if r == nil { return true }
   f := furnitureAt(r, x - r.X, y - r.Y)
   if f != nil { return true }
@@ -420,6 +489,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
+      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -437,6 +507,7 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
+      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -453,18 +524,12 @@ func (g *Game) Adjacent(v int) ([]int, []float64) {
   return adj, weight
 }
 
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
-  var g Game
-  g.Side = SideExplorers
-  g.house = h
-  g.house.Normalize()
-  g.viewer = viewer
-
-  g.los_tex = house.MakeLosTexture(256)
-  g.los_full_merger = make([]bool, 256*256)
-  g.los_merger = make([][]bool, 256)
+func (g *Game) setup() {
+  g.los_tex = house.MakeLosTexture()
+  g.los_full_merger = make([]bool, house.LosTextureSizeSquared)
+  g.los_merger = make([][]bool, house.LosTextureSize)
   for i := range g.los_merger {
-    g.los_merger[i] = g.los_full_merger[i * 256 : (i + 1) * 256]
+    g.los_merger[i] = g.los_full_merger[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -473,6 +538,16 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   }
 
   g.MergeLos(g.Ents)
+}
+
+func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
+  var g Game
+  g.Side = SideExplorers
+  g.House = h
+  g.House.Normalize()
+  g.viewer = viewer
+
+  g.setup()
 
   g.explorer_selection = gui.MakeVerticalTable()
   g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))
@@ -538,8 +613,9 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
-    state := ent.Sprite.Sprite().AnimState()
+    state := ent.sprite.Sprite().State()
     if state != "ready" && state != "killed" {
+      // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
       return
     }
   }
@@ -577,19 +653,19 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
   los[x][y] = true
-  room = roomAt(g.house.Floors[0], x, y)
+  room = roomAt(g.House.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
     x,y = p[0], p[1]
     room0 = room
-    room = roomAt(g.house.Floors[0], x, y)
+    room = roomAt(g.House.Floors[0], x, y)
     if room == nil { return }
     if x == x0 || y == y0 {
       if room0 != nil && room0 != room && !connected(room, room0, x, y, x0, y0) { return }
     } else {
-      roomA := roomAt(g.house.Floors[0], x0, y0)
-      roomB := roomAt(g.house.Floors[0], x, y0)
-      roomC := roomAt(g.house.Floors[0], x0, y)
+      roomA := roomAt(g.House.Floors[0], x0, y0)
+      roomB := roomAt(g.House.Floors[0], x, y0)
+      roomC := roomAt(g.House.Floors[0], x0, y)
       if roomA != nil && roomB != nil && roomA != roomB && !connected(roomA, roomB, x0, y0, x, y0) { return }
       if roomA != nil && roomC != nil && roomA != roomC && !connected(roomA, roomC, x0, y0, x0, y) { return }
       if roomB != nil && room != roomB && !connected(room, roomB, x, y, x, y0) { return }
@@ -656,6 +732,7 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   maxy := ey + ent.Stats.Sight()
   line := make([][2]int, ent.Stats.Sight())
   for x := minx; x <= maxx; x++ {
+    line = line[0:0]
     bresenham(ex, ey, x, miny, &line)
     g.doLos(ent.Stats.Sight(), line, ent.los.grid)
     line = line[0:0]

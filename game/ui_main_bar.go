@@ -45,8 +45,8 @@ func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
 
 func (b *Button) RenderAt(x,y,mx,my int) {
   b.Texture.Data().Bind()
-  tdx :=  + b.Texture.Data().Dx()
-  tdy :=  + b.Texture.Data().Dy()
+  tdx := b.Texture.Data().Dx()
+  tdy := b.Texture.Data().Dy()
   if mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy {
     b.shade = b.shade * 0.9 + 0.1
   } else {
@@ -122,6 +122,10 @@ type MainBarLayout struct {
     X,Y,Width,Icon_size float64
     Count int
     Empty texture.Object
+  }
+
+  Gear struct {
+    X, Y float64
   }
 }
 
@@ -359,11 +363,9 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
   // want to give a mouseover for something that the mouse isn't over after
   // scrolling something.
   m.state.MouseOver.active = false
-  c := m.layout.Conditions
-  if pointInsideRect(m.mx, m.my, int(c.X), int(c.Y), int(c.Width), int(c.Height)) {
-    if m.ent == nil {
-      m.state.MouseOver.active = false
-    } else {
+  if m.ent != nil {
+    c := m.layout.Conditions
+    if pointInsideRect(m.mx, m.my, int(c.X), int(c.Y), int(c.Width), int(c.Height)) {
       pos := c.Y + c.Height + m.state.Conditions.scroll_pos - float64(m.my)
       index := int(pos / base.GetDictionary(int(c.Size)).MaxHeight())
       if index >= 0 && index < len(m.ent.Stats.ConditionNames()) {
@@ -372,7 +374,34 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
         m.state.MouseOver.location = mouseOverConditions
       }
     }
+
+    if index := m.pointInsideAction(m.mx, m.my); index != -1 {
+      m.state.MouseOver.active = true
+      m.state.MouseOver.text = m.ent.Actions[index].String()
+      m.state.MouseOver.location = mouseOverActions
+    }
   }
+}
+
+// Returns the index of the action the point is over, or -1 if none
+func (m *MainBar) pointInsideAction(px,py int) int {
+  x := int(m.layout.Actions.X)
+  y := int(m.layout.Actions.Y)
+  x2 := int(m.layout.Actions.X + m.layout.Actions.Width)
+  y2 := int(m.layout.Actions.Y + m.layout.Actions.Icon_size)
+  if px >= x && py >= y && px < x2 && py < y2 {
+    pos := float64(px - x) / (m.layout.Actions.Icon_size + m.state.Actions.space)
+    pos += m.state.Actions.scroll_pos
+    p := int(pos)
+    frac := pos - float64(p)
+    // Make sure that the click didn't land in the space between two icons
+    if frac < m.layout.Actions.Icon_size / (m.layout.Actions.Icon_size + m.state.Actions.space) {
+      if p >= 0 && p < len(m.ent.Actions) {
+        return p
+      }
+    }
+  }
+  return -1
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
@@ -394,21 +423,9 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
       }
     }
     if m.ent != nil {
-      x := int(m.layout.Actions.X)
-      y := int(m.layout.Actions.Y)
-      x2 := int(m.layout.Actions.X + m.layout.Actions.Width)
-      y2 := int(m.layout.Actions.Y + m.layout.Actions.Icon_size)
-      if m.mx >= x && m.my >= y && m.mx < x2 && m.my < y2 {
-        pos := float64(m.mx - x) / (m.layout.Actions.Icon_size + m.state.Actions.space)
-        pos += m.state.Actions.scroll_pos
-        p := int(pos)
-        frac := pos - float64(p)
-        // Make sure that the click didn't land in the space between two icons
-        if frac < m.layout.Actions.Icon_size / (m.layout.Actions.Icon_size + m.state.Actions.space) {
-          if p >= 0 && p < len(m.ent.Actions) {
-            m.state.Actions.clicked = m.ent.Actions[p]
-          }
-        }
+      index := m.pointInsideAction(m.mx, m.my)
+      if index != -1 {
+        m.state.Actions.clicked = m.ent.Actions[index]
       }
     }
   }
@@ -591,6 +608,16 @@ func (m *MainBar) Draw(region gui.Region) {
       }
 
       r.PopClipPlanes()
+    }
+
+    // Gear
+    if m.ent.ExplorerEnt != nil && m.ent.ExplorerEnt.Gear != nil {
+      gear := m.ent.ExplorerEnt.Gear
+      layout := m.layout.Gear
+      icon := gear.Small_icon.Data()
+      icon.RenderNatural(int(layout.X), int(layout.Y))
+      d := base.GetDictionary(10)
+      d.RenderString("Gear", layout.X + float64(icon.Dx()) / 2, layout.Y - d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
     }
   }
 

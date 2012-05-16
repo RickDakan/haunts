@@ -16,6 +16,7 @@ import (
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/house"
 
   // Need to pull in all of the actions we define here and not in
@@ -48,6 +49,7 @@ func loadAllRegistries() {
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
   house.LoadAllSpawnPointsInDir(filepath.Join(datadir, "spawns"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
+  game.LoadAllGearInDir(filepath.Join(datadir, "gear"))
   game.RegisterActions()
   status.RegisterAllConditions()
 }
@@ -114,14 +116,16 @@ func draggingAndZooming(dz draggerZoomer) {
 }
 
 func gameMode() {
-  draggingAndZooming(game_panel.GetViewer())
+  if game_panel.Active() {
+    draggingAndZooming(game_panel.GetViewer())
+  }
   if key_map["load"].FramePressCount() > 0 && chooser == nil {
     callback := func(path string, err error) {
       ui.DropFocus()
       ui.RemoveChild(anchor)
       chooser = nil
       anchor = nil
-      game_panel.LoadHouse(path)
+      game_panel.LoadHouseFromPath(path)
       base.SetStoreVal("last game path", base.TryRelative(datadir, path))
     }
     chooser = gui.MakeFileChooser(filepath.Join(datadir, "houses"), callback, gui.MakeFileFilter(fmt.Sprintf(".house")))
@@ -129,6 +133,37 @@ func gameMode() {
     anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
     ui.AddChild(anchor)
     ui.TakeFocus(chooser)
+  }
+
+  if key_map["load game"].FramePressCount() > 0 && chooser == nil {
+    callback := func(path string, err error) {
+      ui.DropFocus()
+      ui.RemoveChild(anchor)
+      chooser = nil
+      anchor = nil
+      game_panel.LoadGame(path)
+      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
+    }
+    chooser = gui.MakeFileChooser(filepath.Join(datadir, "games"), callback, gui.MakeFileFilter(fmt.Sprintf(".game")))
+    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    ui.AddChild(anchor)
+    ui.TakeFocus(chooser)
+  }
+
+  if key_map["save game"].FramePressCount() > 0 && chooser == nil {
+    callback := func(filename string) {
+      ui.DropFocus()
+      ui.RemoveChild(anchor)
+      anchor = nil
+      game_panel.SaveGame(filename)
+      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
+    }
+    save_widget := MakeSaveWidget(callback)
+    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
+    anchor.AddChild(save_widget, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    ui.AddChild(anchor)
+    ui.TakeFocus(save_widget)
   }
 }
 
@@ -200,11 +235,25 @@ func main() {
     if r := recover(); r != nil {
       data := debug.Stack()
       base.Error().Printf("PANIC: %s\n", string(data))
+      base.CloseLog()
       fmt.Printf("PANIC: %s\n", string(data))
     }
   } ()
   base.Log().Printf("Version %s", Version())
   sys.Startup()
+  err := gl.Init()
+  if err != nil {
+    panic(err)
+  }
+
+  // Startup audio
+  err = base.InitAudio()
+  if err != nil {
+    panic(err)
+  }
+
+  sound.Init()
+  sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
@@ -214,8 +263,8 @@ func main() {
       panic(err)
     }
   })
+  base.InitShaders()
   runtime.GOMAXPROCS(8)
-  var err error
   ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
@@ -239,10 +288,10 @@ func main() {
       editor.Load(path)
     }
   }
-  editor_name = "house"
+  editor_name = "room"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
-  game_panel.LoadHouse(filepath.Join(datadir, base.GetStoreVal("last game path")))
+  game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
 
   ui.AddChild(editor)
   ui.AddChild(base.MakeConsole())
@@ -250,7 +299,6 @@ func main() {
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
   render.Queue(func() {
-    sys.Think()
     ui.Draw()
   })
   render.Purge()
@@ -261,8 +309,8 @@ func main() {
   heap_prof_count := 0
 
   for key_map["quit"].FramePressCount() == 0 {
+    sys.Think()
     render.Queue(func() {
-      sys.Think()
       sys.SwapBuffers()
       ui.Draw()
     })
@@ -317,6 +365,25 @@ func main() {
       }
       edit_mode = !edit_mode
     }
+
+  if key_map["row up"].FramePressCount() > 0 {
+    house.Num_rows += 25;
+  }
+  if key_map["row down"].FramePressCount() > 0 {
+    house.Num_rows -= 25;
+  }
+  if key_map["steps up"].FramePressCount() > 0 {
+    house.Num_steps++
+  }
+  if key_map["steps down"].FramePressCount() > 0 {
+    house.Num_steps--
+  }
+  if key_map["noise up"].FramePressCount() > 0 {
+    house.Noise_rate += 10
+  }
+  if key_map["noise down"].FramePressCount() > 0 {
+    house.Noise_rate -= 10
+  }
 
     if edit_mode {
       editMode()

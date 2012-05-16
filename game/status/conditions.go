@@ -52,7 +52,7 @@ func MakeCondition(name string) Condition {
 func registerBasicConditions() {
   registry_name := "conditions-basic_conditions"
   base.RemoveRegistry(registry_name)
-  base.RegisterRegistry(registry_name, make(map[string]*basicConditionDef))
+  base.RegisterRegistry(registry_name, make(map[string]*BasicConditionDef))
   base.RegisterAllObjectsInDir(registry_name, filepath.Join(base.GetDataDir(), "conditions", "basic_conditions"), ".json", "json")
   names := base.GetAllNamesInRegistry(registry_name)
   for _,name := range names {
@@ -73,11 +73,11 @@ func init() {
 
 type BasicCondition struct {
   Defname string
-  *basicConditionDef
-  time int
+  *BasicConditionDef
+  Time int
 }
 
-type basicConditionDef struct {
+type BasicConditionDef struct {
   Name string
 
   // On OnRound() this Condition will create a Damage object with this Dynamic
@@ -96,28 +96,28 @@ type basicConditionDef struct {
   // The strength of this condition
   Strength int
 
-  // This Condition will OnRound() exactly Time + 1 times.  If Time < 0 then
-  // it will OnRound() forever.
-  Time int
+  // This Condition will OnRound() exactly Duration + 1 times.
+  // If Duration < 0 then it will OnRound() forever.
+  Duration int
 }
 
 func (bc *BasicCondition) Name() string {
-  return bc.basicConditionDef.Name
+  return bc.BasicConditionDef.Name
 }
 
 func (bc *BasicCondition) Strength() int {
-  return bc.basicConditionDef.Strength
+  return bc.BasicConditionDef.Strength
 }
 
 func (bc *BasicCondition) Kind() Kind {
-  return bc.basicConditionDef.Kind
+  return bc.BasicConditionDef.Kind
 }
 
-func (bc *basicConditionDef) ModifyDamage(dmg Damage) Damage {
+func (bc *BasicConditionDef) ModifyDamage(dmg Damage) Damage {
   return dmg
 }
 
-func (bc *basicConditionDef) ModifyBase(base Base, kind Kind) Base {
+func (bc *BasicConditionDef) ModifyBase(base Base, kind Kind) Base {
   base.Ap_max += bc.Base.Ap_max
   base.Hp_max += bc.Base.Hp_max
   base.Sight += bc.Base.Sight
@@ -132,7 +132,7 @@ func (bc *BasicCondition) OnRound() (dmg *Damage, complete bool) {
   if bc.Dynamic != d {
     dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
   }
-  bc.time++
-  complete = (bc.time == bc.Time)
+  bc.Time++
+  complete = (bc.Time == bc.Duration)
   return
 }

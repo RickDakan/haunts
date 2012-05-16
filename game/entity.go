@@ -9,7 +9,7 @@ import (
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  "github.com/runningwild/opengl/gl"
+  gl "github.com/chsc/gogl/gl21"
 )
 
 type Ai interface {
@@ -17,9 +17,9 @@ type Ai interface {
   Actions() <-chan Action
 }
 
-var ai_maker func(path string, ent *Entity) Ai
+var ai_maker func(path string, ent *Entity, dst *Ai)
 
-func SetAiMaker(f func(path string, ent *Entity) Ai) {
+func SetAiMaker(f func(path string, ent *Entity, dst *Ai)) {
   ai_maker = f
 }
 
@@ -41,7 +41,7 @@ func (g *Game) placeEntity(initial bool) bool {
   }
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
-  r, f, _ := g.house.Floors[0].RoomFurnSpawnAtPos(ix, iy)
+  r, f, _ := g.House.Floors[0].RoomFurnSpawnAtPos(ix, iy)
 
   if r == nil || f { return false }
   for _,e := range g.Ents {
@@ -58,7 +58,7 @@ func (g *Game) placeEntity(initial bool) bool {
   if initial {
     haunt := g.new_ent.HauntEnt
     if haunt != nil {
-      for _, spawn := range g.house.Floors[0].Spawns {
+      for _, spawn := range g.House.Floors[0].Spawns {
         if spawn.Type() != house.SpawnHaunts { continue }
         if haunt.Level == LevelMinion && !spawn.Haunt.Minions { continue }
         if haunt.Level == LevelServitor && !spawn.Haunt.Servitors { continue }
@@ -83,30 +83,45 @@ func (g *Game) placeEntity(initial bool) bool {
   return true
 }
 
+// Does some basic setup that is common to both creating a new entity and to
+// loading one from a saved game.
+func (e *Entity) Load(g *Game) {
+  e.sprite.Load(e.Sprite_path.String())
+
+  if e.Ai_path.String() != "" {
+    ai_maker(e.Ai_path.String(), e, &e.Ai)
+  }
+
+  if e.Side() == SideHaunt || e.Side() == SideExplorers {
+    e.los = &losData{}
+    full_los := make([]bool, house.LosTextureSizeSquared)
+    e.los.grid = make([][]bool, house.LosTextureSize)
+    for i := range e.los.grid {
+      e.los.grid[i] = full_los[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
+    }
+  }
+
+  e.game = g
+}
+
 func MakeEntity(name string, g *Game) *Entity {
   ent := Entity{ Defname: name }
   base.GetObject("entities", &ent)
+
   for _,action_name := range ent.Action_names {
     ent.Actions = append(ent.Actions, MakeAction(action_name))
   }
-  ent.Sprite.Load(ent.Sprite_path.String())
-
-  if ent.Ai_path.String() != "" {
-    ent.Ai = ai_maker(ent.Ai_path.String(), &ent)
-  }
 
   if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
-    ent.los = &losData{}
-    full_los := make([]bool, 256*256)
-    ent.los.grid = make([][]bool, 256)
-    for i := range ent.los.grid {
-      ent.los.grid[i] = full_los[i * 256 : (i + 1) * 256]
-    }
     stats := status.MakeInst(ent.Base)
     ent.Stats = &stats
   }
 
-  ent.game = g
+  ent.Id = g.Entity_id
+  g.Entity_id++
+
+  ent.Load(g)
+
   return &ent
 }
 
@@ -121,6 +136,9 @@ func (sc *spriteContainer) Sprite() *sprite.Sprite {
 }
 func (sc *spriteContainer) Load(path string) {
   sc.sp, sc.err = sprite.LoadSprite(path)
+  if sc.err != nil {
+    base.Error().Printf("Unable to load sprite: %s:%v", path, sc.err)
+  }
 }
 
 // Allows the Ai system to signal to us under certain circumstance
@@ -135,6 +153,8 @@ type entityDef struct {
   Name string
   Dx, Dy int
   Sprite_path base.Path
+
+  Walking_speed float64
 
   // Still frame of the sprite - not necessarily one of the individual frames,
   // but still usable for identifying it.  Should be the same dimensions as
@@ -214,7 +234,12 @@ type HauntEnt struct {
 
   Level   EntLevel
 }
-type ExplorerEnt struct {}
+type ExplorerEnt struct {
+  Gear_names []string
+
+  // If the explorer has picked a piece of gear it will be listed here.
+  Gear *Gear
+}
 type ObjectEnt struct {
   Goal ObjectGoal
 }
@@ -253,12 +278,20 @@ type losData struct {
   minx,miny,maxx,maxy int
 }
 
+type EntityId int
 type EntityInst struct {
+  // Used to keep track of entities across a save/load
+  Id EntityId
+
   X,Y float64
 
-  Sprite spriteContainer
+  sprite spriteContainer
 
   los *losData
+
+  // so we know if we should draw a reticle around it
+  hovered  bool
+  selected bool
 
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
@@ -295,6 +328,9 @@ const (
 )
 func (e *Entity) Game() *Game {
   return e.game
+}
+func (e *Entity) Sprite() *sprite.Sprite {
+  return e.sprite.sp
 }
 func (e *Entity) HasLos(x,y,dx,dy int) bool {
   if e.los == nil {
@@ -337,57 +373,50 @@ type Entity struct {
   EntityInst
 }
 
-func (e *Entity) DrawReticle(viewer house.Viewer, ally,selected bool) {
-  bx,by := e.FPos()
-  wx,wy := viewer.BoardToWindow(float32(bx), float32(by))
-  gl.Disable(gl.TEXTURE_2D)
-
-  if ally {
-    if selected {
-      gl.Color4d(0, 1, 0, 0.8)
-    } else {
-      gl.Color4d(0, 1, 0, 0.3)
-    }
-  } else {
-    if selected {
-      gl.Color4d(1, 0, 0, 0.8)
-    } else {
-      gl.Color4d(1, 0, 0, 0.3)
-    }
+func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
+  if !e.hovered && !e.selected {
+    return
   }
-
-  dxi,dyi := e.Sprite.sp.Dims()
-  dx := float32(dxi)
-  dy := float32(dyi)
-  gl.Begin(gl.LINES)
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy) + dy * e.last_render_width / dx)
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) + e.last_render_width / 2, float32(wy))
-    gl.Vertex2f(float32(wx) - e.last_render_width / 2, float32(wy))
-  gl.End()
+  gl.PushAttrib(gl.CURRENT_BIT)
+  r := byte(rgba[0] * 255)
+  g := byte(rgba[1] * 255)
+  b := byte(rgba[2] * 255)
+  a := byte(rgba[3] * 255)
+  if e.selected {
+    gl.Color4ub(r, g, b, a)
+  } else {
+    gl.Color4ub(r, g, b, byte((int(a) * 200) >> 8))
+  }
+  glow := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "ui", "glow.png"))
+  dx := float64(e.last_render_width + 0.5)
+  dy := float64(e.last_render_width * 150 / 100)
+  glow.Render(float64(pos.X), float64(pos.Y), dx, dy)
+  gl.PopAttrib()
 }
 
+func (e *Entity) Color() (r,g,b,a byte) {
+  return 255, 255, 255, 255
+}
 func (e *Entity) Render(pos mathgl.Vec2, width float32) {
+  var rgba [4]float64
+  gl.GetDoublev(gl.CURRENT_COLOR, &rgba[0])
   e.last_render_width = width
   gl.Enable(gl.TEXTURE_2D)
-  if e.Sprite.sp != nil {
-    dxi,dyi := e.Sprite.sp.Dims()
+  e.drawReticle(pos, rgba)
+  if e.sprite.sp != nil {
+    dxi,dyi := e.sprite.sp.Dims()
     dx := float32(dxi)
     dy := float32(dyi)
-    tx,ty,tx2,ty2 := e.Sprite.sp.Bind()
+    tx,ty,tx2,ty2 := e.sprite.sp.Bind()
     gl.Begin(gl.QUADS)
     gl.TexCoord2d(tx, -ty)
-    gl.Vertex2f(pos.X - width/2, pos.Y)
+    gl.Vertex2f(pos.X, pos.Y)
     gl.TexCoord2d(tx, -ty2)
-    gl.Vertex2f(pos.X - width/2, pos.Y + dy * width / dx)
+    gl.Vertex2f(pos.X, pos.Y + dy * width / dx)
     gl.TexCoord2d(tx2, -ty2)
-    gl.Vertex2f(pos.X + width/2, pos.Y + dy * width / dx)
+    gl.Vertex2f(pos.X + width, pos.Y + dy * width / dx)
     gl.TexCoord2d(tx2, -ty)
-    gl.Vertex2f(pos.X + width/2, pos.Y)
+    gl.Vertex2f(pos.X + width, pos.Y)
     gl.End()
   }
 }
@@ -422,18 +451,18 @@ func (e *Entity) TurnToFace(x,y int) {
   seg.Assign(&target)
   seg.Subtract(&source)
   target_facing := facing(seg)
-  f_diff := target_facing - e.Sprite.sp.Facing()
+  f_diff := target_facing - e.sprite.sp.Facing()
   if f_diff != 0 {
     f_diff = (f_diff + 6) % 6
     if f_diff > 3 {
       f_diff -= 6
     }
     for f_diff < 0 {
-      e.Sprite.sp.Command("turn_left")
+      e.sprite.sp.Command("turn_left")
       f_diff++
     }
     for f_diff > 0 {
-      e.Sprite.sp.Command("turn_right")
+      e.sprite.sp.Command("turn_right")
       f_diff--
     }
   }
@@ -443,10 +472,10 @@ func (e *Entity) TurnToFace(x,y int) {
 // traveled.
 func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
   if dist <= 0 {
-    e.Sprite.sp.Command("stop")
+    e.sprite.sp.Command("stop")
     return 0
   }
-  e.Sprite.sp.Command("move")
+  e.sprite.sp.Command("move")
 
   source := mathgl.Vec2{ float32(e.X), float32(e.Y) }
   target := mathgl.Vec2{ float32(x), float32(y) }
@@ -469,8 +498,8 @@ func (e *Entity) DoAdvance(dist float32, x,y int) float32 {
 }
 
 func (e *Entity) Think(dt int64) {
-  if e.Sprite.sp != nil {
-    e.Sprite.sp.Think(dt)
+  if e.sprite.sp != nil {
+    e.sprite.sp.Think(dt)
   }
 }
 
@@ -478,8 +507,8 @@ func (e *Entity) OnRound() {
   if e.Stats != nil {
     e.Stats.OnRound()
     if e.Stats.HpCur() <= 0 {
-      e.Sprite.Sprite().Command("defend")
-      e.Sprite.Sprite().Command("killed")
+      e.sprite.Sprite().Command("defend")
+      e.sprite.Sprite().Command("killed")
     }
   }
 }
