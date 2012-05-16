@@ -613,7 +613,7 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
-    state := ent.sprite.Sprite().State()
+    state := ent.sprite.Sprite().AnimState()
     if state != "ready" && state != "killed" {
       // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
       return
@@ -629,6 +629,7 @@ func (g *Game) Think(dt int64) {
         g.ai_ent = ent
         g.ai_ent.Ai.Eval()
         g.ai_ent.ai_status = aiRunning
+        g.ai_ent.controlled = true
         break
       }
     }
@@ -640,6 +641,7 @@ func (g *Game) Think(dt int64) {
           g.action_state = doingAction
         } else {
           g.ai_ent.ai_status = aiDone
+          g.ai_ent.controlled = false
           g.ai_ent = nil
         }
       default:

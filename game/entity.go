@@ -290,8 +290,9 @@ type EntityInst struct {
   los *losData
 
   // so we know if we should draw a reticle around it
-  hovered  bool
-  selected bool
+  hovered    bool
+  selected   bool
+  controlled bool
 
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
@@ -374,7 +375,7 @@ type Entity struct {
 }
 
 func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
-  if !e.hovered && !e.selected {
+  if !e.hovered && !e.selected && !e.controlled {
     return
   }
   gl.PushAttrib(gl.CURRENT_BIT)
@@ -382,9 +383,12 @@ func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
   g := byte(rgba[1] * 255)
   b := byte(rgba[2] * 255)
   a := byte(rgba[3] * 255)
-  if e.selected {
+  switch {
+  case e.controlled:
+    gl.Color4ub(0, 0, r, a)
+  case e.selected:
     gl.Color4ub(r, g, b, a)
-  } else {
+  default:
     gl.Color4ub(r, g, b, byte((int(a) * 200) >> 8))
   }
   glow := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "ui", "glow.png"))
