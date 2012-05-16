@@ -107,7 +107,8 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+sync:hit</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">420.0</attribute>
 				<attribute key="y" type="double">-220.8330078125</attribute>
@@ -118,7 +119,8 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+sync:hit</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -297,18 +299,20 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">15</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+sync:hit</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
-				<attribute key="y" type="double">641.4324340820312</attribute>
+				<attribute key="y" type="double">620.7828369140625</attribute>
 				<attribute key="w" type="double">148.0</attribute>
-				<attribute key="h" type="double">29.0</attribute>
+				<attribute key="h" type="double">70.29915618896484</attribute>
 				<attribute key="type" type="String">rectangle</attribute>
 				<attribute key="fill" type="String">#FFCC00</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+sync:hit</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -615,18 +619,20 @@ time:0</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">30</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+sync:hit</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">465.5</attribute>
-				<attribute key="y" type="double">569.0772094726562</attribute>
+				<attribute key="y" type="double">587.6618041992188</attribute>
 				<attribute key="w" type="double">148.0</attribute>
-				<attribute key="h" type="double">29.0</attribute>
+				<attribute key="h" type="double">66.16924285888672</attribute>
 				<attribute key="type" type="String">rectangle</attribute>
 				<attribute key="fill" type="String">#FFCC00</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+sync:hit</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -1244,7 +1250,7 @@ weight:0.5</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">254.25</attribute>
-						<attribute key="y" type="double">641.4324340820312</attribute>
+						<attribute key="y" type="double">620.7828369140625</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-360.0</attribute>
@@ -1646,7 +1652,7 @@ facing:1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">465.5</attribute>
-						<attribute key="y" type="double">569.0772094726562</attribute>
+						<attribute key="y" type="double">587.6618041992188</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">465.5</attribute>
