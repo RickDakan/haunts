@@ -1,7 +1,5 @@
 uniform sampler2D tex;
 varying vec3 pos;
-uniform float frac;
-
 
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -67,21 +65,108 @@ uniform float num_rows;
 uniform float noise_rate;
 uniform float num_steps;
 
-void main() {
-  // Only need to sample one color here - we're assuming the texture is black
-  // and white
-  float grey = texture2D(tex, gl_TexCoord[0].xy).r;
-  float col = floor((gl_TexCoord[0].x) * 100.0);
-  float fudge = snoise(vec2(col, col)) / 9.0 + 0.0;
-  fudge = 0.0;
-  float row = floor((gl_TexCoord[0].y) * num_rows + fudge);
-  float n = snoise(vec2(row, gl_TexCoord[0].x * noise_rate));
+float eval(vec2 pos, vec2 tex_coord) {
+  float grey = texture2D(tex, tex_coord).r;
+  float col = floor(pos.x);
+  float fudge = snoise(vec2(col, col)) / 9.0;
+  float row = floor(pos.y * num_rows / 10.0);
+  float n = snoise(vec2(row, pos.x * noise_rate));
   n = n * 0.5 + 0.5;
-  n = pow(n, 1.5) * grey;
+  n *= grey;
+//  n = pow(n, 1.5) * grey;
+  n *= num_steps + 0.99;
+  n = floor(n);
+  n /= num_steps;
+//  n = pow(floor((num_steps + 0.99) * n) / num_steps, 0.7);
+  return n;
+}
+uniform int foo;
+uniform int range;
+const float inc = 0.75;
 
-  n = pow(floor((num_steps + 0.99) * n) / num_steps, 0.7);
+void main() {
+  vec2 pdx = dFdx(pos.xy) / 2.0;
+  vec2 pdy = dFdy(pos.xy) / 2.0;
+  vec2 tdx = dFdx(gl_TexCoord[0].xy) / 2.0;
+  vec2 tdy = dFdy(gl_TexCoord[0].xy) / 2.0;
+  float n = 0.0;
+  if (foo == 0) {
+  float sum = 0.0;
 
-  n = frac * n + (1.0 - frac) * grey;
+  vec2 tt = gl_TexCoord[0].xy; // + tdy * float(i)*inc;
+  vec2 pt = pos.xy;
+  float e = eval(pt, tt);
+  float tot = 1.0;
+  sum += tot;
+  n += tot * e;
+  float center = e;
 
+  tt = gl_TexCoord[0].xy + tdy * 1.0 * inc;
+  pt = pos.xy + pdy * 1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.75;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdy * -1.0 * inc;
+  pt = pos.xy + pdy * -1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.75;
+  sum += tot;
+  n += tot * e;
+
+//  if (sum * center + 0.001 > n && sum * center - 0.001 < n) {
+//    n /= sum;
+//    gl_FragColor = vec4(n, n, n, 1.0);
+//    return;
+//  }
+
+  tt = gl_TexCoord[0].xy + tdx * 1.0 * inc;
+  pt = pos.xy + pdx * 1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.75;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdx * -1.0 * inc;
+  pt = pos.xy + pdx * -1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.75;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdx * 1.0 + tdy * 1.0 * inc;
+  pt = pos.xy + pdx * 1.0 + pdy * 1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.5;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdx * 1.0 + tdy * -1.0 * inc;
+  pt = pos.xy + pdx * 1.0 + pdy * -1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.5;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdx * -1.0 * inc + tdy * 1.0 * inc;
+  pt = pos.xy + pdx * -1.0 * inc + tdy * 1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.5;
+  sum += tot;
+  n += tot * e;
+
+  tt = gl_TexCoord[0].xy + tdx * -1.0 * inc + tdy * -1.0 * inc;
+  pt = pos.xy + pdx * -1.0 * inc + pdy * -1.0 * inc;
+  e = eval(pt, tt);
+  tot = 0.5;
+  sum += tot;
+  n += tot * e;
+
+
+  n /= sum;
+  } else {
+    n = eval(gl_TexCoord[0].xy, gl_TexCoord[0].xy);
+  }
   gl_FragColor = vec4(n, n, n, 1.0);
 }

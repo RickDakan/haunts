@@ -384,6 +384,9 @@ func main() {
   if key_map["noise down"].FramePressCount() > 0 {
     house.Noise_rate -= 10
   }
+  if key_map["foo"].FramePressCount() > 0 {
+    house.Foo = (house.Foo + 1) % 2
+  }
 
     if edit_mode {
       editMode()
