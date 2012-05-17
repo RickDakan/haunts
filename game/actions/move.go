@@ -64,6 +64,15 @@ type MoveDef struct {
   Name     string
   Texture  texture.Object
 }
+
+type moveExec struct {
+  game.BasicActionExec
+  Dst int
+}
+func init() {
+  gob.Register(moveExec{})
+}
+
 func (a *Move) AP() int {
   return a.cost
 }
@@ -105,7 +114,7 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
 // the specified location.  Returns true if possible, false otherwise.  If it
 // returns true it also begins execution, so it should become the current
 // action.
-func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) bool {
+func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) game.ActionExec {
   a.ent = ent
   var dsts []int
   for x := tx - dist; x <= tx + dist; x++ {
@@ -115,25 +124,18 @@ func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) bool {
     }
   }
   source_cell := []int{a.ent.Game().ToVertex(a.ent.Pos())}
-  fcost, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
-  cost := int(fcost)
+  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
   if path == nil {
-    return false
+    return nil
   }
   path = limitPath(ent.Game(), source_cell[0], path, ent.Stats.ApCur())
   if len(path) <= 1 { // || !canPayForMove(a.Ent, a.Level.MakeBoardPosFromVertex(path[1])) {
-    return false
+    return nil
   }
-  if cost > ent.Stats.ApCur() {
-    cost = ent.Stats.ApCur()
-  }
-  ent.Stats.ApplyDamage(-cost, 0, status.Unspecified)
-  vertex_to_boardpos := func(v interface{}) interface{} {
-    _,x,y := a.ent.Game().FromVertex(v.(int))
-    return [2]int{x,y}
-  }
-  a.path = algorithm.Map(path[1:], [][2]int{}, vertex_to_boardpos).([][2]int)
-  return true
+  var exec moveExec
+  exec.SetBasicData(a.ent, a)
+  exec.Dst = path[len(path)-1]
+  return exec
 }
 
 func (a *Move) findPath(g *game.Game, x,y int) {
@@ -187,7 +189,7 @@ func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.threshold = a.ent.Stats.ApCur()
   return true
 }
-func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
@@ -196,16 +198,17 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus 
   if found,_ := group.FindEvent(gin.MouseLButton); found {
     if len(a.path) > 0 {
       if a.cost <= a.ent.Stats.ApCur() {
-        a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
-        a.cost = 0
-        return game.ConsumedAndBegin
+        var exec moveExec
+        exec.SetBasicData(a.ent, a)
+        exec.Dst = a.dst
+        return true, exec
       }
-      return game.Consumed
+      return true, nil
     } else {
-      return game.NotConsumed
+      return false, nil
     }
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *Move) RenderOnFloor() {
   if a.ent == nil {
@@ -228,7 +231,13 @@ func (a *Move) Cancel() {
   a.path = nil
   a.calculated = false
 }
-func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
+func (a *Move) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(moveExec)
+    _, x, y := a.ent.Game().FromVertex(exec.Dst)
+    a.findPath(a.ent.Game(), x, y)
+    a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
+  }
   // Do stuff
   factor := float32(math.Pow(2, a.ent.Walking_speed))
   dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])

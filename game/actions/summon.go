@@ -64,6 +64,10 @@ type summonActionTempData struct {
   cx,cy int
   spawn *game.Entity
 }
+type summonExec struct {
+  game.BasicActionExec
+  Pos int
+}
 func (a *SummonAction) AP() int {
   return a.Ap
 }
@@ -92,15 +96,7 @@ func (a *SummonAction) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   return true
 }
-func (a *SummonAction) attack(g *game.Game) {
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-  a.spawn = game.MakeEntity(a.Ent_name, g)
-  if a.Current_ammo > 0 {
-    a.Current_ammo--
-  }
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-}
-func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     bx,by := g.GetViewer().WindowToBoard(cursor.Point())
@@ -114,18 +110,20 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) game.Inpu
 
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if g.IsCellOccupied(a.cx, a.cy) {
-      return game.Consumed
+      return true, nil
     }
     if a.Personal_los && !a.ent.HasLos(a.cx, a.cy, 1, 1) {
-      return game.Consumed
+      return true, nil
     }
     if a.ent.Stats.ApCur() >= a.Ap {
-      a.attack(g)
-      return game.ConsumedAndBegin
+      var exec summonExec
+      exec.SetBasicData(a.ent, a)
+      exec.Pos = a.ent.Game().ToVertex(a.cx, a.cy)
+      return true, exec
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *SummonAction) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
@@ -140,7 +138,16 @@ func (a *SummonAction) RenderOnFloor() {
 func (a *SummonAction) Cancel() {
   a.summonActionTempData = summonActionTempData{}
 }
-func (a *SummonAction) Maintain(dt int64) game.MaintenanceStatus {
+func (a *SummonAction) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(summonExec)
+    _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+    a.spawn = game.MakeEntity(a.Ent_name, a.ent.Game())
+    if a.Current_ammo > 0 {
+      a.Current_ammo--
+    }
+  }
   if a.ent.Sprite().State() == "ready" {
     a.ent.TurnToFace(a.cx, a.cy)
     a.ent.Sprite().Command(a.Animation)

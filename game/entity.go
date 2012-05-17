@@ -14,7 +14,7 @@ import (
 
 type Ai interface {
   Eval()
-  Actions() <-chan Action
+  Actions() <-chan ActionExec
 }
 
 var ai_maker func(path string, ent *Entity, dst *Ai)

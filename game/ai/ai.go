@@ -21,7 +21,7 @@ type Ai struct {
   graph   *ai.AiGraph
 
   // Used during evaluation to get the action that the ai wants to execute
-  res chan game.Action
+  res chan game.ActionExec
 
   // Once we send an Action for execution we have to wait until it is done
   // before we make the next one.  This channel is used to handle that.
@@ -57,7 +57,7 @@ func makeAi(path string, ent *game.Entity, dst_iface *game.Ai) {
   ai_graph.Graph = &graph.Graph
   ai_graph.Context = polish.MakeContext()
   ai_struct.graph = ai_graph
-  ai_struct.res = make(chan game.Action)
+  ai_struct.res = make(chan game.ActionExec)
   ai_struct.pause = make(chan bool)
   ai_struct.ent = ent
   ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
@@ -80,7 +80,7 @@ func (a *Ai) Eval() {
   } ()
 }
 
-func (a *Ai) Actions() <-chan game.Action {
+func (a *Ai) Actions() <-chan game.ActionExec {
   select {
     case a.pause <- true:
     default:
@@ -146,8 +146,9 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   context.AddFunc("advanceTowards", func(target *game.Entity) {
     move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
     x,y := target.Pos()
-    if move.AiMoveToWithin(ent, x, y, 1) {
-      a.res <- move
+    exec := move.AiMoveToWithin(ent, x, y, 1)
+    if exec != nil {
+      a.res <- exec
     } else {
       a.graph.Term() <- ai.TermError
     }
@@ -162,9 +163,10 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   context.AddFunc("doBasicAttack", func(target *game.Entity, attack_name string) {
     _attack := getActionByName(ent, attack_name)
     attack := _attack.(*actions.BasicAttack)
-    if attack.AiAttackTarget(ent, target) {
-      base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, attack)
-      a.res <- attack
+    exec := attack.AiAttackTarget(ent, target)
+    if exec != nil {
+      base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, exec)
+      a.res <- exec
       a.State.Last_offensive_target = target.Id
     } else {
       a.graph.Term() <- ai.TermError

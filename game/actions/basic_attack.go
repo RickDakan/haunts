@@ -71,6 +71,15 @@ type basicAttackTempData struct {
   // The selected target for the attack
   target *game.Entity
 }
+
+type basicAttackExec struct {
+  game.BasicActionExec
+  Target game.EntityId
+}
+func init() {
+  gob.Register(basicAttackExec{})
+}
+
 func dist(x,y,x2,y2 int) int {
   dx := x - x2
   if dx < 0 { dx = -dx }
@@ -126,36 +135,33 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   return true
 }
-func (a *BasicAttack) attack(target *game.Entity) {
-  a.target = target
-  if a.Current_ammo > 0 {
-    a.Current_ammo--
-  }
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-}
-func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
-  if ent.Side() == target.Side() { return false }
-  if ent.Stats.ApCur() < a.Ap { return false }
+func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game.ActionExec {
+  if ent.Side() == target.Side() { return nil }
+  if ent.Stats.ApCur() < a.Ap { return nil }
   x,y := ent.Pos()
   x2,y2 := target.Pos()
-  if dist(x,y,x2,y2) > a.Range { return false }
+  if dist(x,y,x2,y2) > a.Range { return nil }
   a.ent = ent
-  a.attack(target)
-  return true
+  return a.makeExec(a.ent, target)
 }
-func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
+  var exec basicAttackExec
+  exec.SetBasicData(ent, a)
+  exec.Target = target.Id
+  return exec
+}
+func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
-  if target == nil { return game.NotConsumed }
-  if target.Stats == nil { return game.NotConsumed }
+  if target == nil { return false, nil }
+  if target.Stats == nil { return false, nil }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     px, py := target.Pos()
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
-      a.attack(target)
-      return game.ConsumedAndBegin
+      return true, a.makeExec(a.ent, target)
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *BasicAttack) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
@@ -175,10 +181,18 @@ func (a *BasicAttack) RenderOnFloor() {
 func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
-func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
+func (a *BasicAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(basicAttackExec)
+    a.target = a.ent.Game().EntityById(exec.Target)
+  }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
+    if a.Current_ammo > 0 {
+      a.Current_ammo--
+    }
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     var defender_cmds []string
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {

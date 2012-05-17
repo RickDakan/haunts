@@ -303,13 +303,12 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   if gp.game.action_state == preppingAction {
-    res := gp.game.current_action.HandleInput(group, gp.game)
-    switch res {
-      case ConsumedAndBegin:
-      gp.game.action_state = doingAction
-      fallthrough
-
-      case Consumed:
+    consumed, exec := gp.game.current_action.HandleInput(group, gp.game)
+    if consumed {
+      if exec != nil {
+        gp.game.current_exec = exec
+        // TODO: Should send the exec across the wire here
+      }
       return true
     }
   }

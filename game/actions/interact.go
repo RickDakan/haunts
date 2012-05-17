@@ -56,6 +56,13 @@ type interactInst struct {
   // The selected target for the attack
   target *game.Entity
 }
+type interactExec struct {
+  game.BasicActionExec
+  Target game.EntityId
+}
+func init() {
+  gob.Register(interactExec{})
+}
 func (a *Interact) AP() int {
   return a.Ap
 }
@@ -152,52 +159,58 @@ func (a *Interact) Prep(ent *game.Entity, g *game.Game) bool {
   }
   return false
 }
-func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
-  if target == nil { return game.NotConsumed }
+  if target == nil { return false, nil }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     for i := range a.targets {
       if a.targets[i] == target {
-        a.target = target
-        switch a.Name {
-        case string(game.GoalCleanse):
-          g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-            return a.(*game.Entity) != target
-          }).([]*game.Entity)
+        // switch a.Name {
+        // case string(game.GoalCleanse):
+        //   g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
+        //     return a.(*game.Entity) != target
+        //   }).([]*game.Entity)
     
-        case string(game.GoalRelic):
-          g.Active_relic = nil
+        // case string(game.GoalRelic):
+        //   g.Active_relic = nil
     
-        case string(game.GoalMystery):
-        }
-        a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-        return game.ConsumedAndBegin
+        // case string(game.GoalMystery):
+        // }
+        // a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+        var exec interactExec
+        exec.SetBasicData(a.ent, a)
+        exec.Target = target.Id
+        return true, exec
       }
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *Interact) RenderOnFloor() {
-  // gl.Disable(gl.TEXTURE_2D)
-  // gl.Begin(gl.QUADS)
-  // gl.Color4d(1.0, 0.2, 0.2, 0.8)
-  // for _,ent := range a.targets {
-  //   ix,iy := ent.Pos()
-  //   x := float64(ix)
-  //   y := float64(iy)
-  //   gl.Vertex2d(x + 0, y + 0)
-  //   gl.Vertex2d(x + 0, y + 1)
-  //   gl.Vertex2d(x + 1, y + 1)
-  //   gl.Vertex2d(x + 1, y + 0)
-  // }
-  // gl.End()
 }
 func (a *Interact) Cancel() {
   a.interactInst = interactInst{}
 }
-func (a *Interact) Maintain(dt int64) game.MaintenanceStatus {
-  a.target.Sprite().Command("inspect")
+func (a *Interact) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(interactExec)
+    g := a.ent.Game()
+    target := g.EntityById(exec.Target)
+    switch a.Name {
+    case string(game.GoalCleanse):
+      g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
+        return a.(*game.Entity) != target
+      }).([]*game.Entity)
+
+    case string(game.GoalRelic):
+      g.Active_relic = nil
+
+    case string(game.GoalMystery):
+    }
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+    target.Sprite().Command("inspect")
+  }
   return game.Complete
 }
 func (a *Interact) Interrupt() bool {

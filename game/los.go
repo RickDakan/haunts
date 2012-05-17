@@ -74,6 +74,7 @@ type Game struct {
   ai_ent *Entity
 
   action_state actionState
+  current_exec   ActionExec
   current_action Action
 
   // Goals ******************************************************
@@ -558,10 +559,17 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 }
 
 func (g *Game) Think(dt int64) {
+  if g.current_exec != nil {
+    ent := g.EntityById(g.current_exec.EntityId())
+    g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+    g.action_state = doingAction
+  }
+
   // If there is an action that is currently executing we need to advance that
   // action.
   if g.action_state == doingAction {
-    res := g.current_action.Maintain(dt)
+    res := g.current_action.Maintain(dt, g.current_exec)
+    g.current_exec = nil
     switch res {
       case Complete:
         g.current_action.Cancel()
@@ -635,10 +643,9 @@ func (g *Game) Think(dt int64) {
     }
     if g.ai_ent != nil {
       select {
-      case act := <-g.ai_ent.Ai.Actions():
-        if act != nil {
-          g.current_action = act
-          g.action_state = doingAction
+      case exec := <-g.ai_ent.Ai.Actions():
+        if exec != nil {
+          g.current_exec = exec
         } else {
           g.ai_ent.ai_status = aiDone
           g.ai_ent.controlled = false

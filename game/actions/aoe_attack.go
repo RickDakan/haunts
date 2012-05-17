@@ -71,6 +71,14 @@ type aoeAttackTempData struct {
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
 }
+type aoeExec struct {
+  game.BasicActionExec
+  Pos int
+}
+func init() {
+  gob.Register(aoeExec{})
+}
+
 func (a *AoeAttack) AP() int {
   return a.Ap
 }
@@ -102,14 +110,7 @@ func (a *AoeAttack) Prep(ent *game.Entity, g *game.Game) bool {
   a.ty = int(by)
   return true
 }
-func (a *AoeAttack) attack(targets []*game.Entity) {
-  a.targets = targets
-  if a.Current_ammo > 0 {
-    a.Current_ammo--
-  }
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-}
-func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil && cursor.Name() == "Mouse" {
     bx,by := g.GetViewer().WindowToBoard(cursor.Point())
@@ -119,28 +120,16 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputSt
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     ex,ey := a.ent.Pos()
     if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
-      x := a.tx - (a.Diameter + 1) / 2
-      y := a.ty - (a.Diameter + 1) / 2
-      x2 := a.tx + a.Diameter / 2
-      y2 := a.ty + a.Diameter / 2
-      var targets []*game.Entity
-      for _,ent := range g.Ents {
-        entx,enty := ent.Pos()
-        if entx >= x && entx < x2 && enty >= y && enty < y2 {
-          targets = append(targets, ent)
-        }
-      }
-      algorithm.Choose2(&targets, func(e *game.Entity) bool {
-        return e.Stats != nil
-      })
-      a.attack(targets)
-      return game.ConsumedAndBegin
+      var exec aoeExec
+      exec.SetBasicData(a.ent, a)
+      exec.Pos = a.ent.Game().ToVertex(a.tx, a.tx)
+      return true, exec
     } else {
-      return game.Consumed
+      return true, nil
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *AoeAttack) RenderOnFloor() {
   ex,ey := a.ent.Pos()
@@ -160,7 +149,30 @@ func (a *AoeAttack) RenderOnFloor() {
 func (a *AoeAttack) Cancel() {
   a.aoeAttackTempData = aoeAttackTempData{}
 }
-func (a *AoeAttack) Maintain(dt int64) game.MaintenanceStatus {
+func (a *AoeAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(aoeExec)
+    _, tx, ty := a.ent.Game().FromVertex(exec.Pos)
+    x := tx - (a.Diameter + 1) / 2
+    y := ty - (a.Diameter + 1) / 2
+    x2 := tx + a.Diameter / 2
+    y2 := ty + a.Diameter / 2
+    var targets []*game.Entity
+    for _,ent := range a.ent.Game().Ents {
+      entx,enty := ent.Pos()
+      if entx >= x && entx < x2 && enty >= y && enty < y2 {
+        targets = append(targets, ent)
+      }
+    }
+    algorithm.Choose2(&targets, func(e *game.Entity) bool {
+      return e.Stats != nil
+    })
+    a.targets = targets
+    if a.Current_ammo > 0 {
+      a.Current_ammo--
+    }
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+  }
   if a.ent.Sprite().State() != "ready" { return game.InProgress }
   for _,target := range a.targets {
     if target.Stats.HpCur() > 0 && target.Sprite().State() != "ready" { return game.InProgress }
