@@ -1,0 +1,13 @@
+{
+  "Name": "Pit",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/pit/pit.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

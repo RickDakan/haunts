@@ -1,0 +1,20 @@
+{
+  "Name": "Victrola",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/victrola/victrola_black.png"
+      }
+    },
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/victrola/victrola_white.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

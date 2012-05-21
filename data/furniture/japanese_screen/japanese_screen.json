@@ -1,0 +1,20 @@
+{
+  "Name": "Japanese Screen",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/japanese_screen/screen.png"
+      }
+    },
+ {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/japanese_screen/screen_black.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

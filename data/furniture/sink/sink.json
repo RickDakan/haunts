@@ -1,0 +1,13 @@
+{
+  "Name": "Sink",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/sink/sink.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
