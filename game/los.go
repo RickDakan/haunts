@@ -2,6 +2,7 @@ package game
 
 import (
   "math/rand"
+  "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
@@ -72,6 +73,7 @@ type Game struct {
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
+  minion_ai Ai
 
   action_state actionState
   current_exec   ActionExec
@@ -319,12 +321,13 @@ func (g *Game) OnRound() {
     g.viewer.Los_tex = g.los_tex
     g.OnBegin()
   }
+  g.minion_ai.Activate()
   for i := range g.Ents {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
     }
     if g.Ents[i].Ai_path.String() != "" {
-      g.Ents[i].ai_status = aiReady
+      g.Ents[i].Ai.Activate()
     }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
@@ -351,7 +354,15 @@ func (g *Game) OnRound() {
 type actionState int
 const (
   noAction       actionState = iota
+
+  // The Ai is running and determining the next action to run
+  waitingAction
+
+  // The player has selected an action and is determining whether or not to
+  // use it, and how.
   preppingAction
+
+  // An action is currently running, everything should pause while this runs.
   doingAction
 )
 
@@ -539,6 +550,8 @@ func (g *Game) setup() {
   }
 
   g.MergeLos(g.Ents)
+
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai)
 }
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
@@ -629,30 +642,25 @@ func (g *Game) Think(dt int64) {
   }
 
   // Do Ai - if there is any to do
-  if g.action_state == noAction {
-    if g.ai_ent == nil {
-      for _,ent := range g.Ents {
-        if ent.Side() != g.Side { continue }
-        if ent.ai_status != aiReady { continue }
-        g.ai_ent = ent
-        g.ai_ent.Ai.Eval()
-        g.ai_ent.ai_status = aiRunning
-        g.ai_ent.controlled = true
-        break
-      }
+  if g.Side == SideHaunt && g.minion_ai.Active() {
+    if g.action_state == noAction {
+      g.minion_ai.ActionExecs()
+      base.Log().Printf("Ative: %t", g.minion_ai.Active())
+      g.action_state = waitingAction
     }
-    if g.ai_ent != nil {
-      select {
-      case exec := <-g.ai_ent.Ai.Actions():
-        if exec != nil {
-          g.current_exec = exec
-        } else {
-          g.ai_ent.ai_status = aiDone
-          g.ai_ent.controlled = false
-          g.ai_ent = nil
-        }
-      default:
+  }
+  if g.action_state == waitingAction {
+    select {
+    case exec := <-g.minion_ai.ActionExecs():
+      base.Log().Printf("Got %v from master", exec)
+      if exec != nil {
+        g.current_exec = exec
+      } else {
+        g.action_state = noAction
+        // TODO: indicate that the master ai can go now
       }
+
+    default:
     }
   }
 }

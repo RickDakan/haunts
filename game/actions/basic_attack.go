@@ -184,6 +184,10 @@ func (a *BasicAttack) Cancel() {
 func (a *BasicAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(basicAttackExec)
+    base.Log().Printf("a: %p", a)
+    base.Log().Printf("a.ent: %p", a.ent)
+    base.Log().Printf("a.ent.Game(): %p", a.ent.Game())
+    base.Log().Printf("exec: %v", exec)
     a.target = a.ent.Game().EntityById(exec.Target)
   }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {

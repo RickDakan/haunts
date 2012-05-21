@@ -13,13 +13,18 @@ import (
 )
 
 type Ai interface {
-  Eval()
-  Actions() <-chan ActionExec
+  // Informs the Ai that a new turn has started
+  Activate()
+
+  // Returns true if the Ai still has things to do this turn
+  Active() bool
+
+  ActionExecs() <-chan ActionExec
 }
 
-var ai_maker func(path string, ent *Entity, dst *Ai)
+var ai_maker func(path string, g *Game, ent *Entity, dst *Ai)
 
-func SetAiMaker(f func(path string, ent *Entity, dst *Ai)) {
+func SetAiMaker(f func(path string, g *Game, ent *Entity, dst *Ai)) {
   ai_maker = f
 }
 
@@ -89,7 +94,7 @@ func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
   if e.Ai_path.String() != "" {
-    ai_maker(e.Ai_path.String(), e, &e.Ai)
+    ai_maker(e.Ai_path.String(), g, e, &e.Ai)
   }
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
@@ -311,10 +316,6 @@ type EntityInst struct {
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
   Ai Ai
-  // The ready flag is set to true at the start of every turn - this lets us
-  // keep easy track of whether or not an entity's Ai has executed yet, since
-  // an entity might not do anything else obvious, like run out of Ap.
-  ai_status aiStatus
 
   // For inanimate objects - some of them need to be activated so we know when
   // the players can interact with them.

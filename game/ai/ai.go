@@ -15,22 +15,30 @@ import (
 
 // The Ai struct contains a glop.AiGraph object as well as a few channels for
 // communicating with the game itself.
-// If there is no action executing and an ent is ready, call Ai.Eval(), it will
-// 
 type Ai struct {
   graph   *ai.AiGraph
 
-  // Used during evaluation to get the action that the ai wants to execute
-  res chan game.ActionExec
+  game *game.Game
 
-  // Once we send an Action for execution we have to wait until it is done
-  // before we make the next one.  This channel is used to handle that.
-  pause chan bool
-
-  // Keep track of the ent since we'll want to reference it regularly
   ent *game.Entity
 
   State AiState
+
+
+  // new stuff
+
+  // Set to true at the beginning of the turn, turned off as soon as the ai is
+  // done for the turn.
+  active bool
+  evaluating bool
+  active_set chan bool
+  active_query chan bool
+  exec_query chan struct{}
+
+  // Once we send an Action for execution we have to wait until it is done
+  // before we make the next one.  This channel is used to handle that.
+  pause chan struct{}
+  execs chan game.ActionExec
 }
 
 type AiState struct {
@@ -39,9 +47,10 @@ type AiState struct {
 
 func init() {
   gob.Register(&Ai{})
+  game.SetAiMaker(makeAi)
 }
 
-func makeAi(path string, ent *game.Entity, dst_iface *game.Ai) {
+func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai) {
   var ai_struct *Ai
   if *dst_iface == nil {
     ai_struct = new(Ai)
@@ -56,36 +65,119 @@ func makeAi(path string, ent *game.Entity, dst_iface *game.Ai) {
   }
   ai_graph.Graph = &graph.Graph
   ai_graph.Context = polish.MakeContext()
-  ai_struct.graph = ai_graph
-  ai_struct.res = make(chan game.ActionExec)
-  ai_struct.pause = make(chan bool)
   ai_struct.ent = ent
-  ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
+  ai_struct.graph = ai_graph
+  ai_struct.game = g
+
+  ai_struct.active_set = make(chan bool)
+  ai_struct.active_query = make(chan bool)
+  ai_struct.exec_query = make(chan struct{})
+  ai_struct.pause = make(chan struct{})
+  ai_struct.execs = make(chan game.ActionExec)
+
+  if ent != nil {
+    ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
+    go ai_struct.masterRoutine()
+  } else {
+    ai_struct.addGameContext()
+    go ai_struct.masterRoutine()
+  }
   *dst_iface = ai_struct
 }
 
-func init() {
-  game.SetAiMaker(makeAi)
-}
+func (a *Ai) entityRoutine() {
+  for {
+    select {
+    case a.active = <-a.active_set:
+      if a.active == false {
+        a.evaluating = false
+      }
 
-// Eval() evaluates the ai graph and returns an Action that the entity wants
-// to execute, or nil if the entity is done for the turn.
-func (a *Ai) Eval() {
-  go func() {
-    err := a.graph.Eval()
-    a.res <- nil
-    if err != nil {
-      base.Warn().Printf("%v", err)
+    case a.active_query <- a.active:
     }
-  } ()
+  }  
 }
 
-func (a *Ai) Actions() <-chan game.ActionExec {
+// Need a goroutine for each ai - all things will go through is so that things
+// stay synchronized
+func (a *Ai) masterRoutine() {
+  for {
+    select {
+    case a.active = <-a.active_set:
+      if a.active && a.ent == nil {
+        // The master is responsible for activating all entities
+        for i := range a.game.Ents {
+          if a.game.Ents[i].Ai != nil {
+            a.game.Ents[i].Ai.Activate()
+          }
+        }
+      }
+      if a.active == false {
+        if a.ent == nil {
+          base.Log().Printf("Evaluating = false")
+        } else {
+          base.Log().Printf("Ent %p inactivated", a.ent)
+        }
+        a.evaluating = false
+      }
+
+    case a.active_query <- a.active:
+
+    case <-a.exec_query:
+      if a.active {
+        select {
+          case a.pause <- struct{}{}:
+          default:
+        }
+      }
+      if a.active && !a.evaluating {
+        a.evaluating = true
+        go func() {
+          if a.ent == nil {
+            base.Log().Printf("Eval master")
+          } else {
+            base.Log().Printf("Eval ent: %p", a.ent)
+          }
+          labels, err := a.graph.Eval()
+          if a.ent == nil {
+            base.Log().Printf("Completed master")
+          } else {
+            base.Log().Printf("Completed ent: %p", a.ent)
+          }
+          for i := range labels {
+            base.Log().Printf("Execed: %s", labels[i])
+          }
+          if err != nil {
+            base.Warn().Printf("%v", err)
+            if e, ok := err.(*polish.Error); ok {
+              base.Warn().Printf("%s", e.Stack)
+            }
+          }
+          a.active_set <- false
+          a.active_set <- false
+          a.execs <- nil
+          base.Log().Printf("Sent nil value")
+        } ()
+      }
+    }
+  }
+}
+
+func (a *Ai) Activate() {
+  a.active_set <- true
+}
+
+func (a *Ai) Active() bool {
+  return <-a.active_query
+}
+
+func (a *Ai) ActionExecs() <-chan game.ActionExec {
   select {
-    case a.pause <- true:
+    case a.pause <- struct{}{}:
     default:
   }
-  return a.res
+  a.exec_query <- struct{}{}
+  return a.execs
 }
 
 // Does the roll dice-d-sides, like 3d6, and returns the result
@@ -95,6 +187,55 @@ func roll(dice, sides float64) float64 {
     result += rand.Intn(int(sides)) + 1
   }
   return float64(result)
+}
+
+func (a *Ai) addGameContext() {
+  polish.AddFloat64MathContext(a.graph.Context)
+  polish.AddBooleanContext(a.graph.Context)
+  a.graph.Context.SetParseOrder(polish.Float, polish.String)
+  a.graph.Context.AddFunc("numActiveMinions", func() float64 {
+    count := 0.0
+    for _, e := range a.game.Ents {
+      if e.Side() != game.SideHaunt { continue }
+      if e.HauntEnt.Level != game.LevelMinion { continue }
+      if !e.Ai.Active() { continue }
+      count++
+    }
+    base.Log().Printf("Num active minions: %f", count)
+    return count
+  })
+  a.graph.Context.AddFunc("randomActiveMinion", func() *game.Entity {
+    base.Log().Printf("randomActiveMinion")
+    var ent *game.Entity
+    count := 1.0
+    for _, e := range a.game.Ents {
+      if e.Side() != game.SideHaunt { continue }
+      if e.HauntEnt.Level != game.LevelMinion { continue }
+      if !e.Ai.Active() { continue }
+      if rand.Float64() < 1.0 / count {
+        ent = e
+      }
+      count++
+    }
+    base.Log().Printf("Selected %s (%p)", ent.Name, ent)
+    return ent
+  })
+  a.graph.Context.AddFunc("exec", func(ent *game.Entity) {
+    base.Log().Printf("Execute %p", ent)
+    exec := <-ent.Ai.ActionExecs()
+    base.Log().Printf("Got an action: %v", exec)
+    if exec != nil {
+      base.Log().Printf("Sending that action")
+      a.execs <- exec
+      base.Log().Printf("Sent.")
+    }
+    <-a.pause
+  })
+  a.graph.Context.AddFunc("done", func() {
+    base.Log().Printf("master done")
+    // a.graph.Term() <- nil
+    <-a.pause
+  })
 }
 
 func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
@@ -116,6 +257,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // current entity
   context.AddFunc("numVisibleEnemies",
       func() float64 {
+        base.Log().Printf("numVisibleEnemies")
         return float64(numVisibleEntities(ent, false))
       })
   context.AddFunc("nearestEnemy",
@@ -127,51 +269,66 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // Ends an entity's turn
   context.AddFunc("done",
       func() {
-        <-a.pause
+        base.Log().Printf("done")
+        a.active_set <- false
+        base.Log().Printf("done")
+        // a.graph.Term() <- nil
       })
 
   // Checks whether an entity is nil, this is important to check when using
   // function that returns an entity (like lastOffensiveTarget)
   context.AddFunc("stillExists", func(target *game.Entity) bool {
+    base.Log().Printf("stillExists")
     return target != nil
   })
 
   // Returns the last entity that this ai attacked.  If the entity has died
   // this can return nil, so be sure to check that before using it.
   context.AddFunc("lastOffensiveTarget", func() *game.Entity {
+    base.Log().Printf("lastOffensiveTarget")
     return ent.Game().EntityById(a.State.Last_offensive_target)
   })
 
   // Advances as far as possible towards the target entity.
   context.AddFunc("advanceTowards", func(target *game.Entity) {
-    move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
+    base.Log().Printf("advanceTowards")
+    name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
+    move := getActionByName(ent, name).(*actions.Move)
     x,y := target.Pos()
     exec := move.AiMoveToWithin(ent, x, y, 1)
     if exec != nil {
-      a.res <- exec
+      base.Log().Printf("Sending exec: %v", exec)
+      a.execs <- exec
+      base.Log().Printf("Sent")
+      <-a.pause
     } else {
+      base.Log().Printf("Terminating")
       a.graph.Term() <- ai.TermError
+      base.Log().Printf("Terminated")
     }
-    <-a.pause
-    x,y = ent.Pos()
   })
 
-  context.AddFunc("getBasicAttack", func() game.Action {
-    return getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
+  context.AddFunc("getBasicAttack", func() string {
+    base.Log().Printf("getBasicAttack")
+    return getActionName(ent, reflect.TypeOf(&actions.BasicAttack{}))
   })
 
   context.AddFunc("doBasicAttack", func(target *game.Entity, attack_name string) {
+    base.Log().Printf("doBasicAttack")
     _attack := getActionByName(ent, attack_name)
     attack := _attack.(*actions.BasicAttack)
     exec := attack.AiAttackTarget(ent, target)
     if exec != nil {
-      base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, exec)
-      a.res <- exec
+      base.Log().Printf("Sending exec: %v", exec)
+      a.execs <- exec
       a.State.Last_offensive_target = target.Id
+      base.Log().Printf("Sent")
+      <-a.pause
     } else {
+      base.Log().Printf("Terminating")
       a.graph.Term() <- ai.TermError
+      base.Log().Printf("Terminated")
     }
-    <-a.pause
   })
 
   context.AddFunc("corpus", func(target *game.Entity) float64 {
@@ -264,11 +421,11 @@ func getActionByName(e *game.Entity, name string) game.Action {
   return nil
 }
 
-func getAction(e *game.Entity, typ reflect.Type) game.Action {
+func getActionName(e *game.Entity, typ reflect.Type) string {
   for _,action := range e.Actions {
     if reflect.TypeOf(action) == typ {
-      return action
+      return lowerAndUnderscore(action.String())
     }
   }
-  return nil
+  return ""
 }
