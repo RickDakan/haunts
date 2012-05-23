@@ -81,6 +81,9 @@ type Game struct {
   haunts_ai Ai
   explorers_ai Ai
 
+  // If an Ai is executing currently it is referenced here
+  active_ai Ai
+
   action_state actionState
   current_exec   ActionExec
   current_action Action
@@ -253,7 +256,7 @@ func (g *Game) OnRound() {
   // An action is currently executing
   if g.action_state != noAction { return }
   // Any master ai is still active
-  if g.Side == SideHaunt && g.minion_ai.Active() { return }
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) { return }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -332,6 +335,9 @@ func (g *Game) OnRound() {
     g.OnBegin()
   }
   g.minion_ai.Activate()
+  if g.haunts_ai != nil {
+    g.haunts_ai.Activate()
+  }
   for i := range g.Ents {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
@@ -654,16 +660,21 @@ func (g *Game) Think(dt int64) {
   }
 
   // Do Ai - if there is any to do
-  if g.Side == SideHaunt && g.minion_ai.Active() {
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
     if g.action_state == noAction {
-      g.minion_ai.ActionExecs()
-      base.Log().Printf("Ative: %t", g.minion_ai.Active())
+      if g.minion_ai.Active() {
+        g.active_ai = g.minion_ai
+      } else {
+        g.active_ai = g.haunts_ai
+      }
+      g.active_ai.ActionExecs()
+      base.Log().Printf("Ative: %t", g.active_ai.Active())
       g.action_state = waitingAction
     }
   }
   if g.action_state == waitingAction {
     select {
-    case exec := <-g.minion_ai.ActionExecs():
+    case exec := <-g.active_ai.ActionExecs():
       base.Log().Printf("Got %v from master", exec)
       if exec != nil {
         g.current_exec = exec

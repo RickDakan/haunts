@@ -78,32 +78,19 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   switch kind {
   case game.EntityAi:
     ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
-    go ai_struct.masterRoutine()
 
   case game.MinionsAi:
-    ai_struct.addGameContext()
-    go ai_struct.masterRoutine()
+    ai_struct.addMinionsContext()
 
   case game.DenizensAi:
+    ai_struct.addDenizensContext()
+
   case game.IntrudersAi:
   default:
     panic("Unknown ai kind")
   }
-
+  go ai_struct.masterRoutine()
   *dst_iface = ai_struct
-}
-
-func (a *Ai) entityRoutine() {
-  for {
-    select {
-    case a.active = <-a.active_set:
-      if a.active == false {
-        a.evaluating = false
-      }
-
-    case a.active_query <- a.active:
-    }
-  }  
 }
 
 // Need a goroutine for each ai - all things will go through is so that things
@@ -197,7 +184,7 @@ func roll(dice, sides float64) float64 {
   return float64(result)
 }
 
-func (a *Ai) addGameContext() {
+func (a *Ai) addMinionsContext() {
   polish.AddFloat64MathContext(a.graph.Context)
   polish.AddBooleanContext(a.graph.Context)
   a.graph.Context.SetParseOrder(polish.Float, polish.String)
@@ -219,6 +206,52 @@ func (a *Ai) addGameContext() {
     for _, e := range a.game.Ents {
       if e.Side() != game.SideHaunt { continue }
       if e.HauntEnt.Level != game.LevelMinion { continue }
+      if !e.Ai.Active() { continue }
+      if rand.Float64() < 1.0 / count {
+        ent = e
+      }
+      count++
+    }
+    base.Log().Printf("Selected %s (%p)", ent.Name, ent)
+    return ent
+  })
+  a.graph.Context.AddFunc("exec", func(ent *game.Entity) {
+    base.Log().Printf("Execute %p", ent)
+    exec := <-ent.Ai.ActionExecs()
+    base.Log().Printf("Got an action: %v", exec)
+    if exec != nil {
+      base.Log().Printf("Sending that action")
+      a.execs <- exec
+      base.Log().Printf("Sent.")
+    }
+    <-a.pause
+  })
+  a.graph.Context.AddFunc("done", func() {
+    base.Log().Printf("master done")
+    <-a.pause
+  })
+}
+
+func (a *Ai) addDenizensContext() {
+  polish.AddFloat64MathContext(a.graph.Context)
+  polish.AddBooleanContext(a.graph.Context)
+  a.graph.Context.SetParseOrder(polish.Float, polish.String)
+  a.graph.Context.AddFunc("numActiveServitors", func() float64 {
+    count := 0.0
+    for _, e := range a.game.Ents {
+      if e.Side() != game.SideHaunt { continue }
+      if e.HauntEnt.Level != game.LevelServitor { continue }
+      if !e.Ai.Active() { continue }
+      count++
+    }
+    return count
+  })
+  a.graph.Context.AddFunc("randomActiveServitor", func() *game.Entity {
+    var ent *game.Entity
+    count := 1.0
+    for _, e := range a.game.Ents {
+      if e.Side() != game.SideHaunt { continue }
+      if e.HauntEnt.Level != game.LevelServitor { continue }
       if !e.Ai.Active() { continue }
       if rand.Float64() < 1.0 / count {
         ent = e
