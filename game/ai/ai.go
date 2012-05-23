@@ -50,7 +50,7 @@ func init() {
   game.SetAiMaker(makeAi)
 }
 
-func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai) {
+func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kind game.AiKind) {
   var ai_struct *Ai
   if *dst_iface == nil {
     ai_struct = new(Ai)
@@ -75,13 +75,21 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai) {
   ai_struct.pause = make(chan struct{})
   ai_struct.execs = make(chan game.ActionExec)
 
-  if ent != nil {
+  switch kind {
+  case game.EntityAi:
     ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
     go ai_struct.masterRoutine()
-  } else {
+
+  case game.MinionsAi:
     ai_struct.addGameContext()
     go ai_struct.masterRoutine()
+
+  case game.DenizensAi:
+  case game.IntrudersAi:
+  default:
+    panic("Unknown ai kind")
   }
+
   *dst_iface = ai_struct
 }
 

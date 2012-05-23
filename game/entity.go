@@ -21,10 +21,17 @@ type Ai interface {
 
   ActionExecs() <-chan ActionExec
 }
+type AiKind int
+const(
+  EntityAi AiKind = iota
+  MinionsAi
+  DenizensAi
+  IntrudersAi
+)
 
-var ai_maker func(path string, g *Game, ent *Entity, dst *Ai)
+var ai_maker func(path string, g *Game, ent *Entity, dst *Ai, kind AiKind)
 
-func SetAiMaker(f func(path string, g *Game, ent *Entity, dst *Ai)) {
+func SetAiMaker(f func(path string, g *Game, ent *Entity, dst *Ai, kind AiKind)) {
   ai_maker = f
 }
 
@@ -94,7 +101,7 @@ func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
   if e.Ai_path.String() != "" {
-    ai_maker(e.Ai_path.String(), g, e, &e.Ai)
+    ai_maker(e.Ai_path.String(), g, e, &e.Ai, EntityAi)
   }
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {

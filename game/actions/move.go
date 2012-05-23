@@ -231,11 +231,12 @@ func (a *Move) Cancel() {
   a.path = nil
   a.calculated = false
 }
-func (a *Move) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(moveExec)
-    _, x, y := a.ent.Game().FromVertex(exec.Dst)
-    a.findPath(a.ent.Game(), x, y)
+    _, x, y := g.FromVertex(exec.Dst)
+    a.findPath(g, x, y)
+    a.ent = g.EntityById(ae.EntityId())
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
   }
   // Do stuff

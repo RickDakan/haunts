@@ -73,7 +73,13 @@ type Game struct {
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
+
+  // This controls the minions on the haunting side, regardless of whether a
+  // human or ai is controlling the rest of that side.
   minion_ai Ai
+
+  haunts_ai Ai
+  explorers_ai Ai
 
   action_state actionState
   current_exec   ActionExec
@@ -243,7 +249,11 @@ func (g *Game) checkWinConditions() {
 }
 
 func (g *Game) OnRound() {
+  // Don't end the round if any of the following are true
+  // An action is currently executing
   if g.action_state != noAction { return }
+  // Any master ai is still active
+  if g.Side == SideHaunt && g.minion_ai.Active() { return }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -551,7 +561,9 @@ func (g *Game) setup() {
 
   g.MergeLos(g.Ents)
 
-  ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai)
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+//  ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, ExplorersAi)
 }
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
@@ -581,7 +593,7 @@ func (g *Game) Think(dt int64) {
   // If there is an action that is currently executing we need to advance that
   // action.
   if g.action_state == doingAction {
-    res := g.current_action.Maintain(dt, g.current_exec)
+    res := g.current_action.Maintain(dt, g, g.current_exec)
     g.current_exec = nil
     switch res {
       case Complete:
@@ -741,7 +753,6 @@ func (g *Game) DetermineLos(ent *Entity, force bool) {
   }
   ent.los.x = ex
   ent.los.y = ey
-
 
   minx := ex - ent.Stats.Sight()
   miny := ey - ent.Stats.Sight()

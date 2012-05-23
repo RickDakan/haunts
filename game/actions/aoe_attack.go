@@ -149,16 +149,16 @@ func (a *AoeAttack) RenderOnFloor() {
 func (a *AoeAttack) Cancel() {
   a.aoeAttackTempData = aoeAttackTempData{}
 }
-func (a *AoeAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(aoeExec)
-    _, tx, ty := a.ent.Game().FromVertex(exec.Pos)
+    _, tx, ty := g.FromVertex(exec.Pos)
     x := tx - (a.Diameter + 1) / 2
     y := ty - (a.Diameter + 1) / 2
     x2 := tx + a.Diameter / 2
     y2 := ty + a.Diameter / 2
     var targets []*game.Entity
-    for _,ent := range a.ent.Game().Ents {
+    for _,ent := range g.Ents {
       entx,enty := ent.Pos()
       if entx >= x && entx < x2 && enty >= y && enty < y2 {
         targets = append(targets, ent)
@@ -171,6 +171,7 @@ func (a *AoeAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatu
     if a.Current_ammo > 0 {
       a.Current_ammo--
     }
+    a.ent = g.EntityById(ae.EntityId())
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
   }
   if a.ent.Sprite().State() != "ready" { return game.InProgress }

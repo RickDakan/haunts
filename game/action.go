@@ -152,7 +152,7 @@ type Action interface {
   // Actually executes the action.  Returns a value after every call
   // indicating whether the action is done, still in progress, or can be
   // interrupted.
-  Maintain(dt int64, exec ActionExec) MaintenanceStatus
+  Maintain(dt int64, g *Game, exec ActionExec) MaintenanceStatus
 
   // This will be called if the action has been readied at this is a logical
   // point for an interrupt to happen.  Should return true if the action

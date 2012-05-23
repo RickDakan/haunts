@@ -141,8 +141,7 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game
   x,y := ent.Pos()
   x2,y2 := target.Pos()
   if dist(x,y,x2,y2) > a.Range { return nil }
-  a.ent = ent
-  return a.makeExec(a.ent, target)
+  return a.makeExec(ent, target)
 }
 func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
   var exec basicAttackExec
@@ -181,13 +180,10 @@ func (a *BasicAttack) RenderOnFloor() {
 func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
-func (a *BasicAttack) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(basicAttackExec)
-    base.Log().Printf("a: %p", a)
-    base.Log().Printf("a.ent: %p", a.ent)
-    base.Log().Printf("a.ent.Game(): %p", a.ent.Game())
-    base.Log().Printf("exec: %v", exec)
+    a.ent = g.EntityById(ae.EntityId())
     a.target = a.ent.Game().EntityById(exec.Target)
   }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {

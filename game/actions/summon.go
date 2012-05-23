@@ -138,7 +138,7 @@ func (a *SummonAction) RenderOnFloor() {
 func (a *SummonAction) Cancel() {
   a.summonActionTempData = summonActionTempData{}
 }
-func (a *SummonAction) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(summonExec)
     _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)

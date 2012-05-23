@@ -192,7 +192,7 @@ func (a *Interact) RenderOnFloor() {
 func (a *Interact) Cancel() {
   a.interactInst = interactInst{}
 }
-func (a *Interact) Maintain(dt int64, ae game.ActionExec) game.MaintenanceStatus {
+func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(interactExec)
     g := a.ent.Game()
