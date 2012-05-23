@@ -88,7 +88,7 @@ func SetBackgroundMusic(file string) {
     base.Error().Printf("Unable to set volume: %v", err)
     return
   }
-  cg.SetVolume(0.1)
+  cg.SetVolume(0.001)
 }
 
 
