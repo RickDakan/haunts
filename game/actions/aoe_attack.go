@@ -83,10 +83,10 @@ func (a *AoeAttack) AP() int {
   return a.Ap
 }
 func (a *AoeAttack) Pos() (int, int) {
-  return 0, 0
+  return a.tx, a.ty
 }
 func (a *AoeAttack) Dims() (int, int) {
-  return 0, 0
+  return a.Diameter, a.Diameter
 }
 func (a *AoeAttack) String() string {
   return a.Name
@@ -122,7 +122,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.
     if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
       var exec aoeExec
       exec.SetBasicData(a.ent, a)
-      exec.Pos = a.ent.Game().ToVertex(a.tx, a.tx)
+      exec.Pos = a.ent.Game().ToVertex(a.tx, a.ty)
       return true, exec
     } else {
       return true, nil
@@ -132,19 +132,18 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.
   return false, nil
 }
 func (a *AoeAttack) RenderOnFloor() {
-  ex,ey := a.ent.Pos()
-  if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
-    gl.Color4d(1.0, 0.2, 0.2, 0.8)
-  } else {
-    gl.Color4d(0.6, 0.6, 0.6, 0.8)
+  if a.ent == nil {
+    return
   }
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.QUADS)
-    gl.Vertex2i(a.tx - (a.Diameter + 1) / 2, a.ty - (a.Diameter + 1) / 2)
-    gl.Vertex2i(a.tx - (a.Diameter + 1) / 2, a.ty + a.Diameter / 2)
-    gl.Vertex2i(a.tx + a.Diameter / 2, a.ty + a.Diameter / 2)
-    gl.Vertex2i(a.tx + a.Diameter / 2, a.ty - (a.Diameter + 1) / 2)
-  gl.End()
+  gl.Color4ub(255, 255, 255, 128)
+  base.EnableShader("box")
+  base.SetUniformF("box", "dx", float32(a.Diameter))
+  base.SetUniformF("box", "dy", float32(a.Diameter))
+  base.SetUniformI("box", "temp_invalid", 0)
+  x := a.tx - (a.Diameter + 1) / 2
+  y := a.ty - (a.Diameter + 1) / 2
+  (&texture.Object{}).Data().Render(float64(x), float64(y), float64(a.Diameter), float64(a.Diameter))
+  base.EnableShader("")
 }
 func (a *AoeAttack) Cancel() {
   a.aoeAttackTempData = aoeAttackTempData{}

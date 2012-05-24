@@ -72,10 +72,10 @@ func (a *SummonAction) AP() int {
   return a.Ap
 }
 func (a *SummonAction) Pos() (int, int) {
-  return 0, 0
+  return a.cx, a.cy
 }
 func (a *SummonAction) Dims() (int, int) {
-  return 0, 0
+  return 1, 1
 }
 func (a *SummonAction) String() string {
   return a.Name
@@ -126,14 +126,16 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, ga
   return false, nil
 }
 func (a *SummonAction) RenderOnFloor() {
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.QUADS)
-  gl.Color4d(1.0, 0.2, 0.2, 0.8)
-    gl.Vertex2i(a.cx + 0, a.cy + 0)
-    gl.Vertex2i(a.cx + 0, a.cy + 1)
-    gl.Vertex2i(a.cx + 1, a.cy + 1)
-    gl.Vertex2i(a.cx + 1, a.cy + 0)
-  gl.End()
+  if a.ent == nil {
+    return
+  }
+  gl.Color4ub(255, 255, 255, 128)
+  base.EnableShader("box")
+  base.SetUniformF("box", "dx", 1)
+  base.SetUniformF("box", "dy", 1)
+  base.SetUniformI("box", "temp_invalid", 0)
+  (&texture.Object{}).Data().Render(float64(a.cx), float64(a.cy), 1, 1)
+  base.EnableShader("")
 }
 func (a *SummonAction) Cancel() {
   a.summonActionTempData = summonActionTempData{}

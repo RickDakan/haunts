@@ -172,9 +172,6 @@ func (a *Move) AiMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist,
   return exec
 }
 
-// Attempts to move such that the shortest path from any location
-// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
-// than max_ap Ap doing this.
 func (a *Move) AiCostToMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist int) int {
   var src []int
   for i := range txs {
