@@ -408,6 +408,9 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
+    if m.my > m.layout.Background.Data().Dy() {
+      return false
+    }
   }
 
   for _, button := range m.buttons {
@@ -440,7 +443,7 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  return false
+  return cursor != nil
 }
 
 func (m *MainBar) Draw(region gui.Region) {
