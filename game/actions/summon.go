@@ -129,7 +129,12 @@ func (a *SummonAction) RenderOnFloor() {
   if a.ent == nil {
     return
   }
-  gl.Color4ub(255, 255, 255, 128)
+  ex,ey := a.ent.Pos()
+  if dist(ex, ey, a.cx, a.cy) <= a.Range && a.ent.HasLos(a.cx, a.cy, 1, 1) {
+    gl.Color4ub(255, 255, 255, 200)
+  } else {
+    gl.Color4ub(255, 64, 64, 200)
+  }
   base.EnableShader("box")
   base.SetUniformF("box", "dx", 1)
   base.SetUniformF("box", "dy", 1)

@@ -135,7 +135,12 @@ func (a *AoeAttack) RenderOnFloor() {
   if a.ent == nil {
     return
   }
-  gl.Color4ub(255, 255, 255, 128)
+  ex,ey := a.ent.Pos()
+  if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
+    gl.Color4ub(255, 255, 255, 200)
+  } else {
+    gl.Color4ub(255, 64, 64, 200)
+  }
   base.EnableShader("box")
   base.SetUniformF("box", "dx", float32(a.Diameter))
   base.SetUniformF("box", "dy", float32(a.Diameter))
