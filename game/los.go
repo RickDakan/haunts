@@ -334,21 +334,18 @@ func (g *Game) OnRound() {
     g.viewer.Los_tex = g.los_tex
     g.OnBegin()
   }
-  g.minion_ai.Activate()
-  if g.haunts_ai != nil {
-    g.haunts_ai.Activate()
-  }
   for i := range g.Ents {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
-    }
-    if g.Ents[i].Ai_path.String() != "" {
-      g.Ents[i].Ai.Activate()
     }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
+  g.minion_ai.Activate()
+  if g.haunts_ai != nil {
+    g.haunts_ai.Activate()
+  }
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {

@@ -103,7 +103,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
-			<attribute key="label" type="String">advanceTowards nearestEnemy</attribute>
+			<attribute key="label" type="String">advanceAllTheWay nearestEnemy</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">390.0</attribute>
 				<attribute key="y" type="double">330.0</attribute>
@@ -114,7 +114,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">advanceTowards nearestEnemy</attribute>
+				<attribute key="text" type="String">advanceAllTheWay nearestEnemy</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -160,7 +160,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">8</attribute>
-			<attribute key="label" type="String">advanceTowards lastOffensiveTarget</attribute>
+			<attribute key="label" type="String">advanceAllTheWay lastOffensiveTarget</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">900.0</attribute>
 				<attribute key="y" type="double">120.0</attribute>
@@ -171,7 +171,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">advanceTowards lastOffensiveTarget</attribute>
+				<attribute key="text" type="String">advanceAllTheWay lastOffensiveTarget</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

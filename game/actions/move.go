@@ -113,29 +113,84 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
 // Usable by ais, tries to find a path that moves the entity to within dist of
 // the specified location.  Returns true if possible, false otherwise.  If it
 // returns true it also begins execution, so it should become the current
-// action.
-func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) game.ActionExec {
-  a.ent = ent
+// action.  If a path is found the entity will only advance such that it uses
+// max Ap.
+func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist,max int) game.ActionExec {
   var dsts []int
   for x := tx - dist; x <= tx + dist; x++ {
     for y := ty - dist; y <= ty + dist; y++ {
       if x == tx && y == ty { continue }
-      dsts = append(dsts, a.ent.Game().ToVertex(x, y))
+      dsts = append(dsts, ent.Game().ToVertex(x, y))
     }
   }
-  source_cell := []int{a.ent.Game().ToVertex(a.ent.Pos())}
+  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
   if path == nil {
     return nil
   }
-  path = limitPath(ent.Game(), source_cell[0], path, ent.Stats.ApCur())
-  if len(path) <= 1 { // || !canPayForMove(a.Ent, a.Level.MakeBoardPosFromVertex(path[1])) {
+  if ent.Stats.ApCur() > max {
+    max = ent.Stats.ApCur()
+  }
+  path = limitPath(ent.Game(), source_cell[0], path, max)
+  if len(path) <= 1 {
     return nil
   }
   var exec moveExec
-  exec.SetBasicData(a.ent, a)
+  exec.SetBasicData(ent, a)
   exec.Dst = path[len(path)-1]
   return exec
+}
+
+// Attempts to move such that the shortest path from any location
+// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
+// than max_ap Ap doing this.
+func (a *Move) AiMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist,max_ap int) game.ActionExec {
+  var src []int
+  for i := range txs {
+    src = append(src, ent.Game().ToVertex(txs[i], tys[i]))
+  }
+  dst := algorithm.ReachableWithinBounds(ent.Game(), src, float64(min_dist), float64(max_dist))
+  if len(dst) == 0 {
+    return nil
+  }
+
+  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
+  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dst)
+  if path == nil {
+    return nil
+  }
+  if ent.Stats.ApCur() > max_ap {
+    max_ap = ent.Stats.ApCur()
+  }
+  path = limitPath(ent.Game(), source_cell[0], path, max_ap)
+  if len(path) <= 1 {
+    return nil
+  }
+  var exec moveExec
+  exec.SetBasicData(ent, a)
+  exec.Dst = path[len(path)-1]
+  return exec
+}
+
+// Attempts to move such that the shortest path from any location
+// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
+// than max_ap Ap doing this.
+func (a *Move) AiCostToMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist int) int {
+  var src []int
+  for i := range txs {
+    src = append(src, ent.Game().ToVertex(txs[i], tys[i]))
+  }
+  dst := algorithm.ReachableWithinBounds(ent.Game(), src, float64(min_dist), float64(max_dist))
+  if len(dst) == 0 {
+    return 0
+  }
+
+  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
+  cost, path := algorithm.Dijkstra(ent.Game(), source_cell, dst)
+  if path == nil {
+    return -1
+  }
+  return int(cost)
 }
 
 func (a *Move) findPath(g *game.Game, x,y int) {
@@ -235,8 +290,12 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
   if ae != nil {
     exec := ae.(moveExec)
     _, x, y := g.FromVertex(exec.Dst)
-    a.findPath(g, x, y)
     a.ent = g.EntityById(ae.EntityId())
+    a.findPath(g, x, y)
+    if len(a.path) == 0 {
+      base.Error().Printf("Got a move exec with a path length of 0: %v", exec)
+      return game.Complete
+    }
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
   }
   // Do stuff
