@@ -13,22 +13,14 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   polish.AddFloat64MathContext(context)
   polish.AddBooleanContext(context)
   context.SetParseOrder(polish.Float, polish.String)
+  a.addCommonContext()
 
   // This entity, the one currently taking its turn
   context.SetValue("me", ent)
 
-  // Ends an entity's turn
-  context.AddFunc("done",
-      func() {
-        a.active_set <- false
-      })
-
   // All actions that the entity has are available using their names,
   // converted to lower case, and replacing spaces with underscores.
   // For example, "Kiss of Death" -> "kiss_of_death"
-
-  // rolls dice, for example "roll 3 6" is a roll of 3d6
-  context.AddFunc("roll", roll)
 
   // These functions are self-explanitory, they are all relative to the
   // current entity
@@ -183,33 +175,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
         base.Error().Printf("Requested aoeAttackStat %s, which doesn't exist", stat)
     }
     return float64(val)
-  })
-
-  context.AddFunc("corpus", func(target *game.Entity) float64 {
-    return float64(target.Stats.Corpus())
-  })
-  context.AddFunc("ego", func(target *game.Entity) float64 {
-    return float64(target.Stats.Ego())
-  })
-  context.AddFunc("hpMax", func(target *game.Entity) float64 {
-    return float64(target.Stats.HpMax())
-  })
-  context.AddFunc("apMax", func(target *game.Entity) float64 {
-    return float64(target.Stats.ApMax())
-  })
-  context.AddFunc("hpCur", func(target *game.Entity) float64 {
-    return float64(target.Stats.HpCur())
-  })
-  context.AddFunc("apCur", func(target *game.Entity) float64 {
-    return float64(target.Stats.ApCur())
-  })
-  context.AddFunc("hasCondition", func(target *game.Entity, name string) bool {
-    for _, con := range target.Stats.ConditionNames() {
-      if lowerAndUnderscore(con) == name {
-        return true
-      }
-    }
-    return false
   })
 }
 

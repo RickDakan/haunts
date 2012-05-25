@@ -6,6 +6,16 @@ There are four different kinds of ais, each is used for a different purpose and 
 
 Since the Entity Ai is the only kind that actually executes actions, the rest of the Ais are simply for choosing the order in which to allow entities to execute.  Denizen, Intruder, and Minion Ais are all quite similar, they have access to different functions to prevent them from inadvertently accessing an entity they shouldn't be allowed to access.  For the purposes of these Ais an 'Active' Ai is one which has not completed its actions for the turn.  All Ais are marked as active at the beginning of the turn and are responsible for marking themselves as inactive by way of the 'done' function.  Once an entity is marked as inactive it cannot be controlled again for the rest of the turn.  Being inactive and having 0 Ap are not the same, although it does make sense to call 'done' if you have 0 Ap.
 
+All Ais have access to the following mathematical operators and functions:
+    +, -, *, /, ^, ln, log2, log10, abs, <, <=, >, >=, ==, pi, e
+
+As well as the following boolean operators:
+    && - logical and
+    || - logical or
+    ^^ - logical xor
+    !  - logical not
+
+
 ###Denizens Ai
 The Denizens Ai must choose the order in which all master and servitor denizen entities execute.  It executes after all minion entities have executed and cannot control them.
 

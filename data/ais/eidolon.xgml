@@ -84,7 +84,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">4</attribute>
-			<attribute key="label" type="String">>= apCur me + basicAttackStat ectoplasmic_discharge ap costToMoveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range</attribute>
+			<attribute key="label" type="String">>= entityStat me apCur + basicAttackStat ectoplasmic_discharge ap costToMoveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">255.0</attribute>
 				<attribute key="y" type="double">180.0</attribute>
@@ -95,7 +95,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">>= apCur me + basicAttackStat ectoplasmic_discharge ap costToMoveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range</attribute>
+				<attribute key="text" type="String">>= entityStat me apCur + basicAttackStat ectoplasmic_discharge ap costToMoveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -103,7 +103,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
-			<attribute key="label" type="String">moveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range apCur me</attribute>
+			<attribute key="label" type="String">moveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range entityStat me apCur</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">255.0</attribute>
 				<attribute key="y" type="double">270.0</attribute>
@@ -114,7 +114,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">moveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range apCur me</attribute>
+				<attribute key="text" type="String">moveInRange allIntruders basicAttackStat ectoplasmic_discharge range basicAttackStat ectoplasmic_discharge range entityStat me apCur</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

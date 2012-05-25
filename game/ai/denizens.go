@@ -11,6 +11,8 @@ func (a *Ai) addDenizensContext() {
   polish.AddFloat64MathContext(a.graph.Context)
   polish.AddBooleanContext(a.graph.Context)
   a.graph.Context.SetParseOrder(polish.Float, polish.String)
+  a.addCommonContext()
+  a.addHigherContext()
 
   // Returns the number of servitors that have not completed their turn
   a.graph.Context.AddFunc("numActiveServitors", func() float64 {
