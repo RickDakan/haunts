@@ -576,6 +576,9 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
   g.House.Normalize()
   g.viewer = viewer
 
+  // This way an unset id will be invalid
+  g.Entity_id = 1
+
   g.setup()
 
   g.explorer_selection = gui.MakeVerticalTable()

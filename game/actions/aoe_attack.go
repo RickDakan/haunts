@@ -177,6 +177,16 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
     }
     a.ent = g.EntityById(ae.EntityId())
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+
+    // Track this information for the ais - the attacking ent will only
+    // remember one ent that it hit, but that's ok
+    for _, target := range a.targets {
+      if target.Side() != a.ent.Side() {
+        target.Info.LastEntThatAttackedMe = a.ent.Id
+        a.ent.Info.LastEntThatIAttacked = target.Id
+        break
+      }
+    }
   }
   if a.ent.Sprite().State() != "ready" { return game.InProgress }
   for _,target := range a.targets {

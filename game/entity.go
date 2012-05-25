@@ -324,6 +324,9 @@ type EntityInst struct {
   // loading an ent from a file
   Ai Ai
 
+  // Info that may be of use to the Ai
+  Info Info
+
   // For inanimate objects - some of them need to be activated so we know when
   // the players can interact with them.
   Active bool
@@ -335,6 +338,18 @@ const (
   aiRunning
   aiDone
 )
+
+// This stores things that a stateless ai can't figure out
+type Info struct {
+  // Basic or Aoe attacks suffice
+  LastEntThatAttackedMe EntityId
+
+  // Basic or Aoe attacks suffice, but since you can hit multiple enemies
+  // (including allies) with an aoe it will only be set if you hit an enemy,
+  // and it will only remember one of them.
+  LastEntThatIAttacked EntityId
+}
+
 func (e *Entity) Game() *Game {
   return e.game
 }

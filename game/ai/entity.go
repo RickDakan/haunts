@@ -38,15 +38,17 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // Checks whether an entity is nil, this is important to check when using
   // function that returns an entity (like lastOffensiveTarget)
   context.AddFunc("stillExists", func(target *game.Entity) bool {
-    base.Log().Printf("stillExists")
     return target != nil
   })
 
   // Returns the last entity that this ai attacked.  If the entity has died
   // this can return nil, so be sure to check that before using it.
-  context.AddFunc("lastOffensiveTarget", func() *game.Entity {
-    base.Log().Printf("lastOffensiveTarget")
-    return ent.Game().EntityById(a.State.Last_offensive_target)
+  context.AddFunc("lastEntAttackedBy", func(ent *game.Entity) *game.Entity {
+    return ent.Game().EntityById(ent.Info.LastEntThatIAttacked)
+  })
+
+  context.AddFunc("lastEntThatAttacked", func(ent *game.Entity) *game.Entity {
+    return ent.Game().EntityById(ent.Info.LastEntThatAttackedMe)
   })
 
   // Advances as far as possible towards the target entity.
@@ -128,7 +130,6 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     exec := attack.AiAttackTarget(ent, target)
     if exec != nil {
       a.execs <- exec
-      a.State.Last_offensive_target = target.Id
       <-a.pause
     } else {
       a.graph.Term() <- ai.TermError
@@ -175,6 +176,20 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
         base.Error().Printf("Requested aoeAttackStat %s, which doesn't exist", stat)
     }
     return float64(val)
+  })
+
+  context.AddFunc("master", func() *game.Entity {
+    for _, ent := range ent.Game().Ents {
+      if ent.HauntEnt != nil && ent.HauntEnt.Level == game.LevelMaster {
+        return ent
+      }
+    }
+    return nil
+  })
+
+  // Ends an entity's turn
+  context.AddFunc("done", func() {
+      a.active_set <- false
   })
 }
 

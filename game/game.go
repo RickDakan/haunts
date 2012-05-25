@@ -270,7 +270,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    base.Log().Printf("Found an escape!: %p %v", gp.game.selected_ent, gp.game.action_state)
     if gp.game.selected_ent != nil {
       switch gp.game.action_state {
       case noAction:

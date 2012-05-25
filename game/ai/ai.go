@@ -21,9 +21,6 @@ type Ai struct {
 
   ent *game.Entity
 
-  State AiState
-
-
   // new stuff
 
   // Set to true at the beginning of the turn, turned off as soon as the ai is
@@ -38,10 +35,6 @@ type Ai struct {
   // before we make the next one.  This channel is used to handle that.
   pause chan struct{}
   execs chan game.ActionExec
-}
-
-type AiState struct {
-  Last_offensive_target game.EntityId
 }
 
 func init() {

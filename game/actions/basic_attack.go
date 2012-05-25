@@ -185,8 +185,12 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     exec := ae.(basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())
     a.target = a.ent.Game().EntityById(exec.Target)
+    a.ent.Info.LastEntThatIAttacked = a.target.Id
+    a.target.Info.LastEntThatAttackedMe = a.ent.Id
   }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
+    // Track this information for the ais
+
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
     if a.Current_ammo > 0 {

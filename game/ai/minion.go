@@ -21,19 +21,19 @@ func (a *Ai) addHigherContext() {
     }
     <-a.pause
   })
-}
 
-func (a *Ai) addCommonContext() {
-  // Indicates that the minions are all done executing for this turn.
+  // Indicates that the entities are all done executing for this turn.
   a.graph.Context.AddFunc("done", func() {
     base.Log().Printf("master done")
     <-a.pause
   })
+}
 
+func (a *Ai) addCommonContext() {
   // rolls dice, for example "roll 3 6" is a roll of 3d6
-  context.AddFunc("roll", roll)
+  a.graph.Context.AddFunc("roll", roll)
 
-  context.AddFunc("entityStat", func(target *game.Entity, stat string) float64 {
+  a.graph.Context.AddFunc("entityStat", func(target *game.Entity, stat string) float64 {
     var val float64
     switch stat {
       case "corpus":
@@ -54,7 +54,7 @@ func (a *Ai) addCommonContext() {
     return val
   })
 
-  context.AddFunc("hasCondition", func(target *game.Entity, name string) bool {
+  a.graph.Context.AddFunc("hasCondition", func(target *game.Entity, name string) bool {
     for _, con := range target.Stats.ConditionNames() {
       if lowerAndUnderscore(con) == name {
         return true
