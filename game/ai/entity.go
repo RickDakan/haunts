@@ -27,18 +27,32 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   context.AddFunc("numVisibleEnemies",
       func() float64 {
         base.Log().Printf("numVisibleEnemies")
-        return float64(numVisibleEntities(ent, false))
+        side := game.SideHaunt
+        if ent.Side() == game.SideHaunt {
+          side = game.SideExplorers
+        }
+        return float64(numVisibleEntities(ent, side))
       })
   context.AddFunc("nearestEnemy",
       func() *game.Entity {
-        return nearestEntity(ent, false)
+        side := game.SideHaunt
+        if ent.Side() == game.SideHaunt {
+          side = game.SideExplorers
+        }
+        nearest := nearestEntity(ent, side)
+        x1, y1 := ent.Pos()
+        x2, y2 := nearest.Pos()
+        base.Log().Printf("Nearest to (%d %d) is (%d %d)", x1, y1, x2, y2)
+        return nearest
       })
-  context.AddFunc("distBetween", distBetween)
+
+  context.AddFunc("walkingDistBetween", walkingDistBetween)
+  context.AddFunc("rangedDistBetween", rangedDistBetween)
 
   // Checks whether an entity is nil, this is important to check when using
   // function that returns an entity (like lastOffensiveTarget)
   context.AddFunc("stillExists", func(target *game.Entity) bool {
-    return target != nil
+    return target != nil && target.Stats != nil && target.Stats.HpCur() > 0
   })
 
   // Returns the last entity that this ai attacked.  If the entity has died
@@ -51,34 +65,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     return ent.Game().EntityById(ent.Info.LastEntThatAttackedMe)
   })
 
-  // Advances as far as possible towards the target entity.
-  context.AddFunc("advanceAllTheWay", func(target *game.Entity) {
-    name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
-    move := getActionByName(ent, name).(*actions.Move)
-    x,y := target.Pos()
-    exec := move.AiMoveToWithin(ent, x, y, 1, ent.Stats.ApCur())
-    if exec != nil {
-      a.execs <- exec
-      <-a.pause
-    } else {
-      a.graph.Term() <- ai.TermError
-    }
-  })
-
-  context.AddFunc("advance", func(target *game.Entity, dist float64, max float64) {
-    name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
-    move := getActionByName(ent, name).(*actions.Move)
-    x,y := target.Pos()
-    exec := move.AiMoveToWithin(ent, x, y, int(dist), int(max))
-    if exec != nil {
-      a.execs <- exec
-      <-a.pause
-    } else {
-      a.graph.Term() <- ai.TermError
-    }
-  })
-
-  context.AddFunc("moveInRange", func(ents []*game.Entity, min_dist, max_dist, max_ap float64) {
+  context.AddFunc("advanceInRange", func(ents []*game.Entity, min_dist, max_dist, max_ap float64) {
     name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
     move := getActionByName(ent, name).(*actions.Move)
     var txs, tys []int
@@ -92,6 +79,29 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
       a.execs <- exec
       <-a.pause
     } else {
+      // Probably already in this range, so it's ok
+    }
+  })
+
+  context.AddFunc("group", func(e *game.Entity) []*game.Entity {
+    return []*game.Entity{e}
+  })
+
+  context.AddFunc("advanceAllTheWay", func(ents []*game.Entity) {
+    name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
+    move := getActionByName(ent, name).(*actions.Move)
+    var txs, tys []int
+    for i := range ents {
+      x, y := ents[i].Pos()
+      txs = append(txs, x)
+      tys = append(tys, y)
+    }
+    exec := move.AiMoveInRange(ent, txs, tys, 1, 1, ent.Stats.ApCur())
+    if exec != nil {
+      a.execs <- exec
+      <-a.pause
+    } else {
+      base.Log().Printf("Got a nil exec from move.AiMoveInRange")
       // Probably already in this range, so it's ok
     }
   })
@@ -193,12 +203,12 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   })
 }
 
-func numVisibleEntities(e *game.Entity, ally bool) float64 {
+func numVisibleEntities(e *game.Entity, side game.Side) float64 {
   count := 0
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side() == ent.Side()) { continue }
+    if ent.Side() != side { continue }
     x,y := ent.Pos()
     if e.HasLos(x, y, 1, 1) {
       count++

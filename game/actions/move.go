@@ -110,37 +110,6 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
   return path
 }
 
-// Usable by ais, tries to find a path that moves the entity to within dist of
-// the specified location.  Returns true if possible, false otherwise.  If it
-// returns true it also begins execution, so it should become the current
-// action.  If a path is found the entity will only advance such that it uses
-// max Ap.
-func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist,max int) game.ActionExec {
-  var dsts []int
-  for x := tx - dist; x <= tx + dist; x++ {
-    for y := ty - dist; y <= ty + dist; y++ {
-      if x == tx && y == ty { continue }
-      dsts = append(dsts, ent.Game().ToVertex(x, y))
-    }
-  }
-  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
-  if path == nil {
-    return nil
-  }
-  if ent.Stats.ApCur() > max {
-    max = ent.Stats.ApCur()
-  }
-  path = limitPath(ent.Game(), source_cell[0], path, max)
-  if len(path) <= 1 {
-    return nil
-  }
-  var exec moveExec
-  exec.SetBasicData(ent, a)
-  exec.Dst = path[len(path)-1]
-  return exec
-}
-
 // Attempts to move such that the shortest path from any location
 // (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
 // than max_ap Ap doing this.
@@ -151,19 +120,24 @@ func (a *Move) AiMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist,
   }
   dst := algorithm.ReachableWithinBounds(ent.Game(), src, float64(min_dist), float64(max_dist))
   if len(dst) == 0 {
+    base.Log().Printf("dst is 0")
     return nil
   }
 
   source_cell := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(ent.Game(), source_cell, dst)
+  base.Log().Printf("path before limiting: %v", path)
   if path == nil {
+    base.Log().Printf("path is 0")
     return nil
   }
   if ent.Stats.ApCur() > max_ap {
     max_ap = ent.Stats.ApCur()
   }
   path = limitPath(ent.Game(), source_cell[0], path, max_ap)
+  base.Log().Printf("path after limiting: %v", path)
   if len(path) <= 1 {
+    base.Log().Printf("dst is <= 1")
     return nil
   }
   var exec moveExec

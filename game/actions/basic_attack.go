@@ -181,6 +181,7 @@ func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
 func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
+  base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
     exec := ae.(basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())

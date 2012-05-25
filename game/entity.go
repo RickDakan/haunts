@@ -3,6 +3,7 @@ package game
 import (
   "image"
   "path/filepath"
+  "encoding/gob"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -21,6 +22,17 @@ type Ai interface {
 
   ActionExecs() <-chan ActionExec
 }
+
+// A dummy ai that always claims to be inactive, this is just a convenience so
+// that we don't have to keep checking if an Ai is nil or not.
+type inactiveAi struct{}
+func (a inactiveAi) Activate() {}
+func (a inactiveAi) Active() bool { return false }
+func (a inactiveAi) ActionExecs() <-chan ActionExec { return nil }
+func init() {
+  gob.Register(inactiveAi{})
+}
+
 type AiKind int
 const(
   EntityAi AiKind = iota
@@ -102,6 +114,8 @@ func (e *Entity) Load(g *Game) {
 
   if e.Ai_path.String() != "" {
     ai_maker(e.Ai_path.String(), g, e, &e.Ai, EntityAi)
+  } else {
+    e.Ai = inactiveAi{}
   }
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {

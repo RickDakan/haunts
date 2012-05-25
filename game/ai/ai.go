@@ -6,6 +6,7 @@ import (
   "reflect"
   "encoding/gob"
   "github.com/runningwild/glop/ai"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/polish"
@@ -84,6 +85,8 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     ai_struct.addDenizensContext()
 
   case game.IntrudersAi:
+    ai_struct.addIntrudersContext()
+
   default:
     panic("Unknown ai kind")
   }
@@ -103,9 +106,7 @@ func (a *Ai) masterRoutine() {
       if a.active && a.ent == nil {
         // The master is responsible for activating all entities
         for i := range a.game.Ents {
-          if a.game.Ents[i].Ai != nil {
-            a.game.Ents[i].Ai.Activate()
-          }
+          a.game.Ents[i].Ai.Activate()
         }
       }
       if a.active == false {
@@ -186,7 +187,22 @@ func roll(dice, sides float64) float64 {
   return float64(result)
 }
 
-func distBetween(e1,e2 *game.Entity) float64 {
+func walkingDistBetween(e1,e2 *game.Entity) float64 {
+  if e1 == e2 {
+    return 0
+  }
+  g := e1.Game()
+  dv := g.ToVertex(e2.Pos())
+  dst := algorithm.ReachableWithinBounds(g, []int{dv}, 1, 1)
+  sv := g.ToVertex(e1.Pos())
+  cost, _ := algorithm.Dijkstra(g, []int{sv}, dst)
+  if cost == -1 {
+    return 1e9
+  }
+  return cost + 1
+}
+
+func rangedDistBetween(e1,e2 *game.Entity) float64 {
   e1x,e1y := e1.Pos()
   e2x,e2y := e2.Pos()
   dx := e1x - e2x
@@ -199,19 +215,20 @@ func distBetween(e1,e2 *game.Entity) float64 {
   return float64(dy)
 }
 
-func nearestEntity(e *game.Entity, ally bool) *game.Entity {
+func nearestEntity(e *game.Entity, side game.Side) *game.Entity {
   var nearest *game.Entity
   cur_dist := 1.0e9
   for _,ent := range e.Game().Ents {
     if ent == e { continue }
     if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side() == ent.Side()) { continue }
-    dist := distBetween(e, ent)
+    if ent.Side() != side { continue }
+    dist := walkingDistBetween(e, ent)
     if cur_dist > dist {
       cur_dist = dist
       nearest = ent
     }
   }
+  base.Log().Printf("Best walking dist: %f -> %s %dhp", cur_dist, nearest.Name, nearest.Stats.HpCur())
   return nearest
 }
 

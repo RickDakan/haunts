@@ -349,9 +349,8 @@ func (g *Game) OnRound() {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
   g.minion_ai.Activate()
-  if g.haunts_ai != nil {
-    g.haunts_ai.Activate()
-  }
+  g.haunts_ai.Activate()
+  g.explorers_ai.Activate()
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -573,8 +572,10 @@ func (g *Game) setup() {
   ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
   if g.Human == SideExplorers {
     ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+    g.explorers_ai = inactiveAi{}
   } else {
     ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+    g.haunts_ai = inactiveAi{}
   }
 }
 
@@ -670,15 +671,19 @@ func (g *Game) Think(dt int64) {
   }
 
   // Do Ai - if there is any to do
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
-    if g.action_state == noAction {
-      if g.minion_ai.Active() {
-        g.active_ai = g.minion_ai
-      } else {
+  if g.Side == SideHaunt {
+    if g.minion_ai.Active() {
+      g.active_ai = g.minion_ai
+      g.action_state = waitingAction
+    } else {
+      if g.haunts_ai.Active() {
         g.active_ai = g.haunts_ai
+        g.action_state = waitingAction
       }
-      g.active_ai.ActionExecs()
-      base.Log().Printf("Ative: %t", g.active_ai.Active())
+    }
+  } else {
+    if g.explorers_ai.Active() {
+      g.active_ai = g.explorers_ai
       g.action_state = waitingAction
     }
   }
