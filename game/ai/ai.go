@@ -35,6 +35,12 @@ type Ai struct {
   // before we make the next one.  This channel is used to handle that.
   pause chan struct{}
   execs chan game.ActionExec
+
+  // This exists so that we can gob this without error.  Gob doesn't like
+  // gobbing things that don't have any exported fields, and since we might
+  // want exported fields later we'll just have this here for now so we can
+  // leave the Ai as an exported field in the entities.
+  Dummy int
 }
 
 func init() {

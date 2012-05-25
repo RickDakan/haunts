@@ -27,6 +27,12 @@ type Game struct {
   // Next unique EntityId to be assigned
   Entity_id EntityId
 
+  // The side of the human player in the case that this is a one player game,
+  // this is so that if we load a saved game we know which side to put ais on.
+  // TODO: IN a game with two humans we'll need something more complicated
+  // here.
+  Human Side
+
   // Current player
   Side Side
 
@@ -565,12 +571,16 @@ func (g *Game) setup() {
   g.MergeLos(g.Ents)
 
   ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
-  ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
-//  ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, ExplorersAi)
+  if g.Human == SideExplorers {
+    ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+  } else {
+    ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+  }
 }
 
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
+func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   var g Game
+  g.Human = side
   g.Side = SideExplorers
   g.House = h
   g.House.Normalize()

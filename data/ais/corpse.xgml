@@ -236,7 +236,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">12</attribute>
-			<attribute key="label" type="String">&amp;&amp; ! hasCondition lastOffensiveTarget  diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
+			<attribute key="label" type="String">&amp;&amp; ! hasCondition lastEntAttackedBy me diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">643.3977661132812</attribute>
 				<attribute key="y" type="double">-65.0</attribute>
@@ -247,7 +247,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">&amp;&amp; ! hasCondition lastOffensiveTarget  diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
+				<attribute key="text" type="String">&amp;&amp; ! hasCondition lastEntAttackedBy me diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

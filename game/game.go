@@ -437,14 +437,14 @@ func spawnAllCleanses(g *Game) {
   spawnEnts(g, cleanse_ents, cleanse_spawns)
 }
 
-func (gp *GamePanel) LoadHouse(def *house.HouseDef) {
+func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   gp.house = def
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
-  gp.game = makeGame(gp.house, gp.viewer)
+  gp.game = makeGame(gp.house, gp.viewer, side)
 
   spawnAllRelics(gp.game)
   spawnAllCleanses(gp.game)
@@ -473,7 +473,7 @@ func (gp *GamePanel) LoadHouseFromPath(path string) {
     base.Error().Printf("%v", err)
     return
   }
-  gp.LoadHouse(def)
+  gp.LoadHouse(def, SideExplorers)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {
