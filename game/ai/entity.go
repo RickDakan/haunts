@@ -26,7 +26,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // current entity
   context.AddFunc("numVisibleEnemies",
       func() float64 {
-        base.Log().Printf("numVisibleEnemies")
+        base.Log().Printf("Minion: numVisibleEnemies")
         side := game.SideHaunt
         if ent.Side() == game.SideHaunt {
           side = game.SideExplorers
@@ -35,6 +35,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
       })
   context.AddFunc("nearestEnemy",
       func() *game.Entity {
+        base.Log().Printf("Minion: nearestEnemy")
         side := game.SideHaunt
         if ent.Side() == game.SideHaunt {
           side = game.SideExplorers
@@ -52,74 +53,64 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   // Checks whether an entity is nil, this is important to check when using
   // function that returns an entity (like lastOffensiveTarget)
   context.AddFunc("stillExists", func(target *game.Entity) bool {
+    base.Log().Printf("Minion: stillExists")
     return target != nil && target.Stats != nil && target.Stats.HpCur() > 0
   })
 
   // Returns the last entity that this ai attacked.  If the entity has died
   // this can return nil, so be sure to check that before using it.
   context.AddFunc("lastEntAttackedBy", func(ent *game.Entity) *game.Entity {
+    base.Log().Printf("Minion: lastEntAttackedBy")
     return ent.Game().EntityById(ent.Info.LastEntThatIAttacked)
   })
 
   context.AddFunc("lastEntThatAttacked", func(ent *game.Entity) *game.Entity {
+    base.Log().Printf("Minion: lastEntThatAttacked")
     return ent.Game().EntityById(ent.Info.LastEntThatAttackedMe)
   })
 
   context.AddFunc("advanceInRange", func(ents []*game.Entity, min_dist, max_dist, max_ap float64) {
+    base.Log().Printf("Minion: advanceInRange")
     name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
     move := getActionByName(ent, name).(*actions.Move)
-    var txs, tys []int
-    for i := range ents {
-      x, y := ents[i].Pos()
-      txs = append(txs, x)
-      tys = append(tys, y)
-    }
-    exec := move.AiMoveInRange(ent, txs, tys, int(min_dist), int(max_dist), int(max_ap))
+    exec := move.AiMoveInRange(ent, ents, int(min_dist), int(max_dist), int(max_ap))
     if exec != nil {
       a.execs <- exec
       <-a.pause
     } else {
-      // Probably already in this range, so it's ok
+      a.graph.Term() <- ai.TermError
     }
   })
 
   context.AddFunc("group", func(e *game.Entity) []*game.Entity {
+    base.Log().Printf("Minion: group")
     return []*game.Entity{e}
   })
 
   context.AddFunc("advanceAllTheWay", func(ents []*game.Entity) {
+    base.Log().Printf("Minion: advanceAllTheWay")
     name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
     move := getActionByName(ent, name).(*actions.Move)
-    var txs, tys []int
-    for i := range ents {
-      x, y := ents[i].Pos()
-      txs = append(txs, x)
-      tys = append(tys, y)
-    }
-    exec := move.AiMoveInRange(ent, txs, tys, 1, 1, ent.Stats.ApCur())
+    exec := move.AiMoveInRange(ent, ents, 1, 1, ent.Stats.ApCur())
     if exec != nil {
       a.execs <- exec
       <-a.pause
     } else {
       base.Log().Printf("Got a nil exec from move.AiMoveInRange")
-      // Probably already in this range, so it's ok
+      a.graph.Term() <- ai.TermError
     }
   })
 
   context.AddFunc("costToMoveInRange", func(ents []*game.Entity, min_dist, max_dist float64) float64 {
+    base.Log().Printf("Minion: costToMoveInRange")
     name := getActionName(ent, reflect.TypeOf(&actions.Move{}))
     move := getActionByName(ent, name).(*actions.Move)
-    var txs, tys []int
-    for i := range ents {
-      x, y := ents[i].Pos()
-      txs = append(txs, x)
-      tys = append(tys, y)
-    }
-    cost := move.AiCostToMoveInRange(ent, txs, tys, int(min_dist), int(max_dist))
+    cost := move.AiCostToMoveInRange(ent, ents, int(min_dist), int(max_dist))
     return float64(cost)
   })
 
   context.AddFunc("allIntruders", func() []*game.Entity {
+    base.Log().Printf("Minion: allIntruders")
     var ents []*game.Entity
     for _, target := range ent.Game().Ents {
       if target.ExplorerEnt != nil {
@@ -130,11 +121,12 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   })
 
   context.AddFunc("getBasicAttack", func() string {
-    base.Log().Printf("getBasicAttack")
+    base.Log().Printf("Minion: getBasicAttack")
     return getActionName(ent, reflect.TypeOf(&actions.BasicAttack{}))
   })
 
   context.AddFunc("doBasicAttack", func(target *game.Entity, attack_name string) {
+    base.Log().Printf("Minion: doBasicAttack")
     _attack := getActionByName(ent, attack_name)
     attack := _attack.(*actions.BasicAttack)
     exec := attack.AiAttackTarget(ent, target)
@@ -147,6 +139,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   })
 
   context.AddFunc("basicAttackStat", func(action, stat string) float64 {
+    base.Log().Printf("Minion: basicAttackStat")
     attack := getActionByName(ent, action).(*actions.BasicAttack)
     var val int
     switch stat {
@@ -167,6 +160,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   })
 
   context.AddFunc("aoeAttackStat", func(action, stat string) float64 {
+    base.Log().Printf("Minion: aoeAttackStat")
     attack := getActionByName(ent, action).(*actions.AoeAttack)
     var val int
     switch stat {
@@ -189,6 +183,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   })
 
   context.AddFunc("master", func() *game.Entity {
+    base.Log().Printf("Minion: master")
     for _, ent := range ent.Game().Ents {
       if ent.HauntEnt != nil && ent.HauntEnt.Level == game.LevelMaster {
         return ent
@@ -199,7 +194,8 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
 
   // Ends an entity's turn
   context.AddFunc("done", func() {
-      a.active_set <- false
+    base.Log().Printf("Minion: done")
+    a.active_set <- false
   })
 }
 

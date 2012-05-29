@@ -94,8 +94,9 @@ func (a *Move) Readyable() bool {
 
 func limitPath(g *game.Game, start int, path []int, max int) []int {
   total := 0
+  graph := g.Graph(nil)
   for last := 0; last < len(path); last++ {
-    adj,cost := g.Adjacent(start)
+    adj,cost := graph.Adjacent(start)
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
@@ -113,19 +114,20 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
 // Attempts to move such that the shortest path from any location
 // (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
 // than max_ap Ap doing this.
-func (a *Move) AiMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist,max_ap int) game.ActionExec {
+func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist,max_ap int) game.ActionExec {
+  graph := ent.Game().Graph(targets)
   var src []int
-  for i := range txs {
-    src = append(src, ent.Game().ToVertex(txs[i], tys[i]))
+  for i := range targets {
+    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
   }
-  dst := algorithm.ReachableWithinBounds(ent.Game(), src, float64(min_dist), float64(max_dist))
+  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
   if len(dst) == 0 {
     base.Log().Printf("dst is 0")
     return nil
   }
 
   source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  _, path := algorithm.Dijkstra(ent.Game(), source_cell, dst)
+  _, path := algorithm.Dijkstra(graph, source_cell, dst)
   base.Log().Printf("path before limiting: %v", path)
   if path == nil {
     base.Log().Printf("path is 0")
@@ -146,18 +148,19 @@ func (a *Move) AiMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist,
   return exec
 }
 
-func (a *Move) AiCostToMoveInRange(ent *game.Entity, txs,tys []int, min_dist,max_dist int) int {
+func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist int) int {
+  graph := ent.Game().Graph(targets)
   var src []int
-  for i := range txs {
-    src = append(src, ent.Game().ToVertex(txs[i], tys[i]))
+  for i := range targets {
+    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
   }
-  dst := algorithm.ReachableWithinBounds(ent.Game(), src, float64(min_dist), float64(max_dist))
+  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
   if len(dst) == 0 {
     return 0
   }
 
   source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  cost, path := algorithm.Dijkstra(ent.Game(), source_cell, dst)
+  cost, path := algorithm.Dijkstra(graph, source_cell, dst)
   if path == nil {
     return -1
   }
@@ -170,7 +173,7 @@ func (a *Move) findPath(g *game.Game, x,y int) {
     a.dst = dst
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
-    cost,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
+    cost,path := algorithm.Dijkstra(g.Graph(nil), []int{src}, []int{dst})
     if len(path) <= 1 {
       return
     }
@@ -188,10 +191,11 @@ func (a *Move) findPath(g *game.Game, x,y int) {
         }
       }
       current := 0.0
+      graph := g.Graph(nil)
       for i := 1; i < len(a.path); i++ {
         src := g.ToVertex(a.path[i-1][0], a.path[i-1][1])
         dst := g.ToVertex(a.path[i][0], a.path[i][1])
-        v, cost := g.Adjacent(src)
+        v, cost := graph.Adjacent(src)
         for j := range v {
           if v[j] == dst {
             current += cost[j]
@@ -258,6 +262,7 @@ func (a *Move) Cancel() {
   a.calculated = false
 }
 func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
+  base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
     exec := ae.(moveExec)
     _, x, y := g.FromVertex(exec.Dst)
@@ -267,15 +272,22 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
       base.Error().Printf("Got a move exec with a path length of 0: %v", exec)
       return game.Complete
     }
+    if a.cost > a.ent.Stats.ApCur() {
+      base.Error().Printf("Got a move that required more ap than available: %v", exec)
+      return game.Complete
+    }
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
+    base.Log().Printf("Doing move: %v", a.path)
   }
   // Do stuff
   factor := float32(math.Pow(2, a.ent.Walking_speed))
   dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
+  base.Log().Printf("dist(%d, %d): %f", a.path[0][0], a.path[0][1], dist)
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)
       a.ent = nil
+      base.Log().Printf("Move complete")
       return game.Complete
     }
     a.path = a.path[1:]

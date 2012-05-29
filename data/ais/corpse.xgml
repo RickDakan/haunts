@@ -46,7 +46,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">2</attribute>
-			<attribute key="label" type="String">== distBetween nearestEnemy me 1</attribute>
+			<attribute key="label" type="String">== walkingDistBetween nearestEnemy me 1</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">257.5</attribute>
 				<attribute key="y" type="double">270.0</attribute>
@@ -57,7 +57,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">== distBetween nearestEnemy me 1</attribute>
+				<attribute key="text" type="String">== walkingDistBetween nearestEnemy me 1</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -141,7 +141,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">7</attribute>
-			<attribute key="label" type="String">== distBetween lastEntAttackedBy me me 1</attribute>
+			<attribute key="label" type="String">== walkingDistBetween lastEntAttackedBy me me 1</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">547.0</attribute>
 				<attribute key="y" type="double">60.0</attribute>
@@ -152,7 +152,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">== distBetween lastEntAttackedBy me me 1</attribute>
+				<attribute key="text" type="String">== walkingDistBetween lastEntAttackedBy me me 1</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -198,7 +198,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">10</attribute>
-			<attribute key="label" type="String">&lt;= distBetween lastEntAttackedBy me me 6</attribute>
+			<attribute key="label" type="String">&lt;= walkingDistBetween lastEntAttackedBy me me 6</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">547.0</attribute>
 				<attribute key="y" type="double">120.0</attribute>
@@ -209,7 +209,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">&lt;= distBetween lastEntAttackedBy me me 6</attribute>
+				<attribute key="text" type="String">&lt;= walkingDistBetween lastEntAttackedBy me me 6</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

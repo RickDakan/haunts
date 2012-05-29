@@ -122,7 +122,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">6</attribute>
-			<attribute key="label" type="String">&lt;= distBetween me nearestEnemy basicAttackStat ectoplasmic_discharge range</attribute>
+			<attribute key="label" type="String">&lt;= walkingDistBetween me nearestEnemy basicAttackStat ectoplasmic_discharge range</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">-48.21204376220703</attribute>
 				<attribute key="y" type="double">450.0</attribute>
@@ -133,7 +133,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">&lt;= distBetween me nearestEnemy basicAttackStat ectoplasmic_discharge range</attribute>
+				<attribute key="text" type="String">&lt;= walkingDistBetween me nearestEnemy basicAttackStat ectoplasmic_discharge range</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -141,7 +141,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">7</attribute>
-			<attribute key="label" type="String">== distBetween nearestEnemy me basicAttackStat ectoplasmic_discharge range</attribute>
+			<attribute key="label" type="String">== walkingDistBetween nearestEnemy me basicAttackStat ectoplasmic_discharge range</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">255.0</attribute>
 				<attribute key="y" type="double">90.0</attribute>
@@ -152,7 +152,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">== distBetween nearestEnemy me basicAttackStat ectoplasmic_discharge range</attribute>
+				<attribute key="text" type="String">== walkingDistBetween nearestEnemy me basicAttackStat ectoplasmic_discharge range</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

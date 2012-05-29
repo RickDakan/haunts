@@ -497,13 +497,33 @@ func (g *Game) IsCellOccupied(x,y int) bool {
   return false
 }
 
-func (g *Game) Adjacent(v int) ([]int, []float64) {
+type exclusionGraph struct {
+  ex map[*Entity]bool
+  g *Game
+}
+func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
+  return eg.g.Adjacent(v, eg.ex)
+}
+func (eg *exclusionGraph) NumVertex() int {
+  return eg.g.NumVertex()
+}
+
+func (g *Game) Graph(exclude []*Entity) algorithm.Graph {
+  ex := make(map[*Entity]bool, len(exclude))
+  for i := range exclude {
+    ex[exclude[i]] = true
+  }
+  return &exclusionGraph{ex, g}
+}
+
+func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
   room,x,y := g.FromVertex(v)
   var adj []int
   var weight []float64
   var moves [3][3]float64
   ent_occupied := make(map[[2]int]bool)
   for _,ent := range g.Ents {
+    if ex[ent] { continue }
     x,y := ent.Pos()
     dx,dy := ent.Dims()
     for i := x; i < x+dx; i++ {
@@ -660,12 +680,19 @@ func (g *Game) Think(dt int64) {
     g.los_tex.Remap()
   }
 
+  // Don't do any ai stuff if there is a pending action
+  if g.current_action != nil {
+    return
+  }
+
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
     state := ent.sprite.Sprite().AnimState()
     if state != "ready" && state != "killed" {
-      // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
+      return
+    }
+    if ent.sprite.Sprite().NumPendingCmds() > 0 {
       return
     }
   }

@@ -7,6 +7,7 @@ import (
   "runtime"
   "runtime/debug"
   "runtime/pprof"
+  "math/rand"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
@@ -58,6 +59,7 @@ func init() {
   runtime.LockOSThread()
   sys = system.Make(gos.GetSystemInterface())
 
+  rand.Seed(100)
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)

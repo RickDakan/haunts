@@ -188,21 +188,22 @@ func roll(dice, sides float64) float64 {
 }
 
 func walkingDistBetween(e1,e2 *game.Entity) float64 {
+    base.Log().Printf("Minion: walkingDistBetween")
   if e1 == e2 {
     return 0
   }
-  g := e1.Game()
-  dv := g.ToVertex(e2.Pos())
-  dst := algorithm.ReachableWithinBounds(g, []int{dv}, 1, 1)
-  sv := g.ToVertex(e1.Pos())
-  cost, _ := algorithm.Dijkstra(g, []int{sv}, dst)
+  graph := e1.Game().Graph([]*game.Entity{e1, e2})
+  dv := e1.Game().ToVertex(e2.Pos())
+  sv := e1.Game().ToVertex(e1.Pos())
+  cost, _ := algorithm.Dijkstra(graph, []int{sv}, []int{dv})
   if cost == -1 {
     return 1e9
   }
-  return cost + 1
+  return cost
 }
 
 func rangedDistBetween(e1,e2 *game.Entity) float64 {
+    base.Log().Printf("Minion: rangedDistBetween")
   e1x,e1y := e1.Pos()
   e2x,e2y := e2.Pos()
   dx := e1x - e2x
