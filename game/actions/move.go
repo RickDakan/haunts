@@ -278,10 +278,12 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)
+      a.ent.Info.RoomsExplored[a.ent.CurrentRoom()] = true
       a.ent = nil
       return game.Complete
     }
     a.path = a.path[1:]
+    a.ent.Info.RoomsExplored[a.ent.CurrentRoom()] = true
     dist = a.ent.DoAdvance(dist, a.path[0][0], a.path[0][1])
   }
   return game.InProgress

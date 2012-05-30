@@ -143,6 +143,8 @@ func MakeEntity(name string, g *Game) *Entity {
     ent.Stats = &stats
   }
 
+  ent.Info = makeInfo()
+
   ent.Id = g.Entity_id
   g.Entity_id++
 
@@ -362,6 +364,15 @@ type Info struct {
   // (including allies) with an aoe it will only be set if you hit an enemy,
   // and it will only remember one of them.
   LastEntThatIAttacked EntityId
+
+  // Set of all rooms that this entity has actually stood in.  The values are
+  // indices into the array of rooms in the floor.
+  RoomsExplored map[int]bool
+}
+func makeInfo() Info {
+  var i Info
+  i.RoomsExplored = make(map[int]bool)
+  return i
 }
 
 func (e *Entity) Game() *Game {
