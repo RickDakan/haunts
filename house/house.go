@@ -123,9 +123,15 @@ type Door struct {
 
   temporary, invalid bool
 
+  highlight_threshold bool
+
   // gl stuff for drawing the threshold on the ground
   gl_ids doorGlIds
   state  doorState
+}
+
+func (d *Door) HighlightThreshold(v bool) {
+  d.highlight_threshold = v
 }
 
 type doorState struct {

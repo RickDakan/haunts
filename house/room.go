@@ -469,7 +469,11 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     }
     tex := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "textures/pinkbrick.jpg"))
     tex.Bind()
-    do_color(255, 255, 255, 255)
+    if door.highlight_threshold {
+      do_color(255, 255, 255, 255)
+    } else {
+      do_color(128, 128, 128, 255)
+    }
     gl.BindBuffer(gl.ARRAY_BUFFER, door.gl_ids.vbuffer)
     gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
@@ -519,7 +523,6 @@ func (room *Room) setupGlStuff() {
      room.Wall.Data().Dy() == room.gl.wall_tex_dy {
     return
   }
-  base.Log().Printf("SETUP GL")
   room.gl.x = room.X
   room.gl.y = room.Y
   room.gl.dx = room.Size.Dx

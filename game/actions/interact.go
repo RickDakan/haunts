@@ -54,6 +54,9 @@ type interactInst struct {
   // Potential targets
   targets []*game.Entity
 
+  // Potential doors
+  doors []*house.Door
+
   // The selected target for the attack
   target *game.Entity
 }
@@ -118,6 +121,71 @@ func distBetweenEnts(e1, e2 *game.Entity) int {
   }
   return ydist
 }
+
+type frect struct {
+  x,y,x2,y2 float64
+}
+func makeIntFrect(x, y, x2, y2 int) frect {
+  return frect{float64(x), float64(y), float64(x2), float64(y2)}
+}
+func (f frect) overlapX(f2 frect) bool {
+  if f2.x >= f.x && f2.x <= f.x2 { return true }
+  if f2.x2 >= f.x && f2.x2 <= f.x2 { return true }
+  return false
+}
+func (f frect) overlapY(f2 frect) bool {
+  if f2.y >= f.y && f2.y <= f.y2 { return true }
+  if f2.y2 >= f.y && f2.y2 <= f.y2 { return true }
+  return false
+}
+func (f frect) Overlaps(f2 frect) bool {
+  return (f.overlapX(f2) || f2.overlapX(f)) && (f.overlapY(f2) || f2.overlapY(f))
+}
+func (f frect) Contains(x,y float64) bool {
+  return f.Overlaps(frect{x,y,x,y})
+}
+
+func makeRectForDoor(room *house.Room, door *house.Door) frect {
+  var dr frect
+  switch door.Facing {
+  case house.FarLeft:
+    dr = makeIntFrect(door.Pos, room.Size.Dy - 1, door.Pos + door.Width, room.Size.Dy)
+    dr.y += 0.5
+    dr.y2 += 0.5
+  case house.FarRight:
+    dr = makeIntFrect(room.Size.Dx - 1, door.Pos, room.Size.Dx, door.Pos + door.Width)
+    dr.x += 0.5
+    dr.x2 += 0.5
+  case house.NearLeft:
+    dr = makeIntFrect(0, door.Pos, 1, door.Pos + door.Width)
+    dr.x -= 0.5
+    dr.x2 -= 0.5
+  case house.NearRight:
+    dr = makeIntFrect(door.Pos, 0, door.Pos + door.Width, 1)
+    dr.y -= 0.5
+    dr.y2 -= 0.5
+  }
+  dr.x += float64(room.X)
+  dr.y += float64(room.Y)
+  dr.x2 += float64(room.X)
+  dr.y2 += float64(room.Y)
+  return dr
+}
+
+func (a *Interact) findDoors(ent *game.Entity, g *game.Game) []*house.Door {
+  room_num := ent.CurrentRoom()
+  room := g.House.Floors[0].Rooms[room_num]
+  x,y := ent.Pos()
+  dx,dy := ent.Dims()
+  ent_rect := makeIntFrect(x, y, x+dx, y+dy)
+  var valid []*house.Door
+  for _, door := range room.Doors {
+    if ent_rect.Overlaps(makeRectForDoor(room, door)) {
+      valid = append(valid, door)
+    }
+  }
+  return valid
+}
 func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
   var targets []*game.Entity
   for _,e := range g.Ents {
@@ -152,73 +220,51 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
   return targets
 }
 func (a *Interact) Preppable(ent *game.Entity, g *game.Game) bool {
-  return true
   if a.Ap > ent.Stats.ApCur() {
     return false
   }
   a.targets = a.findTargets(ent, g)
-  return len(a.targets) > 0
+  a.doors = a.findDoors(ent, g)
+  return len(a.targets) > 0 || len(a.doors) > 0
 }
 func (a *Interact) Prep(ent *game.Entity, g *game.Game) bool {
   if a.Preppable(ent, g) {
     a.ent = ent
+    room := g.House.Floors[0].Rooms[ent.CurrentRoom()]
+    for _, door := range a.doors {
+      _, other_door := g.House.Floors[0].FindMatchingDoor(room, door)
+      if other_door != nil {
+        door.HighlightThreshold(true)
+        other_door.HighlightThreshold(true)
+      }
+    }
     return true
   }
   return false
 }
 func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
-  room_num := a.ent.CurrentRoom()
-  if room_num == -1 { return false, nil }
-  room := g.House.Floors[0].Rooms[room_num]
-  x, y := a.ent.Pos()
-  x -= room.X
-  y -= room.Y
-  rdx, rdy := room.Dims()
-  var exec interactExec
-  exec.toggle_door = true
-  exec.SetBasicData(a.ent, a)
-  exec.room = room_num
-  for door_num, door := range room.Doors {
-    exec.door = door_num
-    switch door.Facing {
-    case house.FarLeft:
-      if y == rdy - 1 && x >= door.Pos && x < door.Pos + door.Width {
-        return true, exec
-      }
-
-    case house.FarRight:
-      if x == rdx - 1 && y >= door.Pos && y < door.Pos + door.Width {
-        return true, exec
-      }
-
-    case house.NearLeft:
-      if x == 0 && y >= door.Pos && y < door.Pos + door.Width {
-        return true, exec
-      }
-
-    case house.NearRight:
-      if y == 0 && y >= door.Pos && y < door.Pos + door.Width {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    bx, by := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
+    room_num := a.ent.CurrentRoom()
+    room := g.House.Floors[0].Rooms[room_num]
+    for door_num, door := range room.Doors {
+      rect := makeRectForDoor(room, door)
+      if rect.Contains(float64(bx), float64(by)) {
+        var exec interactExec
+        exec.toggle_door = true
+        exec.SetBasicData(a.ent, a)
+        exec.room = room_num
+        exec.door = door_num
         return true, exec
       }
     }
   }
+
   target := g.HoveredEnt()
   if target == nil { return false, nil }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     for i := range a.targets {
       if a.targets[i] == target && distBetweenEnts(a.ent, target) <= a.Range {
-        // switch a.Name {
-        // case string(game.GoalCleanse):
-        //   g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-        //     return a.(*game.Entity) != target
-        //   }).([]*game.Entity)
-    
-        // case string(game.GoalRelic):
-        //   g.Active_relic = nil
-    
-        // case string(game.GoalMystery):
-        // }
-        // a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
         var exec interactExec
         exec.SetBasicData(a.ent, a)
         exec.Target = target.Id
@@ -232,6 +278,17 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
 func (a *Interact) RenderOnFloor() {
 }
 func (a *Interact) Cancel() {
+  room := a.ent.Game().House.Floors[0].Rooms[a.ent.CurrentRoom()]
+  for _, door := range a.doors {
+    _, other_door := a.ent.Game().House.Floors[0].FindMatchingDoor(room, door)
+    if other_door != nil {
+      door.HighlightThreshold(false)
+      other_door.HighlightThreshold(false)
+    }
+  }
+  for _, door := range a.doors {
+    door.HighlightThreshold(false)
+  }
   a.interactInst = interactInst{}
 }
 func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
