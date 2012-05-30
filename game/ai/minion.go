@@ -62,6 +62,15 @@ func (a *Ai) addCommonContext() {
     }
     return false
   })
+
+  a.graph.Context.AddFunc("hasAction", func(target *game.Entity, name string) bool {
+    for _, action := range target.Actions {
+      if lowerAndUnderscore(action.String()) == name {
+        return true
+      }
+    }
+    return false
+  })
 }
 
 // This is the context used for the ai that controls the denizens' minions

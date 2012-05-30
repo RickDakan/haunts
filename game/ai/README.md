@@ -63,26 +63,35 @@ Returns the number of enemies that this entity can see.
 **nearestEnemy () -> (Entity)**  
 Returns the nearest enemy entity to this entity.  Such an entity may not exist, before using this you should check that numVisibleEnemies > 0, or you should check that this entity exists with stillExists.
 
-**distBetween (Entity, Entity) -> (number)**  
-Returns the straight-line distance between two entities.
+**walkingDistBetween (Entity, Entity) -> (number)**  
+Returns the distance one entity would need to walk to be standing in the other's position.  Includes navigating around furniture and other entities.
+
+**rangedDistBetween (Entity, Entity) -> (number)**  
+Returns the straight-line distance between two entities, this is the distance used when determining if an entity is in range of an attack.
 
 **stillExists (Entity) -> (bool)**  
 Returns true iff the entity exists.
 
-**lastOffensiveTarget () -> (Entity)**  
-Returns the last entity that this entity attacked.  Note: This entity may not be in LoS and it may not be possible to path to it.
+**lastEntAttackedBy (Entity) -> (Entity)**  
+Returns the entity that was last attacked by this entity.  If there were multiple (as in the case of an aoe attack) it only returns one of them.  If it returns an entity that entity will be an enemy.
 
-**advanceAllTheWay (Entity) -> ()**  
-Advances this entity as far as possible towards the specified entity.
+**lastEntThatAttacked (Entity) -> (Entity)**  
+Returns the last entity that attacked this one.
 
-**advance (target Entity, dist number, max number) -> ()**  
-Advances this entity towards target until it is within walking-distance dist of it.  While doing so it will not spend more than max Ap.
+**group (Entity) -> ([]Entity)**  
+Create an array of entities consiting of only the specified entity.  Useful when using functions that take an array of entities when you only have a single entity.
+
+**advanceInRange ([]Entity, min number, max number, ap number) -> ()**  
+Advances the entity along the shortest path that ends at least max distance from an entity in the array and not closer than min distance to any entity in the array.  Regardless of the path or final position, this ent will not spend more than the specified amount of ap in making this move.
+
+**costToMoveInRange ([]Entity, min number, max number) -> (number)**  
+Returns the Ap required for this entity to execute advanceInRange with these same parameters.
+
+**advanceAllTheWay ([]Entity) -> ()**  
+Advances this entity as far as possible towards one entity in the array.
 
 **moveInRange (Entities, min_dist number, max_dist number, max_ap number) -> ()**  
 Advances this entity as short a distance as possible such that it is within min_dist and max_dist walking distance of the specified entities.  While doing so it will not spend more than max Ap.  Note that this function takes an array of entities, so you cannot just pass it a single entity (I need to do something about this).
-
-**costToMoveInRange (Entities, min_dist number, max_dist number) -> (number)**  
-Returns the Ap required for this entity to execute moveInRange with these same parameters.
 
 **allIntruders () -> (Entities)**  
 Returns an array of all intruders.
@@ -110,23 +119,17 @@ Queries the specified aoe attack for one of its stats.  Acceptable values of sta
 * ammo
 * diameter
 
-**corpus (Entity) -> (number)**  
-Returns the corpus of the specified entity.
-
-**ego (Entity) -> (number)**  
-Returns the ego of the specified entity.
-
-**hpMax (Entity) -> (number)**  
-Returns the max hp of the specified entity.
-
-**apMax (Entity) -> (number)**  
-Returns the max ap of the specified entity.
-
-**hpCur (Entity) -> (number)**  
-Returns the current hp of the specified entity.
-
-**apCur (Entity) -> (number)**  
-Returns the current ap of the specified entity.
+**entityStat (Entity, stat string) -> (number)**  
+Queries the specified entity for one of its stats.  Acceptable values of stat are:
+* corpus
+* ego
+* hpMax
+* apMax
+* hpCur
+* apCur
 
 **hasCondition (Entity, condition string) -> (bool)**  
-Returns true iff the specified entity currently as the specified condition
+Returns true iff the specified entity currently has the specified condition
+
+**hasAction (Entity, action string) -> (bool)**  
+Returns true iff the specified entity currently has the specified action
