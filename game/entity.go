@@ -404,6 +404,16 @@ func (ei *EntityInst) Pos() (int,int) {
 func (ei *EntityInst) FPos() (float64,float64) {
   return ei.X, ei.Y
 }
+func (ei *EntityInst) CurrentRoom() int {
+  x, y := ei.Pos()
+  room := roomAt(ei.game.House.Floors[0], x, y)
+  for i := range ei.game.House.Floors[0].Rooms {
+    if ei.game.House.Floors[0].Rooms[i] == room {
+      return i
+    }
+  }
+  return -1
+}
 
 type Entity struct {
 	Defname string

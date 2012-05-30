@@ -200,6 +200,11 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
       base.Error().Printf("Got a basic attack that attacked a dead person: %v", exec)
       return game.Complete
     }
+
+    if distBetweenEnts(a.ent, a.target) > a.Range {
+      base.Error().Printf("Got a basic attack that is out of range: %v", exec)
+      return game.Complete
+    }
   }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())

@@ -394,19 +394,14 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       zexp := math.Log(float64(zoom))
       frac := 1 - 1/zexp
       frac = (frac - 0.6) * 5.0;
-      ranges := 0
       switch {
       case frac > 0.7:
         base.SetUniformI("gorey", "range", 1)
-ranges = 1
       case frac > 0.3:
         base.SetUniformI("gorey", "range", 2)
-ranges = 2
       default:
         base.SetUniformI("gorey", "range", 3)
-ranges = 3
       }
-      base.Log().Printf("vals %f %f %f %d %d", Num_rows, Noise_rate, Num_steps, Foo, ranges)
     }
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {
@@ -466,6 +461,23 @@ ranges = 3
         gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
       }
     }
+  }
+  for _, door := range room.Doors {
+    door.setupGlStuff(room)
+    if door.gl_ids.vbuffer == 0 {
+      continue
+    }
+    tex := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "textures/pinkbrick.jpg"))
+    tex.Bind()
+    do_color(255, 255, 255, 255)
+    gl.BindBuffer(gl.ARRAY_BUFFER, door.gl_ids.vbuffer)
+    gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+    gl.ClientActiveTexture(gl.TEXTURE1)
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+    gl.ClientActiveTexture(gl.TEXTURE0)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.gl_ids.floor_buffer)
+    gl.DrawElements(gl.TRIANGLES, door.gl_ids.floor_count, gl.UNSIGNED_SHORT, nil)
   }
   if los_tex != nil {
     base.EnableShader("")

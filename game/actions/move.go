@@ -122,24 +122,19 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
   }
   dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
   if len(dst) == 0 {
-    base.Log().Printf("dst is 0")
     return nil
   }
 
   source_cell := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(graph, source_cell, dst)
-  base.Log().Printf("path before limiting: %v", path)
   if path == nil {
-    base.Log().Printf("path is 0")
     return nil
   }
   if ent.Stats.ApCur() > max_ap {
     max_ap = ent.Stats.ApCur()
   }
   path = limitPath(ent.Game(), source_cell[0], path, max_ap)
-  base.Log().Printf("path after limiting: %v", path)
   if len(path) <= 1 {
-    base.Log().Printf("dst is <= 1")
     return nil
   }
   var exec moveExec
@@ -262,7 +257,6 @@ func (a *Move) Cancel() {
   a.calculated = false
 }
 func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
-  base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
     exec := ae.(moveExec)
     _, x, y := g.FromVertex(exec.Dst)
@@ -277,17 +271,14 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
       return game.Complete
     }
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
-    base.Log().Printf("Doing move: %v", a.path)
   }
   // Do stuff
   factor := float32(math.Pow(2, a.ent.Walking_speed))
   dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
-  base.Log().Printf("dist(%d, %d): %f", a.path[0][0], a.path[0][1], dist)
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)
       a.ent = nil
-      base.Log().Printf("Move complete")
       return game.Complete
     }
     a.path = a.path[1:]

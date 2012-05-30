@@ -479,6 +479,9 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
         pos = x
     }
     if pos >= door.Pos && pos < door.Pos + door.Width {
+      if !door.Opened {
+        base.Log().Printf("Door is closed!")
+      }
       return door.Opened
     }
   }
@@ -506,6 +509,14 @@ func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
 }
 func (eg *exclusionGraph) NumVertex() int {
   return eg.g.NumVertex()
+}
+
+func (g *Game) RecalcLos() {
+  for i := range g.Ents {
+    if g.Ents[i].los != nil {
+      g.Ents[i].los.x = -1
+    }
+  }
 }
 
 func (g *Game) Graph(exclude []*Entity) algorithm.Graph {

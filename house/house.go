@@ -10,6 +10,8 @@ import (
   "image"
   "math"
   "path/filepath"
+  gl "github.com/chsc/gogl/gl21"
+  "unsafe"
 )
 
 type Room struct {
@@ -120,6 +122,114 @@ type Door struct {
   Opened bool
 
   temporary, invalid bool
+
+  // gl stuff for drawing the threshold on the ground
+  gl_ids doorGlIds
+  state  doorState
+}
+
+type doorState struct {
+  // for tracking whether the buffers are dirty
+  facing WallFacing
+  pos    int
+  room struct {
+    x, y, dx, dy int
+  }
+}
+
+type doorGlIds struct {
+  vbuffer uint32
+
+  floor_buffer uint32
+  floor_count  gl.Sizei
+}
+
+func (d *Door) setupGlStuff(room *Room) {
+  var state doorState
+  state.facing = d.Facing
+  state.pos = d.Pos
+  state.room.x = room.X
+  state.room.y = room.Y
+  state.room.dx = room.roomDef.Size.Dx
+  state.room.dy = room.roomDef.Size.Dy
+  if state == d.state {
+    return
+  }
+  d.state = state
+  if d.gl_ids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &d.gl_ids.vbuffer)
+    gl.DeleteBuffers(1, &d.gl_ids.floor_buffer)
+    d.gl_ids.vbuffer = 0
+    d.gl_ids.floor_buffer = 0
+  }
+
+  var x1, y1, x2, y2 float32
+  switch d.Facing {
+  case FarLeft:
+    x1 = float32(d.Pos)
+    y1 = float32(room.roomDef.Size.Dy) - 0.5
+    x2 = float32(d.Pos + d.Width)
+    y2 = float32(room.roomDef.Size.Dy) + 0.5
+  case FarRight:
+    x1 = float32(room.roomDef.Size.Dx) - 0.5
+    y1 = float32(d.Pos + d.Width)
+    x2 = float32(room.roomDef.Size.Dx) + 0.5
+    y2 = float32(d.Pos)
+  case NearLeft:
+    x1 = 0.5
+    y1 = float32(d.Pos)
+    x2 = -0.5
+    y2 = float32(d.Pos + d.Width)
+  case NearRight:
+    x1 = float32(d.Pos)
+    y1 = -0.5
+    x2 = float32(d.Pos + d.Width)
+    y2 = 0.5
+  }
+  base.Log().Printf("door: %v %f %f %f %f", d.state, x1, y1, x2, y2)
+  vs := []roomVertex{
+    {
+      u: 0,
+      v: 0,
+      x: x1,
+      y: y1,
+    },
+    {
+      u: 0,
+      v: -1,
+      x: x1,
+      y: y2,
+    },
+    {
+      u: 1,
+      v: -1,
+      x: x2,
+      y: y2,
+    },
+    {
+      u: 1,
+      v: 0,
+      x: x2,
+      y: y1,
+    },
+  }
+  for i := range vs {
+    vs[i].los_u = (vs[i].y + float32(room.Y)) / LosTextureSize
+    vs[i].los_v = (vs[i].x + float32(room.X)) / LosTextureSize
+  }
+
+  gl.GenBuffers(1, &d.gl_ids.vbuffer)
+  gl.BindBuffer(gl.ARRAY_BUFFER, d.gl_ids.vbuffer)
+  size := int(unsafe.Sizeof(roomVertex{}))
+  gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
+  base.Log().Printf("vs: %v", vs)
+  base.Log().Printf("glids: %v", d.gl_ids)
+
+  is := []uint16{0, 1, 2, 0, 2, 3}
+  gl.GenBuffers(1, &d.gl_ids.floor_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.gl_ids.floor_buffer)
+  gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+  d.gl_ids.floor_count = 6
 }
 
 func (d *Door) TextureData() *texture.Data {
@@ -207,7 +317,7 @@ func (room *Room) canAddDoor(door *Door) bool {
   return true
 }
 
-func (f *Floor) findMatchingDoor(room *Room, door *Door) (*Room, *Door) {
+func (f *Floor) FindMatchingDoor(room *Room, door *Door) (*Room, *Door) {
   for _, other_room := range f.Rooms {
     if other_room == room {
       continue
@@ -291,7 +401,7 @@ func (f *Floor) canAddDoor(target *Room, door *Door) bool {
 func (f *Floor) removeInvalidDoors() {
   for _, room := range f.Rooms {
     room.Doors = algorithm.Choose(room.Doors, func(a interface{}) bool {
-      _, other_door := f.findMatchingDoor(room, a.(*Door))
+      _, other_door := f.FindMatchingDoor(room, a.(*Door))
       return other_door != nil && !other_door.temporary
     }).([]*Door)
   }
@@ -375,7 +485,7 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     // they are attached to have different alpha.  This is probably not a
     // big deal so we'll just ignore it.
     for _, door := range r1.Doors {
-      r2, _ := f.findMatchingDoor(r1, door)
+      r2, _ := f.FindMatchingDoor(r1, door)
       if r2 == nil {
         continue
       }
@@ -732,6 +842,7 @@ func (hdt *houseDoorTab) onEscape() {
     }
     if hdt.prev_door != nil {
       hdt.prev_room.Doors = append(hdt.prev_room.Doors, hdt.prev_door)
+      hdt.prev_door.state.pos = -1  // forces it to redo its gl data
       hdt.prev_door = nil
       hdt.prev_room = nil
     }
@@ -800,7 +911,7 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         *hdt.prev_door = *hdt.temp_door
         hdt.prev_room = hdt.temp_room
         hdt.temp_door.temporary = true
-        room, door := hdt.house.Floors[0].findMatchingDoor(hdt.temp_room, hdt.temp_door)
+        room, door := hdt.house.Floors[0].FindMatchingDoor(hdt.temp_room, hdt.temp_door)
         if room != nil {
           algorithm.Choose2(&room.Doors, func(d *Door) bool {
             return d != door

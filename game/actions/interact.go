@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/game/status"
 )
@@ -59,6 +60,11 @@ type interactInst struct {
 type interactExec struct {
   game.BasicActionExec
   Target game.EntityId
+
+  // If this interaction was to open or close a door then toggle_door will be
+  // true, otherwise it will be false.  If it is true then Target will be 0.
+  toggle_door bool
+  floor, room, door int
 }
 func init() {
   gob.Register(interactExec{})
@@ -146,6 +152,7 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
   return targets
 }
 func (a *Interact) Preppable(ent *game.Entity, g *game.Game) bool {
+  return true
   if a.Ap > ent.Stats.ApCur() {
     return false
   }
@@ -160,11 +167,46 @@ func (a *Interact) Prep(ent *game.Entity, g *game.Game) bool {
   return false
 }
 func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
+  room_num := a.ent.CurrentRoom()
+  if room_num == -1 { return false, nil }
+  room := g.House.Floors[0].Rooms[room_num]
+  x, y := a.ent.Pos()
+  x -= room.X
+  y -= room.Y
+  rdx, rdy := room.Dims()
+  var exec interactExec
+  exec.toggle_door = true
+  exec.SetBasicData(a.ent, a)
+  exec.room = room_num
+  for door_num, door := range room.Doors {
+    exec.door = door_num
+    switch door.Facing {
+    case house.FarLeft:
+      if y == rdy - 1 && x >= door.Pos && x < door.Pos + door.Width {
+        return true, exec
+      }
+
+    case house.FarRight:
+      if x == rdx - 1 && y >= door.Pos && y < door.Pos + door.Width {
+        return true, exec
+      }
+
+    case house.NearLeft:
+      if x == 0 && y >= door.Pos && y < door.Pos + door.Width {
+        return true, exec
+      }
+
+    case house.NearRight:
+      if y == 0 && y >= door.Pos && y < door.Pos + door.Width {
+        return true, exec
+      }
+    }
+  }
   target := g.HoveredEnt()
   if target == nil { return false, nil }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     for i := range a.targets {
-      if a.targets[i] == target {
+      if a.targets[i] == target && distBetweenEnts(a.ent, target) <= a.Range {
         // switch a.Name {
         // case string(game.GoalCleanse):
         //   g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
@@ -196,20 +238,69 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
   if ae != nil {
     exec := ae.(interactExec)
     g := a.ent.Game()
-    target := g.EntityById(exec.Target)
-    switch a.Name {
-    case string(game.GoalCleanse):
-      g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-        return a.(*game.Entity) != target
-      }).([]*game.Entity)
-
-    case string(game.GoalRelic):
-      g.Active_relic = nil
-
-    case string(game.GoalMystery):
+    if (exec.Target != 0) == (exec.toggle_door) {
+      base.Error().Printf("Got an interact that tried to target a door and an entity.")
+      return game.Complete
     }
-    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-    target.Sprite().Command("inspect")
+    if exec.Target != 0 {
+      target := g.EntityById(exec.Target)
+      if target == nil {
+        base.Error().Printf("Tried to interact with an entity that doesn't exist.")
+        return game.Complete
+      }
+      switch a.Name {
+      case string(game.GoalCleanse):
+        found := false
+        for i := range g.Active_cleanses {
+          if g.Active_cleanses[i] == target {
+            found = true
+          }
+        }
+        if !found {
+          base.Error().Printf("Tried to interact with the wrong entity.")
+          return game.Complete
+        }
+        g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
+          return a.(*game.Entity) != target
+        }).([]*game.Entity)
+
+      case string(game.GoalRelic):
+        if g.Active_relic != target {
+          base.Error().Printf("Tried to interact with the wrong entity.")
+          return game.Complete
+        }
+        g.Active_relic = nil
+
+      case string(game.GoalMystery):
+      }
+      a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+      target.Sprite().Command("inspect")
+    } else {
+      // We're interacting with a door here
+      if exec.floor < 0 || exec.floor >= len(g.House.Floors) {
+        base.Error().Printf("Specified an unknown floor %v", exec)
+        return game.Complete
+      }
+      floor := g.House.Floors[exec.floor]
+      if exec.room < 0 || exec.room >= len(floor.Rooms) {
+        base.Error().Printf("Specified an unknown room %v", exec)
+        return game.Complete
+      }
+      room := floor.Rooms[exec.room]
+      if exec.door < 0 || exec.door >= len(room.Doors) {
+        base.Error().Printf("Specified an unknown door %v", exec)
+        return game.Complete
+      }
+      door := room.Doors[exec.door]
+      _, other_door := floor.FindMatchingDoor(room, door)
+      if other_door != nil {
+        door.Opened = !door.Opened
+        other_door.Opened = door.Opened
+        g.RecalcLos()
+      } else {
+        base.Error().Printf("Couldn't find matching door: %v", exec)
+      }
+    }
   }
   return game.Complete
 }
