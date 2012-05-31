@@ -187,6 +187,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
   for i := range ents {
     g.Ents = append(g.Ents, ents[i])
+    ents[i].Info.RoomsExplored[ents[i].CurrentRoom()] = true
     g.viewer.AddDrawable(ents[i])
     index := rand.Intn(len(poss))
     pos := poss[index]
@@ -517,6 +518,37 @@ func (g *Game) RecalcLos() {
       g.Ents[i].los.x = -1
     }
   }
+}
+
+type roomGraph struct {
+  g *Game
+}
+
+func (g *Game) RoomGraph() algorithm.Graph {
+  return &roomGraph{g}
+}
+
+func (rg *roomGraph) NumVertex() int {
+  return len(rg.g.House.Floors[0].Rooms)
+}
+
+func (rg *roomGraph) Adjacent(n int) ([]int, []float64) {
+  room := rg.g.House.Floors[0].Rooms[n]
+  var adj []int
+  var cost []float64
+  for _, door := range room.Doors {
+    other_room, _ := rg.g.House.Floors[0].FindMatchingDoor(room, door)
+    if other_room != nil {
+      for i := range rg.g.House.Floors[0].Rooms {
+        if other_room == rg.g.House.Floors[0].Rooms[i] {
+          adj = append(adj, i)
+          cost = append(cost, 1)
+          break
+        }
+      }
+    }
+  }
+  return adj, cost
 }
 
 func (g *Game) Graph(exclude []*Entity) algorithm.Graph {

@@ -63,6 +63,7 @@ func (g *Game) placeEntity(initial bool) bool {
     base.Log().Printf("No new ent")
     return false
   }
+  g.new_ent.Info.RoomsExplored[g.new_ent.CurrentRoom()] = true
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
   r, f, _ := g.House.Floors[0].RoomFurnSpawnAtPos(ix, iy)
