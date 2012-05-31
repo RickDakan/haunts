@@ -198,18 +198,20 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     g := ent.Game()
     graph := g.RoomGraph()
     current_room_num := ent.CurrentRoom()
-    var best float64 = 10000
-    var best_room *house.Room
-    for room_num, room := range g.House.Floors[0].Rooms {
-      if ent.Info.RoomsExplored[room_num] { continue }
-      cost, path := algorithm.Dijkstra(graph, current_room_num, room_num)
-      if cost == -1 { continue }
-      if cost < best {
-        best = cost
-        best_room = g.House.Floors[0].Rooms[path[len(path) - 1]]
+    var unexplored []int
+    for room_num, _ := range g.House.Floors[0].Rooms {
+      if !ent.Info.RoomsExplored[room_num] {
+        unexplored = append(unexplored, room_num)
       }
     }
-    return best_room
+    if len(unexplored) == 0 {
+      return nil
+    }
+    cost, path := algorithm.Dijkstra(graph, []int{current_room_num}, unexplored)
+    if cost == -1 {
+      return nil
+    }
+    return g.House.Floors[0].Rooms[path[len(path) - 1]]
   })
 
   // Ends an entity's turn
