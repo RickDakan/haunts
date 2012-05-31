@@ -11,6 +11,8 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
+  "os"
+  "time"
 )
 
 type Ai interface {
@@ -108,16 +110,30 @@ func (g *Game) placeEntity(initial bool) bool {
   return true
 }
 
+func (e *Entity) ReloadAi() {
+  if e.Ai_path.String() == "" {
+    e.Ai = inactiveAi{}
+    return
+  }
+  stat, err := os.Stat(e.Ai_path.String())
+  if err != nil {
+    return
+  }
+  if e.Ai == nil || stat.ModTime().After(e.ai_file_load_time) {
+    if e.Ai != nil {
+      base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
+    }
+    ai_maker(e.Ai_path.String(), e.Game(), e, &e.Ai, EntityAi)
+    e.ai_file_load_time = stat.ModTime()
+  }
+}
+
 // Does some basic setup that is common to both creating a new entity and to
 // loading one from a saved game.
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
-  if e.Ai_path.String() != "" {
-    ai_maker(e.Ai_path.String(), g, e, &e.Ai, EntityAi)
-  } else {
-    e.Ai = inactiveAi{}
-  }
+  e.ReloadAi()
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
     e.los = &losData{}
@@ -340,6 +356,7 @@ type EntityInst struct {
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
   Ai Ai
+  ai_file_load_time time.Time
 
   // Info that may be of use to the Ai
   Info Info
@@ -572,6 +589,8 @@ func (e *Entity) OnRound() {
     if e.Stats.HpCur() <= 0 {
       e.sprite.Sprite().Command("defend")
       e.sprite.Sprite().Command("killed")
+    } else {
+      e.ReloadAi()
     }
   }
 }
