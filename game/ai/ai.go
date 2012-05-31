@@ -136,12 +136,22 @@ func (a *Ai) masterRoutine() {
       if a.active && !a.evaluating {
         a.evaluating = true
         go func() {
+          var cont func() bool
           if a.ent == nil {
             base.Log().Printf("Eval master")
+            cont = func() bool { return true }
           } else {
             base.Log().Printf("Eval ent: %p", a.ent)
+            cur_ap := a.ent.Stats.ApCur()
+            cont = func() bool {
+              if cur_ap == a.ent.Stats.ApCur() {
+                return false
+              }
+              cur_ap = a.ent.Stats.ApCur()
+              return true
+            }
           }
-          labels, err := a.graph.Eval()
+          labels, err := a.graph.Eval(10, cont)
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {
