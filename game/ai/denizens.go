@@ -7,12 +7,12 @@ import (
   "github.com/runningwild/polish"
 )
 
-func (a *Ai) addDenizensContext() {
+func (a *Ai) addDenizensContext(g *game.Game) {
   polish.AddFloat64MathContext(a.graph.Context)
   polish.AddBooleanContext(a.graph.Context)
   a.graph.Context.SetParseOrder(polish.Float, polish.String)
-  a.addCommonContext()
-  a.addHigherContext()
+  a.addCommonContext(g)
+  a.addHigherContext(g)
 
   // Returns the number of servitors that have not completed their turn
   a.graph.Context.AddFunc("numActiveServitors", func() float64 {

@@ -4,10 +4,11 @@ import (
   "math/rand"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/polish"
 )
 
-func (a *Ai) addHigherContext() {
+func (a *Ai) addHigherContext(g *game.Game) {
   // Begins or continues executing an entity's ai and executes one action from
   // it.
   a.graph.Context.AddFunc("exec", func(ent *game.Entity) {
@@ -29,7 +30,7 @@ func (a *Ai) addHigherContext() {
   })
 }
 
-func (a *Ai) addCommonContext() {
+func (a *Ai) addCommonContext(g *game.Game) {
   // rolls dice, for example "roll 3 6" is a roll of 3d6
   a.graph.Context.AddFunc("roll", roll)
 
@@ -71,15 +72,78 @@ func (a *Ai) addCommonContext() {
     }
     return false
   })
+
+  a.graph.Context.AddFunc("posOf", func(target *game.Entity) Pos {
+    x, y := target.Pos()
+    return Pos{x, y}
+  })
+
+  a.graph.Context.AddFunc("roomAt", func(pos Pos) *house.Room {
+    return roomAt(pos, g)
+  })
+
+  a.graph.Context.AddFunc("doorAt", func(pos Pos) *house.Door {
+    room := roomAt(pos, g)
+    if room == nil {
+      return nil
+    }
+    pos.X -= room.Size.Dx
+    pos.Y -= room.Size.Dy
+    for _, door := range room.Doors {
+      switch door.Facing {
+      case house.FarLeft:
+        if pos.Y == room.Size.Dy - 1 && pos.X >= door.Pos - 1 && pos.X < door.Pos + door.Width + 1 {
+          return door
+        }
+      case house.FarRight:
+        if pos.X == room.Size.Dx - 1 && pos.Y >= door.Pos - 1 && pos.Y < door.Pos + door.Width + 1 {
+          return door
+        }
+      case house.NearLeft:
+        if pos.Y == 0 && pos.X >= door.Pos - 1 && pos.X < door.Pos + door.Width + 1 {
+          return door
+        }
+      case house.NearRight:
+        if pos.X == 0 && pos.Y >= door.Pos - 1 && pos.Y < door.Pos + door.Width + 1 {
+          return door
+        }
+      }
+    }
+    return nil
+  })
+
+  a.graph.Context.AddFunc("roomExists", func(room *house.Room) bool {
+    return room != nil
+  })
+
+  a.graph.Context.AddFunc("doorExists", func(door *house.Door) bool {
+    return door != nil
+  })
+
+  a.graph.Context.AddFunc("doorOpened", func(door *house.Door) bool {
+    return door.Opened
+  })
 }
 
+func roomAt(pos Pos, g *game.Game) *house.Room {
+  for _, room := range g.House.Floors[0].Rooms {
+    if pos.X < room.X { continue }
+    if pos.Y < room.Y { continue }
+    if pos.X >= room.X + room.Size.Dx { continue }
+    if pos.Y >= room.Y + room.Size.Dy { continue }
+    return room
+  }
+  return nil
+}
+
+
 // This is the context used for the ai that controls the denizens' minions
-func (a *Ai) addMinionsContext() {
+func (a *Ai) addMinionsContext(g *game.Game) {
   polish.AddFloat64MathContext(a.graph.Context)
   polish.AddBooleanContext(a.graph.Context)
   a.graph.Context.SetParseOrder(polish.Float, polish.String)
-  a.addCommonContext()
-  a.addHigherContext()
+  a.addCommonContext(g)
+  a.addHigherContext(g)
 
   // Returns the number of minions that have not completed their turn
   a.graph.Context.AddFunc("numActiveMinions", func() float64 {

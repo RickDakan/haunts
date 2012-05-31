@@ -7,12 +7,12 @@ import (
   "github.com/runningwild/polish"
 )
 
-func (a *Ai) addIntrudersContext() {
+func (a *Ai) addIntrudersContext(g *game.Game) {
   polish.AddFloat64MathContext(a.graph.Context)
   polish.AddBooleanContext(a.graph.Context)
   a.graph.Context.SetParseOrder(polish.Float, polish.String)
-  a.addCommonContext()
-  a.addHigherContext()
+  a.addCommonContext(g)
+  a.addHigherContext(g)
 
   // Returns the number of intruders that have not completed their turn
   a.graph.Context.AddFunc("numActiveIntruders", func() float64 {

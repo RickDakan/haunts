@@ -3,9 +3,11 @@ package ai
 import (
   "reflect"
   "github.com/runningwild/glop/ai"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/polish"
 )
 
@@ -13,7 +15,7 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
   polish.AddFloat64MathContext(context)
   polish.AddBooleanContext(context)
   context.SetParseOrder(polish.Float, polish.String)
-  a.addCommonContext()
+  a.addCommonContext(ent.Game())
 
   // This entity, the one currently taking its turn
   context.SetValue("me", ent)
@@ -190,6 +192,24 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
       }
     }
     return nil
+  })
+
+  context.AddFunc("nearestUnexploredRoom", func() *house.Room {
+    g := ent.Game()
+    graph := g.RoomGraph()
+    current_room_num := ent.CurrentRoom()
+    var best float64 = 10000
+    var best_room *house.Room
+    for room_num, room := range g.House.Floors[0].Rooms {
+      if ent.Info.RoomsExplored[room_num] { continue }
+      cost, path := algorithm.Dijkstra(graph, current_room_num, room_num)
+      if cost == -1 { continue }
+      if cost < best {
+        best = cost
+        best_room = g.House.Floors[0].Rooms[path[len(path) - 1]]
+      }
+    }
+    return best_room
   })
 
   // Ends an entity's turn

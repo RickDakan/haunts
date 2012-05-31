@@ -79,19 +79,25 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
 
   case game.MinionsAi:
-    ai_struct.addMinionsContext()
+    ai_struct.addMinionsContext(g)
 
   case game.DenizensAi:
-    ai_struct.addDenizensContext()
+    ai_struct.addDenizensContext(g)
 
   case game.IntrudersAi:
-    ai_struct.addIntrudersContext()
+    ai_struct.addIntrudersContext(g)
 
   default:
     panic("Unknown ai kind")
   }
   go ai_struct.masterRoutine()
   *dst_iface = ai_struct
+}
+
+// Used to indicate a position on the board
+type Pos struct {
+  // Floor int
+  X, Y int
 }
 
 // Need a goroutine for each ai - all things will go through is so that things
