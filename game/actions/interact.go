@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game/status"
 )
 
@@ -353,6 +354,11 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
       if other_door != nil {
         door.Opened = !door.Opened
         other_door.Opened = door.Opened
+        if door.Opened {
+          sound.PlaySound(door.Open_sound)
+        } else {
+          sound.PlaySound(door.Shut_sound)
+        }
         g.RecalcLos()
       } else {
         base.Error().Printf("Couldn't find matching door: %v", exec)

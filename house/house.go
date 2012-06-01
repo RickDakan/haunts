@@ -106,6 +106,9 @@ type doorDef struct {
 
   Opened_texture texture.Object
   Closed_texture texture.Object
+
+  Open_sound base.Path
+  Shut_sound base.Path
 }
 
 type Door struct {

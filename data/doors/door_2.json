@@ -6,5 +6,8 @@
   },
   "Closed_texture": {
     "Path": "doors/test_door_closed.png"
-  }
+  },
+  "Open_sound": "sound/door_open.ogg",
+  "Shut_sound": "sound/door_shut.ogg",
+  "Attribution": "Sound effects obtained from http://www.freesfx.co.uk"
 }
