@@ -214,6 +214,30 @@ func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
     return g.House.Floors[0].Rooms[path[len(path) - 1]]
   })
 
+  context.AddFunc("nextRoomTowards", func(target *house.Room) *house.Room {
+    g := ent.Game()
+    graph := g.RoomGraph()
+    current_room_num := ent.CurrentRoom()
+    if g.House.Floors[0].Rooms[current_room_num] == target {
+      return target
+    }
+    target_num := -1
+    for room_num, room := range g.House.Floors[0].Rooms {
+      if room == target {
+        target_num = room_num
+        break
+      }
+    }
+    if target_num == -1 {
+      return nil
+    }
+    cost, path := algorithm.Dijkstra(graph, []int{current_room_num}, []int{target_num})
+    if cost == -1 {
+      return nil
+    }
+    return g.House.Floors[0].Rooms[path[1]]
+  })
+
   // Ends an entity's turn
   context.AddFunc("done", func() {
     base.Log().Printf("Minion: done")
