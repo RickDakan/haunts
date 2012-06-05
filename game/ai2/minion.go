@@ -11,7 +11,7 @@ import (
 
 func (a *Ai) addMinionsContext() {
   a.L.Register("activeMinions", activeMinionsFunc(a))
-  a.L.Register("execMinions", execMinionFunc(a))
+  a.L.Register("execMinion", execMinionFunc(a))
 }
 
 // Input:
@@ -21,12 +21,7 @@ func (a *Ai) addMinionsContext() {
 //     minions.
 func activeMinionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    n := L.GetTop()
-    if n != 0 {
-      errstr := fmt.Sprintf("activeMinions expects exactly 0 parameters, got %d.", n)
-      base.Warn().Printf(errstr)
-      L.PushString(errstr)
-      L.Error()
+    if !luaNumParamsOk(L, 0, "activeMinions") {
       return 0
     }
     L.NewTable()
@@ -39,28 +34,29 @@ func activeMinionsFunc(a *Ai) lua.GoFunction {
       L.PushInteger(int(ent.Id))
       L.SetTable(-3)
     }
+    base.Log().Printf("activeMinions: %d", count)
     return 1
   }
 }
 
 func execMinionFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    n := L.GetTop()
-    if n != 1 {
-      errstr := fmt.Sprintf("execMinion expects exactly 1 parameters, got %d.", n)
-      base.Warn().Printf(errstr)
-      L.PushString(errstr)
-      L.Error()
+    base.Log().Printf("Exec minion")
+    if !luaNumParamsOk(L, 1, "execMinion") {
       return 0
     }
     id := game.EntityId(L.ToInteger(0))
     ent := a.game.EntityById(id)
     if ent == nil {
-      base.Warn().Printf("Tried to execMinion entity with Id=%d, which doesn't exist.", id)
+      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which doesn't exist.", id))
       return 0
     }
     if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
-      base.Warn().Printf("Tried to execMinion entity with Id=%d, which is not a minion.", id)
+      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", id))
+      return 0
+    }
+    if !ent.Ai.Active() {
+      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

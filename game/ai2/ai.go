@@ -1,7 +1,9 @@
 package ai2
 
 import (
+  "fmt"
   "encoding/gob"
+  "io/ioutil"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   lua "github.com/xenith-studios/golua"
@@ -16,6 +18,9 @@ type Ai struct {
 
   ent *game.Entity
 
+  // The actual lua program to run when executing this ai
+  Prog string
+
   // new stuff
 
   // Set to true at the beginning of the turn, turned off as soon as the ai is
@@ -25,6 +30,7 @@ type Ai struct {
   active_set chan bool
   active_query chan bool
   exec_query chan struct{}
+  terminate chan struct{}
 
   // Once we send an Action for execution we have to wait until it is done
   // before we make the next one.  This channel is used to handle that.
@@ -50,15 +56,22 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   } else {
     ai_struct = (*dst_iface).(*Ai)
   }
-  ai_struct.L = lua.NewState();
-  ai_struct.L.OpenLibs();
+  prog, err := ioutil.ReadFile(path)
+  if err != nil {
+    base.Error().Printf("Unable to load ai file %s: %v", path, err)
+    return
+  }
+  ai_struct.Prog = string(prog)
   ai_struct.ent = ent
   ai_struct.game = g
+  ai_struct.L = lua.NewState();
+  ai_struct.L.OpenLibs();
 
   ai_struct.active_set = make(chan bool)
   ai_struct.active_query = make(chan bool)
   ai_struct.exec_query = make(chan struct{})
   ai_struct.pause = make(chan struct{})
+  ai_struct.terminate = make(chan struct{})
   ai_struct.execs = make(chan game.ActionExec)
 
   switch kind {
@@ -66,7 +79,7 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     ai_struct.addEntityContext()
 
   case game.MinionsAi:
-    // ai_struct.addMinionsContext(g)
+    ai_struct.addMinionsContext()
 
   case game.DenizensAi:
     // ai_struct.addDenizensContext(g)
@@ -77,6 +90,17 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   default:
     panic("Unknown ai kind")
   }
+  // Add this to all contexts
+  ai_struct.L.Register("print", func(L *lua.State) int {
+    var res string
+    n := L.GetTop()
+    for i := -n; i < 0; i++ {
+      res += L.ToString(i) + " "
+    }
+    base.Log().Printf("Ai(%p): %s", ai_struct, res)
+    return 0
+  })
+
   go ai_struct.masterRoutine()
   *dst_iface = ai_struct
 }
@@ -86,6 +110,10 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
 func (a *Ai) masterRoutine() {
   for {
     select {
+    case <-a.terminate:
+      base.Log().Printf("Terminated Ai(p=%p)", a)
+      return
+
     case a.active = <-a.active_set:
       if a.active {
         <-a.active_set
@@ -122,8 +150,12 @@ func (a *Ai) masterRoutine() {
           } else {
             base.Log().Printf("Eval ent: %p", a.ent)
           }
-          // TODO: EVALUATE LUA SCRIPT HERE
-          // labels, err := a.graph.Eval(10, cont)
+          base.Log().Printf("Evaluating lua script: %s", a.Prog)
+          // Reset the execution limit in case it was set to 0 due to a
+          // previous error
+          a.L.SetExecutionLimit(250000)
+          res := a.L.DoString(a.Prog)
+          base.Log().Printf("Res: %t", res)
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {
@@ -145,6 +177,10 @@ func (a *Ai) masterRoutine() {
   }
 }
 
+func (a *Ai) Terminate() {
+  a.terminate <- struct{}{}
+}
+
 func (a *Ai) Activate() {
   a.active_set <- true
   a.active_set <- true
@@ -161,6 +197,22 @@ func (a *Ai) ActionExecs() <-chan game.ActionExec {
   }
   a.exec_query <- struct{}{}
   return a.execs
+}
+
+func luaDoError(L *lua.State, err_str string) {
+  base.Error().Printf(err_str)
+  L.PushString(err_str)
+  L.SetExecutionLimit(1)
+}
+
+func luaNumParamsOk(L *lua.State, num_params int, name string) bool {
+  n := L.GetTop()
+  if n != num_params {
+    err_str := fmt.Sprintf("%s expects exactly %d parameters, got %d.", name, num_params, n)
+    luaDoError(L, err_str)
+    return false
+  }
+  return true
 }
 
 // // Does the roll dice-d-sides, like 3d6, and returns the result

@@ -23,7 +23,7 @@ import (
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
   _ "github.com/runningwild/haunts/game/actions"
-  _ "github.com/runningwild/haunts/game/ai"
+  _ "github.com/runningwild/haunts/game/ai2"
 
   "github.com/runningwild/haunts/game/status"
 )
@@ -236,6 +236,7 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
+      base.Error().Printf("PANIC: %v\n", r)
       base.Error().Printf("PANIC: %s\n", string(data))
       base.CloseLog()
       fmt.Printf("PANIC: %s\n", string(data))

@@ -70,14 +70,38 @@ type basicAttackTempData struct {
 
   // The selected target for the attack
   target *game.Entity
+
+  // exec that we're currently executing
+  exec basicAttackExec
 }
 
 type basicAttackExec struct {
+  id int
   game.BasicActionExec
   Target game.EntityId
 }
 func init() {
   gob.Register(basicAttackExec{})
+}
+
+// Results - used by the ai to get feedback on what its actions did.
+type BasicAttackResult struct {
+  Hit bool
+}
+var exec_id int
+// TODO: This thing leaks memory since we never bother to purge it.  It would
+// make the most sense to purge it OnRound(), but we'd have to make a way to
+// register OnRound callbacks with the game.
+var results map[int]BasicAttackResult
+func init() {
+  results = make(map[int]BasicAttackResult)
+}
+func GetBasicAttackResult(e game.ActionExec) *BasicAttackResult {
+  res, ok := results[e.(basicAttackExec).id]
+  if !ok {
+    return nil
+  }
+  return &res
 }
 
 func dist(x,y,x2,y2 int) int {
@@ -145,6 +169,8 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game
 }
 func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
   var exec basicAttackExec
+  exec.id = exec_id
+  exec_id++
   exec.SetBasicData(ent, a)
   exec.Target = target.Id
   return exec
@@ -183,26 +209,26 @@ func (a *BasicAttack) Cancel() {
 func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
-    exec := ae.(basicAttackExec)
+    a.exec = ae.(basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())
-    a.target = a.ent.Game().EntityById(exec.Target)
+    a.target = a.ent.Game().EntityById(a.exec.Target)
 
     // Track this information for the ais
     a.ent.Info.LastEntThatIAttacked = a.target.Id
     a.target.Info.LastEntThatAttackedMe = a.ent.Id
 
     if a.Ap > a.ent.Stats.ApCur() {
-      base.Error().Printf("Got a basic attack that required more ap than available: %v", exec)
+      base.Error().Printf("Got a basic attack that required more ap than available: %v", a.exec)
       return game.Complete
     }
 
     if a.target.Stats.HpCur() <= 0 {
-      base.Error().Printf("Got a basic attack that attacked a dead person: %v", exec)
+      base.Error().Printf("Got a basic attack that attacked a dead person: %v", a.exec)
       return game.Complete
     }
 
     if distBetweenEnts(a.ent, a.target) > a.Range {
-      base.Error().Printf("Got a basic attack that is out of range: %v", exec)
+      base.Error().Printf("Got a basic attack that is out of range: %v", a.exec)
       return game.Complete
     }
   }
@@ -224,8 +250,10 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
       } else {
         defender_cmds = []string{"defend", "damaged"}
       }
+      results[a.exec.id] = BasicAttackResult{Hit:true}
     } else {
       defender_cmds = []string{"defend", "undamaged"}
+      results[a.exec.id] = BasicAttackResult{Hit:false}
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")

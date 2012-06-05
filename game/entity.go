@@ -16,6 +16,9 @@ import (
 )
 
 type Ai interface {
+  // Kills any goroutines associated with this Ai
+  Terminate()
+
   // Informs the Ai that a new turn has started
   Activate()
 
@@ -28,6 +31,7 @@ type Ai interface {
 // A dummy ai that always claims to be inactive, this is just a convenience so
 // that we don't have to keep checking if an Ai is nil or not.
 type inactiveAi struct{}
+func (a inactiveAi) Terminate() {}
 func (a inactiveAi) Activate() {}
 func (a inactiveAi) Active() bool { return false }
 func (a inactiveAi) ActionExecs() <-chan ActionExec { return nil }
@@ -122,6 +126,7 @@ func (e *Entity) ReloadAi() {
   if e.Ai == nil || stat.ModTime().After(e.ai_file_load_time) {
     if e.Ai != nil {
       base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
+      e.Ai.Terminate()
     }
     ai_maker(e.Ai_path.String(), e.Game(), e, &e.Ai, EntityAi)
     e.ai_file_load_time = stat.ModTime()

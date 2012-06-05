@@ -349,6 +349,13 @@ func (g *Game) OnRound() {
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
+
+  // The entity ais must be activated before the master ais, otherwise the
+  // masters might be running with stale data if one of the entities has been
+  // reloaded.
+  for i := range g.Ents {
+    g.Ents[i].Ai.Activate()
+  }
   g.minion_ai.Activate()
   g.haunts_ai.Activate()
   g.explorers_ai.Activate()
@@ -626,20 +633,30 @@ func (g *Game) setup() {
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
-      g.DetermineLos(g.Ents[i], true)
+      g.UpdateEntLos(g.Ents[i], true)
     }
   }
 
   g.MergeLos(g.Ents)
 
-  ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
-  if g.Human == SideExplorers {
-    ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
-    g.explorers_ai = inactiveAi{}
-  } else {
-    ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
-    g.haunts_ai = inactiveAi{}
-  }
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
+  g.explorers_ai = inactiveAi{}
+  g.haunts_ai = inactiveAi{}
+  // if g.Human == SideExplorers {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+  //   g.explorers_ai = inactiveAi{}
+  // } else {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+  //   g.haunts_ai = inactiveAi{}
+  // }
+  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
+  // if g.Human == SideExplorers {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+  //   g.explorers_ai = inactiveAi{}
+  // } else {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+  //   g.haunts_ai = inactiveAi{}
+  // }
 }
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
@@ -694,7 +711,7 @@ func (g *Game) Think(dt int64) {
   var side_ents []*Entity
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
-      g.DetermineLos(g.Ents[i], false)
+      g.UpdateEntLos(g.Ents[i], false)
       side_ents = append(side_ents, g.Ents[i])
     }
   }
@@ -838,39 +855,47 @@ func (g *Game) MergeLos(ents []*Entity) {
   }
 }
 
-func (g *Game) DetermineLos(ent *Entity, force bool) {
+// This is the function used to determine LoS.  Nothing else should try to
+// make any attempts at doing so.  Eventually this should be replaced with
+// something more sensible and faster, so everyone needs to use this so that
+// everything stays in sync.
+func (g *Game) DetermineLos(x, y, los_dist int, grid [][]bool) {
+  for i := range grid {
+    for j := range grid[i] {
+      grid[i][j] = false
+    }
+  }
+  minx := x - los_dist
+  miny := y - los_dist
+  maxx := x + los_dist
+  maxy := y + los_dist
+  line := make([][2]int, los_dist)
+  for vx := minx; vx <= maxx; vx++ {
+    line = line[0:0]
+    bresenham(x, y, vx, miny, &line)
+    g.doLos(los_dist, line, grid)
+    line = line[0:0]
+    bresenham(x, y, vx, maxy, &line)
+    g.doLos(los_dist, line, grid)
+  }
+  for vy := miny; vy <= maxy; vy++ {
+    line = line[0:0]
+    bresenham(x, y, minx, vy, &line)
+    g.doLos(los_dist, line, grid)
+    line = line[0:0]
+    bresenham(x, y, maxx, vy, &line)
+    g.doLos(los_dist, line, grid)
+  }
+}
+
+func (g *Game) UpdateEntLos(ent *Entity, force bool) {
   if ent.los == nil || ent.Stats == nil { return }
   ex,ey := ent.Pos()
   if !force && ex == ent.los.x && ey == ent.los.y { return }
-  for i := range ent.los.grid {
-    for j := range ent.los.grid[i] {
-      ent.los.grid[i][j] = false
-    }
-  }
   ent.los.x = ex
   ent.los.y = ey
 
-  minx := ex - ent.Stats.Sight()
-  miny := ey - ent.Stats.Sight()
-  maxx := ex + ent.Stats.Sight()
-  maxy := ey + ent.Stats.Sight()
-  line := make([][2]int, ent.Stats.Sight())
-  for x := minx; x <= maxx; x++ {
-    line = line[0:0]
-    bresenham(ex, ey, x, miny, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-    line = line[0:0]
-    bresenham(ex, ey, x, maxy, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-  }
-  for y := miny; y <= maxy; y++ {
-    line = line[0:0]
-    bresenham(ex, ey, minx, y, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-    line = line[0:0]
-    bresenham(ex, ey, maxx, y, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-  }
+  g.DetermineLos(ex, ey, ent.Stats.Sight(), ent.los.grid)
 
   ent.los.minx = len(ent.los.grid)
   ent.los.miny = len(ent.los.grid)

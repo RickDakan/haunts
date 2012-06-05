@@ -46,7 +46,7 @@ type Ai struct {
 
 func init() {
   gob.Register(&Ai{})
-  game.SetAiMaker(makeAi)
+  // game.SetAiMaker(makeAi)
 }
 
 func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kind game.AiKind) {

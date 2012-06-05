@@ -26,6 +26,5 @@
     "Corpus": 12,
     "Ego": 8,
     "Sight": 30
-  },
-  "Ai_path": "ais/basic.xgml"
+  }
 }
