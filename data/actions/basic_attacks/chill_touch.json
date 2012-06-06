@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/chill_touch.png"
   },
-  "Ap"       : 3,
+  "Ap"       : 2,
   "Strength" : 4,
   "Damage"   : 1,
   "Range"    : 1

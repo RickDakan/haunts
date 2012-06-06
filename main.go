@@ -7,6 +7,7 @@ import (
   "runtime"
   "runtime/debug"
   "runtime/pprof"
+  "math/rand"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
@@ -22,7 +23,7 @@ import (
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
   _ "github.com/runningwild/haunts/game/actions"
-  _ "github.com/runningwild/haunts/game/ai"
+  _ "github.com/runningwild/haunts/game/ai2"
 
   "github.com/runningwild/haunts/game/status"
 )
@@ -58,6 +59,7 @@ func init() {
   runtime.LockOSThread()
   sys = system.Make(gos.GetSystemInterface())
 
+  rand.Seed(100)
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)
@@ -234,6 +236,7 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
+      base.Error().Printf("PANIC: %v\n", r)
       base.Error().Printf("PANIC: %s\n", string(data))
       base.CloseLog()
       fmt.Printf("PANIC: %s\n", string(data))
@@ -253,7 +256,7 @@ func main() {
   }
 
   sound.Init()
-  sound.SetBackgroundMusic("macabre.ogg")
+  // sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
@@ -383,6 +386,9 @@ func main() {
   }
   if key_map["noise down"].FramePressCount() > 0 {
     house.Noise_rate -= 10
+  }
+  if key_map["foo"].FramePressCount() > 0 {
+    house.Foo = (house.Foo + 1) % 2
   }
 
     if edit_mode {

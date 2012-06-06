@@ -1,4 +1,5 @@
 {
+  "foo" : "m",
   "row up" : "ctrl+Up",
   "row down" : "ctrl+Down",
   "steps up" : "alt+Up",

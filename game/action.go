@@ -2,7 +2,10 @@ package game
 
 import (
   "fmt"
+  "bytes"
+  "encoding/gob"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/house"
 )
@@ -49,18 +52,62 @@ const (
   Complete
 )
 
-// Acceptable values to be returned from Action.HandleInput()
-type InputStatus int
-const (
-  // The input was not consumed.
-  NotConsumed InputStatus = iota
+// All implementations of ActionExec will probably use exactly this setup,
+// so we just provide it here so we don't duplicate a ton of code everywhere.
+type BasicActionExec struct {
+  Ent   EntityId
+  Index int
+}
+func (bae BasicActionExec) EntityId() EntityId {
+  return bae.Ent
+}
+func (bae BasicActionExec) ActionIndex() int {
+  return bae.Index
+}
+func (bae *BasicActionExec) SetBasicData(ent *Entity, action Action) {
+  bae.Ent = ent.Id
+  bae.Index = -1
+  for i := range ent.Actions {
+    if ent.Actions[i] == action {
+      bae.Index = i
+    }
+  }
+  if bae.Index == -1 {
+    base.Error().Printf("Action '%v' was unable to find itself in Entity %v's Actions: %v", action, ent, ent.Actions)
+  }
+}
 
-  // The input was consumed but the action has not begun.
-  Consumed
+// When an entity commits to an action it will create an ActionExec.  This
+// will be passed to the Action 
+type ActionExec interface {
+  // Entity whose action created this ActionExec
+  EntityId() EntityId
 
-  // The input was consumed and the action has begun.
-  ConsumedAndBegin
-)
+  // Index into Entity.Actions
+  ActionIndex() int
+}
+
+func encodeActionExec(ae ActionExec) []byte {
+  b := bytes.NewBuffer(nil)
+  enc := gob.NewEncoder(b)
+  err := enc.Encode(ae)
+  if err != nil {
+    base.Error().Printf("Failed to gob an ActionExec: %v", err)
+    return nil
+  }
+  return b.Bytes()
+}
+
+func decodeActionExec(b []byte) ActionExec {
+  var ae ActionExec
+  dec := gob.NewDecoder(bytes.NewReader(b))
+  err := dec.Decode(&ae)
+  if err != nil {
+    base.Error().Printf("Failed to ungob an ActionExec: %v", err)
+    return nil
+  }
+  return ae
+}
 
 type Action interface {
   // The amount of Ap that this action costs if performed in its current
@@ -86,15 +133,15 @@ type Action interface {
   // be performed at all.
   Prep(e *Entity, g *Game) bool
 
-  // Got to have some way for the user to interact with the action.  Returns
-  // true if the action has been comitted.  If this action is not being
-  // readied then it will take effect immediately.  If this function returns
-  // ConsumedAndBegin it should charge the required Ap when it does so.
-  HandleInput(gui.EventGroup, *Game) InputStatus
+  // The boolean return value indicates whether or not the input was consumed
+  // If this function returns false then the ActionExec returned will be nil,
+  // otherwise, if it is not nil, it indicates that the entity has committed
+  // to this action.  That ActionExec should be passed to the Action on the
+  // next call to Maintain().
+  HandleInput(gui.EventGroup, *Game) (bool, ActionExec)
 
   // Got to have some way for the user to see what is going on
   house.FloorDrawer
-//  RenderOnFloor(*house.Room)
 
   // Called if the user cancels the action - done this way so that all actions
   // can be cancelled in the same way instead of each action deciding how to
@@ -105,7 +152,7 @@ type Action interface {
   // Actually executes the action.  Returns a value after every call
   // indicating whether the action is done, still in progress, or can be
   // interrupted.
-  Maintain(dt int64) MaintenanceStatus
+  Maintain(dt int64, g *Game, exec ActionExec) MaintenanceStatus
 
   // This will be called if the action has been readied at this is a logical
   // point for an interrupt to happen.  Should return true if the action

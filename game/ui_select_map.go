@@ -15,8 +15,6 @@ type UiSelectMap struct {
 
   region gui.Region
 
-  game_panel *GamePanel
-
   chooser *hui.RosterChooser
 }
 
@@ -63,8 +61,6 @@ func MakeUiSelectMap(gp *GamePanel) (gui.Widget, error) {
     return nil, err
   }
 
-  ui.game_panel = gp
-
   ui.region.Dx = 1024
   ui.region.Dy = 768
   var options []hui.Option
@@ -80,8 +76,14 @@ func MakeUiSelectMap(gp *GamePanel) (gui.Widget, error) {
     for index = range m {
       break
     }
-    gp.LoadHouse(options[index].(*MapOption).house_def)
-    })
+    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+    select_side, err := MakeUiSelectSide(gp, options[index].(*MapOption).house_def)
+    if err != nil {
+      base.Error().Printf("Unable to make Side Selector: %v", err)
+      return
+    }
+    gp.AnchorBox.AddChild(select_side, gui.Anchor{0, 0, 0, 0})
+  })
   ui.chooser = chooser
 
   return &ui, nil
@@ -105,25 +107,10 @@ func (ui *UiSelectMap) Rendered() gui.Region {
 
 func (ui *UiSelectMap) Think(g *gui.Gui, dt int64) {
   ui.chooser.Think(g, dt)
-  // ui.mx, ui.my = gin.In().GetCursor("Mouse").Point()
 }
 
 func (ui *UiSelectMap) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return ui.chooser.Respond(g, group)
-
-  // if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-  //   for _, button := range ui.buttons {
-  //     if button.handleClick(ui.mx, ui.my, ui.game_panel) {
-  //       return true
-  //     }
-  //   }
-  // }
-  // for _, button := range ui.buttons {
-  //   if button.Respond(group, ui) {
-  //     return true
-  //   }
-  // }
-  return false
 }
 
 func (ui *UiSelectMap) Draw(region gui.Region) {

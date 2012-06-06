@@ -89,10 +89,7 @@ func (wt *WallTexture) Render() {
   wt.Texture.Data().RenderAdvanced(float64(wt.X-dx2), float64(wt.Y-dy2), float64(2*dx2), float64(2*dy2), float64(wt.Rot), wt.Flip)
 }
 
-
-
 func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) {
-  base.Log().Printf("Wall texture setup gl")
   if gl_ids.vbuffer != 0 {
     gl.DeleteBuffers(1, &gl_ids.vbuffer)
     gl.DeleteBuffers(1, &gl_ids.left_buffer)

@@ -64,6 +64,15 @@ type MoveDef struct {
   Name     string
   Texture  texture.Object
 }
+
+type moveExec struct {
+  game.BasicActionExec
+  Dst int
+}
+func init() {
+  gob.Register(moveExec{})
+}
+
 func (a *Move) AP() int {
   return a.cost
 }
@@ -85,12 +94,13 @@ func (a *Move) Readyable() bool {
 
 func limitPath(g *game.Game, start int, path []int, max int) []int {
   total := 0
-  for last := 0; last < len(path); last++ {
-    adj,cost := g.Adjacent(start)
+  graph := g.Graph(nil)
+  for last := 1; last < len(path); last++ {
+    adj,cost := graph.Adjacent(start)
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total > max {
+        if total >= max {
           return path[0 : last]
         }
         start = adj[index]
@@ -101,39 +111,75 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
   return path
 }
 
-// Usable by ais, tries to find a path that moves the entity to within dist of
-// the specified location.  Returns true if possible, false otherwise.  If it
-// returns true it also begins execution, so it should become the current
-// action.
-func (a *Move) AiMoveToWithin(ent *game.Entity, tx,ty,dist int) bool {
-  a.ent = ent
-  var dsts []int
-  for x := tx - dist; x <= tx + dist; x++ {
-    for y := ty - dist; y <= ty + dist; y++ {
-      if x == tx && y == ty { continue }
-      dsts = append(dsts, a.ent.Game().ToVertex(x, y))
-    }
-  }
-  source_cell := []int{a.ent.Game().ToVertex(a.ent.Pos())}
-  fcost, path := algorithm.Dijkstra(ent.Game(), source_cell, dsts)
-  cost := int(fcost)
+func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionExec {
+  graph := ent.Game().Graph(nil)
+  src := []int{ent.Game().ToVertex(ent.Pos())}
+  _, path := algorithm.Dijkstra(graph, src, dst)
   if path == nil {
-    return false
+    return nil
   }
-  path = limitPath(ent.Game(), source_cell[0], path, ent.Stats.ApCur())
-  if len(path) <= 1 { // || !canPayForMove(a.Ent, a.Level.MakeBoardPosFromVertex(path[1])) {
-    return false
+  if ent.Stats.ApCur() < max_ap {
+    max_ap = ent.Stats.ApCur()
   }
-  if cost > ent.Stats.ApCur() {
-    cost = ent.Stats.ApCur()
+  path = limitPath(ent.Game(), src[0], path, max_ap)
+  if len(path) <= 1 {
+    return nil
   }
-  ent.Stats.ApplyDamage(-cost, 0, status.Unspecified)
-  vertex_to_boardpos := func(v interface{}) interface{} {
-    _,x,y := a.ent.Game().FromVertex(v.(int))
-    return [2]int{x,y}
+  var exec moveExec
+  exec.SetBasicData(ent, a)
+  exec.Dst = path[len(path)-1]
+  return exec
+}
+
+// Attempts to move such that the shortest path from any location
+// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
+// than max_ap Ap doing this.
+func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist,max_ap int) game.ActionExec {
+  graph := ent.Game().Graph(targets)
+  var src []int
+  for i := range targets {
+    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
   }
-  a.path = algorithm.Map(path[1:], [][2]int{}, vertex_to_boardpos).([][2]int)
-  return true
+  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
+  if len(dst) == 0 {
+    return nil
+  }
+
+  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
+  _, path := algorithm.Dijkstra(graph, source_cell, dst)
+  if path == nil {
+    return nil
+  }
+  if ent.Stats.ApCur() > max_ap {
+    max_ap = ent.Stats.ApCur()
+  }
+  path = limitPath(ent.Game(), source_cell[0], path, max_ap)
+  if len(path) <= 1 {
+    return nil
+  }
+  var exec moveExec
+  exec.SetBasicData(ent, a)
+  exec.Dst = path[len(path)-1]
+  return exec
+}
+
+func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist int) int {
+  graph := ent.Game().Graph(targets)
+  var src []int
+  for i := range targets {
+    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
+  }
+  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
+  if len(dst) == 0 {
+    return 0
+  }
+
+  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
+  cost, path := algorithm.Dijkstra(graph, source_cell, dst)
+  if path == nil {
+    return -1
+  }
+  return int(cost)
 }
 
 func (a *Move) findPath(g *game.Game, x,y int) {
@@ -142,7 +188,7 @@ func (a *Move) findPath(g *game.Game, x,y int) {
     a.dst = dst
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
-    cost,path := algorithm.Dijkstra(g, []int{src}, []int{dst})
+    cost,path := algorithm.Dijkstra(g.Graph(nil), []int{src}, []int{dst})
     if len(path) <= 1 {
       return
     }
@@ -160,10 +206,11 @@ func (a *Move) findPath(g *game.Game, x,y int) {
         }
       }
       current := 0.0
+      graph := g.Graph(nil)
       for i := 1; i < len(a.path); i++ {
         src := g.ToVertex(a.path[i-1][0], a.path[i-1][1])
         dst := g.ToVertex(a.path[i][0], a.path[i][1])
-        v, cost := g.Adjacent(src)
+        v, cost := graph.Adjacent(src)
         for j := range v {
           if v[j] == dst {
             current += cost[j]
@@ -187,7 +234,7 @@ func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.threshold = a.ent.Stats.ApCur()
   return true
 }
-func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
@@ -196,16 +243,17 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus 
   if found,_ := group.FindEvent(gin.MouseLButton); found {
     if len(a.path) > 0 {
       if a.cost <= a.ent.Stats.ApCur() {
-        a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
-        a.cost = 0
-        return game.ConsumedAndBegin
+        var exec moveExec
+        exec.SetBasicData(a.ent, a)
+        exec.Dst = a.dst
+        return true, exec
       }
-      return game.Consumed
+      return true, nil
     } else {
-      return game.NotConsumed
+      return false, nil
     }
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *Move) RenderOnFloor() {
   if a.ent == nil {
@@ -228,17 +276,35 @@ func (a *Move) Cancel() {
   a.path = nil
   a.calculated = false
 }
-func (a *Move) Maintain(dt int64) game.MaintenanceStatus {
+func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(moveExec)
+    _, x, y := g.FromVertex(exec.Dst)
+    a.ent = g.EntityById(ae.EntityId())
+    a.findPath(g, x, y)
+    if len(a.path) == 0 {
+      base.Error().Printf("Got a move exec with a path length of 0: %v", exec)
+      return game.Complete
+    }
+    if a.cost > a.ent.Stats.ApCur() {
+      base.Error().Printf("Got a move that required more ap than available: %v", exec)
+      base.Error().Printf("Path: %v", a.path)
+      return game.Complete
+    }
+    a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
+  }
   // Do stuff
   factor := float32(math.Pow(2, a.ent.Walking_speed))
   dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
   for dist > 0 {
     if len(a.path) == 1 {
       a.ent.DoAdvance(0,0,0)
+      a.ent.Info.RoomsExplored[a.ent.CurrentRoom()] = true
       a.ent = nil
       return game.Complete
     }
     a.path = a.path[1:]
+    a.ent.Info.RoomsExplored[a.ent.CurrentRoom()] = true
     dist = a.ent.DoAdvance(dist, a.path[0][0], a.path[0][1])
   }
   return game.InProgress

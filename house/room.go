@@ -7,9 +7,9 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
+  "math"
   "image"
   "io"
-  "math"
   "os"
   "path/filepath"
   "strings"
@@ -247,6 +247,7 @@ func alphaMult(a, b byte) byte {
 var Num_rows float32 = 1150;
 var Noise_rate float32 = 60;
 var Num_steps float32 = 3;
+var Foo int = 0;
 
 
 // Need floor, right wall, and left wall matrices to draw the details
@@ -378,26 +379,29 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     if (plane.mat == &left || plane.mat == &right) && strings.Contains(string(room.Wall.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
+      base.SetUniformI("gorey", "foo", Foo)
       base.SetUniformF("gorey", "num_rows", Num_rows);
       base.SetUniformF("gorey", "noise_rate", Noise_rate);
       base.SetUniformF("gorey", "num_steps", Num_steps);
-      zexp := math.Log(float64(zoom))
-      frac := 1 - 1/zexp
-      frac = (frac - 0.6) * 5.0;
-      base.SetUniformF("gorey", "frac", float32(frac))
     }
     if plane.mat == &floor && strings.Contains(string(room.Floor.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
+      base.SetUniformI("gorey", "foo", Foo);
       base.SetUniformF("gorey", "num_rows", Num_rows);
       base.SetUniformF("gorey", "noise_rate", Noise_rate);
       base.SetUniformF("gorey", "num_steps", Num_steps);
       zexp := math.Log(float64(zoom))
       frac := 1 - 1/zexp
       frac = (frac - 0.6) * 5.0;
-      base.Log().Printf("frac: %f", frac)
-      base.SetUniformF("gorey", "frac", float32(frac))
-      base.Log().Printf("vals %f %f %f", Num_rows, Noise_rate, Num_steps)
+      switch {
+      case frac > 0.7:
+        base.SetUniformI("gorey", "range", 1)
+      case frac > 0.3:
+        base.SetUniformI("gorey", "range", 2)
+      default:
+        base.SetUniformI("gorey", "range", 3)
+      }
     }
     gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {
@@ -458,6 +462,27 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       }
     }
   }
+  for _, door := range room.Doors {
+    door.setupGlStuff(room)
+    if door.gl_ids.vbuffer == 0 {
+      continue
+    }
+    tex := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "textures/pinkbrick.jpg"))
+    tex.Bind()
+    if door.highlight_threshold {
+      do_color(255, 255, 255, 255)
+    } else {
+      do_color(128, 128, 128, 255)
+    }
+    gl.BindBuffer(gl.ARRAY_BUFFER, door.gl_ids.vbuffer)
+    gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+    gl.ClientActiveTexture(gl.TEXTURE1)
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+    gl.ClientActiveTexture(gl.TEXTURE0)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.gl_ids.floor_buffer)
+    gl.DrawElements(gl.TRIANGLES, door.gl_ids.floor_count, gl.UNSIGNED_SHORT, nil)
+  }
   if los_tex != nil {
     base.EnableShader("")
     gl.ActiveTexture(gl.TEXTURE1)
@@ -498,7 +523,6 @@ func (room *Room) setupGlStuff() {
      room.Wall.Data().Dy() == room.gl.wall_tex_dy {
     return
   }
-  base.Log().Printf("SETUP GL")
   room.gl.x = room.X
   room.gl.y = room.Y
   room.gl.dx = room.Size.Dx

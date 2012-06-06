@@ -2,6 +2,7 @@ package game
 
 import (
   "math/rand"
+  "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
@@ -25,6 +26,12 @@ type Game struct {
 
   // Next unique EntityId to be assigned
   Entity_id EntityId
+
+  // The side of the human player in the case that this is a one player game,
+  // this is so that if we load a saved game we know which side to put ais on.
+  // TODO: IN a game with two humans we'll need something more complicated
+  // here.
+  Human Side
 
   // Current player
   Side Side
@@ -73,7 +80,18 @@ type Game struct {
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
 
+  // This controls the minions on the haunting side, regardless of whether a
+  // human or ai is controlling the rest of that side.
+  minion_ai Ai
+
+  haunts_ai Ai
+  explorers_ai Ai
+
+  // If an Ai is executing currently it is referenced here
+  active_ai Ai
+
   action_state actionState
+  current_exec   ActionExec
   current_action Action
 
   // Goals ******************************************************
@@ -169,6 +187,7 @@ func (g *Game) PlaceInitialExplorers(ents []*Entity) {
   }
   for i := range ents {
     g.Ents = append(g.Ents, ents[i])
+    ents[i].Info.RoomsExplored[ents[i].CurrentRoom()] = true
     g.viewer.AddDrawable(ents[i])
     index := rand.Intn(len(poss))
     pos := poss[index]
@@ -240,7 +259,11 @@ func (g *Game) checkWinConditions() {
 }
 
 func (g *Game) OnRound() {
+  // Don't end the round if any of the following are true
+  // An action is currently executing
   if g.action_state != noAction { return }
+  // Any master ai is still active
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) { return }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -322,13 +345,20 @@ func (g *Game) OnRound() {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
     }
-    if g.Ents[i].Ai_path.String() != "" {
-      g.Ents[i].ai_status = aiReady
-    }
   }
   g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
+
+  // The entity ais must be activated before the master ais, otherwise the
+  // masters might be running with stale data if one of the entities has been
+  // reloaded.
+  for i := range g.Ents {
+    g.Ents[i].Ai.Activate()
+  }
+  g.minion_ai.Activate()
+  g.haunts_ai.Activate()
+  g.explorers_ai.Activate()
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -350,7 +380,15 @@ func (g *Game) OnRound() {
 type actionState int
 const (
   noAction       actionState = iota
+
+  // The Ai is running and determining the next action to run
+  waitingAction
+
+  // The player has selected an action and is determining whether or not to
+  // use it, and how.
   preppingAction
+
+  // An action is currently running, everything should pause while this runs.
   doingAction
 )
 
@@ -449,6 +487,9 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
         pos = x
     }
     if pos >= door.Pos && pos < door.Pos + door.Width {
+      if !door.Opened {
+        base.Log().Printf("Door is closed!")
+      }
       return door.Opened
     }
   }
@@ -467,13 +508,72 @@ func (g *Game) IsCellOccupied(x,y int) bool {
   return false
 }
 
-func (g *Game) Adjacent(v int) ([]int, []float64) {
+type exclusionGraph struct {
+  ex map[*Entity]bool
+  g *Game
+}
+func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
+  return eg.g.Adjacent(v, eg.ex)
+}
+func (eg *exclusionGraph) NumVertex() int {
+  return eg.g.NumVertex()
+}
+
+func (g *Game) RecalcLos() {
+  for i := range g.Ents {
+    if g.Ents[i].los != nil {
+      g.Ents[i].los.x = -1
+    }
+  }
+}
+
+type roomGraph struct {
+  g *Game
+}
+
+func (g *Game) RoomGraph() algorithm.Graph {
+  return &roomGraph{g}
+}
+
+func (rg *roomGraph) NumVertex() int {
+  return len(rg.g.House.Floors[0].Rooms)
+}
+
+func (rg *roomGraph) Adjacent(n int) ([]int, []float64) {
+  room := rg.g.House.Floors[0].Rooms[n]
+  var adj []int
+  var cost []float64
+  for _, door := range room.Doors {
+    other_room, _ := rg.g.House.Floors[0].FindMatchingDoor(room, door)
+    if other_room != nil {
+      for i := range rg.g.House.Floors[0].Rooms {
+        if other_room == rg.g.House.Floors[0].Rooms[i] {
+          adj = append(adj, i)
+          cost = append(cost, 1)
+          break
+        }
+      }
+    }
+  }
+  return adj, cost
+}
+
+func (g *Game) Graph(exclude []*Entity) algorithm.Graph {
+  ex := make(map[*Entity]bool, len(exclude))
+  for i := range exclude {
+    ex[exclude[i]] = true
+  }
+  return &exclusionGraph{ex, g}
+}
+
+func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
   room,x,y := g.FromVertex(v)
   var adj []int
   var weight []float64
   var moves [3][3]float64
   ent_occupied := make(map[[2]int]bool)
   for _,ent := range g.Ents {
+    if ex[ent] { continue }
     x,y := ent.Pos()
     dx,dy := ent.Dims()
     for i := x; i < x+dx; i++ {
@@ -533,19 +633,42 @@ func (g *Game) setup() {
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
-      g.DetermineLos(g.Ents[i], true)
+      g.UpdateEntLos(g.Ents[i], true)
     }
   }
 
   g.MergeLos(g.Ents)
+
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
+  g.explorers_ai = inactiveAi{}
+  // if g.Human == SideExplorers {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+  //   g.explorers_ai = inactiveAi{}
+  // } else {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+  //   g.haunts_ai = inactiveAi{}
+  // }
+  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
+  // if g.Human == SideExplorers {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
+  //   g.explorers_ai = inactiveAi{}
+  // } else {
+  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
+  //   g.haunts_ai = inactiveAi{}
+  // }
 }
 
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
+func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   var g Game
+  g.Human = side
   g.Side = SideExplorers
   g.House = h
   g.House.Normalize()
   g.viewer = viewer
+
+  // This way an unset id will be invalid
+  g.Entity_id = 1
 
   g.setup()
 
@@ -558,10 +681,17 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer) *Game {
 }
 
 func (g *Game) Think(dt int64) {
+  if g.current_exec != nil {
+    ent := g.EntityById(g.current_exec.EntityId())
+    g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+    g.action_state = doingAction
+  }
+
   // If there is an action that is currently executing we need to advance that
   // action.
   if g.action_state == doingAction {
-    res := g.current_action.Maintain(dt)
+    res := g.current_action.Maintain(dt, g, g.current_exec)
+    g.current_exec = nil
     switch res {
       case Complete:
         g.current_action.Cancel()
@@ -581,7 +711,7 @@ func (g *Game) Think(dt int64) {
   var side_ents []*Entity
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
-      g.DetermineLos(g.Ents[i], false)
+      g.UpdateEntLos(g.Ents[i], false)
       side_ents = append(side_ents, g.Ents[i])
     }
   }
@@ -610,40 +740,52 @@ func (g *Game) Think(dt int64) {
     g.los_tex.Remap()
   }
 
+  // Don't do any ai stuff if there is a pending action
+  if g.current_action != nil {
+    return
+  }
+
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
-    state := ent.sprite.Sprite().State()
+    state := ent.sprite.Sprite().AnimState()
     if state != "ready" && state != "killed" {
-      // base.Log().Printf("Not doing AI because %s is in anim %s", ent.Name, ent.Sprite.Sprite().AnimState())
+      return
+    }
+    if ent.sprite.Sprite().NumPendingCmds() > 0 {
       return
     }
   }
 
   // Do Ai - if there is any to do
-  if g.action_state == noAction {
-    if g.ai_ent == nil {
-      for _,ent := range g.Ents {
-        if ent.Side() != g.Side { continue }
-        if ent.ai_status != aiReady { continue }
-        g.ai_ent = ent
-        g.ai_ent.Ai.Eval()
-        g.ai_ent.ai_status = aiRunning
-        break
+  if g.Side == SideHaunt {
+    if g.minion_ai.Active() {
+      g.active_ai = g.minion_ai
+      g.action_state = waitingAction
+    } else {
+      if g.haunts_ai.Active() {
+        g.active_ai = g.haunts_ai
+        g.action_state = waitingAction
       }
     }
-    if g.ai_ent != nil {
-      select {
-      case act := <-g.ai_ent.Ai.Actions():
-        if act != nil {
-          g.current_action = act
-          g.action_state = doingAction
-        } else {
-          g.ai_ent.ai_status = aiDone
-          g.ai_ent = nil
-        }
-      default:
+  } else {
+    if g.explorers_ai.Active() {
+      g.active_ai = g.explorers_ai
+      g.action_state = waitingAction
+    }
+  }
+  if g.action_state == waitingAction {
+    select {
+    case exec := <-g.active_ai.ActionExecs():
+      base.Log().Printf("Got %v from master", exec)
+      if exec != nil {
+        g.current_exec = exec
+      } else {
+        g.action_state = noAction
+        // TODO: indicate that the master ai can go now
       }
+
+    default:
     }
   }
 }
@@ -713,40 +855,47 @@ func (g *Game) MergeLos(ents []*Entity) {
   }
 }
 
-func (g *Game) DetermineLos(ent *Entity, force bool) {
+// This is the function used to determine LoS.  Nothing else should try to
+// make any attempts at doing so.  Eventually this should be replaced with
+// something more sensible and faster, so everyone needs to use this so that
+// everything stays in sync.
+func (g *Game) DetermineLos(x, y, los_dist int, grid [][]bool) {
+  for i := range grid {
+    for j := range grid[i] {
+      grid[i][j] = false
+    }
+  }
+  minx := x - los_dist
+  miny := y - los_dist
+  maxx := x + los_dist
+  maxy := y + los_dist
+  line := make([][2]int, los_dist)
+  for vx := minx; vx <= maxx; vx++ {
+    line = line[0:0]
+    bresenham(x, y, vx, miny, &line)
+    g.doLos(los_dist, line, grid)
+    line = line[0:0]
+    bresenham(x, y, vx, maxy, &line)
+    g.doLos(los_dist, line, grid)
+  }
+  for vy := miny; vy <= maxy; vy++ {
+    line = line[0:0]
+    bresenham(x, y, minx, vy, &line)
+    g.doLos(los_dist, line, grid)
+    line = line[0:0]
+    bresenham(x, y, maxx, vy, &line)
+    g.doLos(los_dist, line, grid)
+  }
+}
+
+func (g *Game) UpdateEntLos(ent *Entity, force bool) {
   if ent.los == nil || ent.Stats == nil { return }
   ex,ey := ent.Pos()
   if !force && ex == ent.los.x && ey == ent.los.y { return }
-  for i := range ent.los.grid {
-    for j := range ent.los.grid[i] {
-      ent.los.grid[i][j] = false
-    }
-  }
   ent.los.x = ex
   ent.los.y = ey
 
-
-  minx := ex - ent.Stats.Sight()
-  miny := ey - ent.Stats.Sight()
-  maxx := ex + ent.Stats.Sight()
-  maxy := ey + ent.Stats.Sight()
-  line := make([][2]int, ent.Stats.Sight())
-  for x := minx; x <= maxx; x++ {
-    line = line[0:0]
-    bresenham(ex, ey, x, miny, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-    line = line[0:0]
-    bresenham(ex, ey, x, maxy, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-  }
-  for y := miny; y <= maxy; y++ {
-    line = line[0:0]
-    bresenham(ex, ey, minx, y, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-    line = line[0:0]
-    bresenham(ex, ey, maxx, y, &line)
-    g.doLos(ent.Stats.Sight(), line, ent.los.grid)
-  }
+  g.DetermineLos(ex, ey, ent.Stats.Sight(), ent.los.grid)
 
   ent.los.minx = len(ent.los.grid)
   ent.los.miny = len(ent.los.grid)

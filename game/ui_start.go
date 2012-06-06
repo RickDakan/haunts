@@ -88,10 +88,10 @@ func (ui *UiStart) Rendered() gui.Region {
 }
 
 func (ui *UiStart) Think(g *gui.Gui, dt int64) {
-  ui.mx, ui.my = gin.In().GetCursor("Mouse").Point()
 }
 
 func (ui *UiStart) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  ui.mx, ui.my = gin.In().GetCursor("Mouse").Point()
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     for _, button := range ui.buttons {
       if button.handleClick(ui.mx, ui.my, ui.game_panel) {

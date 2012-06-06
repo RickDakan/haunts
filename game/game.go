@@ -73,9 +73,9 @@ func (gp *GamePanel) LoadGame(path string) {
   base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
   base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
 
+  gp.house = gp.game.House
   gp.game.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
-  gp.house = gp.game.House
   gp.viewer = gp.game.viewer
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
   gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
@@ -270,7 +270,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   if found,event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
-    base.Log().Printf("Found an escape!: %p %v", gp.game.selected_ent, gp.game.action_state)
     if gp.game.selected_ent != nil {
       switch gp.game.action_state {
       case noAction:
@@ -303,13 +302,12 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   }
 
   if gp.game.action_state == preppingAction {
-    res := gp.game.current_action.HandleInput(group, gp.game)
-    switch res {
-      case ConsumedAndBegin:
-      gp.game.action_state = doingAction
-      fallthrough
-
-      case Consumed:
+    consumed, exec := gp.game.current_action.HandleInput(group, gp.game)
+    if consumed {
+      if exec != nil {
+        gp.game.current_exec = exec
+        // TODO: Should send the exec across the wire here
+      }
       return true
     }
   }
@@ -439,14 +437,14 @@ func spawnAllCleanses(g *Game) {
   spawnEnts(g, cleanse_ents, cleanse_spawns)
 }
 
-func (gp *GamePanel) LoadHouse(def *house.HouseDef) {
+func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   gp.house = def
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
-  gp.game = makeGame(gp.house, gp.viewer)
+  gp.game = makeGame(gp.house, gp.viewer, side)
 
   spawnAllRelics(gp.game)
   spawnAllCleanses(gp.game)
@@ -475,7 +473,7 @@ func (gp *GamePanel) LoadHouseFromPath(path string) {
     base.Error().Printf("%v", err)
     return
   }
-  gp.LoadHouse(def)
+  gp.LoadHouse(def, SideExplorers)
 }
 
 func (gp *GamePanel) GetViewer() house.Viewer {

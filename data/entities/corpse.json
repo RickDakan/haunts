@@ -22,5 +22,5 @@
     "Ego": 9,
     "Sight": 10
   },
-  "Ai_path": "ais/corpse.xgml"
+  "Ai_path": "ais/corpse.lua"
 }

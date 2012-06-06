@@ -70,7 +70,40 @@ type basicAttackTempData struct {
 
   // The selected target for the attack
   target *game.Entity
+
+  // exec that we're currently executing
+  exec basicAttackExec
 }
+
+type basicAttackExec struct {
+  id int
+  game.BasicActionExec
+  Target game.EntityId
+}
+func init() {
+  gob.Register(basicAttackExec{})
+}
+
+// Results - used by the ai to get feedback on what its actions did.
+type BasicAttackResult struct {
+  Hit bool
+}
+var exec_id int
+// TODO: This thing leaks memory since we never bother to purge it.  It would
+// make the most sense to purge it OnRound(), but we'd have to make a way to
+// register OnRound callbacks with the game.
+var results map[int]BasicAttackResult
+func init() {
+  results = make(map[int]BasicAttackResult)
+}
+func GetBasicAttackResult(e game.ActionExec) *BasicAttackResult {
+  res, ok := results[e.(basicAttackExec).id]
+  if !ok {
+    return nil
+  }
+  return &res
+}
+
 func dist(x,y,x2,y2 int) int {
   dx := x - x2
   if dx < 0 { dx = -dx }
@@ -126,36 +159,34 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   return true
 }
-func (a *BasicAttack) attack(target *game.Entity) {
-  a.target = target
-  if a.Current_ammo > 0 {
-    a.Current_ammo--
-  }
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-}
-func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) bool {
-  if ent.Side() == target.Side() { return false }
-  if ent.Stats.ApCur() < a.Ap { return false }
+func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game.ActionExec {
+  if ent.Side() == target.Side() { return nil }
+  if ent.Stats.ApCur() < a.Ap { return nil }
   x,y := ent.Pos()
   x2,y2 := target.Pos()
-  if dist(x,y,x2,y2) > a.Range { return false }
-  a.ent = ent
-  a.attack(target)
-  return true
+  if dist(x,y,x2,y2) > a.Range { return nil }
+  return a.makeExec(ent, target)
 }
-func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
+  var exec basicAttackExec
+  exec.id = exec_id
+  exec_id++
+  exec.SetBasicData(ent, a)
+  exec.Target = target.Id
+  return exec
+}
+func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
-  if target == nil { return game.NotConsumed }
-  if target.Stats == nil { return game.NotConsumed }
+  if target == nil { return false, nil }
+  if target.Stats == nil { return false, nil }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     px, py := target.Pos()
     if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
-      a.attack(target)
-      return game.ConsumedAndBegin
+      return true, a.makeExec(a.ent, target)
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *BasicAttack) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
@@ -175,10 +206,39 @@ func (a *BasicAttack) RenderOnFloor() {
 func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
-func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
+func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
+  base.Log().Printf("Maintain: %v", ae)
+  if ae != nil {
+    a.exec = ae.(basicAttackExec)
+    a.ent = g.EntityById(ae.EntityId())
+    a.target = a.ent.Game().EntityById(a.exec.Target)
+
+    // Track this information for the ais
+    a.ent.Info.LastEntThatIAttacked = a.target.Id
+    a.target.Info.LastEntThatAttackedMe = a.ent.Id
+
+    if a.Ap > a.ent.Stats.ApCur() {
+      base.Error().Printf("Got a basic attack that required more ap than available: %v", a.exec)
+      return game.Complete
+    }
+
+    if a.target.Stats.HpCur() <= 0 {
+      base.Error().Printf("Got a basic attack that attacked a dead person: %v", a.exec)
+      return game.Complete
+    }
+
+    if distBetweenEnts(a.ent, a.target) > a.Range {
+      base.Error().Printf("Got a basic attack that is out of range: %v", a.exec)
+      return game.Complete
+    }
+  }
   if a.ent.Sprite().State() == "ready" && a.target.Sprite().State() == "ready" {
     a.target.TurnToFace(a.ent.Pos())
     a.ent.TurnToFace(a.target.Pos())
+    if a.Current_ammo > 0 {
+      a.Current_ammo--
+    }
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     var defender_cmds []string
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _,name := range a.Conditions {
@@ -190,12 +250,17 @@ func (a *BasicAttack) Maintain(dt int64) game.MaintenanceStatus {
       } else {
         defender_cmds = []string{"defend", "damaged"}
       }
+      results[a.exec.id] = BasicAttackResult{Hit:true}
     } else {
       defender_cmds = []string{"defend", "undamaged"}
+      results[a.exec.id] = BasicAttackResult{Hit:false}
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
+    base.Log().Printf("Finished basic attack")
     return game.Complete
+  } else {
+    base.Log().Printf("Waiting: %s %s", a.ent.Sprite().State(), a.target.Sprite().State())
   }
   return game.InProgress
 }

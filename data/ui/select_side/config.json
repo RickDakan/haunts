@@ -1,0 +1,16 @@
+{
+  "Denizens": {
+    "X": 10,
+    "Y": 10,
+    "Texture": {
+      "Path": "ui/select_side/denizens.png"
+    }
+  },
+  "Intruders": {
+    "X": 400,
+    "Y": 10,
+    "Texture": {
+      "Path": "ui/select_side/intruders.png"
+    }
+  }
+}

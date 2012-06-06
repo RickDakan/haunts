@@ -3,6 +3,7 @@ package game
 import (
   "image"
   "path/filepath"
+  "encoding/gob"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -10,16 +11,45 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
+  "os"
+  "time"
 )
 
 type Ai interface {
-  Eval()
-  Actions() <-chan Action
+  // Kills any goroutines associated with this Ai
+  Terminate()
+
+  // Informs the Ai that a new turn has started
+  Activate()
+
+  // Returns true if the Ai still has things to do this turn
+  Active() bool
+
+  ActionExecs() <-chan ActionExec
 }
 
-var ai_maker func(path string, ent *Entity, dst *Ai)
+// A dummy ai that always claims to be inactive, this is just a convenience so
+// that we don't have to keep checking if an Ai is nil or not.
+type inactiveAi struct{}
+func (a inactiveAi) Terminate() {}
+func (a inactiveAi) Activate() {}
+func (a inactiveAi) Active() bool { return false }
+func (a inactiveAi) ActionExecs() <-chan ActionExec { return nil }
+func init() {
+  gob.Register(inactiveAi{})
+}
 
-func SetAiMaker(f func(path string, ent *Entity, dst *Ai)) {
+type AiKind int
+const(
+  EntityAi AiKind = iota
+  MinionsAi
+  DenizensAi
+  IntrudersAi
+)
+
+var ai_maker func(path string, g *Game, ent *Entity, dst *Ai, kind AiKind)
+
+func SetAiMaker(f func(path string, g *Game, ent *Entity, dst *Ai, kind AiKind)) {
   ai_maker = f
 }
 
@@ -39,6 +69,7 @@ func (g *Game) placeEntity(initial bool) bool {
     base.Log().Printf("No new ent")
     return false
   }
+  g.new_ent.Info.RoomsExplored[g.new_ent.CurrentRoom()] = true
   ix,iy := int(g.new_ent.X), int(g.new_ent.Y)
   idx,idy := g.new_ent.Dims()
   r, f, _ := g.House.Floors[0].RoomFurnSpawnAtPos(ix, iy)
@@ -83,14 +114,31 @@ func (g *Game) placeEntity(initial bool) bool {
   return true
 }
 
+func (e *Entity) ReloadAi() {
+  if e.Ai_path.String() == "" {
+    e.Ai = inactiveAi{}
+    return
+  }
+  stat, err := os.Stat(e.Ai_path.String())
+  if err != nil {
+    return
+  }
+  if e.Ai == nil || stat.ModTime().After(e.ai_file_load_time) {
+    if e.Ai != nil {
+      base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
+      e.Ai.Terminate()
+    }
+    ai_maker(e.Ai_path.String(), e.Game(), e, &e.Ai, EntityAi)
+    e.ai_file_load_time = stat.ModTime()
+  }
+}
+
 // Does some basic setup that is common to both creating a new entity and to
 // loading one from a saved game.
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
 
-  if e.Ai_path.String() != "" {
-    ai_maker(e.Ai_path.String(), e, &e.Ai)
-  }
+  e.ReloadAi()
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
     e.los = &losData{}
@@ -116,6 +164,8 @@ func MakeEntity(name string, g *Game) *Entity {
     stats := status.MakeInst(ent.Base)
     ent.Stats = &stats
   }
+
+  ent.Info = makeInfo()
 
   ent.Id = g.Entity_id
   g.Entity_id++
@@ -290,8 +340,9 @@ type EntityInst struct {
   los *losData
 
   // so we know if we should draw a reticle around it
-  hovered  bool
-  selected bool
+  hovered    bool
+  selected   bool
+  controlled bool
 
   // The width that this entity's sprite was rendered at the last time it was
   // drawn.  User to determine what entity the cursor is over.
@@ -310,10 +361,10 @@ type EntityInst struct {
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
   Ai Ai
-  // The ready flag is set to true at the start of every turn - this lets us
-  // keep easy track of whether or not an entity's Ai has executed yet, since
-  // an entity might not do anything else obvious, like run out of Ap.
-  ai_status aiStatus
+  ai_file_load_time time.Time
+
+  // Info that may be of use to the Ai
+  Info Info
 
   // For inanimate objects - some of them need to be activated so we know when
   // the players can interact with them.
@@ -326,6 +377,27 @@ const (
   aiRunning
   aiDone
 )
+
+// This stores things that a stateless ai can't figure out
+type Info struct {
+  // Basic or Aoe attacks suffice
+  LastEntThatAttackedMe EntityId
+
+  // Basic or Aoe attacks suffice, but since you can hit multiple enemies
+  // (including allies) with an aoe it will only be set if you hit an enemy,
+  // and it will only remember one of them.
+  LastEntThatIAttacked EntityId
+
+  // Set of all rooms that this entity has actually stood in.  The values are
+  // indices into the array of rooms in the floor.
+  RoomsExplored map[int]bool
+}
+func makeInfo() Info {
+  var i Info
+  i.RoomsExplored = make(map[int]bool)
+  return i
+}
+
 func (e *Entity) Game() *Game {
   return e.game
 }
@@ -366,6 +438,16 @@ func (ei *EntityInst) Pos() (int,int) {
 func (ei *EntityInst) FPos() (float64,float64) {
   return ei.X, ei.Y
 }
+func (ei *EntityInst) CurrentRoom() int {
+  x, y := ei.Pos()
+  room := roomAt(ei.game.House.Floors[0], x, y)
+  for i := range ei.game.House.Floors[0].Rooms {
+    if ei.game.House.Floors[0].Rooms[i] == room {
+      return i
+    }
+  }
+  return -1
+}
 
 type Entity struct {
 	Defname string
@@ -374,7 +456,7 @@ type Entity struct {
 }
 
 func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
-  if !e.hovered && !e.selected {
+  if !e.hovered && !e.selected && !e.controlled {
     return
   }
   gl.PushAttrib(gl.CURRENT_BIT)
@@ -382,9 +464,12 @@ func (e *Entity) drawReticle(pos mathgl.Vec2, rgba [4]float64) {
   g := byte(rgba[1] * 255)
   b := byte(rgba[2] * 255)
   a := byte(rgba[3] * 255)
-  if e.selected {
+  switch {
+  case e.controlled:
+    gl.Color4ub(0, 0, r, a)
+  case e.selected:
     gl.Color4ub(r, g, b, a)
-  } else {
+  default:
     gl.Color4ub(r, g, b, byte((int(a) * 200) >> 8))
   }
   glow := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "ui", "glow.png"))
@@ -509,6 +594,8 @@ func (e *Entity) OnRound() {
     if e.Stats.HpCur() <= 0 {
       e.sprite.Sprite().Command("defend")
       e.sprite.Sprite().Command("killed")
+    } else {
+      e.ReloadAi()
     }
   }
 }

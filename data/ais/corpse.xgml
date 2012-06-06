@@ -46,7 +46,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">2</attribute>
-			<attribute key="label" type="String">== distBetween nearestEnemy me 1</attribute>
+			<attribute key="label" type="String">== walkingDistBetween nearestEnemy me 1</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">257.5</attribute>
 				<attribute key="y" type="double">270.0</attribute>
@@ -57,7 +57,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">== distBetween nearestEnemy me 1</attribute>
+				<attribute key="text" type="String">== walkingDistBetween nearestEnemy me 1</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -103,7 +103,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
-			<attribute key="label" type="String">advanceTowards nearestEnemy</attribute>
+			<attribute key="label" type="String">advanceAllTheWay nearestEnemy</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">390.0</attribute>
 				<attribute key="y" type="double">330.0</attribute>
@@ -114,7 +114,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">advanceTowards nearestEnemy</attribute>
+				<attribute key="text" type="String">advanceAllTheWay nearestEnemy</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -122,7 +122,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">6</attribute>
-			<attribute key="label" type="String">stillExists lastOffensiveTarget</attribute>
+			<attribute key="label" type="String">stillExists lastEntAttackedBy me</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">255.0</attribute>
 				<attribute key="y" type="double">60.0</attribute>
@@ -133,7 +133,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">stillExists lastOffensiveTarget</attribute>
+				<attribute key="text" type="String">stillExists lastEntAttackedBy me</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -141,7 +141,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">7</attribute>
-			<attribute key="label" type="String">== distBetween lastOffensiveTarget me 1</attribute>
+			<attribute key="label" type="String">== walkingDistBetween lastEntAttackedBy me me 1</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">547.0</attribute>
 				<attribute key="y" type="double">60.0</attribute>
@@ -152,7 +152,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">== distBetween lastOffensiveTarget me 1</attribute>
+				<attribute key="text" type="String">== walkingDistBetween lastEntAttackedBy me me 1</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -160,7 +160,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">8</attribute>
-			<attribute key="label" type="String">advanceTowards lastOffensiveTarget</attribute>
+			<attribute key="label" type="String">advanceAllTheWay lastEntAttackedBy me</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">900.0</attribute>
 				<attribute key="y" type="double">120.0</attribute>
@@ -171,7 +171,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">advanceTowards lastOffensiveTarget</attribute>
+				<attribute key="text" type="String">advanceAllTheWay lastEntAttackedBy me</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -179,7 +179,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">9</attribute>
-			<attribute key="label" type="String">doBasicAttack lastOffensiveTarget pummel</attribute>
+			<attribute key="label" type="String">doBasicAttack lastEntAttackedBy me pummel</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">570.0</attribute>
 				<attribute key="y" type="double">-180.0</attribute>
@@ -190,7 +190,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">doBasicAttack lastOffensiveTarget pummel</attribute>
+				<attribute key="text" type="String">doBasicAttack lastEntAttackedBy me pummel</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -198,7 +198,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">10</attribute>
-			<attribute key="label" type="String">&lt;= distBetween lastOffensiveTarget me 3</attribute>
+			<attribute key="label" type="String">&lt;= walkingDistBetween lastEntAttackedBy me me 6</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">547.0</attribute>
 				<attribute key="y" type="double">120.0</attribute>
@@ -209,7 +209,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">&lt;= distBetween lastOffensiveTarget me 3</attribute>
+				<attribute key="text" type="String">&lt;= walkingDistBetween lastEntAttackedBy me me 6</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -217,7 +217,7 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">11</attribute>
-			<attribute key="label" type="String">doBasicAttack lastOffensiveTarget diseased_kiss</attribute>
+			<attribute key="label" type="String">doBasicAttack lastEntAttackedBy me diseased_kiss</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">780.0</attribute>
 				<attribute key="y" type="double">-120.0</attribute>
@@ -228,7 +228,7 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">doBasicAttack lastOffensiveTarget diseased_kiss</attribute>
+				<attribute key="text" type="String">doBasicAttack lastEntAttackedBy me diseased_kiss</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -236,18 +236,18 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">12</attribute>
-			<attribute key="label" type="String">&amp;&amp; ! hasCondition lastOffensiveTarget  diseased_kiss > hpCur lastOffensiveTarget 5</attribute>
+			<attribute key="label" type="String">&amp;&amp; ! hasCondition lastEntAttackedBy me diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
 			<section name="graphics">
-				<attribute key="x" type="double">630.0</attribute>
+				<attribute key="x" type="double">643.3977661132812</attribute>
 				<attribute key="y" type="double">-65.0</attribute>
-				<attribute key="w" type="double">516.0</attribute>
+				<attribute key="w" type="double">593.5658569335938</attribute>
 				<attribute key="h" type="double">30.0</attribute>
 				<attribute key="type" type="String">rectangle</attribute>
 				<attribute key="fill" type="String">#FFCC00</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">&amp;&amp; ! hasCondition lastOffensiveTarget  diseased_kiss > hpCur lastOffensiveTarget 5</attribute>
+				<attribute key="text" type="String">&amp;&amp; ! hasCondition lastEntAttackedBy me diseased_kiss > entityStat lastEntAttackedBy me hpCur 5</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -489,11 +489,11 @@
 				<attribute key="targetArrow" type="String">standard</attribute>
 				<section name="Line">
 					<section name="point">
-						<attribute key="x" type="double">630.0</attribute>
+						<attribute key="x" type="double">643.3977661132812</attribute>
 						<attribute key="y" type="double">-65.0</attribute>
 					</section>
 					<section name="point">
-						<attribute key="x" type="double">751.2553100585938</attribute>
+						<attribute key="x" type="double">782.8803100585938</attribute>
 						<attribute key="y" type="double">-92.5</attribute>
 					</section>
 					<section name="point">
@@ -517,6 +517,24 @@
 			<section name="graphics">
 				<attribute key="fill" type="String">#FF0000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
+				<section name="Line">
+					<section name="point">
+						<attribute key="x" type="double">643.3977661132812</attribute>
+						<attribute key="y" type="double">-65.0</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">548.214599609375</attribute>
+						<attribute key="y" type="double">-115.3125</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">547.255126953125</attribute>
+						<attribute key="y" type="double">-115.3125</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">570.0</attribute>
+						<attribute key="y" type="double">-180.0</attribute>
+					</section>
+				</section>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">-0.3207164406776428</attribute>
@@ -530,6 +548,24 @@
 			<section name="graphics">
 				<attribute key="fill" type="String">#00FF00</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
+				<section name="Line">
+					<section name="point">
+						<attribute key="x" type="double">547.0</attribute>
+						<attribute key="y" type="double">60.0</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">547.0</attribute>
+						<attribute key="y" type="double">-2.5</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">547.9210815429688</attribute>
+						<attribute key="y" type="double">-2.5</attribute>
+					</section>
+					<section name="point">
+						<attribute key="x" type="double">643.3977661132812</attribute>
+						<attribute key="y" type="double">-65.0</attribute>
+					</section>
+				</section>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xTarget" type="double">-0.3217054307460785</attribute>

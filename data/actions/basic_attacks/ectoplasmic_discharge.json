@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/discharge.png"
   },
-  "Ap"       : 3,
+  "Ap"       : 4,
   "Strength" : 5,
   "Damage"   : 5,
-  "Range"    : 3
+  "Range"    : 4
 }
