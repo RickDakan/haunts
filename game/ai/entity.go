@@ -15,10 +15,13 @@ func (a *Ai) addEntityContext() {
   a.L.Register("pos", posFunc(a))
   a.L.Register("me", meFunc(a))
   a.L.Register("allPathablePoints", allPathablePointsFunc(a))
-  a.L.Register("rangedDistBetween", rangedDistBetweenFunc(a.ent))
+  a.L.Register("rangedDistBetweenPositions", rangedDistBetweenPositionsFunc(a.ent))
+  a.L.Register("rangedDistBetweenEntities", rangedDistBetweenEntitiesFunc(a.ent))
   a.L.Register("nearestNEntities", nearestNEntitiesFunc(a.ent))
   a.L.Register("getBasicAttackStats", getBasicAttackStatsFunc(a))
+  a.L.Register("getEntityStats", getEntityStatsFunc(a))
   a.L.Register("getConditions", getConditionsFunc(a))
+  a.L.Register("entityInfo", entityInfoFunc(a))
   a.L.Register("doBasicAttack", doBasicAttackFunc(a))
   a.L.Register("doMove", doMoveFunc(a))
   a.L.Register("exists", existsFunc(a))
@@ -87,7 +90,8 @@ func init() {
 // Input:
 // 1 - Integer - Id of an entity.
 // Output:
-// 1 - table[x,y] - Position of the specified entity.
+// 1 - table[x,y] - Position of the specified entity if the entity is in los,
+//     otherwise it will return nil.
 func posFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "pos") {
@@ -100,7 +104,11 @@ func posFunc(a *Ai) lua.GoFunction {
       return 0
     }
     x, y := ent.Pos()
-    putPointToTable(L, x, y)
+    if a.ent.HasLos(x, y, 1, 1) {
+      putPointToTable(L, x, y)
+    } else {
+      L.PushNil()
+    }
     return 1
   }
 }
@@ -167,6 +175,42 @@ func allPathablePointsFunc(a *Ai) lua.GoFunction {
       putPointToTable(L, x, y)
       L.SetTable(-3)
     }
+    return 1
+  }
+}
+
+// Input:
+// 1 - Integer - Id of the entity we are querying
+// Output:
+// 1 - Table - The following keys are populated in the return value:
+//     lastEntityIAttacked: Id of the last entity that this one attacked
+//     lastEntityThatAttackedMe: Id of the last entity to attack this one
+//
+//     Note - Just because an Id is present in the table does not mean that
+//     its corresponding entity still exists, you still need to check that it
+//     exists with the exists() function.
+func entityInfoFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 1, "entityInfo") {
+      return 0
+    }
+    if !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected entityInfo(int)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-1))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    L.NewTable()
+    L.PushString("lastEntityIAttacked")
+    L.PushInteger(int(ent.Info.LastEntThatIAttacked))
+    L.SetTable(-3)
+    L.PushString("lastEntityThatAttackedMe")
+    L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
+    L.SetTable(-3)
     return 1
   }
 }
@@ -277,25 +321,73 @@ func doMoveFunc(a *Ai) lua.GoFunction {
 
 
 // Input:
+// 1 - table[x,y] - One position
+// 2 - table[x,y] - Another position
+// Output:
+// 1 - Integer - The ranged distance between the two positions.
+func rangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 2, "rangedDistBetweenPositions") {
+      return 0
+    }
+    x1, y1 := getPointFromTable(L)
+    L.Pop(1)
+    x2, y2 := getPointFromTable(L)
+    dx := x2 - x1
+    if dx < 0 {
+      dx = -dx
+    }
+    dy := y2 - y1
+    if dy < 0 {
+      dy = -dy
+    }
+    if dx > dy {
+      L.PushInteger(dx)
+    } else {
+      L.PushInteger(dy)
+    }
+    return 1
+  }
+}
+
+// Input:
 // 1 - EntityId - Id of one entity in Los
 // 2 - EntityId - Id another entity in Los
 // Output:
 // 1 - Integer - The ranged distance between the two entities.  If either of
-//     the entities specified are not in los this function will return 10000.
-func rangedDistBetweenFunc(me *game.Entity) lua.GoFunction {
+//     the entities specified are not in los this function will return nil.
+func rangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "rangedDistBetween") {
+    if !luaNumParamsOk(L, 2, "rangedDistBetweenEntities") {
       return 0
     }
     id1 := game.EntityId(L.ToInteger(-2))
     id2 := game.EntityId(L.ToInteger(-1))
     e1 := me.Game().EntityById(id1)
-    e2 := me.Game().EntityById(id2)
-    if e1 == nil || e2 == nil {
-      L.PushInteger(10000)
-    } else {
-      L.PushInteger(rangedDistBetween(e1, e2))
+    if e1 == nil {
+      L.PushNil()
+      return 1
     }
+    x, y := e1.Pos()
+    dx, dy := e1.Dims()
+    if !me.HasLos(x, y, dx, dy) {
+      L.PushNil()
+      return 1
+    }
+    e2 := me.Game().EntityById(id2)
+    if e2 == nil {
+      L.PushNil()
+      return 1
+    }
+
+    x, y = e2.Pos()
+    dx, dy = e2.Dims()
+    if !me.HasLos(x, y, dx, dy) {
+      L.PushNil()
+      return 1
+    }
+
+    L.PushInteger(rangedDistBetween(e1, e2))
     return 1
   }
 }
@@ -350,6 +442,55 @@ func getBasicAttackStatsFunc(a *Ai) lua.GoFunction {
     }
     luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
     return 0
+  }
+}
+
+// Input:
+// 1 - Integer - Entity id of the entity whose action we want to query
+// Output:
+// 1 - Table - Contains a mapping from stat to value of that stat, includes
+//     the following values: corpus, ego, apMax, apCur, hpMax, hpCur
+func getEntityStatsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 1, "getEntityStats") {
+      return 0
+    }
+    if !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getEntityStats(int)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-1))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    if ent.Stats == nil {
+      luaDoError(L, fmt.Sprintf("Tried to query stats for entity with id=%d who doesn't have stats.", id))
+      return 0
+    }
+
+    L.NewTable()
+    L.PushString("corpus")
+    L.PushInteger(ent.Stats.Corpus())
+    L.SetTable(-3)
+    L.PushString("ego")
+    L.PushInteger(ent.Stats.Ego())
+    L.SetTable(-3)
+    L.PushString("hpCur")
+    L.PushInteger(ent.Stats.HpCur())
+    L.SetTable(-3)
+    L.PushString("hpMax")
+    L.PushInteger(ent.Stats.HpMax())
+    L.SetTable(-3)
+    L.PushString("apCur")
+    L.PushInteger(ent.Stats.ApCur())
+    L.SetTable(-3)
+    L.PushString("apMax")
+    L.PushInteger(ent.Stats.ApMax())
+    L.SetTable(-3)
+
+    return 1
   }
 }
 
