@@ -87,11 +87,16 @@ func init() {
   }
 }
 
-// Input:
-// 1 - Integer - Id of an entity.
-// Output:
-// 1 - table[x,y] - Position of the specified entity if the entity is in los,
-//     otherwise it will return nil.
+// Returns the position of the specified entity, which must be in los.
+//    Format:
+//    p = pos(id)
+//
+//    Inputs:
+//    id - integer - Entity id of the entity whose position this should return.
+//
+//    Outputs:
+//    p - table[x,y] - The position of the specified entity, or nil if the
+//                     entity was not in los.
 func PosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "pos") {
@@ -100,8 +105,8 @@ func PosFunc(a *Ai) lua.GoFunction {
     id := game.EntityId(L.ToInteger(-1))
     ent := a.ent.Game().EntityById(id)
     if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to get the position an entity with id=%d who doesn't exist.", id))
-      return 0
+      L.PushNil()
+      return 1
     }
     x, y := ent.Pos()
     if a.ent.HasLos(x, y, 1, 1) {
@@ -114,9 +119,12 @@ func PosFunc(a *Ai) lua.GoFunction {
 }
 
 
-// Input: none
-// Output:
-// 1 - Integer - Id of the entity that this ai controls.
+// Returns the entity id of the entity that is being controlled by this ai.
+//    Format:
+//    myid = me()
+//
+//    Outputs:
+//    myid - integer
 func MeFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 0, "me") {
@@ -127,17 +135,20 @@ func MeFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - table[x,y] - Src, where the path starts from.
-// 2 - table[x,y] - Dst, where the path ends if it goes to distance 0.
-// 3 - Integer - Minimum distance from Dst that a path must end at.
-// 4 - Integer - Maximum distance from Dst that a path must end at.
-// Output:
-// 1 - Table - An array of all of the points that a unit standing at Src can
-//     reach that are at between the specified minimum and maximum distances
-//     from Dst.  Remember that a valid pass cannot cross other entities,
-//     furniture, walls, closed doors, or go out of what your los of the Src
-//     position.
+// Returns an array of all points that can be reached by walking from a
+// specific location that end in a certain general area.  Assumes that a 1x1
+// unit is doing the walking.
+//    Format:
+//    points = allPathablePoints(src, dst, min, max)
+//
+//    Inputs:
+//    src - table[x,y] - Where the path starts.
+//    dst - table[x,y] - Another point near where the path should go.
+//    min - integer    - Minimum distance from dst that the path should end at.
+//    max - integer    - Maximum distance from dst that the path should end at.
+//
+//    Outputs:
+//    points - array[table[x,y]]
 func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 4, "allPathablePoints") {
@@ -179,16 +190,17 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - Integer - Id of the entity we are querying
-// Output:
-// 1 - Table - The following keys are populated in the return value:
-//     lastEntityIAttacked: Id of the last entity that this one attacked
-//     lastEntityThatAttackedMe: Id of the last entity to attack this one
+// Gets some basic persistent data about an entity.
+//    Format:
+//    info = entityInfo(id)
 //
-//     Note - Just because an Id is present in the table does not mean that
-//     its corresponding entity still exists, you still need to check that it
-//     exists with the exists() function.
+//    Inputs:
+//    id - integer - Entity id of some entity
+//
+//    Outputs:
+//    info - table - Table containing the following values:
+//                   lastEntityIAttacked      (integer)
+//                   lastEntityThatAttackedMe (integer)
 func EntityInfoFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "entityInfo") {
@@ -215,14 +227,18 @@ func EntityInfoFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - String - Name of the attack to use
-// 2 - EntityId - Id of the target
-// Output:
-// 1 - Table - If the action was successful a table with the following keys
-//     will be returned:
-//     "Hit": Boolean indicated whether or not the attack hit its target
-//     This table will be nil if the action was invalid for some reason.
+// Performs a basic attack against the specifed target.
+//    Format:
+//    res = doBasicAttack(attack, target)
+//
+//    Inputs:
+//    attack - string  - Name of the attack to use.
+//    target - integer - Entity id of the target of this attack.
+//
+//    Outputs:
+//    res - table - Table containing the following values:
+//                  hit (boolean) - true iff the attack hit its target.
+//                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Do basic attack")
@@ -264,11 +280,21 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - table[table[x,y]] - Array of acceptable destinations
-// 2 - Integer - Maximum ap to spend while doing this move.
-// Output:
-// 1 - table[x,y] - New position of this entity, or nil if the move failed.
+// Performs a move action to the closest one of any of the specifed inputs
+// points.  The movement can be restricted to not spend more than a certain
+// amount of ap.
+//    Format:
+//    p = doMove(dsts, max_ap)
+//
+//    Input:
+//    dsts  - array[table[x,y]] - Array of all points that are acceptable
+//                                destinations.
+//    max_ap - integer - Maxmium ap to spend while doing this move, if the
+//                       required ap exceeds this the entity will still move
+//                       as far as possible towards a destination.
+//
+//    Output:
+//    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "doMove") {
@@ -320,11 +346,16 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 }
 
 
-// Input:
-// 1 - table[x,y] - One position
-// 2 - table[x,y] - Another position
-// Output:
-// 1 - Integer - The ranged distance between the two positions.
+// Computes the ranged distance between two points.
+//    Format:
+//    dist = rangedDistBetweenPositions(p1, p2)
+//
+//    Input:
+//    p1 - table[x,y]
+//    p2 - table[x,y]
+//
+//    Output:
+//    dist - integer - The ranged distance between the two positions.
 func RangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "rangedDistBetweenPositions") {
@@ -350,12 +381,19 @@ func RangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - EntityId - Id of one entity in Los
-// 2 - EntityId - Id another entity in Los
-// Output:
-// 1 - Integer - The ranged distance between the two entities.  If either of
-//     the entities specified are not in los this function will return nil.
+// Computes the ranged distance between two entities.
+//    Format:
+//    dist = rangedDistBetweenEntities(e1, e2)
+//
+//    Input:
+//    e1 - integer - An entity id.
+//    e2 - integer - Another entity id.
+//
+//    Output:
+//    dist - integer - The ranged distance between the two specified entities,
+//                     this will not necessarily be the same as
+//                     rangedDistBetweenPositions(pos(e1), pos(e2)) if at
+//                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "rangedDistBetweenEntities") {
@@ -392,12 +430,21 @@ func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - Integer - Entity id of the entity whose action we want to query
-// 2 - String  - Name of the basic attack
-// Output:
-// 1 - Table - Contains a mapping from stat to value of that stat, includes
-//     the following values: ap, damage, strength, range, ammo
+// Gets some stats about a basic attack.
+//    Format:
+//    stats = getBasicAttackStats(id, name)
+//
+//    Input:
+//    id   - integer - Entity id of the entity with the action to query.
+//    name - string  - Name of the action to query.
+//
+//    Output:
+//    stats - table - Table containing the following values:
+//                    ap       (integer)
+//                    damage   (integer)
+//                    strength (integer)
+//                    range    (integer)
+//                    ammo     (integer)
 func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "getBasicAttackStats") {
@@ -445,11 +492,21 @@ func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - Integer - Entity id of the entity whose action we want to query
-// Output:
-// 1 - Table - Contains a mapping from stat to value of that stat, includes
-//     the following values: corpus, ego, apMax, apCur, hpMax, hpCur
+// Gets some stats about an entity.
+//    Format:
+//    stats = getBasicAttackStats(id)
+//
+//    Input:
+//    id   - integer - Entity id of the entity to query.
+//
+//    Output:
+//    stats - table - Table containing the following values:
+//                    corpus (integer)
+//                    ego    (integer)
+//                    hpCur  (integer)
+//                    hpMax  (integer)
+//                    apCur  (integer)
+//                    apMax  (integer)
 func GetEntityStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "getEntityStats") {
@@ -494,11 +551,17 @@ func GetEntityStatsFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - Integer - Entity id of the entity whose conditions we want to know.
-// Output:
-// 1 - Table - Contains a mapping from condition name to a boolean value that
-//     is set to true.
+// Returns a list of all conditions affecting an entity.
+//    Format:
+//    conditions = getConditions(id)
+//
+//    Input:
+//    id - integer - Entity id of the entity whose conditions to query.
+//
+//    Output:
+//    conditions - table - Contains a mapping from name to a true boolean for
+//                         every condition currently affecting the specified
+//                         entity.
 func GetConditionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "getConditions") {
@@ -524,10 +587,16 @@ func GetConditionsFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Input:
-// 1 - Integer - Entity id of the entity whose existence we are querying.
-// Output:
-// 1 - Boolean - True if the entity exists.
+// Queries whether or not an entity still exists.  An entity existing implies
+// that it currently alive.
+//    Format:
+//    e = exists(id)
+//
+//    Input:
+//    id - integer - Entity id of the entity whose existence we are querying.
+//
+//    Output:
+//    e - boolean - True if the entity exists and has positive hp.
 func ExistsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "exists") {
@@ -539,21 +608,26 @@ func ExistsFunc(a *Ai) lua.GoFunction {
     }
     id := game.EntityId(L.ToInteger(-1))
     ent := a.ent.Game().EntityById(id)
-    L.PushBoolean(ent != nil)
+    l.PushBoolean(ent != nil && ent.Stats != nil && ent.Stats.HpCur() > 0)
     return 1
   }
 }
 
-// Input:
-// 1 - Integer - Maximum number of entities to return
-// 2 - String  - One of "intruder" "denizen" "minion" "servitor" "master"
-//     "non-minion" "non-servitor" "non-master"
-//     The "non-*" parameters indicate denizens only (i.e. will *not* include
-//     intruders) that are not of the type specified.
-// Output:
-// 1 - Table - Contains a mapping from index to entity Id, sorted in ascending
-//     order of distance from the entity that called this function.  Only ents
-//     that this unit has los to will be included in the output.
+// Returns an array of all entities of a specified type that are in this
+// entity's los.  The entities in the array will be sorted in ascending order
+// of distance from this entity.
+//    Format
+//    ents = nearestNEntites(max, kind)
+//
+//    Input:
+//    max  - integer - Maximum number of entities to return
+//    kind - string  - One of "intruder" "denizen" "minion" "servitor"
+//                     "master" "non-minion" "non-servitor" "non-master" and
+//                     "all".  The "non-*" parameters indicate denizens only
+//                     (i.e. will *not* include intruders) that are not of the
+//                     type specified.
+//    Output:
+//    ents - array[integer] - Array of entity ids.
 func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
   valid_kinds := map[string]bool {
     "intruder": true,
@@ -564,6 +638,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     "non-minion": true,
     "non-servitor": true,
     "non-master": true,
+    "all" : true,
   }
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "nearestNEntities") {
@@ -581,7 +656,9 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     }
     var eds entityDistSlice
     for _, ent := range g.Ents {
+      if ent.Stats == nil { continue }
       switch kind {
+      case "all":
       case "intruder":
         if ent.Side() != game.SideExplorers { continue }
       case "denizen":
