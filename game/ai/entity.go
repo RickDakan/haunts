@@ -21,6 +21,7 @@ func (a *Ai) addEntityContext() {
   a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
   a.L.Register("getEntityStats", GetEntityStatsFunc(a))
   a.L.Register("getConditions", GetConditionsFunc(a))
+  a.L.Register("getActions", GetActionsFunc(a))
   a.L.Register("entityInfo", EntityInfoFunc(a))
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
   a.L.Register("doMove", DoMoveFunc(a))
@@ -430,7 +431,9 @@ func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   }
 }
 
-// Gets some stats about a basic attack.
+// Gets some stats about a basic attack.  If the specified action is not a
+// basic attack this function will return nil.  It is an error to query an
+// entity for an action that it does not have.
 //    Format:
 //    stats = getBasicAttackStats(id, name)
 //
@@ -465,8 +468,9 @@ func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
       if action.String() == name {
         attack, ok := action.(*actions.BasicAttack)
         if !ok {
-          luaDoError(L, fmt.Sprintf("%s is not a BasicAttack", name))
-          return 0
+          // It's not a basic attack, that's ok but we have to return nil.
+          L.PushNil()
+          return 1
         }
         L.NewTable()
         L.PushString("ap")
@@ -587,6 +591,41 @@ func GetConditionsFunc(a *Ai) lua.GoFunction {
   }
 }
 
+// Returns a list of all actions that an entity has.
+//    Format:
+//    actions = getActions(id)
+//
+//    Input:
+//    id - integer - Entity id of the entity whose actions to query.
+//
+//    Output:
+//    actions - table - Contains a mapping from name to a true boolean for
+//                      every action that the specified entity has.
+func GetActionsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 1, "getActions") {
+      return 0
+    }
+    if !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getActions(int)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-1))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    L.NewTable()
+    for _, action := range ent.Actions {
+      L.PushString(action.String())
+      L.PushBoolean(true)
+      L.SetTable(-3)
+    }
+    return 1
+  }
+}
+
 // Queries whether or not an entity still exists.  An entity existing implies
 // that it currently alive.
 //    Format:
@@ -608,7 +647,7 @@ func ExistsFunc(a *Ai) lua.GoFunction {
     }
     id := game.EntityId(L.ToInteger(-1))
     ent := a.ent.Game().EntityById(id)
-    l.PushBoolean(ent != nil && ent.Stats != nil && ent.Stats.HpCur() > 0)
+    L.PushBoolean(ent != nil && ent.Stats != nil && ent.Stats.HpCur() > 0)
     return 1
   }
 }
