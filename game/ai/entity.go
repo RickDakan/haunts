@@ -12,19 +12,19 @@ import (
 )
 
 func (a *Ai) addEntityContext() {
-  a.L.Register("pos", posFunc(a))
-  a.L.Register("me", meFunc(a))
-  a.L.Register("allPathablePoints", allPathablePointsFunc(a))
-  a.L.Register("rangedDistBetweenPositions", rangedDistBetweenPositionsFunc(a.ent))
-  a.L.Register("rangedDistBetweenEntities", rangedDistBetweenEntitiesFunc(a.ent))
-  a.L.Register("nearestNEntities", nearestNEntitiesFunc(a.ent))
-  a.L.Register("getBasicAttackStats", getBasicAttackStatsFunc(a))
-  a.L.Register("getEntityStats", getEntityStatsFunc(a))
-  a.L.Register("getConditions", getConditionsFunc(a))
-  a.L.Register("entityInfo", entityInfoFunc(a))
-  a.L.Register("doBasicAttack", doBasicAttackFunc(a))
-  a.L.Register("doMove", doMoveFunc(a))
-  a.L.Register("exists", existsFunc(a))
+  a.L.Register("pos", PosFunc(a))
+  a.L.Register("me", MeFunc(a))
+  a.L.Register("allPathablePoints", AllPathablePointsFunc(a))
+  a.L.Register("rangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a.ent))
+  a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a.ent))
+  a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
+  a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
+  a.L.Register("getEntityStats", GetEntityStatsFunc(a))
+  a.L.Register("getConditions", GetConditionsFunc(a))
+  a.L.Register("entityInfo", EntityInfoFunc(a))
+  a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
+  a.L.Register("doMove", DoMoveFunc(a))
+  a.L.Register("exists", ExistsFunc(a))
 }
 
 type entityDist struct {
@@ -92,7 +92,7 @@ func init() {
 // Output:
 // 1 - table[x,y] - Position of the specified entity if the entity is in los,
 //     otherwise it will return nil.
-func posFunc(a *Ai) lua.GoFunction {
+func PosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "pos") {
       return 0
@@ -117,7 +117,7 @@ func posFunc(a *Ai) lua.GoFunction {
 // Input: none
 // Output:
 // 1 - Integer - Id of the entity that this ai controls.
-func meFunc(a *Ai) lua.GoFunction {
+func MeFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 0, "me") {
       return 0
@@ -138,7 +138,7 @@ func meFunc(a *Ai) lua.GoFunction {
 //     from Dst.  Remember that a valid pass cannot cross other entities,
 //     furniture, walls, closed doors, or go out of what your los of the Src
 //     position.
-func allPathablePointsFunc(a *Ai) lua.GoFunction {
+func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 4, "allPathablePoints") {
       return 0
@@ -189,7 +189,7 @@ func allPathablePointsFunc(a *Ai) lua.GoFunction {
 //     Note - Just because an Id is present in the table does not mean that
 //     its corresponding entity still exists, you still need to check that it
 //     exists with the exists() function.
-func entityInfoFunc(a *Ai) lua.GoFunction {
+func EntityInfoFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "entityInfo") {
       return 0
@@ -223,7 +223,7 @@ func entityInfoFunc(a *Ai) lua.GoFunction {
 //     will be returned:
 //     "Hit": Boolean indicated whether or not the attack hit its target
 //     This table will be nil if the action was invalid for some reason.
-func doBasicAttackFunc(a *Ai) lua.GoFunction {
+func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Do basic attack")
     if !luaNumParamsOk(L, 2, "doBasicAttack") {
@@ -269,7 +269,7 @@ func doBasicAttackFunc(a *Ai) lua.GoFunction {
 // 2 - Integer - Maximum ap to spend while doing this move.
 // Output:
 // 1 - table[x,y] - New position of this entity, or nil if the move failed.
-func doMoveFunc(a *Ai) lua.GoFunction {
+func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "doMove") {
       return 0
@@ -325,7 +325,7 @@ func doMoveFunc(a *Ai) lua.GoFunction {
 // 2 - table[x,y] - Another position
 // Output:
 // 1 - Integer - The ranged distance between the two positions.
-func rangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
+func RangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "rangedDistBetweenPositions") {
       return 0
@@ -356,7 +356,7 @@ func rangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
 // Output:
 // 1 - Integer - The ranged distance between the two entities.  If either of
 //     the entities specified are not in los this function will return nil.
-func rangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
+func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "rangedDistBetweenEntities") {
       return 0
@@ -398,7 +398,7 @@ func rangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
 // Output:
 // 1 - Table - Contains a mapping from stat to value of that stat, includes
 //     the following values: ap, damage, strength, range, ammo
-func getBasicAttackStatsFunc(a *Ai) lua.GoFunction {
+func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 2, "getBasicAttackStats") {
       return 0
@@ -450,7 +450,7 @@ func getBasicAttackStatsFunc(a *Ai) lua.GoFunction {
 // Output:
 // 1 - Table - Contains a mapping from stat to value of that stat, includes
 //     the following values: corpus, ego, apMax, apCur, hpMax, hpCur
-func getEntityStatsFunc(a *Ai) lua.GoFunction {
+func GetEntityStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "getEntityStats") {
       return 0
@@ -499,7 +499,7 @@ func getEntityStatsFunc(a *Ai) lua.GoFunction {
 // Output:
 // 1 - Table - Contains a mapping from condition name to a boolean value that
 //     is set to true.
-func getConditionsFunc(a *Ai) lua.GoFunction {
+func GetConditionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "getConditions") {
       return 0
@@ -528,7 +528,7 @@ func getConditionsFunc(a *Ai) lua.GoFunction {
 // 1 - Integer - Entity id of the entity whose existence we are querying.
 // Output:
 // 1 - Boolean - True if the entity exists.
-func existsFunc(a *Ai) lua.GoFunction {
+func ExistsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaNumParamsOk(L, 1, "exists") {
       return 0
@@ -554,7 +554,7 @@ func existsFunc(a *Ai) lua.GoFunction {
 // 1 - Table - Contains a mapping from index to entity Id, sorted in ascending
 //     order of distance from the entity that called this function.  Only ents
 //     that this unit has los to will be included in the output.
-func nearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
+func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
   valid_kinds := map[string]bool {
     "intruder": true,
     "denizen": true,
