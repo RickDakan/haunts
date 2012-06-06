@@ -17,6 +17,7 @@ func (a *Ai) addEntityContext() {
   a.L.Register("allPathablePoints", allPathablePointsFunc(a))
   a.L.Register("rangedDistBetween", rangedDistBetweenFunc(a.ent))
   a.L.Register("nearestNEntities", nearestNEntitiesFunc(a.ent))
+  a.L.Register("getBasicAttackStats", getBasicAttackStatsFunc(a))
   a.L.Register("doBasicAttack", doBasicAttackFunc(a))
   a.L.Register("doMove", doMoveFunc(a))
 }
@@ -294,6 +295,59 @@ func rangedDistBetweenFunc(me *game.Entity) lua.GoFunction {
       L.PushInteger(rangedDistBetween(e1, e2))
     }
     return 1
+  }
+}
+
+// Input:
+// 1 - Integer - Entity id of the entity whose action we want to query
+// 2 - String  - Name of the basic attack
+// Output:
+// 1 - Table - Contains a mapping from stat to value of that stat, includes
+//     the following values: ap, damage, strength, range, ammo
+func getBasicAttackStatsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 2, "getBasicAttackStats") {
+      return 0
+    }
+    if !L.IsNumber(-2) || !L.IsString(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getBasicAttackStats(int, string)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-2))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    name := L.ToString(-1)
+    for _, action := range ent.Actions {
+      if action.String() == name {
+        attack, ok := action.(*actions.BasicAttack)
+        if !ok {
+          luaDoError(L, fmt.Sprintf("%s is not a BasicAttack", name))
+          return 0
+        }
+        L.NewTable()
+        L.PushString("ap")
+        L.PushInteger(attack.Ap)
+        L.SetTable(-3)
+        L.PushString("damage")
+        L.PushInteger(attack.Damage)
+        L.SetTable(-3)
+        L.PushString("strength")
+        L.PushInteger(attack.Strength)
+        L.SetTable(-3)
+        L.PushString("range")
+        L.PushInteger(attack.Range)
+        L.SetTable(-3)
+        L.PushString("ammo")
+        L.PushInteger(attack.Ammo)
+        L.SetTable(-3)
+        return 1
+      }
+    }
+    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
+    return 0
   }
 }
 
