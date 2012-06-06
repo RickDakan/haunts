@@ -257,7 +257,10 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
+    base.Log().Printf("Finished basic attack")
     return game.Complete
+  } else {
+    base.Log().Printf("Waiting: %s %s", a.ent.Sprite().State(), a.target.Sprite().State())
   }
   return game.InProgress
 }

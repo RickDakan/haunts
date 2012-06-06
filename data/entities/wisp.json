@@ -20,5 +20,6 @@
     "Corpus": 7,
     "Ego": 7,
     "Sight": 15
-  }
+  },
+  "Ai_path": "ais/wisp.lua"
 }

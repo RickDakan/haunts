@@ -18,6 +18,7 @@ func (a *Ai) addEntityContext() {
   a.L.Register("rangedDistBetween", rangedDistBetweenFunc(a.ent))
   a.L.Register("nearestNEntities", nearestNEntitiesFunc(a.ent))
   a.L.Register("doBasicAttack", doBasicAttackFunc(a))
+  a.L.Register("doMove", doMoveFunc(a))
 }
 
 type entityDist struct {
@@ -146,9 +147,10 @@ func allPathablePointsFunc(a *Ai) lua.GoFunction {
     a.ent.Game().DetermineLos(x2, y2, max, grid)
     var dst []int
     for x := x2 - max; x <= x2 + max; x++ {
-      if x > x2 - min && x < x2 + min { continue }
       for y := y2 - max; y <= y2 + max; y++ {
-        if y > y2 - min && y < y2 + min { continue }
+        if x > x2 - min && x < x2 + min && y > y2 - min && y < y2 + min {
+          continue
+        }
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
@@ -176,6 +178,7 @@ func allPathablePointsFunc(a *Ai) lua.GoFunction {
 //     This table will be nil if the action was invalid for some reason.
 func doBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
+    base.Log().Printf("Do basic attack")
     if !luaNumParamsOk(L, 2, "doBasicAttack") {
       return 0
     }
@@ -192,6 +195,7 @@ func doBasicAttackFunc(a *Ai) lua.GoFunction {
       luaDoError(L, fmt.Sprintf("Tried to target entity with id=%d who doesn't exist.", id))
       return 0
     }
+    base.Log().Printf("Do basic attack - should execute at this point")
     attack := action.(*actions.BasicAttack)
     exec := attack.AiAttackTarget(me, target)
     if exec != nil {
@@ -207,6 +211,61 @@ func doBasicAttackFunc(a *Ai) lua.GoFunction {
         L.SetTable(-3)
       }
     } else {
+      L.PushNil()
+    }
+    return 1
+  }
+}
+
+// Input:
+// 1 - table[table[x,y]] - Array of acceptable destinations
+// 2 - Integer - Maximum ap to spend while doing this move.
+// Output:
+// 1 - table[x,y] - New position of this entity, or nil if the move failed.
+func doMoveFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 2, "doMove") {
+      return 0
+    }
+    if !L.IsTable(-2) || !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected doMove(table, int)"))
+      return 0
+    }
+    me := a.ent
+    max_ap := L.ToInteger(-1)
+    L.Pop(1)
+    n := int(L.ObjLen(-1))
+    dsts := make([]int, n)[0:0]
+    for i := 1; i <= n; i++ {
+      L.PushInteger(i)
+      L.GetTable(-2)
+      x, y := getPointFromTable(L)
+      dsts = append(dsts, me.Game().ToVertex(x, y))
+      L.Pop(1)
+    }
+    var move *actions.Move
+    var ok bool
+    for i := range me.Actions {
+      move, ok = me.Actions[i].(*actions.Move)
+      if ok {
+        break
+      }
+    }
+    if !ok {
+      // TODO: what to do here?  This poor guy didn't have a move action :(
+      L.PushNil()
+      return 1
+    }
+    exec := move.AiMoveToPos(me, dsts, max_ap)
+    if exec != nil {
+      a.execs <- exec
+      <-a.pause
+      // TODO: Need to get a resolution
+      x, y := me.Pos()
+      putPointToTable(L, x, y)
+      base.Log().Printf("Finished move")
+    } else {
+      base.Log().Printf("Didn't bother moving")
       L.PushNil()
     }
     return 1

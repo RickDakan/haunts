@@ -95,12 +95,12 @@ func (a *Move) Readyable() bool {
 func limitPath(g *game.Game, start int, path []int, max int) []int {
   total := 0
   graph := g.Graph(nil)
-  for last := 0; last < len(path); last++ {
+  for last := 1; last < len(path); last++ {
     adj,cost := graph.Adjacent(start)
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total > max {
+        if total >= max {
           return path[0 : last]
         }
         start = adj[index]
@@ -109,6 +109,26 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
     }
   }
   return path
+}
+
+func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionExec {
+  graph := ent.Game().Graph(nil)
+  src := []int{ent.Game().ToVertex(ent.Pos())}
+  _, path := algorithm.Dijkstra(graph, src, dst)
+  if path == nil {
+    return nil
+  }
+  if ent.Stats.ApCur() < max_ap {
+    max_ap = ent.Stats.ApCur()
+  }
+  path = limitPath(ent.Game(), src[0], path, max_ap)
+  if len(path) <= 1 {
+    return nil
+  }
+  var exec moveExec
+  exec.SetBasicData(ent, a)
+  exec.Dst = path[len(path)-1]
+  return exec
 }
 
 // Attempts to move such that the shortest path from any location
@@ -268,6 +288,7 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
     }
     if a.cost > a.ent.Stats.ApCur() {
       base.Error().Printf("Got a move that required more ap than available: %v", exec)
+      base.Error().Printf("Path: %v", a.path)
       return game.Complete
     }
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
