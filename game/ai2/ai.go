@@ -1,6 +1,7 @@
 package ai2
 
 import (
+  "math/rand"
   "fmt"
   "encoding/gob"
   "io/ioutil"
@@ -76,13 +77,15 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
 
   switch kind {
   case game.EntityAi:
+    base.Log().Printf("Adding entity context for %s", ent.Name)
     ai_struct.addEntityContext()
 
   case game.MinionsAi:
     ai_struct.addMinionsContext()
 
   case game.DenizensAi:
-    // ai_struct.addDenizensContext(g)
+    base.Log().Printf("Adding denizens context")
+    ai_struct.addDenizensContext()
 
   case game.IntrudersAi:
     // ai_struct.addIntrudersContext(g)
@@ -99,6 +102,16 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     }
     base.Log().Printf("Ai(%p): %s", ai_struct, res)
     return 0
+  })
+  ai_struct.L.Register("randN", func(L *lua.State) int {
+    n := L.GetTop()
+    if n == 0 || !L.IsNumber(-1) {
+      L.PushInteger(0)
+      return 1
+    }
+    val := L.ToInteger(-1)
+    L.PushInteger(rand.Intn(val) + 1)
+    return 1
   })
 
   go ai_struct.masterRoutine()

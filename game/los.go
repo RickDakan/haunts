@@ -640,8 +640,8 @@ func (g *Game) setup() {
   g.MergeLos(g.Ents)
 
   ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
+  ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
   g.explorers_ai = inactiveAi{}
-  g.haunts_ai = inactiveAi{}
   // if g.Human == SideExplorers {
   //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
   //   g.explorers_ai = inactiveAi{}

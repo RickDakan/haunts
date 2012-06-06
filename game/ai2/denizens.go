@@ -1,46 +1,71 @@
 package ai2
 
-// import (
-//   "math/rand"
-//   "github.com/runningwild/haunts/base"
-//   "github.com/runningwild/haunts/game"
-//   "github.com/runningwild/polish"
-// )
+import (
+  "fmt"
+  // "github.com/runningwild/haunts/game/actions"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/game"
+  // "github.com/runningwild/haunts/house"
+  lua "github.com/xenith-studios/golua"
+)
 
-// func (a *Ai) addDenizensContext(g *game.Game) {
-//   polish.AddFloat64MathContext(a.graph.Context)
-//   polish.AddBooleanContext(a.graph.Context)
-//   a.graph.Context.SetParseOrder(polish.Float, polish.String)
-//   a.addCommonContext(g)
-//   a.addHigherContext(g)
+func (a *Ai) addDenizensContext() {
+  a.L.Register("activeNonMinions", activeNonMinionsFunc(a))
+  a.L.Register("execNonMinion", execNonMinionFunc(a))
+}
 
-//   // Returns the number of servitors that have not completed their turn
-//   a.graph.Context.AddFunc("numActiveServitors", func() float64 {
-//     count := 0.0
-//     for _, e := range a.game.Ents {
-//       if e.Side() != game.SideHaunt { continue }
-//       if e.HauntEnt.Level != game.LevelServitor { continue }
-//       if !e.Ai.Active() { continue }
-//       count++
-//     }
-//     return count
-//   })
+// Input:
+//   None
+// Output:
+// 1 - Table - Contains a mapping from index to entity Id of all active
+//     non-minions.
+func activeNonMinionsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    base.Log().Printf("Acing non minions")
+    if !luaNumParamsOk(L, 0, "activeNonMinions") {
+      return 0
+    }
+    L.NewTable()
+    count := 0
+    for _, ent := range a.game.Ents {
+      if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
+      base.Log().Printf("Servitor: %s", ent.Name)
+      if !ent.Ai.Active() { continue }
+      base.Log().Printf("Is active")
+      count++
+      L.PushInteger(count)
+      L.PushInteger(int(ent.Id))
+      L.SetTable(-3)
+    }
+    return 1
+  }
+}
 
-//   // Returns a random active servitor
-//   a.graph.Context.AddFunc("randomActiveServitor", func() *game.Entity {
-//     var ent *game.Entity
-//     count := 1.0
-//     for _, e := range a.game.Ents {
-//       if e.Side() != game.SideHaunt { continue }
-//       if e.HauntEnt.Level != game.LevelServitor { continue }
-//       if !e.Ai.Active() { continue }
-//       if rand.Float64() < 1.0 / count {
-//         ent = e
-//       }
-//       count++
-//     }
-//     base.Log().Printf("Selected %s (%p)", ent.Name, ent)
-//     return ent
-//   })
-// }
-
+func execNonMinionFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    base.Log().Printf("Exec non-minion")
+    if !luaNumParamsOk(L, 1, "execNonMinion") {
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(0))
+    ent := a.game.EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which doesn't exist.", id))
+      return 0
+    }
+    if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
+      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is a minion.", id))
+      return 0
+    }
+    if !ent.Ai.Active() {
+      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is not active.", id))
+      return 0
+    }
+    exec := <-ent.Ai.ActionExecs()
+    if exec != nil {
+      a.execs <- exec
+    }
+    <-a.pause
+    return 0
+  }
+}

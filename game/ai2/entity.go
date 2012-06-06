@@ -18,8 +18,10 @@ func (a *Ai) addEntityContext() {
   a.L.Register("rangedDistBetween", rangedDistBetweenFunc(a.ent))
   a.L.Register("nearestNEntities", nearestNEntitiesFunc(a.ent))
   a.L.Register("getBasicAttackStats", getBasicAttackStatsFunc(a))
+  a.L.Register("getConditions", getConditionsFunc(a))
   a.L.Register("doBasicAttack", doBasicAttackFunc(a))
   a.L.Register("doMove", doMoveFunc(a))
+  a.L.Register("exists", existsFunc(a))
 }
 
 type entityDist struct {
@@ -348,6 +350,56 @@ func getBasicAttackStatsFunc(a *Ai) lua.GoFunction {
     }
     luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
     return 0
+  }
+}
+
+// Input:
+// 1 - Integer - Entity id of the entity whose conditions we want to know.
+// Output:
+// 1 - Table - Contains a mapping from condition name to a boolean value that
+//     is set to true.
+func getConditionsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 1, "getConditions") {
+      return 0
+    }
+    if !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getConditions(int)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-1))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    L.NewTable()
+    for _, condition := range ent.Stats.ConditionNames() {
+      L.PushString(condition)
+      L.PushBoolean(true)
+      L.SetTable(-3)
+    }
+    return 1
+  }
+}
+
+// Input:
+// 1 - Integer - Entity id of the entity whose existence we are querying.
+// Output:
+// 1 - Boolean - True if the entity exists.
+func existsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaNumParamsOk(L, 1, "exists") {
+      return 0
+    }
+    if !L.IsNumber(-1) {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected exists(int)"))
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-1))
+    ent := a.ent.Game().EntityById(id)
+    L.PushBoolean(ent != nil)
+    return 1
   }
 }
 
