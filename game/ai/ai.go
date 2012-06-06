@@ -1,26 +1,26 @@
 package ai
 
 import (
-  "strings"
   "math/rand"
-  "reflect"
+  "fmt"
   "encoding/gob"
-  "github.com/runningwild/glop/ai"
-  "github.com/runningwild/glop/util/algorithm"
+  "io/ioutil"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
-  "github.com/runningwild/polish"
-  "github.com/runningwild/yedparse"
+  lua "github.com/xenith-studios/golua"
 )
 
 // The Ai struct contains a glop.AiGraph object as well as a few channels for
 // communicating with the game itself.
 type Ai struct {
-  graph   *ai.AiGraph
+  L *lua.State
 
   game *game.Game
 
   ent *game.Entity
+
+  // The actual lua program to run when executing this ai
+  Prog string
 
   // new stuff
 
@@ -31,6 +31,7 @@ type Ai struct {
   active_set chan bool
   active_query chan bool
   exec_query chan struct{}
+  terminate chan struct{}
 
   // Once we send an Action for execution we have to wait until it is done
   // before we make the next one.  This channel is used to handle that.
@@ -46,7 +47,7 @@ type Ai struct {
 
 func init() {
   gob.Register(&Ai{})
-  // game.SetAiMaker(makeAi)
+  game.SetAiMaker(makeAi)
 }
 
 func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kind game.AiKind) {
@@ -56,48 +57,65 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   } else {
     ai_struct = (*dst_iface).(*Ai)
   }
-  ai_graph := ai.NewGraph()
-  graph,err := yed.ParseFromFile(path)
+  prog, err := ioutil.ReadFile(path)
   if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err.Error())
+    base.Error().Printf("Unable to load ai file %s: %v", path, err)
+    return
   }
-  ai_graph.Graph = &graph.Graph
-  ai_graph.Context = polish.MakeContext()
+  ai_struct.Prog = string(prog)
   ai_struct.ent = ent
-  ai_struct.graph = ai_graph
   ai_struct.game = g
+  ai_struct.L = lua.NewState();
+  ai_struct.L.OpenLibs();
 
   ai_struct.active_set = make(chan bool)
   ai_struct.active_query = make(chan bool)
   ai_struct.exec_query = make(chan struct{})
   ai_struct.pause = make(chan struct{})
+  ai_struct.terminate = make(chan struct{})
   ai_struct.execs = make(chan game.ActionExec)
 
   switch kind {
   case game.EntityAi:
-    ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
+    base.Log().Printf("Adding entity context for %s", ent.Name)
+    ai_struct.addEntityContext()
 
   case game.MinionsAi:
-    ai_struct.addMinionsContext(g)
+    ai_struct.addMinionsContext()
 
   case game.DenizensAi:
-    ai_struct.addDenizensContext(g)
+    base.Log().Printf("Adding denizens context")
+    ai_struct.addDenizensContext()
 
   case game.IntrudersAi:
-    ai_struct.addIntrudersContext(g)
+    // ai_struct.addIntrudersContext(g)
 
   default:
     panic("Unknown ai kind")
   }
+  // Add this to all contexts
+  ai_struct.L.Register("print", func(L *lua.State) int {
+    var res string
+    n := L.GetTop()
+    for i := -n; i < 0; i++ {
+      res += L.ToString(i) + " "
+    }
+    base.Log().Printf("Ai(%p): %s", ai_struct, res)
+    return 0
+  })
+  ai_struct.L.Register("randN", func(L *lua.State) int {
+    n := L.GetTop()
+    if n == 0 || !L.IsNumber(-1) {
+      L.PushInteger(0)
+      return 1
+    }
+    val := L.ToInteger(-1)
+    L.PushInteger(rand.Intn(val) + 1)
+    return 1
+  })
+
   go ai_struct.masterRoutine()
   *dst_iface = ai_struct
-}
-
-// Used to indicate a position on the board
-type Pos struct {
-  // Floor int
-  X, Y int
 }
 
 // Need a goroutine for each ai - all things will go through is so that things
@@ -105,6 +123,10 @@ type Pos struct {
 func (a *Ai) masterRoutine() {
   for {
     select {
+    case <-a.terminate:
+      base.Log().Printf("Terminated Ai(p=%p)", a)
+      return
+
     case a.active = <-a.active_set:
       if a.active {
         <-a.active_set
@@ -136,35 +158,21 @@ func (a *Ai) masterRoutine() {
       if a.active && !a.evaluating {
         a.evaluating = true
         go func() {
-          var cont func() bool
           if a.ent == nil {
             base.Log().Printf("Eval master")
-            cont = func() bool { return true }
           } else {
             base.Log().Printf("Eval ent: %p", a.ent)
-            cur_ap := a.ent.Stats.ApCur()
-            cont = func() bool {
-              if cur_ap == a.ent.Stats.ApCur() {
-                return false
-              }
-              cur_ap = a.ent.Stats.ApCur()
-              return true
-            }
           }
-          labels, err := a.graph.Eval(10, cont)
+          base.Log().Printf("Evaluating lua script: %s", a.Prog)
+          // Reset the execution limit in case it was set to 0 due to a
+          // previous error
+          a.L.SetExecutionLimit(25000)
+          res := a.L.DoString(a.Prog)
+          base.Log().Printf("Res: %t", res)
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {
             base.Log().Printf("Completed ent: %p", a.ent)
-          }
-          for i := range labels {
-            base.Log().Printf("Execed: %s", labels[i])
-          }
-          if err != nil {
-            base.Warn().Printf("%v", err)
-            if e, ok := err.(*polish.Error); ok {
-              base.Warn().Printf("%s", e.Stack)
-            }
           }
           a.active_set <- false
           a.active_set <- false
@@ -174,6 +182,10 @@ func (a *Ai) masterRoutine() {
       }
     }
   }
+}
+
+func (a *Ai) Terminate() {
+  a.terminate <- struct{}{}
 }
 
 func (a *Ai) Activate() {
@@ -194,32 +206,23 @@ func (a *Ai) ActionExecs() <-chan game.ActionExec {
   return a.execs
 }
 
-// Does the roll dice-d-sides, like 3d6, and returns the result
-func roll(dice, sides float64) float64 {
-  result := 0
-  for i := 0; i < int(dice); i++ {
-    result += rand.Intn(int(sides)) + 1
-  }
-  return float64(result)
+func luaDoError(L *lua.State, err_str string) {
+  base.Error().Printf(err_str)
+  L.PushString(err_str)
+  L.SetExecutionLimit(1)
 }
 
-func walkingDistBetween(e1,e2 *game.Entity) float64 {
-    base.Log().Printf("Minion: walkingDistBetween")
-  if e1 == e2 {
-    return 0
+func luaNumParamsOk(L *lua.State, num_params int, name string) bool {
+  n := L.GetTop()
+  if n != num_params {
+    err_str := fmt.Sprintf("%s expects exactly %d parameters, got %d.", name, num_params, n)
+    luaDoError(L, err_str)
+    return false
   }
-  graph := e1.Game().Graph([]*game.Entity{e1, e2})
-  dv := e1.Game().ToVertex(e2.Pos())
-  sv := e1.Game().ToVertex(e1.Pos())
-  cost, _ := algorithm.Dijkstra(graph, []int{sv}, []int{dv})
-  if cost == -1 {
-    return 1e9
-  }
-  return cost
+  return true
 }
 
-func rangedDistBetween(e1,e2 *game.Entity) float64 {
-    base.Log().Printf("Minion: rangedDistBetween")
+func rangedDistBetween(e1,e2 *game.Entity) int {
   e1x,e1y := e1.Pos()
   e2x,e2y := e2.Pos()
   dx := e1x - e2x
@@ -227,52 +230,8 @@ func rangedDistBetween(e1,e2 *game.Entity) float64 {
   if dx < 0 { dx = -dx }
   if dy < 0 { dy = -dy }
   if dx > dy {
-    return float64(dx)
+    return dx
   }
-  return float64(dy)
+  return dy
 }
 
-func nearestEntity(e *game.Entity, side game.Side) *game.Entity {
-  var nearest *game.Entity
-  cur_dist := 1.0e9
-  for _,ent := range e.Game().Ents {
-    if ent == e { continue }
-    if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
-    if ent.Side() != side { continue }
-    dist := walkingDistBetween(e, ent)
-    if cur_dist > dist {
-      cur_dist = dist
-      nearest = ent
-    }
-  }
-  base.Log().Printf("Best walking dist: %f -> %s %dhp", cur_dist, nearest.Name, nearest.Stats.HpCur())
-  return nearest
-}
-
-func lowerAndUnderscore(s string) string {
-  b := []byte(strings.ToLower(s))
-  for i := range b {
-    if b[i] == ' ' {
-      b[i] = '_'
-    }
-  }
-  return string(b)
-}
-
-func getActionByName(e *game.Entity, name string) game.Action {
-  for _,action := range e.Actions {
-    if lowerAndUnderscore(action.String()) == name {
-      return action
-    }
-  }
-  return nil
-}
-
-func getActionName(e *game.Entity, typ reflect.Type) string {
-  for _,action := range e.Actions {
-    if reflect.TypeOf(action) == typ {
-      return lowerAndUnderscore(action.String())
-    }
-  }
-  return ""
-}
