@@ -206,6 +206,59 @@ func (a *Ai) ActionExecs() <-chan game.ActionExec {
   return a.execs
 }
 
+type luaType int
+const(
+  luaInteger luaType = iota
+  luaString
+  luaTable
+)
+
+func makeLuaSigniature(name string, params []luaType) string {
+  sig := name + "("
+  for i := range params {
+    switch params[i] {
+    case luaInteger:
+      sig += "integer"
+    case luaString:
+      sig += "string"
+    case luaTable:
+      sig += "table"
+    default:
+      sig += "<unknown type>"
+    }
+    if i != len(params) - 1 {
+      sig += ", "
+    }
+  }
+  sig += ")"
+  return sig
+}
+
+func luaCheckParamsOk(L *lua.State, name string, params ...luaType) bool {
+  fmt.Sprintf("%s(")
+  n := L.GetTop()
+  if n != len(params) {
+    luaDoError(L, fmt.Sprintf("Got %d parameters to %s.", n, makeLuaSigniature(name, params)))
+    return false
+  }
+  for i := -n; i < 0; i++ {
+    ok := false
+    switch params[i + n] {
+    case luaInteger:
+      ok = L.IsNumber(i)
+    case luaString:
+      ok = L.IsString(i)
+    case luaTable:
+      ok = L.IsTable(i)
+    }
+    if !ok {
+      luaDoError(L, fmt.Sprintf("Unexpected parameters to %s.", makeLuaSigniature(name, params)))
+      return false
+    }
+  }
+  return true
+}
+
 func luaDoError(L *lua.State, err_str string) {
   base.Error().Printf(err_str)
   L.PushString(err_str)

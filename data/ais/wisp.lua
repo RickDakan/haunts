@@ -6,7 +6,7 @@ while true do
   intruders = nearestNEntities(1, "intruder")
 
   -- If there are no intruders in sight we just hang out and wait
-  if !intruders[1] then
+  if not intruders[1] then
     break
   end
 

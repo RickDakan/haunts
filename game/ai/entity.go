@@ -152,11 +152,7 @@ func MeFunc(a *Ai) lua.GoFunction {
 //    points - array[table[x,y]]
 func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 4, "allPathablePoints") {
-      return 0
-    }
-    if !L.IsTable(-4) || !L.IsTable(-3) || !L.IsNumber(-2) || !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected allPathablePoints(table, table, int, int)"))
+    if !luaCheckParamsOk(L, "allPathablePoints", luaTable, luaTable, luaInteger, luaInteger) {
       return 0
     }
     min := L.ToInteger(-2)
@@ -204,11 +200,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 //                   lastEntityThatAttackedMe (integer)
 func EntityInfoFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 1, "entityInfo") {
-      return 0
-    }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected entityInfo(int)"))
+    if !luaCheckParamsOk(L, "entityInfo", luaInteger) {
       return 0
     }
     id := game.EntityId(L.ToInteger(-1))
@@ -242,8 +234,7 @@ func EntityInfoFunc(a *Ai) lua.GoFunction {
 //                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    base.Log().Printf("Do basic attack")
-    if !luaNumParamsOk(L, 2, "doBasicAttack") {
+    if !luaCheckParamsOk(L, "doBasicAttack", luaString, luaInteger) {
       return 0
     }
     me := a.ent
@@ -298,11 +289,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "doMove") {
-      return 0
-    }
-    if !L.IsTable(-2) || !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected doMove(table, int)"))
+    if !luaCheckParamsOk(L, "doMove", luaTable, luaInteger) {
       return 0
     }
     me := a.ent
@@ -359,7 +346,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 //    dist - integer - The ranged distance between the two positions.
 func RangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "rangedDistBetweenPositions") {
+    if !luaCheckParamsOk(L, "rangedDistBetweenPositions", luaTable, luaTable) {
       return 0
     }
     x1, y1 := getPointFromTable(L)
@@ -397,7 +384,7 @@ func RangedDistBetweenPositionsFunc(me *game.Entity) lua.GoFunction {
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "rangedDistBetweenEntities") {
+    if !luaCheckParamsOk(L, "rangedDistBetweenEntities", luaInteger, luaInteger) {
       return 0
     }
     id1 := game.EntityId(L.ToInteger(-2))
@@ -450,11 +437,7 @@ func RangedDistBetweenEntitiesFunc(me *game.Entity) lua.GoFunction {
 //                    ammo     (integer)
 func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "getBasicAttackStats") {
-      return 0
-    }
-    if !L.IsNumber(-2) || !L.IsString(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getBasicAttackStats(int, string)"))
+    if !luaCheckParamsOk(L, "getBasicAttackStats", luaInteger, luaString) {
       return 0
     }
     id := game.EntityId(L.ToInteger(-2))
@@ -513,11 +496,7 @@ func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
 //                    apMax  (integer)
 func GetEntityStatsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 1, "getEntityStats") {
-      return 0
-    }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getEntityStats(int)"))
+    if !luaCheckParamsOk(L, "getEntityStats", luaInteger) {
       return 0
     }
     id := game.EntityId(L.ToInteger(-1))
@@ -568,11 +547,7 @@ func GetEntityStatsFunc(a *Ai) lua.GoFunction {
 //                         entity.
 func GetConditionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 1, "getConditions") {
-      return 0
-    }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getConditions(int)"))
+    if !luaCheckParamsOk(L, "getConditions", luaInteger) {
       return 0
     }
     id := game.EntityId(L.ToInteger(-1))
@@ -603,7 +578,7 @@ func GetConditionsFunc(a *Ai) lua.GoFunction {
 //                      every action that the specified entity has.
 func GetActionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 1, "getActions") {
+    if !luaCheckParamsOk(L, "getActions", luaInteger) {
       return 0
     }
     if !L.IsNumber(-1) {
@@ -638,7 +613,7 @@ func GetActionsFunc(a *Ai) lua.GoFunction {
 //    e - boolean - True if the entity exists and has positive hp.
 func ExistsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 1, "exists") {
+    if !luaCheckParamsOk(L, "exists", luaInteger) {
       return 0
     }
     if !L.IsNumber(-1) {
@@ -680,7 +655,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     "all" : true,
   }
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 2, "nearestNEntities") {
+    if !luaCheckParamsOk(L, "nearestNEntities", luaInteger, luaString) {
       return 0
     }
     g := me.Game()
