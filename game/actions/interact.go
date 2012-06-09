@@ -62,6 +62,7 @@ type interactInst struct {
   target *game.Entity
 }
 type interactExec struct {
+  id int
   game.BasicActionExec
   Target game.EntityId
 
@@ -69,6 +70,18 @@ type interactExec struct {
   // true, otherwise it will be false.  If it is true then Target will be 0.
   toggle_door bool
   floor, room, door int
+}
+
+func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interactExec {
+  var exec interactExec
+  exec.id = exec_id
+  exec_id++
+  exec.SetBasicData(ent, a)
+  exec.floor = floor
+  exec.room = room
+  exec.door = door
+  exec.toggle_door = true
+  return exec
 }
 func init() {
   gob.Register(interactExec{})
@@ -171,6 +184,22 @@ func makeRectForDoor(room *house.Room, door *house.Door) frect {
   dr.x2 += float64(room.X)
   dr.y2 += float64(room.Y)
   return dr
+}
+
+func (a *Interact) AiToggleDoor(ent *game.Entity, floor, room, door int) game.ActionExec {
+  floors := ent.Game().House.Floors
+  if floor < 0 || floor >= len(floors) {
+    return nil
+  }
+  rooms := floors[floor].Rooms
+  if room < 0 || room >= len(rooms) {
+    return nil
+  }
+  doors := rooms[room].Doors
+  if door < 0 || door >= len(doors) {
+    return nil
+  }
+  return a.makeDoorExec(ent, floor, room, door)
 }
 
 func (a *Interact) findDoors(ent *game.Entity, g *game.Game) []*house.Door {
@@ -295,15 +324,16 @@ func (a *Interact) Cancel() {
 func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(interactExec)
+    a.ent = g.EntityById(ae.EntityId())
     g := a.ent.Game()
     if (exec.Target != 0) == (exec.toggle_door) {
-      base.Error().Printf("Got an interact that tried to target a door and an entity.")
+      base.Error().Printf("Got an interact that tried to target a door and an entity: %v", exec)
       return game.Complete
     }
     if exec.Target != 0 {
       target := g.EntityById(exec.Target)
       if target == nil {
-        base.Error().Printf("Tried to interact with an entity that doesn't exist.")
+        base.Error().Printf("Tried to interact with an entity that doesn't exist: %v", exec)
         return game.Complete
       }
       switch a.Name {
@@ -315,7 +345,7 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
           }
         }
         if !found {
-          base.Error().Printf("Tried to interact with the wrong entity.")
+          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
           return game.Complete
         }
         g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
@@ -324,7 +354,7 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
 
       case string(game.GoalRelic):
         if g.Active_relic != target {
-          base.Error().Printf("Tried to interact with the wrong entity.")
+          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
           return game.Complete
         }
         g.Active_relic = nil
@@ -350,6 +380,15 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
         return game.Complete
       }
       door := room.Doors[exec.door]
+
+      x,y := a.ent.Pos()
+      dx,dy := a.ent.Dims()
+      ent_rect := makeIntFrect(x, y, x+dx, y+dy)
+      if !ent_rect.Overlaps(makeRectForDoor(room, door)) {
+        base.Error().Printf("Tried to open a door that was out of range: %v", exec)
+        return game.Complete
+      }
+
       _, other_door := floor.FindMatchingDoor(room, door)
       if other_door != nil {
         door.Opened = !door.Opened

@@ -100,8 +100,8 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total >= max {
-          return path[0 : last]
+        if total >= max && last < len(path) - 1 {
+          return path[0 : last + 1]
         }
         start = adj[index]
         break

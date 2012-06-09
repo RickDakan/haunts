@@ -8,6 +8,7 @@
   },
   "Action_names": [
     "Move Test",
+    "Interact",
     "Chill Touch"
   ],
   "HauntEnt": {
@@ -21,5 +22,5 @@
     "Ego": 7,
     "Sight": 15
   },
-  "Ai_path": "ais/basic.lua"
+  "Ai_path": "ais/test.lua"
 }

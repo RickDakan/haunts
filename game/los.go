@@ -350,6 +350,12 @@ func (g *Game) OnRound() {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
 
+  for i := range g.Ents {
+    if g.Ents[i].Side() == g.Side {
+      g.Ents[i].OnRound()
+    }
+  }
+
   // The entity ais must be activated before the master ais, otherwise the
   // masters might be running with stale data if one of the entities has been
   // reloaded.
@@ -360,11 +366,6 @@ func (g *Game) OnRound() {
   g.haunts_ai.Activate()
   g.explorers_ai.Activate()
 
-  for i := range g.Ents {
-    if g.Ents[i].Side() == g.Side {
-      g.Ents[i].OnRound()
-    }
-  }
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
     g.selected_ent.selected = false
@@ -816,6 +817,13 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
     if dist <= 0 { return }
     los[x][y] = true
   }
+}
+
+func (g *Game) TeamLos(x, y int) bool {
+  if x < 0 || y < 0 || x >= len(g.los_merger) || y >= len(g.los_merger[x]) {
+    return false
+  }
+  return g.los_merger[x][y]
 }
 
 func (g *Game) MergeLos(ents []*Entity) {

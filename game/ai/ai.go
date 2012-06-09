@@ -98,7 +98,7 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     var res string
     n := L.GetTop()
     for i := -n; i < 0; i++ {
-      res += L.ToString(i) + " "
+      res += luaStringifyParam(L, i) + " "
     }
     base.Log().Printf("Ai(%p): %s", ai_struct, res)
     return 0
@@ -118,6 +118,19 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   *dst_iface = ai_struct
 }
 
+func luaStringifyParam(L *lua.State, index int) string {
+  if L.IsTable(index) {
+    return "table"
+  }
+  if L.IsBoolean(index) {
+    if L.ToBoolean(index) {
+      return "true"
+    }
+    return "false"
+  }
+  return L.ToString(index)
+}
+
 // Need a goroutine for each ai - all things will go through is so that things
 // stay synchronized
 func (a *Ai) masterRoutine() {
@@ -130,12 +143,6 @@ func (a *Ai) masterRoutine() {
     case a.active = <-a.active_set:
       if a.active {
         <-a.active_set
-      }
-      if a.active && a.ent == nil {
-        // The master is responsible for activating all entities
-        for i := range a.game.Ents {
-          a.game.Ents[i].Ai.Activate()
-        }
       }
       if a.active == false {
         if a.ent == nil {
