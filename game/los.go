@@ -746,6 +746,11 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
+    if ent.Side() != SideHaunt && ent.Side() != SideExplorers {
+      // Relics and cleanse points and whatnot matter here, and they might not
+      // be in a 'ready' state.
+      continue
+    }
     state := ent.sprite.Sprite().AnimState()
     if state != "ready" && state != "killed" {
       return
