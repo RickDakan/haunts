@@ -399,8 +399,10 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
           sound.PlaySound(door.Shut_sound)
         }
         g.RecalcLos()
+        a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       } else {
         base.Error().Printf("Couldn't find matching door: %v", exec)
+        return game.Complete
       }
     }
   }
