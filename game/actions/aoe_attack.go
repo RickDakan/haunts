@@ -9,6 +9,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
 )
@@ -153,6 +154,26 @@ func (a *AoeAttack) RenderOnFloor() {
 func (a *AoeAttack) Cancel() {
   a.aoeAttackTempData = aoeAttackTempData{}
 }
+
+// Used for doing los computation on aoe attacks, so we don't have to allocate
+// and deallocate lots of these.  Only one ai is ever running at a time so
+// this should be ok.
+var grid [4][][]bool
+func init() {
+  grid[0] = make([][]bool, house.LosTextureSize)
+  grid[1] = make([][]bool, house.LosTextureSize)
+  grid[2] = make([][]bool, house.LosTextureSize)
+  grid[3] = make([][]bool, house.LosTextureSize)
+  raw := make([]bool, 4*house.LosTextureSizeSquared)
+  stride := house.LosTextureSizeSquared
+  for i := 0; i < house.LosTextureSize; i++ {
+    grid[0][i] = raw[stride*0 + i*house.LosTextureSize : stride*0 + (i+1)*house.LosTextureSize]
+    grid[1][i] = raw[stride*1 + i*house.LosTextureSize : stride*1 + (i+1)*house.LosTextureSize]
+    grid[2][i] = raw[stride*2 + i*house.LosTextureSize : stride*2 + (i+1)*house.LosTextureSize]
+    grid[3][i] = raw[stride*3 + i*house.LosTextureSize : stride*3 + (i+1)*house.LosTextureSize]
+  }
+}
+
 func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(aoeExec)
@@ -161,10 +182,26 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
     y := ty - (a.Diameter + 1) / 2
     x2 := tx + a.Diameter / 2
     y2 := ty + a.Diameter / 2
+
+    // If the diameter is even we need to run los from all four positions
+    // around the center of the aoe.
+    num_centers := 1
+    if a.Diameter % 2 == 0 {
+      num_centers = 4
+    }
     var targets []*game.Entity
+    for i := 0; i < num_centers; i++ {
+      // If num_centers is 4 then this will calculate the los for all four
+      // positions around the center
+      g.DetermineLos(tx + i%2, ty + i/2, a.Diameter, grid[i])
+    }
     for _,ent := range g.Ents {
       entx,enty := ent.Pos()
-      if entx >= x && entx < x2 && enty >= y && enty < y2 {
+      has_los := false
+      for i := 0; i < num_centers; i++ {
+        has_los = has_los || grid[i][entx][enty]
+      }
+      if has_los && entx >= x && entx < x2 && enty >= y && enty < y2 {
         targets = append(targets, ent)
       }
     }
