@@ -286,18 +286,16 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   }
 }
 
-// Performs a basic attack against the specifed target.
+// Performs an aoe attack against centered at the specified position.
 //    Format:
-//    res = doBasicAttack(attack, target)
+//    res = doAoeAttack(attack, pos)
 //
 //    Inputs:
-//    attack - string  - Name of the attack to use.
-//    target - integer - Entity id of the target of this attack.
+//    attack - string     - Name of the attack to use.
+//    pos    - table[x,y] - Position to center the aoe around.
 //
 //    Outputs:
-//    res - table - Table containing the following values:
-//                  hit (boolean) - true iff the attack hit its target.
-//                  If the attack was invalid for some reason res will be nil.
+//    res - boolean - true if the action performed, nil otherwise.
 func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaCheckParamsOk(L, "doAoeAttack", luaString, luaTable) {
