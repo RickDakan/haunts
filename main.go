@@ -249,12 +249,6 @@ func main() {
     panic(err)
   }
 
-  // Startup audio
-  err = base.InitAudio()
-  if err != nil {
-    panic(err)
-  }
-
   sound.Init()
   // sound.SetBackgroundMusic("macabre.ogg")
   render.Init()

@@ -1,3 +1,5 @@
+
+// +build !nosound
 package sound
 
 import (

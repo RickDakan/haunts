@@ -229,6 +229,11 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
   }
   filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
     _,filename := filepath.Split(path)
+    if err != nil {
+      Error().Printf("Error walking directory: %v", err)
+      panic(err)
+      return nil
+    }
     if strings.HasPrefix(filename, ".") {
       if info.IsDir() {
         return filepath.SkipDir

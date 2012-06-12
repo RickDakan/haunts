@@ -11,31 +11,12 @@ import (
   "path/filepath"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/fmod"
   "code.google.com/p/freetype-go/freetype/truetype"
   "log"
   "fmt"
   "time"
   "sync"
 )
-
-var audio *fmod.System
-func InitAudio() error {
-  var err error
-  audio, err = fmod.CreateSystem()
-  if err != nil {
-    return err
-  }
-  err = audio.Init(32, fmod.INIT_NORMAL, nil)
-  if err != nil {
-    audio.Release()
-    audio = nil
-  }
-  return err
-}
-func GetAudio() *fmod.System {
-  return audio
-}
 
 var datadir string
 var logger *log.Logger

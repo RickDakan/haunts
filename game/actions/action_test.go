@@ -24,10 +24,6 @@ func ActionSpec(c gospec.Context) {
     basic := game.MakeAction("Basic Test")
     _,ok := basic.(*actions.BasicAttack)
     c.Expect(ok, Equals, true)
-
-    charge := game.MakeAction("Charge Test")
-    _,ok = charge.(*actions.ChargeAttack)
-    c.Expect(ok, Equals, true)
   })
 
   c.Specify("Actions can be gobbed without loss of type.", func() {
@@ -37,7 +33,6 @@ func ActionSpec(c gospec.Context) {
     var as []game.Action
     as = append(as, game.MakeAction("Move Test"))
     as = append(as, game.MakeAction("Basic Test"))
-    as = append(as, game.MakeAction("Charge Test"))
 
     err := enc.Encode(as)
     c.Assume(err, Equals, nil)
@@ -51,9 +46,6 @@ func ActionSpec(c gospec.Context) {
     c.Expect(ok, Equals, true)
 
     _,ok = as2[1].(*actions.BasicAttack)
-    c.Expect(ok, Equals, true)
-
-    _,ok = as2[2].(*actions.ChargeAttack)
     c.Expect(ok, Equals, true)
 
   })
