@@ -24,6 +24,7 @@ func (a *Ai) addEntityContext() {
   a.L.Register("getActions", GetActionsFunc(a))
   a.L.Register("entityInfo", EntityInfoFunc(a))
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
+  a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
   a.L.Register("doMove", DoMoveFunc(a))
   a.L.Register("exists", ExistsFunc(a))
 
@@ -260,8 +261,11 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
       luaDoError(L, fmt.Sprintf("Tried to target entity with id=%d who doesn't exist.", id))
       return 0
     }
-    base.Log().Printf("Do basic attack - should execute at this point")
-    attack := action.(*actions.BasicAttack)
+    attack, ok := action.(*actions.BasicAttack)
+    if !ok {
+      luaDoError(L, fmt.Sprintf("Action '%s' is not a basic attack.", name))
+      return 0
+    }
     exec := attack.AiAttackTarget(me, target)
     if exec != nil {
       a.execs <- exec
@@ -275,6 +279,48 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
         L.PushBoolean(result.Hit)
         L.SetTable(-3)
       }
+    } else {
+      L.PushNil()
+    }
+    return 1
+  }
+}
+
+// Performs a basic attack against the specifed target.
+//    Format:
+//    res = doBasicAttack(attack, target)
+//
+//    Inputs:
+//    attack - string  - Name of the attack to use.
+//    target - integer - Entity id of the target of this attack.
+//
+//    Outputs:
+//    res - table - Table containing the following values:
+//                  hit (boolean) - true iff the attack hit its target.
+//                  If the attack was invalid for some reason res will be nil.
+func DoAoeAttackFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaCheckParamsOk(L, "doAoeAttack", luaString, luaTable) {
+      return 0
+    }
+    me := a.ent
+    name := L.ToString(-2)
+    action := getActionByName(me, name)
+    if action == nil {
+      luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
+      return 0
+    }
+    attack, ok := action.(*actions.AoeAttack)
+    if !ok {
+      luaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
+      return 0
+    }
+    tx, ty := getPointFromTable(L)
+    exec := attack.AiAttackPosition(me, tx, ty)
+    if exec != nil {
+      a.execs <- exec
+      <-a.pause
+      L.PushBoolean(true)
     } else {
       L.PushNil()
     }

@@ -5,6 +5,9 @@ import (
   "fmt"
   "encoding/gob"
   "io/ioutil"
+  "os"
+  "strings"
+  "path/filepath"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   lua "github.com/xenith-studios/golua"
@@ -79,6 +82,7 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   case game.EntityAi:
     base.Log().Printf("Adding entity context for %s", ent.Name)
     ai_struct.addEntityContext()
+    ai_struct.loadUtils("entity")
 
   case game.MinionsAi:
     ai_struct.addMinionsContext()
@@ -129,6 +133,28 @@ func luaStringifyParam(L *lua.State, index int) string {
     return "false"
   }
   return L.ToString(index)
+}
+
+func (a *Ai) loadUtils(dir string) {
+  root := filepath.Join(base.GetDataDir(), "ais", "utils", dir)
+  filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+    if err != nil || info.IsDir() {
+      return nil
+    }
+    if strings.HasSuffix(info.Name(), ".lua") {
+      f, err := os.Open(path)
+      if err != nil {
+        return nil
+      }
+      data, err := ioutil.ReadAll(f)
+      f.Close()
+      if err != nil {
+        return nil
+      }
+      a.L.DoString(string(data))
+    }
+    return nil
+  })
 }
 
 // Need a goroutine for each ai - all things will go through is so that things

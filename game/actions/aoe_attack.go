@@ -71,6 +71,8 @@ type aoeAttackTempData struct {
 
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
+
+  exec aoeExec
 }
 type aoeExec struct {
   game.BasicActionExec
@@ -155,6 +157,54 @@ func (a *AoeAttack) Cancel() {
   a.aoeAttackTempData = aoeAttackTempData{}
 }
 
+type AiAoeTarget int
+const(
+  AiAoeHitAlliesOk AiAoeTarget = iota
+  AiAoeHitMinionsOk
+  AiAoeHitNoAllies
+)
+func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTarget) (x, y int) {
+  ex, ey := ent.Pos()
+  max := 0
+  var bx, by int
+  for x := ex - a.Range - extra_dist; x <= x + a.Range + extra_dist; x++ {
+    for y := ey - a.Range - extra_dist; y <= y + a.Range + extra_dist; y++ {
+      targets := a.getTargetsAt(ent.Game(), x, y)
+      ok := false
+      count := 0
+      for i := range targets {
+        if targets[i].Side() != ent.Side() || spec == AiAoeHitAlliesOk {
+          count++
+        } else if ent.Side() == game.SideHaunt && spec == AiAoeHitMinionsOk {
+          if targets[i].HauntEnt != nil && targets[i].HauntEnt.Level == game.LevelMinion {
+          } else {
+            ok = false
+          }
+        } else {
+          ok = false
+        }
+      }
+      if ok && count > max {
+        max = count
+        bx, by = x, y
+      }
+    }
+  }
+  return bx, by
+}
+func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec {
+  if !ent.HasLos(x, y, 1, 1) {
+    return nil
+  }
+  if a.Ap > ent.Stats.ApCur() {
+    return nil
+  }
+  var exec aoeExec
+  exec.SetBasicData(ent, a)
+  exec.Pos = ent.Game().ToVertex(x, y)
+  return exec
+}
+
 // Used for doing los computation on aoe attacks, so we don't have to allocate
 // and deallocate lots of these.  Only one ai is ever running at a time so
 // this should be ok.
@@ -174,45 +224,59 @@ func init() {
   }
 }
 
+func (a *AoeAttack) getTargetsAt(g *game.Game, tx, ty int) []*game.Entity {
+  x := tx - (a.Diameter + 1) / 2
+  y := ty - (a.Diameter + 1) / 2
+  x2 := tx + a.Diameter / 2
+  y2 := ty + a.Diameter / 2
+
+  // If the diameter is even we need to run los from all four positions
+  // around the center of the aoe.
+  num_centers := 1
+  if a.Diameter % 2 == 0 {
+    num_centers = 4
+  }
+
+  var targets []*game.Entity
+  for i := 0; i < num_centers; i++ {
+    // If num_centers is 4 then this will calculate the los for all four
+    // positions around the center
+    g.DetermineLos(tx + i%2, ty + i/2, a.Diameter, grid[i])
+  }
+  for _,ent := range g.Ents {
+    entx,enty := ent.Pos()
+    has_los := false
+    for i := 0; i < num_centers; i++ {
+      has_los = has_los || grid[i][entx][enty]
+    }
+    if has_los && entx >= x && entx < x2 && enty >= y && enty < y2 {
+      targets = append(targets, ent)
+    }
+  }
+  algorithm.Choose2(&targets, func(e *game.Entity) bool {
+    return e.Stats != nil
+  })
+
+  return targets
+}
+
 func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(aoeExec)
-    _, tx, ty := g.FromVertex(exec.Pos)
-    x := tx - (a.Diameter + 1) / 2
-    y := ty - (a.Diameter + 1) / 2
-    x2 := tx + a.Diameter / 2
-    y2 := ty + a.Diameter / 2
-
-    // If the diameter is even we need to run los from all four positions
-    // around the center of the aoe.
-    num_centers := 1
-    if a.Diameter % 2 == 0 {
-      num_centers = 4
-    }
-    var targets []*game.Entity
-    for i := 0; i < num_centers; i++ {
-      // If num_centers is 4 then this will calculate the los for all four
-      // positions around the center
-      g.DetermineLos(tx + i%2, ty + i/2, a.Diameter, grid[i])
-    }
-    for _,ent := range g.Ents {
-      entx,enty := ent.Pos()
-      has_los := false
-      for i := 0; i < num_centers; i++ {
-        has_los = has_los || grid[i][entx][enty]
-      }
-      if has_los && entx >= x && entx < x2 && enty >= y && enty < y2 {
-        targets = append(targets, ent)
-      }
-    }
-    algorithm.Choose2(&targets, func(e *game.Entity) bool {
-      return e.Stats != nil
-    })
-    a.targets = targets
+    a.exec = ae.(aoeExec)
+    _, tx, ty := g.FromVertex(a.exec.Pos)
+    a.targets = a.getTargetsAt(g, tx, ty)
     if a.Current_ammo > 0 {
       a.Current_ammo--
     }
     a.ent = g.EntityById(ae.EntityId())
+    if !a.ent.HasLos(tx, ty, 1, 1) {
+      base.Error().Printf("Entity %d tried to target position (%d, %d) with an aoe but doesn't have los to it: %v", a.ent.Id, tx, ty, a.exec)
+      return game.Complete
+    }
+    if a.Ap > a.ent.Stats.ApCur() {
+      base.Error().Printf("Got an aoe attack that required more ap than available: %v", a.exec)
+      return game.Complete
+    }
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
 
     // Track this information for the ais - the attacking ent will only
