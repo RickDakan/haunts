@@ -15,7 +15,7 @@ var action_map map[string]func() Action
 func MakeAction(name string) Action {
   f,ok := action_map[name]
   if !ok {
-    fmt.Printf("Unable to find an Action named '%s'", name)
+    base.Error().Printf("Unable to find an Action named '%s'", name)
   }
   return f()
 }
