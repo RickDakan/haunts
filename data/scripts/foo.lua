@@ -1,7 +1,7 @@
 function Init()
   map = selectMap()
   loadHouse(map)
-  spawnDude("Teen", 10, 20)
+  -- spawnEntity("Teen", 10, 20)
 
   -- This creates a list of entities and associated point values.  The order
   -- the names are listed in here is the order they will appear to the user.
@@ -19,7 +19,7 @@ function Init()
   -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
   while table.getn(placed) == 0 do
-    placed = placeDude("Master-.*", 1, ents)
+    placed = placeEntities("Master-.*", 1, ents)
   end
 
   -- placed is an array containing all of the entities placed, in this case
@@ -42,7 +42,7 @@ function Init()
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "servitor-".
-  placed = placeDude("servitor-.*", 10, ents)
+  placed = placeEntities("Servitor-.*", 10, ents)
 
   -- Now that we've placed all of these entities we will put up the main bar
   -- and let the game begin.
@@ -50,4 +50,9 @@ function Init()
 end
 
 function OnRound(intruders)
+  if not intruders then
+    spawn_points = getSpawnPointsMatching("Minion-.*")
+    p = spawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
+    print("Spawned Angry Shade at ", p.x, p.y)
+  end
 end

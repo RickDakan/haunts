@@ -1,8 +1,10 @@
 package game
 
 import (
+  "math/rand"
   "path/filepath"
   "io/ioutil"
+  "regexp"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
@@ -49,8 +51,10 @@ func startGameScript(gp *GamePanel, path string) {
   registerUtilityFunctions(gp.script.L)
   gp.script.L.Register("loadHouse", loadHouse(gp))
   gp.script.L.Register("showMainBar", showMainBar(gp))
-  gp.script.L.Register("spawnDude", spawnDude(gp))
-  gp.script.L.Register("placeDude", placeDude(gp))
+  gp.script.L.Register("spawnEntityAtPosition", spawnEntityAtPosition(gp))
+  gp.script.L.Register("getSpawnPointsMatching", getSpawnPointsMatching(gp))
+  gp.script.L.Register("spawnEntitySomewhereInSpawnPoints", spawnEntitySomewhereInSpawnPoints(gp))
+  gp.script.L.Register("placeEntities", placeEntities(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
 
@@ -68,14 +72,18 @@ func startGameScript(gp *GamePanel, path string) {
 }
 
 func (gs *gameScript) OnRound(g *Game) {
-  gs.L.SetExecutionLimit(250000)
-  base.Log().Printf("Calling on round")
-  gs.L.GetField(lua.LUA_GLOBALSINDEX, "OnRound")
-  gs.L.PushBoolean(g.Side == SideExplorers)
-  gs.L.Call(1, 0)
+  go func() {
+    gs.L.SetExecutionLimit(250000)
+    base.Log().Printf("Calling on round")
+    gs.L.GetField(lua.LUA_GLOBALSINDEX, "OnRound")
+    gs.L.PushBoolean(g.Side == SideExplorers)
+    gs.L.Call(1, 0)
+  } ()
 }
 
-func (gp *GamePanel) scriptThink() {
+// Can be called occassionally and will allow a script to progress whenever
+// it is ready
+func (gp *GamePanel) scriptThinkOnce() {
   if gp.script.L == nil {
     return
   }
@@ -91,6 +99,24 @@ func (gp *GamePanel) scriptThink() {
       done = true
     }
   }
+}
+
+// Thinks continually until a value is passed along done
+func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
+  done_chan := make(chan struct{})
+
+  go func() {
+    for {
+      select {
+      case <-gp.script.sync:
+        <-gp.script.sync
+      case <-done_chan:
+        return
+      }
+    }
+  } ()
+
+  return done_chan
 }
 
 func loadHouse(gp *GamePanel) lua.GoFunction {
@@ -146,7 +172,7 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func spawnDude(gp *GamePanel) lua.GoFunction {
+func spawnEntityAtPosition(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
@@ -158,7 +184,113 @@ func spawnDude(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func placeDude(gp *GamePanel) lua.GoFunction {
+func getSpawnPointsMatching(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    spawn_pattern := L.ToString(-1)
+    re, err := regexp.Compile(spawn_pattern)
+    if err != nil {
+      base.Error().Printf("Failed to compile regexp '%s': %v", spawn_pattern, err)
+      return 0
+    }
+    L.NewTable()
+    count := 0
+    for index, sp := range gp.game.House.Floors[0].Spawns {
+      if !re.MatchString(sp.Name) {
+        continue
+      }
+      count++
+      L.PushInteger(count)
+      L.NewTable()
+      x, y := sp.Pos()
+      dx, dy := sp.Dims()
+      L.PushString("id")
+      L.PushInteger(index)
+      L.SetTable(-3)
+      L.PushString("name")
+      L.PushString(sp.Name)
+      L.SetTable(-3)
+      L.PushString("x")
+      L.PushInteger(x)
+      L.SetTable(-3)
+      L.PushString("y")
+      L.PushInteger(y)
+      L.SetTable(-3)
+      L.PushString("dx")
+      L.PushInteger(dx)
+      L.SetTable(-3)
+      L.PushString("dy")
+      L.PushInteger(dy)
+      L.SetTable(-3)
+      L.SetTable(-3)
+    }
+    return 1
+  }
+}
+
+func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    name := L.ToString(-2)
+
+    var tx,ty int
+    count := 0
+    sp_count := 1
+    L.PushInteger(sp_count)
+    L.GetTable(-2)
+    for !L.IsNil(-1) {
+      L.PushString("id")
+      L.GetTable(-2)
+      id := L.ToInteger(-1)
+      L.Pop(2)
+      sp_count++
+      L.PushInteger(sp_count)
+      L.GetTable(-2)
+      if id < 0 || id >= len(gp.game.House.Floors[0].Spawns) {
+        base.Error().Printf("Tried to access un unknown spawn point: %d", id)
+        break
+      }
+      sp := gp.game.House.Floors[0].Spawns[id]
+      sx, sy := sp.Pos()
+      sdx, sdy := sp.Dims()
+      for x := sx; x < sx + sdx; x++ {
+        for y := sy; y < sy + sdy; y++ {
+          if gp.game.IsCellOccupied(x, y) {
+            continue
+          }
+          count++
+          if rand.Intn(count) == 0 {
+            tx = x
+            ty = y
+          }
+        }
+      }
+    }
+    if count == 0 {
+      base.Error().Printf("Unable to find an available position to spawn")
+      return 0
+    }
+    ent := MakeEntity(name, gp.game)
+    if ent == nil {
+      base.Error().Printf("Cannot make an entity named '%s', no such thing.", name)
+      return 0
+    }
+    gp.game.SpawnEntity(ent, tx, ty)
+
+    L.NewTable()
+    L.PushString("x")
+    L.PushInteger(tx)
+    L.SetTable(-3)
+    L.PushString("y")
+    L.PushInteger(ty)
+    L.SetTable(-3)
+    return 1
+  }
+}
+
+func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     pattern := L.ToString(-3)

@@ -108,7 +108,7 @@ func (gp *GamePanel) Active() bool {
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
-  gp.scriptThink()
+  gp.scriptThinkOnce()
   gp.AnchorBox.Think(ui, t)
   if !gp.Active() {
     return
