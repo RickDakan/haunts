@@ -199,7 +199,7 @@ func (a *Ai) masterRoutine() {
           base.Log().Printf("Evaluating lua script: %s", a.Prog)
           // Reset the execution limit in case it was set to 0 due to a
           // previous error
-          a.L.SetExecutionLimit(25000)
+          a.L.SetExecutionLimit(2500)
           res := a.L.DoString(a.Prog)
           base.Log().Printf("Res: %t", res)
           if a.ent == nil {

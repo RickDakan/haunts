@@ -166,26 +166,47 @@ const(
 func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTarget) (x, y int) {
   ex, ey := ent.Pos()
   max := 0
+  best_dist := 10000
   var bx, by int
-  for x := ex - a.Range - extra_dist; x <= x + a.Range + extra_dist; x++ {
-    for y := ey - a.Range - extra_dist; y <= y + a.Range + extra_dist; y++ {
+  var radius int
+  if a.Range > 0 {
+    radius += a.Range
+  }
+  if extra_dist > 0 {
+    radius += extra_dist
+  }
+  for x := ex - radius; x <= ex + radius; x++ {
+    for y := ey - radius; y <= ey + radius; y++ {
+      if !ent.HasLos(x, y, 1, 1) { continue }
       targets := a.getTargetsAt(ent.Game(), x, y)
-      ok := false
+      ok := true
       count := 0
       for i := range targets {
-        if targets[i].Side() != ent.Side() || spec == AiAoeHitAlliesOk {
+        if targets[i].Side() != ent.Side() {
           count++
         } else if ent.Side() == game.SideHaunt && spec == AiAoeHitMinionsOk {
-          if targets[i].HauntEnt != nil && targets[i].HauntEnt.Level == game.LevelMinion {
-          } else {
+          if targets[i].HauntEnt == nil || targets[i].HauntEnt.Level != game.LevelMinion {
             ok = false
           }
-        } else {
+        } else if spec != AiAoeHitAlliesOk {
           ok = false
         }
       }
-      if ok && count > max {
+      dx := x - ex
+      if dx < 0 {
+        dx = -dx
+      }
+      dy := y - ey
+      if dy < 0 {
+        dy = -dy
+      }
+      dist := dx
+      if dy > dx {
+        dist = dy
+      }
+      if ok && (count > max || count == max && dist < best_dist) {
         max = count
+        best_dist = dist
         bx, by = x, y
       }
     }
@@ -194,9 +215,11 @@ func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTar
 }
 func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec {
   if !ent.HasLos(x, y, 1, 1) {
+    base.Log().Printf("Don't have los")
     return nil
   }
   if a.Ap > ent.Stats.ApCur() {
+    base.Log().Printf("Don't have the ap")
     return nil
   }
   var exec aoeExec

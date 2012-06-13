@@ -797,11 +797,13 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var x0,y0,x,y int
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
+  if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
   los[x][y] = true
   room = roomAt(g.House.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
     x,y = p[0], p[1]
+    if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
     room0 = room
     room = roomAt(g.House.Floors[0], x, y)
     if room == nil { return }

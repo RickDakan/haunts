@@ -19,12 +19,14 @@ func (a *Ai) addEntityContext() {
   a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
   a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
   a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
+  a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
   a.L.Register("getEntityStats", GetEntityStatsFunc(a))
   a.L.Register("getConditions", GetConditionsFunc(a))
   a.L.Register("getActions", GetActionsFunc(a))
   a.L.Register("entityInfo", EntityInfoFunc(a))
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
   a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
+  a.L.Register("bestAoeAttackPos", BestAoeAttackPosFunc(a))
   a.L.Register("doMove", DoMoveFunc(a))
   a.L.Register("exists", ExistsFunc(a))
 
@@ -326,6 +328,53 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   }
 }
 
+// Performs an aoe attack against centered at the specified position.
+//    Format:
+//    target = bestAoeAttackPos(attack, extra_dist, spec)
+//
+//    Inputs:
+//    attack     - string  - Name of the attack to use.
+//    extra_dist - integer - Available distance to move before attacking.
+//    spec       - string  - One of the following values:
+//                           "allies ok", "minions ok", "enemies only"
+//
+//    Outputs:
+//    pos - table[x,y] - Position to place aoe for maximum results.
+func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaCheckParamsOk(L, "bestAoeAttackPos", luaString, luaInteger, luaString) {
+      return 0
+    }
+    me := a.ent
+    name := L.ToString(-3)
+    action := getActionByName(me, name)
+    if action == nil {
+      luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
+      return 0
+    }
+    attack, ok := action.(*actions.AoeAttack)
+    if !ok {
+      luaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
+      return 0
+    }
+    var spec actions.AiAoeTarget
+    switch L.ToString(-1) {
+    case "allies ok":
+      spec = actions.AiAoeHitAlliesOk
+    case "minions ok":
+      spec = actions.AiAoeHitMinionsOk
+    case "enemies only":
+      spec = actions.AiAoeHitNoAllies
+    default:
+      luaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for bestAoeAttackPos().", L.ToString(-1)))
+      return 0
+    }
+    x, y := attack.AiBestTarget(me, L.ToInteger(-2), spec)
+    putPointToTable(L, x, y)
+    return 1
+  }
+}
+
 // Performs a move action to the closest one of any of the specifed inputs
 // points.  The movement can be restricted to not spend more than a certain
 // amount of ap.
@@ -521,6 +570,75 @@ func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
         L.SetTable(-3)
         L.PushString("range")
         L.PushInteger(attack.Range)
+        L.SetTable(-3)
+        L.PushString("ammo")
+        if attack.Current_ammo == -1 {
+          L.PushInteger(1000)
+        } else {
+          L.PushInteger(attack.Current_ammo)
+        }
+        L.SetTable(-3)
+        return 1
+      }
+    }
+    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
+    return 0
+  }
+}
+
+// Gets some stats about an aoe attack.  If the specified action is not an
+// aoe attack this function will return nil.  It is an error to query an
+// entity for an action that it does not have.
+//    Format:
+//    stats = getAoeAttackStats(id, name)
+//
+//    Input:
+//    id   - integer - Entity id of the entity with the action to query.
+//    name - string  - Name of the action to query.
+//
+//    Output:
+//    stats - table - Table containing the following values:
+//                    ap       (integer)
+//                    damage   (integer)
+//                    strength (integer)
+//                    range    (integer)
+//                    diameter (integer)
+//                    ammo     (integer)
+func GetAoeAttackStatsFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !luaCheckParamsOk(L, "getAoeAttackStats", luaInteger, luaString) {
+      return 0
+    }
+    id := game.EntityId(L.ToInteger(-2))
+    ent := a.ent.Game().EntityById(id)
+    if ent == nil {
+      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
+      return 0
+    }
+    name := L.ToString(-1)
+    for _, action := range ent.Actions {
+      if action.String() == name {
+        attack, ok := action.(*actions.AoeAttack)
+        if !ok {
+          // It's not a basic attack, that's ok but we have to return nil.
+          L.PushNil()
+          return 1
+        }
+        L.NewTable()
+        L.PushString("ap")
+        L.PushInteger(attack.Ap)
+        L.SetTable(-3)
+        L.PushString("damage")
+        L.PushInteger(attack.Damage)
+        L.SetTable(-3)
+        L.PushString("strength")
+        L.PushInteger(attack.Strength)
+        L.SetTable(-3)
+        L.PushString("range")
+        L.PushInteger(attack.Range)
+        L.SetTable(-3)
+        L.PushString("diameter")
+        L.PushInteger(attack.Diameter)
         L.SetTable(-3)
         L.PushString("ammo")
         if attack.Current_ammo == -1 {
