@@ -1,0 +1,15 @@
+{
+  "Name"     : "Inject",
+  "Kind"     : "Poison",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/pummel.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 5,
+  "Damage"   : 1,
+  "Range"    : 1,
+  "Conditions" : [
+     "Agony"
+   ]
+}

@@ -1,6 +1,6 @@
 {
   "Name"     : "Grave Grasp",
-  "Kind"     : "Panic",
+  "Kind"     : "Terror",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/grasp.png"
@@ -8,8 +8,8 @@
   "Ap"       : 6,
   "Strength" : 5,
   "Damage"   : 0,
-  "Range"    : 1,
+  "Range"    : 7,
   "Conditions": [
-     "Grave Grasp"
+     "Horrified"
    ]
 }

@@ -1,0 +1,13 @@
+{
+  "Name": "Cage",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/cage/cage.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

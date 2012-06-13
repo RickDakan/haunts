@@ -1,0 +1,20 @@
+{
+  "Name": "Treasure Chest",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/treasure_chest/chest_closed.png"
+      }
+    },
+    {
+      "Dx": 2,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/treasure_chest/chest_open.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

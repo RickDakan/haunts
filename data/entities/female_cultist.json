@@ -1,5 +1,5 @@
 {
-  "Name": "Female Cultist",
+  "Name": "Devotee",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/female_cultist",
@@ -8,19 +8,18 @@
   },
   "Action_names": [
     "Move Test",
-    "Kick",
-    "Abjuration"
+	"Parasitic Gift",
+	"Envenomed Blade"
   ],
   "HauntEnt": {
     "Cost":  1,
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 600,
     "Hp_max": 6,
     "Corpus": 9,
     "Ego": 9,
     "Sight": 10
-  },
-  "Ai_path": "ais/basic.lua"
+  }
 }

@@ -1,0 +1,13 @@
+{
+  "Name": "Bathtub",
+  "Orientations" : [
+    {
+      "Dx": 3,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/bathtub/bathtub.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

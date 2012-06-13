@@ -1,0 +1,13 @@
+{
+  "Name": "Bookcase",
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/bookcase/bookcase.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

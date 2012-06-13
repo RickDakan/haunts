@@ -8,7 +8,8 @@
   },
   "Action_names": [
     "Move Test",
-    "Ectoplasmic Discharge"
+    "Feast",
+	"Cosmic Infection"
   ],
   "HauntEnt": {
     "Cost":  1,
@@ -16,10 +17,9 @@
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 6,
-    "Corpus": 9,
+    "Hp_max": 8,
+    "Corpus": 10,
     "Ego": 9,
     "Sight": 10
-  },
-  "Ai_path": "ais/eidolon.xgml"
+  }
 }

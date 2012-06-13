@@ -1,5 +1,5 @@
 {
-  "Name": "Male Cultist",
+  "Name": "Disciple",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/male_cultist",
@@ -8,18 +8,18 @@
   },
   "Action_names": [
     "Move Test",
-    "Kick"
+	"Inject",
+	"Envenomed Dart"
   ],
   "HauntEnt": {
     "Cost":  1,
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 8,
     "Hp_max": 6,
     "Corpus": 9,
     "Ego": 9,
-    "Sight": 20
-  },
-  "Ai_path": "ais/male_cultist.lua"
+    "Sight": 10
+  }
 }

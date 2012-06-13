@@ -1,0 +1,12 @@
+{
+  "Name"     : "Crozier",
+  "Kind"     : "Terror",
+  "Animation": "ranged",
+  "Ap"       : 3,
+  "Strength" : 7,
+  "Damage"   : 3,
+  "Range"    : 10,
+  "Conditions": [
+     "Agony"
+   ]
+}

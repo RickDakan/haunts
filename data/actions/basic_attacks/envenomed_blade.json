@@ -1,0 +1,15 @@
+{
+  "Name"     : "Envenomed Blade",
+  "Kind"     : "Poison",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/disrupt.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 5,
+  "Damage"   : 3,
+  "Range"    : 1,
+  "Conditions": [
+     "Poison"
+   ]
+}

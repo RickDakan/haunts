@@ -1,0 +1,13 @@
+{
+  "Name": "Spikes",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/spikes/spikes.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
