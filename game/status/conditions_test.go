@@ -66,6 +66,21 @@ func ConditionsSpec(c gospec.Context) {
     c.Expect(s.AttackBonusWith(status.Unspecified), Equals, -3)
   })
 
+  c.Specify("Resistances work", func() {
+    var s status.Inst
+    fr1 := status.MakeCondition("Fire Resistance")
+    fr2 := status.MakeCondition("Greater Fire Resistance")
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified"))
+    s.ApplyCondition(fr1)
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified") + 1)
+    c.Expect(s.CorpusVs("Panic"), Equals, s.CorpusVs("Unspecified"))
+    c.Expect(s.CorpusVs("Brutal"), Equals, s.CorpusVs("Unspecified"))
+    s.ApplyCondition(fr2)
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified") + 3)
+    c.Expect(s.CorpusVs("Panic"), Equals, s.CorpusVs("Unspecified"))
+    c.Expect(s.CorpusVs("Brutal"), Equals, s.CorpusVs("Unspecified"))
+  })
+
   c.Specify("Basic conditions last the appropriate amount of time", func() {
     var s status.Inst
     s.UnmarshalJSON([]byte(`
