@@ -1,0 +1,9 @@
+{
+  "Name": "Focused",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 2,
+  "Base": {
+    "Attack": 2
+  }
+}

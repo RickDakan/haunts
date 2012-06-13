@@ -1,0 +1,9 @@
+{
+  "Name": "Night Vision",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Dynamic": {
+    "Sight": 15
+  }
+}

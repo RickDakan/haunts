@@ -1,0 +1,15 @@
+{
+  "Name"     : "Envenomed Dart",
+  "Kind"     : "Poison",
+  "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/kiss.png"
+  },
+  "Ap"       : 5,
+  "Strength" : 5,
+  "Damage"   : 2,
+  "Range"    : 7,
+  "Conditions": [
+     "Poison"
+   ]
+}

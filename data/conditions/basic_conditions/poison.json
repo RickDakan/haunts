@@ -1,0 +1,9 @@
+{
+  "Name": "Poison",
+  "Strength": 3,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Dynamic": {
+    "Hp": -1
+  }
+}

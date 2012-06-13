@@ -1,10 +1,10 @@
 {
-  "Name"     : "Agonizing Thoughts",
+  "Name"     : "Crozier",
   "Kind"     : "Terror",
-  "Animation": "cast",
+  "Animation": "ranged",
   "Ap"       : 3,
   "Strength" : 7,
-  "Damage"   : 0,
+  "Damage"   : 3,
   "Range"    : 10,
   "Conditions": [
      "Agony"

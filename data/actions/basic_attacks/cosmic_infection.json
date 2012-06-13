@@ -1,0 +1,16 @@
+{
+  "Name"     : "Cosmic Infection",
+  "Kind"     : "Poison",
+  "Animation": "infect",
+  "Texture"   : {
+    "Path": "actions/icons/disrupt.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 7,
+  "Damage"   : 1,
+  "Range"    : 1,
+  "Conditions" : [
+     "Agony",
+     "Horrified"
+   ]
+}

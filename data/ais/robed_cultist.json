@@ -1,24 +1,24 @@
 {
-  "Name": "Eidolon",
+  "Name": "Cultist",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/eidolon",
+  "Sprite_path" : "entities/robed_cultist",
   "Still": {
     "Path": "entities/corpse_still.png"
   },
   "Action_names": [
     "Move Test",
-    "Feast",
-	"Cosmic Infection"
+    "Cultic Mantra",
+    "Sacrificial Blade"
   ],
   "HauntEnt": {
     "Cost":  1,
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 10,
-    "Hp_max": 8,
-    "Corpus": 10,
+    "Ap_max": 8,
+    "Hp_max": 6,
+    "Corpus": 9,
     "Ego": 9,
     "Sight": 10
   }
