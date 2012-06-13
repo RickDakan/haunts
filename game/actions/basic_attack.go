@@ -25,6 +25,9 @@ func registerBasicAttacks() map[string]func() game.Action {
     makers[cname] = func() game.Action {
       a := BasicAttack{ Defname: cname }
       base.GetObject("actions-attack_actions", &a)
+      if !a.Target_allies && !a.Target_enemies {
+        base.Error().Printf("Basic Attack '%s' cannot target anything!  Either Target_allies or Target_enemies must be true", a.Name)
+      }
       if a.Ammo > 0 {
         a.Current_ammo = a.Ammo
       } else {
@@ -50,17 +53,19 @@ type BasicAttack struct {
   Current_ammo int
 }
 type BasicAttackDef struct {
-  Name       string
-  Kind       status.Kind
-  Ap         int
-  Ammo       int  // 0 = infinity
-  Strength   int
-  Range      int
-  Damage     int
-  Animation  string
-  Conditions []string
-  Texture    texture.Object
-  Sounds     map[string]string
+  Name           string
+  Kind           status.Kind
+  Ap             int
+  Ammo           int  // 0 = infinity
+  Strength       int
+  Range          int
+  Damage         int
+  Target_allies  bool
+  Target_enemies bool
+  Animation      string
+  Conditions     []string
+  Texture        texture.Object
+  Sounds         map[string]string
 }
 type basicAttackTempData struct {
   ent *game.Entity

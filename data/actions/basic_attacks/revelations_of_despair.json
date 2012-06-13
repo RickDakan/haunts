@@ -9,6 +9,7 @@
   "Strength" : 5,
   "Damage"   : 2,
   "Range"    : 10,
+  "Target_enemies": true,
   "Conditions": [
      "Dread",
 	 "Panic",

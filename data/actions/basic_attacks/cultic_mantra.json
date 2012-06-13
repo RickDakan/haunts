@@ -9,6 +9,7 @@
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
+  "Target_enemies": true,
   "Conditions": [
      "Focused"
    ]
