@@ -255,6 +255,9 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     for i := range gp.game.Ents {
       fx,fy := gp.game.Ents[i].FPos()
       wx,wy := gp.viewer.BoardToWindow(float32(fx), float32(fy))
+      if gp.game.Ents[i].Stats != nil && gp.game.Ents[i].Stats.HpCur() <= 0 {
+        continue  // Don't bother showing dead units
+      }
       x := wx - int(gp.game.Ents[i].last_render_width / 2)
       y := wy
       x2 := wx + int(gp.game.Ents[i].last_render_width / 2)
