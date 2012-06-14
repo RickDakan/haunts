@@ -308,7 +308,6 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
       if target.Side() != a.ent.Side() {
         target.Info.LastEntThatAttackedMe = a.ent.Id
         a.ent.Info.LastEntThatIAttacked = target.Id
-        break
       }
     }
   }

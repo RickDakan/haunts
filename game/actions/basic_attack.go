@@ -137,15 +137,22 @@ func (a *BasicAttack) Icon() *texture.Object {
 func (a *BasicAttack) Readyable() bool {
   return true
 }
+func (a *BasicAttack) validTarget(source, target *game.Entity) bool {
+  if source.Stats == nil || target.Stats == nil { return false }
+  if distBetweenEnts(source, target) > a.Range { return false }
+  x2,y2 := target.Pos()
+  dx,dy := target.Dims()
+  if !source.HasLos(x2, y2, dx, dy) { return false }
+  if target.Stats.HpCur() <= 0 { return false }
+  if source.Side() == target.Side() && !a.Target_allies { return false }
+  if source.Side() != target.Side() && !a.Target_enemies { return false }
+  return true
+}
 func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
   var targets []*game.Entity
-  x,y := ent.Pos()
-  for _,e := range g.Ents {
-    if e == ent { continue }
-    if e.Stats == nil { continue }
-    x2,y2 := e.Pos()
-    if dist(x, y, x2, y2) <= a.Range && ent.HasLos(x2, y2, 1, 1) && e.Stats.HpCur() > 0 {
-      targets = append(targets, e)
+  for _, target := range g.Ents {
+    if a.validTarget(ent, target) {
+      targets = append(targets, target)
     }
   }
   return targets
@@ -165,11 +172,9 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game.ActionExec {
-  if ent.Side() == target.Side() { return nil }
-  if ent.Stats.ApCur() < a.Ap { return nil }
-  x,y := ent.Pos()
-  x2,y2 := target.Pos()
-  if dist(x,y,x2,y2) > a.Range { return nil }
+  if !a.validTarget(ent, target) {
+    return nil
+  }
   return a.makeExec(ent, target)
 }
 func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
@@ -182,14 +187,11 @@ func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
-  if target == nil { return false, nil }
-  if target.Stats == nil { return false, nil }
   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    px, py := target.Pos()
-    if a.ent.Stats.ApCur() >= a.Ap && target.Stats.HpCur() > 0 && a.ent.HasLos(px, py, 1, 1) {
-      return true, a.makeExec(a.ent, target)
+    if target == nil || !a.validTarget(a.ent, target) {
+      return true, nil
     }
-    return true, nil
+    return true, a.makeExec(a.ent, target)
   }
   return false, nil
 }
@@ -219,21 +221,18 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     a.target = a.ent.Game().EntityById(a.exec.Target)
 
     // Track this information for the ais
-    a.ent.Info.LastEntThatIAttacked = a.target.Id
-    a.target.Info.LastEntThatAttackedMe = a.ent.Id
+    if a.ent.Side() != a.target.Side() {
+      a.ent.Info.LastEntThatIAttacked = a.target.Id
+      a.target.Info.LastEntThatAttackedMe = a.ent.Id
+    }
 
     if a.Ap > a.ent.Stats.ApCur() {
       base.Error().Printf("Got a basic attack that required more ap than available: %v", a.exec)
       return game.Complete
     }
 
-    if a.target.Stats.HpCur() <= 0 {
-      base.Error().Printf("Got a basic attack that attacked a dead person: %v", a.exec)
-      return game.Complete
-    }
-
-    if distBetweenEnts(a.ent, a.target) > a.Range {
-      base.Error().Printf("Got a basic attack that is out of range: %v", a.exec)
+    if !a.validTarget(a.ent, a.target) {
+      base.Error().Printf("Got a basic attack that was invalid for some reason: %v", a.exec)
       return game.Complete
     }
   }
