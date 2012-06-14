@@ -101,7 +101,7 @@ func init() {
   }
 }
 
-// Returns the position of the specified entity, which must be in los.
+// Returns the position of the specified entity.
 //    Format:
 //    p = pos(id)
 //
@@ -109,8 +109,7 @@ func init() {
 //    id - integer - Entity id of the entity whose position this should return.
 //
 //    Outputs:
-//    p - table[x,y] - The position of the specified entity, or nil if the
-//                     entity was not in los.
+//    p - table[x,y] - The position of the specified entity.
 func PosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !luaCheckParamsOk(L, "pos", luaInteger) {
@@ -123,11 +122,7 @@ func PosFunc(a *Ai) lua.GoFunction {
       return 1
     }
     x, y := ent.Pos()
-    if a.ent.HasLos(x, y, 1, 1) {
-      putPointToTable(L, x, y)
-    } else {
-      L.PushNil()
-    }
+    putPointToTable(L, x, y)
     return 1
   }
 }
