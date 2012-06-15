@@ -1,0 +1,6 @@
+{
+  "Name": "Computer",
+  "Texture":  {
+    "Path": "textures/computer_texture.png"
+  }
+}

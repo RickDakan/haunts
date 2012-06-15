@@ -1,0 +1,13 @@
+{
+  "Name": "Bed - Single",
+  "Orientations": [
+    {
+      "Dx": 2,
+      "Dy": 4,
+      "Texture": {
+        "Path": "furniture/bed_single/bed_single.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
