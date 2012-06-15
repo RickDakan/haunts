@@ -50,6 +50,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("showMainBar", showMainBar(gp))
   gp.script.L.Register("spawnDude", spawnDude(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
+  gp.script.L.Register("selectMap", selectMap(gp))
 
   gp.script.sync = make(chan struct{})
   res := gp.script.L.DoString(string(prog))
@@ -92,14 +93,13 @@ func (gp *GamePanel) scriptThink() {
 
 func loadHouse(gp *GamePanel) lua.GoFunction {
   return func(L* lua.State) int {
-    base.Log().Printf("Makeing Stuff")
     gp.script.syncStart()
     defer gp.script.syncEnd()
 
-    path := L.ToString(-1)
-    def, err := house.MakeHouseFromPath(filepath.Join(base.GetDataDir(), "houses", path))
-    if err != nil || len(def.Floors) == 0 {
-      base.Error().Printf("%v", err)
+    name := L.ToString(-1)
+    def := house.MakeHouseFromName(name)
+    if def == nil || len(def.Floors) == 0 {
+      base.Error().Printf("No house exists with the name '%s'.", name)
       return 0
     }
     gp.house = def
@@ -166,6 +166,27 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
       L.PushInteger(int(gp.game.Ents[i].Id))
       L.SetTable(-3)
     }
+    return 1
+  }
+}
+
+func selectMap(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    selector, output, err := MakeUiSelectMap(gp)
+    if err != nil {
+      base.Error().Printf("Error selecting map: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(selector, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.script.syncEnd()
+
+    name := <-output
+
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(selector)
+    L.PushString(name)
+    gp.script.syncEnd()
     return 1
   }
 }

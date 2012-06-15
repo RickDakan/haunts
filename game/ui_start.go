@@ -27,7 +27,7 @@ type UiStartLayout struct {
 func makeChallegeSelection(_gp interface{}) {
   gp := _gp.(*GamePanel)
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
-  select_map, err := MakeUiSelectMap(gp)
+  select_map, _, err := MakeUiSelectMap(gp)
   if err != nil {
     base.Error().Printf("Unable to make Map Selector: %v", err)
     return

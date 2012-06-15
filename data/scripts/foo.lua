@@ -1,5 +1,7 @@
 function Init()
-  loadHouse("milestone-manor.house")
+  map = selectMap()
+  print(map)
+  loadHouse(map)
   spawnDude("Angry Shade", 20, 20)
   spawnDude("Teen", 10, 20)
   spawnDude("Teen", 10, 20)

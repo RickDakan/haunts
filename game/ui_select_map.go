@@ -52,41 +52,38 @@ type UiSelectMapLayout struct {
   Default_icon texture.Object
 }
 
-func MakeUiSelectMap(gp *GamePanel) (gui.Widget, error) {
+func MakeUiSelectMap(gp *GamePanel) (gui.Widget, <-chan string, error) {
   var ui UiSelectMap
 
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "select_map", "config.json"), "json", &ui.layout)
   if err != nil {
-    return nil, err
+    return nil, nil, err
   }
 
   ui.region.Dx = 1024
   ui.region.Dy = 768
   var options []hui.Option
+  // TODO: may want to reload the registry on this one?  If we want to pik up
+  // new changes to files that is.
   for _, name := range base.GetAllNamesInRegistry("houses") {
     var mo MapOption
-    base.Log().Printf("Making house: %s", name)
     mo.house_def = house.MakeHouseFromName(name)
     mo.layout = &ui.layout
     options = append(options, &mo)
   }
+  out := make(chan string, 2)
   chooser := hui.MakeRosterChooser(options, hui.SelectExactlyOne, func(m map[int]bool) {
     var index int
     for index = range m {
+      out <- options[index].(*MapOption).house_def.Name
       break
     }
-    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
-    select_side, err := MakeUiSelectSide(gp, options[index].(*MapOption).house_def)
-    if err != nil {
-      base.Error().Printf("Unable to make Side Selector: %v", err)
-      return
-    }
-    gp.AnchorBox.AddChild(select_side, gui.Anchor{0, 0, 0, 0})
+    close(out)
   })
   ui.chooser = chooser
 
-  return &ui, nil
+  return &ui, out, nil
 }
 
 func (ui *UiSelectMap) String() string {

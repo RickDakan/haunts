@@ -256,9 +256,9 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return false
   }
 
-  if gp.game.Turn <= 1 {
-    return gp.game.setupRespond(ui, group)
-  }
+  // if gp.game.Turn <= 1 {
+  //   return gp.game.setupRespond(ui, group)
+  // }
 
   if group.Events[0].Type == gin.Release {
     return false
