@@ -288,7 +288,9 @@ func main() {
   editor_name = "room"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
-  game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
+  if base.GetStoreVal("last game path") != "" {
+    game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
+  }
 
   ui.AddChild(editor)
   ui.AddChild(base.MakeConsole())

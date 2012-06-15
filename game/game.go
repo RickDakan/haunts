@@ -34,14 +34,20 @@ type GamePanel struct {
   complete gui.Widget
 
   game *Game
+
+  script *gameScript
 }
 
 func MakeGamePanel() *GamePanel {
   var gp GamePanel
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+  startGameScript(&gp, "foo.lua")
+  return &gp
+
+  // the logic after this should be done by a lua script
   gp.house = house.MakeHouseDef()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
 
   start_menu, err := MakeUiStart(&gp)
   if err != nil {
@@ -102,10 +108,29 @@ func (gp *GamePanel) Active() bool {
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
+  gp.scriptThink()
   gp.AnchorBox.Think(ui, t)
   if !gp.Active() {
     return
   }
+
+  if gp.last_think == 0 {
+    gp.last_think = t
+  }
+  dt := t - gp.last_think
+  gp.last_think = t
+  gp.game.Think(dt)
+
+  if gp.main_bar != nil {
+    if gp.game.selected_ent != nil {
+      gp.main_bar.SelectEnt(gp.game.selected_ent)
+    } else {
+      gp.main_bar.SelectEnt(gp.game.hovered_ent)
+    }
+  }
+
+  return
+  // The logic after this should go into a lua script
   switch gp.game.Turn {
   case 0:
   case 1:
@@ -134,13 +159,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   default:
   }
   gp.main_bar.SelectEnt(gp.game.selected_ent)
-  if gp.last_think == 0 {
-    gp.last_think = t
-  }
-  dt := t - gp.last_think
-  gp.last_think = t
-
-  gp.game.Think(dt)
   if gp.game.winner != SideNone {
     var name string
     if gp.game.winner == SideExplorers {
@@ -165,6 +183,7 @@ func (g *Game) SpawnEntity(spawn *Entity, x,y int) {
   spawn.Y = float64(y)
   g.viewer.AddDrawable(spawn)
   g.Ents = append(g.Ents, spawn)
+  base.Log().Printf("Spaned %s with %d hp", spawn.Name, spawn.Stats.HpMax())
 }
 
 func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {

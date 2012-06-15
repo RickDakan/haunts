@@ -162,6 +162,7 @@ func MakeEntity(name string, g *Game) *Entity {
 
   if ent.Side() == SideHaunt || ent.Side() == SideExplorers {
     stats := status.MakeInst(ent.Base)
+    stats.OnBegin()
     ent.Stats = &stats
   }
 

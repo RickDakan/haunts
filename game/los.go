@@ -98,6 +98,8 @@ type Game struct {
 
   // Defaults to the zero value which is NoSide
   winner Side
+
+  script *gameScript
 }
 
 func (g *Game) EntityById(id EntityId) *Entity {
@@ -258,6 +260,12 @@ func (g *Game) checkWinConditions() {
   }
 }
 
+// This is called if the player is ready to end the turn, if the turn ends
+// then the following things happen:
+// 1. The game script gets to run its OnRound() function
+// 2. Entities with stats and HpCur() <= 0 are removed.
+// 3. Entities all have their OnRound() function called.
+// 4. All ais are activated.
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
@@ -272,83 +280,86 @@ func (g *Game) OnRound() {
     g.Side = SideExplorers
   }
 
-  if g.Turn == 1 {
-    var action_name string
-    switch g.Purpose {
-    case PurposeNone:
-      base.Error().Printf("Explorers have not set a purpose")
+  g.script.OnRound(g)
 
-    case PurposeCleanse:
-      action_name = "Cleanse"
-      // If this is a cleanse scenario we need to choose the active cleanse points
-      cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
-        ent := a.(*Entity)
-        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
-      }).([]*Entity)
-      count := 3
-      if len(cleanses) < 3 {
-        count = len(cleanses)
-      }
-      for i := 0; i < count; i++ {
-        n := rand.Intn(len(cleanses))
-        active := cleanses[n]
-        cleanses[n] = cleanses[len(cleanses)-1]
-        cleanses = cleanses[0:len(cleanses)-1]
-        g.Active_cleanses = append(g.Active_cleanses, active)
-      }
-      for _, active := range g.Active_cleanses {
-        base.Log().Printf("Active cleanse point: %s", active.Name)
-      }
+  // if g.Turn == 1 {
+  //   var action_name string
+  //   switch g.Purpose {
+  //   case PurposeNone:
+  //     base.Error().Printf("Explorers have not set a purpose")
 
-    case PurposeMystery:
-      action_name = "Mystery"
+  //   case PurposeCleanse:
+  //     action_name = "Cleanse"
+  //     // If this is a cleanse scenario we need to choose the active cleanse points
+  //     cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
+  //       ent := a.(*Entity)
+  //       return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
+  //     }).([]*Entity)
+  //     count := 3
+  //     if len(cleanses) < 3 {
+  //       count = len(cleanses)
+  //     }
+  //     for i := 0; i < count; i++ {
+  //       n := rand.Intn(len(cleanses))
+  //       active := cleanses[n]
+  //       cleanses[n] = cleanses[len(cleanses)-1]
+  //       cleanses = cleanses[0:len(cleanses)-1]
+  //       g.Active_cleanses = append(g.Active_cleanses, active)
+  //     }
+  //     for _, active := range g.Active_cleanses {
+  //       base.Log().Printf("Active cleanse point: %s", active.Name)
+  //     }
 
-    case PurposeRelic:
-      action_name = "Relic"
-      relics := algorithm.Choose(g.Ents, func(a interface{}) bool {
-        ent := a.(*Entity)
-        return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalRelic
-      }).([]*Entity)
-      if len(relics) == 0 {
-        base.Warn().Printf("Unable to find any relics for the relic mission")
-      } else {
-        g.Active_relic = relics[rand.Intn(len(relics))]
-        x,y := g.Active_relic.Pos()
-        base.Log().Printf("Chose active relic at position %d %d", x, y)
-      }
-    }
-    if action_name != "" {
-      for i := range g.Ents {
-        ent := g.Ents[i]
-        if ent.Side() != SideExplorers { continue }
-        action := MakeAction(action_name)
-        ent.Actions = append(ent.Actions, action)
-        for j := len(ent.Actions) - 1; j > 1; j-- {
-          ent.Actions[j], ent.Actions[j-1] = ent.Actions[j-1], ent.Actions[j]
-        }
-      }
-    }
-  }
+  //   case PurposeMystery:
+  //     action_name = "Mystery"
 
-  if g.Turn <= 2 {
-    g.viewer.RemoveDrawable(g.new_ent)
-    g.new_ent = nil
-  }
-  if g.Turn < 2 {
-    return
-  }
-  if g.Turn == 2 {
-    g.viewer.Los_tex = g.los_tex
-    g.OnBegin()
-  }
+  //   case PurposeRelic:
+  //     action_name = "Relic"
+  //     relics := algorithm.Choose(g.Ents, func(a interface{}) bool {
+  //       ent := a.(*Entity)
+  //       return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalRelic
+  //     }).([]*Entity)
+  //     if len(relics) == 0 {
+  //       base.Warn().Printf("Unable to find any relics for the relic mission")
+  //     } else {
+  //       g.Active_relic = relics[rand.Intn(len(relics))]
+  //       x,y := g.Active_relic.Pos()
+  //       base.Log().Printf("Chose active relic at position %d %d", x, y)
+  //     }
+  //   }
+  //   if action_name != "" {
+  //     for i := range g.Ents {
+  //       ent := g.Ents[i]
+  //       if ent.Side() != SideExplorers { continue }
+  //       action := MakeAction(action_name)
+  //       ent.Actions = append(ent.Actions, action)
+  //       for j := len(ent.Actions) - 1; j > 1; j-- {
+  //         ent.Actions[j], ent.Actions[j-1] = ent.Actions[j-1], ent.Actions[j]
+  //       }
+  //     }
+  //   }
+  // }
+
+  // if g.Turn <= 2 {
+  //   g.viewer.RemoveDrawable(g.new_ent)
+  //   g.new_ent = nil
+  // }
+  // if g.Turn < 2 {
+  //   return
+  // }
+  // if g.Turn == 2 {
+  //   g.viewer.Los_tex = g.los_tex
+  //   g.OnBegin()
+  // }
+
   for i := range g.Ents {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
       g.viewer.RemoveDrawable(g.Ents[i])
     }
   }
-  g.Ents = algorithm.Choose(g.Ents, func(a interface{}) bool {
-    return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
-  }).([]*Entity)
+  algorithm.Choose2(&g.Ents, func(ent *Entity) bool {
+    return ent.Stats == nil || ent.Stats.HpCur() > 0
+  })
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
