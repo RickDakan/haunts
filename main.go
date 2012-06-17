@@ -48,7 +48,6 @@ func loadAllRegistries() {
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
-  house.LoadAllSpawnPointsInDir(filepath.Join(datadir, "spawns"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
   game.LoadAllGearInDir(filepath.Join(datadir, "gear"))
   game.RegisterActions()

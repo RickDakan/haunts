@@ -1,12 +1,9 @@
 package game
 
 import (
-  "math/rand"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
-  "github.com/runningwild/glop/util/algorithm"
 )
 
 type hauntSetupLayout struct {
@@ -145,42 +142,43 @@ func (hs *hauntSetup) masterToServitor() {
   hs.AnchorBox.AddChild(hs.roster_chooser, gui.Anchor{0, 0.5, 0, 0.5})
 }
 
+// TODO: DEPRECATED
 func (hs *hauntSetup) servitorToMinion() {
-  hs.AnchorBox.RemoveChild(hs.roster_chooser)
-  ents := getAllEntsWithSideAndLevel(hs.game, SideHaunt, LevelMinion)
+  // hs.AnchorBox.RemoveChild(hs.roster_chooser)
+  // ents := getAllEntsWithSideAndLevel(hs.game, SideHaunt, LevelMinion)
 
-  spawns := hs.game.House.Floors[0].Spawns
-  spawns = algorithm.Choose(spawns, func(a interface{}) bool {
-    return a.(*house.SpawnPoint).Type() == house.SpawnHaunts
-  }).([]*house.SpawnPoint)
+  // spawns := hs.game.House.Floors[0].Spawns
+  // spawns = algorithm.Choose(spawns, func(a interface{}) bool {
+  //   return a.(*house.SpawnPoint).Type() == house.SpawnHaunts
+  // }).([]*house.SpawnPoint)
 
-  // Randomly select a minion, then randomly select a minion spawn point, then
-  // randomly place it within that spawn point's region.  Continue until
-  // all minion points are used up or sanity has run out.
-  sanity := 100
-  for hs.minion_points > 0 && sanity > 0 {
-    ent := ents[rand.Intn(len(ents))]
-    if ent.HauntEnt.Cost > hs.minion_points {
-      sanity--
-      continue
-    }
-    spawn := spawns[rand.Intn(len(spawns))]
-    x, y := spawn.Pos()
-    x += rand.Intn(2 * spawn.Dx + 1) - spawn.Dx
-    y += rand.Intn(2 * spawn.Dy + 1) - spawn.Dy
-    hs.game.new_ent = MakeEntity(ent.Name, hs.game)
-    hs.game.new_ent.X = float64(x)
-    hs.game.new_ent.Y = float64(y)
-    hs.game.viewer.AddDrawable(hs.game.new_ent)
-    if hs.game.placeEntity(true) {
-      sanity += 10
-      hs.minion_points -= ent.HauntEnt.Cost
-    } else {
-      sanity--
-      hs.game.viewer.RemoveDrawable(hs.game.new_ent)
-    }
-  }
-  hs.game.OnRound()
+  // // Randomly select a minion, then randomly select a minion spawn point, then
+  // // randomly place it within that spawn point's region.  Continue until
+  // // all minion points are used up or sanity has run out.
+  // sanity := 100
+  // for hs.minion_points > 0 && sanity > 0 {
+  //   ent := ents[rand.Intn(len(ents))]
+  //   if ent.HauntEnt.Cost > hs.minion_points {
+  //     sanity--
+  //     continue
+  //   }
+  //   spawn := spawns[rand.Intn(len(spawns))]
+  //   x, y := spawn.Pos()
+  //   x += rand.Intn(2 * spawn.Dx + 1) - spawn.Dx
+  //   y += rand.Intn(2 * spawn.Dy + 1) - spawn.Dy
+  //   hs.game.new_ent = MakeEntity(ent.Name, hs.game)
+  //   hs.game.new_ent.X = float64(x)
+  //   hs.game.new_ent.Y = float64(y)
+  //   hs.game.viewer.AddDrawable(hs.game.new_ent)
+  //   if hs.game.placeEntity(true) {
+  //     sanity += 10
+  //     hs.minion_points -= ent.HauntEnt.Cost
+  //   } else {
+  //     sanity--
+  //     hs.game.viewer.RemoveDrawable(hs.game.new_ent)
+  //   }
+  // }
+  // hs.game.OnRound()
 }
 
 func (hs *hauntSetup) Respond(ui *gui.Gui, group gui.EventGroup) bool {

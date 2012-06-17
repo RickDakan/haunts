@@ -1,7 +1,6 @@
 package game
 
 import (
-  "math/rand"
   "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -158,79 +157,53 @@ func (g *Game) OnBegin() {
   }
 }
 
+// TODO: DEPRECATED
 func (g *Game) PlaceInitialExplorers(ents []*Entity) {
-  if len(ents) > 9 {
-    base.Error().Printf("Cannot place more than 9 ents at a starting position.")
-    return
-  }
+  // if len(ents) > 9 {
+  //   base.Error().Printf("Cannot place more than 9 ents at a starting position.")
+  //   return
+  // }
 
-  var sp *house.SpawnPoint
-  for _, s := range g.House.Floors[0].Spawns {
-    if s.Type() == house.SpawnExplorers {
-      sp = s
-      break
-    }
-  }
-  if sp == nil {
-    base.Error().Printf("No initial explorer positions listed.")
-    return
-  }
-  if sp.Dx * sp.Dy < len(ents) {
-    base.Error().Printf("Not enough space to place the explorers.")
-    return
-  }
-  x, y := sp.Pos()
-  base.Log().Printf("Starting %d explorers at (%d, %d)", len(ents), x, y)
-  var poss [][2]int
-  for dx := 0; dx < sp.Dx; dx++ {
-    for dy := 0; dy < sp.Dy; dy++ {
-      poss = append(poss, [2]int{x+dx, y+dy})
-    }
-  }
-  for i := range ents {
-    g.Ents = append(g.Ents, ents[i])
-    ents[i].Info.RoomsExplored[ents[i].CurrentRoom()] = true
-    g.viewer.AddDrawable(ents[i])
-    index := rand.Intn(len(poss))
-    pos := poss[index]
-    poss[index] = poss[len(poss)-1]
-    poss = poss[0:len(poss)-1]
-    ents[i].X = float64(pos[0])
-    ents[i].Y = float64(pos[1])
-  }
+  // var sp *house.SpawnPoint
+  // for _, s := range g.House.Floors[0].Spawns {
+  //   if s.Type() == house.SpawnExplorers {
+  //     sp = s
+  //     break
+  //   }
+  // }
+  // if sp == nil {
+  //   base.Error().Printf("No initial explorer positions listed.")
+  //   return
+  // }
+  // if sp.Dx * sp.Dy < len(ents) {
+  //   base.Error().Printf("Not enough space to place the explorers.")
+  //   return
+  // }
+  // x, y := sp.Pos()
+  // base.Log().Printf("Starting %d explorers at (%d, %d)", len(ents), x, y)
+  // var poss [][2]int
+  // for dx := 0; dx < sp.Dx; dx++ {
+  //   for dy := 0; dy < sp.Dy; dy++ {
+  //     poss = append(poss, [2]int{x+dx, y+dy})
+  //   }
+  // }
+  // for i := range ents {
+  //   g.Ents = append(g.Ents, ents[i])
+  //   ents[i].Info.RoomsExplored[ents[i].CurrentRoom()] = true
+  //   g.viewer.AddDrawable(ents[i])
+  //   index := rand.Intn(len(poss))
+  //   pos := poss[index]
+  //   poss[index] = poss[len(poss)-1]
+  //   poss = poss[0:len(poss)-1]
+  //   ents[i].X = float64(pos[0])
+  //   ents[i].Y = float64(pos[1])
+  // }
 }
 
 func (g *Game) checkWinConditions() {
   // Check for explorer win conditions
   explorer_win := false
-  switch g.Purpose {
-  case PurposeRelic:
-    if g.Active_relic == nil {
-      // If the relic has been taken and at least one explorer is standing in
-      // an exit then the explorers win.
-      for _, ent := range g.Ents {
-        if ent.Side() != SideExplorers { continue }
-        for _, spawn := range g.House.Floors[0].Spawns {
-          if spawn.Type() != house.SpawnExit { continue }
-          x, y := ent.Pos()
-          sx, sy := spawn.Pos()
-          sdx, sdy := spawn.Dims()
-          if x >= sx && x < sx + sdx && y >= sy && y < sy + sdy {
-            explorer_win = true
-          }
-        }
-      }
-    }
 
-  case PurposeMystery:
-  case PurposeCleanse:
-    if len(g.Active_cleanses) == 0 {
-      explorer_win = true
-    }
-
-  default:
-    base.Log().Printf("No purpose set - unable to check for explorer win condition")
-  }
   if explorer_win {
     base.Log().Printf("Explorers won - kaboom")
   }

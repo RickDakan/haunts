@@ -426,37 +426,41 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
     base.Log().Printf("Using object '%s' at (%.0f, %.0f)", place.ent.Name, place.ent.X, place.ent.Y)
   }
 }
+
+// TODO: DEPRECATED
 func spawnAllRelics(g *Game) {
-  relic_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-    return a.(*house.SpawnPoint).Type() == house.SpawnRelic
-  }).([]*house.SpawnPoint)
+  // relic_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
+  //   return a.(*house.SpawnPoint).Type() == house.SpawnRelic
+  // }).([]*house.SpawnPoint)
 
-  ent_names := base.GetAllNamesInRegistry("entities")
-  all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-    return MakeEntity(a.(string), g)
-  }).([]*Entity)
-  relic_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-    e := a.(*Entity)
-    return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalRelic
-  }).([]*Entity)
+  // ent_names := base.GetAllNamesInRegistry("entities")
+  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
+  //   return MakeEntity(a.(string), g)
+  // }).([]*Entity)
+  // relic_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
+  //   e := a.(*Entity)
+  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalRelic
+  // }).([]*Entity)
 
-  spawnEnts(g, relic_ents, relic_spawns)
+  // spawnEnts(g, relic_ents, relic_spawns)
 }
+
+// TODO: DEPRECATED
 func spawnAllCleanses(g *Game) {
-  cleanse_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-    return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
-  }).([]*house.SpawnPoint)
+  // cleanse_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
+  //   return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
+  // }).([]*house.SpawnPoint)
 
-  ent_names := base.GetAllNamesInRegistry("entities")
-  all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-    return MakeEntity(a.(string), g)
-  }).([]*Entity)
-  cleanse_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-    e := a.(*Entity)
-    return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalCleanse
-  }).([]*Entity)
+  // ent_names := base.GetAllNamesInRegistry("entities")
+  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
+  //   return MakeEntity(a.(string), g)
+  // }).([]*Entity)
+  // cleanse_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
+  //   e := a.(*Entity)
+  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalCleanse
+  // }).([]*Entity)
 
-  spawnEnts(g, cleanse_ents, cleanse_spawns)
+  // spawnEnts(g, cleanse_ents, cleanse_spawns)
 }
 
 func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
