@@ -94,6 +94,7 @@ func (g *Game) placeEntity(initial bool) bool {
         if haunt.Level == LevelMinion && !spawn.Haunt.Minions { continue }
         if haunt.Level == LevelServitor && !spawn.Haunt.Servitors { continue }
         if haunt.Level == LevelMaster && !spawn.Haunt.Masters { continue }
+
         x, y := spawn.Pos()
         dx, dy := spawn.Dims()
         if ix < x || ix + idx > x + dx { continue }

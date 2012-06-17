@@ -49,6 +49,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("loadHouse", loadHouse(gp))
   gp.script.L.Register("showMainBar", showMainBar(gp))
   gp.script.L.Register("spawnDude", spawnDude(gp))
+  gp.script.L.Register("placeDude", placeDude(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
 
@@ -152,6 +153,16 @@ func spawnDude(gp *GamePanel) lua.GoFunction {
     x := L.ToInteger(-2)
     y := L.ToInteger(-1)
     gp.game.SpawnEntity(MakeEntity(name, gp.game), x, y)
+    return 0
+  }
+}
+
+func placeDude(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    ep := MakeEntityPlacer(gp.game, []string{"Angry Shade", "Teen"}, []int{1,2}, 5)
+    gp.AnchorBox.AddChild(ep, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.script.syncEnd()
     return 0
   }
 }

@@ -2,7 +2,6 @@ package game
 
 import (
   "math/rand"
-  "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/glop/gui"
@@ -89,16 +88,16 @@ func (hs *hauntSetup) makeServitorPlacer(ents []*Entity) hui.Selector {
   }
 }
 
-func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity {
-  names := base.GetAllNamesInRegistry("entities")
-  ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
-    return MakeEntity(a.(string), game)
-  }).([]*Entity)
-  ents = algorithm.Choose(ents, func(a interface{}) bool {
-    return a.(*Entity).Side() == side && a.(*Entity).HauntEnt.Level == level
-  }).([]*Entity)
-  return ents
-}
+// func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity {
+//   names := base.GetAllNamesInRegistry("entities")
+//   ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
+//     return MakeEntity(a.(string), game)
+//   }).([]*Entity)
+//   ents = algorithm.Choose(ents, func(a interface{}) bool {
+//     return a.(*Entity).Side() == side && a.(*Entity).HauntEnt.Level == level
+//   }).([]*Entity)
+//   return ents
+// }
 
 func MakeHauntSetupBar(game *Game) (*hauntSetup, error) {
   var hs hauntSetup
