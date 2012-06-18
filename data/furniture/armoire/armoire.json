@@ -1,0 +1,13 @@
+{
+  "Name": "Armoire",
+  "Orientations": [
+    {
+      "Dx": 2,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/armoire/armoire.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

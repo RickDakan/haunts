@@ -1,0 +1,13 @@
+{
+  "Name": "Hedge",
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/hedge/hedge.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

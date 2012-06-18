@@ -1,0 +1,13 @@
+{
+  "Name": "Coffee Table",
+  "Orientations": [
+    {
+      "Dx": 2,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/coffee_table/coffee_table.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

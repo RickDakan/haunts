@@ -1,0 +1,13 @@
+{
+  "Name": "Dress Form",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/dress_form/dress_form.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
