@@ -9,5 +9,6 @@
   "Ammo"     : 3,
   "Strength" : 4,
   "Damage"   : 2,
-  "Range"    : 1
+  "Range"    : 1,
+  "Target_enemies": true
 }

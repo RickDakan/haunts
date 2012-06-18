@@ -5,6 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/chill_touch.png"
   },
+  "Target_enemies": true,
   "Ap"       : 2,
   "Strength" : 4,
   "Damage"   : 1,

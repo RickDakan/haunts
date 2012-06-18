@@ -9,6 +9,7 @@
   "Strength" : 5,
   "Damage"   : 0,
   "Range"    : 7,
+  "Target_enemies": true,
   "Conditions": [
      "Horrified"
    ]

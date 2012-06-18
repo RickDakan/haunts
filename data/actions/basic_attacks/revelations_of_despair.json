@@ -7,8 +7,9 @@
   },
   "Ap"       : 4,
   "Strength" : 5,
-  "Damage"   : 2,
+  "Damage"   : 0,
   "Range"    : 10,
+  "Target_enemies": true,
   "Conditions": [
      "Dread",
 	 "Panic",

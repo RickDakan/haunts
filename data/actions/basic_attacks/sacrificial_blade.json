@@ -8,5 +8,6 @@
   "Ap"       : 3,
   "Strength" : 5,
   "Damage"   : 3,
-  "Range"    : 1
+  "Range"    : 1,
+  "Target_enemies": true
 }
