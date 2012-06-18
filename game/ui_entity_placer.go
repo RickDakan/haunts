@@ -63,20 +63,20 @@ func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity
 // Returns an entity placer and a channel that will send a single slice of
 // strings when the user is done with the ui.  The strings will be the names
 // of all of the entities that were placed.
-func MakeEntityPlacer(g *Game, pattern string, names []string, costs []int, points int) (*entityPlacer, <-chan []string) {
+func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs []int) (*entityPlacer, <-chan []string) {
   house.PushSpawnRegexp(pattern)
   ep := entityPlacer{
     game: g,
     points: points,
     names: names,
-    name_to_cost: make(map[string]int, len(names)),
+    name_to_cost: make(map[string]int),
     pattern: pattern,
   }
   
   var roster []hui.Option
   for i := range ep.names {
-    roster = append(roster, makeEntLabel(MakeEntity(names[i], g)))
-    ep.name_to_cost[names[i]] = costs[i]
+    ep.name_to_cost[ep.names[i]] = costs[i]
+    roster = append(roster, makeEntLabel(MakeEntity(ep.names[i], g)))
   }
 
   placed := make(chan []string, 1)
@@ -112,8 +112,8 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       if ep.game.placeEntity(ep.pattern) {
         cost := ep.name_to_cost[ent.Name]
         ep.points -= cost
+        ep.placed = append(ep.placed, ent.Name)
         if cost <= ep.points {
-          ep.placed = append(ep.placed, ent.Name)
           ep.game.new_ent = MakeEntity(ent.Name, ep.game)
           ep.game.viewer.AddDrawable(ep.game.new_ent)
         }

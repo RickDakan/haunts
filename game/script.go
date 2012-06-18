@@ -161,8 +161,25 @@ func spawnDude(gp *GamePanel) lua.GoFunction {
 func placeDude(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
-    re := L.ToString(-1)
-    ep, placed_chan := MakeEntityPlacer(gp.game, re, []string{"Angry Shade", "Teen"}, []int{1,2}, 5)
+    pattern := L.ToString(-3)
+    points := L.ToInteger(-2)
+
+    var names []string
+    var costs []int
+    L.PushNil()
+    for L.Next(-2) != 0 {
+      L.PushInteger(1)
+      L.GetTable(-2)
+      names = append(names, L.ToString(-1))
+      L.Pop(1)
+      L.PushInteger(2)
+      L.GetTable(-2)
+      costs = append(costs, L.ToInteger(-1))
+      L.Pop(1)
+      L.Pop(1)
+    }
+
+    ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
     gp.AnchorBox.AddChild(ep, gui.Anchor{0.5,0.5,0.5,0.5})
     gp.script.syncEnd()
 
