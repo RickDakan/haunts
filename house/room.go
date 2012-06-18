@@ -449,13 +449,13 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
         gl.DrawElements(gl.TRIANGLES, ids.floor_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.left_buffer != 0 {
-        gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+        gl.StencilFunc(gl.ALWAYS, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.left_buffer)
         do_color(R, G, B, alphaMult(A, left_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.left_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.right_buffer != 0 {
-        gl.StencilFunc(gl.NOTEQUAL, 1, 1)
+        gl.StencilFunc(gl.ALWAYS, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.right_buffer)
         do_color(R, G, B, alphaMult(A, right_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
