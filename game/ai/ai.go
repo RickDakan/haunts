@@ -68,8 +68,8 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   ai_struct.Prog = string(prog)
   ai_struct.ent = ent
   ai_struct.game = g
-  ai_struct.L = lua.NewState();
-  ai_struct.L.OpenLibs();
+  ai_struct.L = lua.NewState()
+  ai_struct.L.OpenLibs()
 
   ai_struct.active_set = make(chan bool)
   ai_struct.active_query = make(chan bool)

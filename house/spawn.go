@@ -6,7 +6,34 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
+  "regexp"
 )
+
+var spawn_regex []*regexp.Regexp
+func PushSpawnRegexp(pattern string) {
+  re, err := regexp.Compile(pattern)
+  if err != nil {
+    base.Error().Printf("Unable to compile regexp: '%s': %v", pattern, err)
+    // Just duplicate the top one, since this will probably come with an
+    // associated pop.
+    spawn_regex = append(spawn_regex, topSpawnRegexp())
+    return
+  }
+  spawn_regex = append(spawn_regex, re)
+}
+func PopSpawnRegexp() {
+  if len(spawn_regex) == 0 {
+    base.Error().Printf("Tried to pop an empty stack.")
+    return
+  }
+  spawn_regex = spawn_regex[0 : len(spawn_regex) - 1]
+}
+func topSpawnRegexp() *regexp.Regexp {
+  if len(spawn_regex) == 0 {
+    return nil
+  }
+  return spawn_regex[len(spawn_regex)-1]
+}
 
 type SpawnPoint struct {
   Name  string
@@ -39,11 +66,18 @@ func (sp *SpawnPoint) Render(pos mathgl.Vec2, width float32) {
   gl.End()
 }
 func (sp *SpawnPoint) RenderOnFloor() {
+  re := topSpawnRegexp()
+  if re == nil || !re.MatchString(sp.Name) {
+    return
+  }
+
   var rgba [4]float64
   gl.GetDoublev(gl.CURRENT_COLOR, &rgba[0])
   gl.PushAttrib(gl.CURRENT_BIT)
   gl.Disable(gl.TEXTURE_2D)
 
+  // This just creates a color that is consistent among all spawn points whose
+  // names match SpawnName-.*
   prefix := sp.Name
   for i := range prefix {
     if prefix[i] == '-' {

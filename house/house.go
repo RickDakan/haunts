@@ -922,9 +922,12 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (hdt *houseDoorTab) Collapse() {
+  PopSpawnRegexp()
   hdt.onEscape()
 }
-func (hdt *houseDoorTab) Expand() {}
+func (hdt *houseDoorTab) Expand() {
+  PushSpawnRegexp(".*")
+}
 func (hdt *houseDoorTab) Reload() {
   hdt.onEscape()
 }

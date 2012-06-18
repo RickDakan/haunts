@@ -2,6 +2,7 @@ package game
 
 import (
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
@@ -16,15 +17,18 @@ type entityPlacer struct {
 
   names        []string
   name_to_cost map[string]int
+
+  // entities that the user has placed
+  placed []string
+
+  // regular expression that matches valid spawn points
+  pattern string
 }
 
 func makeEntityPlacerSelector(game *Game, ep *entityPlacer) hui.Selector {
   return func(index int, selected map[int]bool, doit bool) (valid bool) {
     if index == -1 {
-      valid = (len(selected) == 1)
-      if valid {
-        game.new_ent = nil
-      }
+      return true
     } else {
       valid = true
     }
@@ -56,12 +60,17 @@ func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity
   return ents
 }
 
-func MakeEntityPlacer(g *Game, names []string, costs []int, points int) *entityPlacer {
+// Returns an entity placer and a channel that will send a single slice of
+// strings when the user is done with the ui.  The strings will be the names
+// of all of the entities that were placed.
+func MakeEntityPlacer(g *Game, pattern string, names []string, costs []int, points int) (*entityPlacer, <-chan []string) {
+  house.PushSpawnRegexp(pattern)
   ep := entityPlacer{
     game: g,
     points: points,
     names: names,
     name_to_cost: make(map[string]int, len(names)),
+    pattern: pattern,
   }
   
   var roster []hui.Option
@@ -70,14 +79,19 @@ func MakeEntityPlacer(g *Game, names []string, costs []int, points int) *entityP
     ep.name_to_cost[names[i]] = costs[i]
   }
 
+  placed := make(chan []string, 1)
   ep.roster_chooser = hui.MakeRosterChooser(roster,
     makeEntityPlacerSelector(g, &ep),
-    func(m map[int]bool) {},
-    )
+    func(m map[int]bool) {
+      placed <- ep.placed
+      house.PopSpawnRegexp()
+      close(placed)
+    },
+  )
   ep.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   ep.AnchorBox.AddChild(ep.roster_chooser, gui.Anchor{0,0.5,0,0.5})
 
-  return &ep
+  return &ep, placed
 }
 
 func (ep *entityPlacer) Think(ui *gui.Gui, t int64) {
@@ -95,10 +109,11 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     ep.game.new_ent.X, ep.game.new_ent.Y = float64(bx), float64(by)
     if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
       ent := ep.game.new_ent
-      if ep.game.placeEntity(true) {
+      if ep.game.placeEntity(ep.pattern) {
         cost := ep.name_to_cost[ent.Name]
         ep.points -= cost
         if cost <= ep.points {
+          ep.placed = append(ep.placed, ent.Name)
           ep.game.new_ent = MakeEntity(ent.Name, ep.game)
           ep.game.viewer.AddDrawable(ep.game.new_ent)
         }

@@ -12,6 +12,7 @@ import (
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
   "os"
+  "regexp"
   "time"
 )
 
@@ -62,11 +63,16 @@ func LoadAllEntities() {
 }
 
 // Tries to place new_ent in the game at its current position.  Returns true
-// on success, false otherwise.  If initial is true it will only place spawns
-// in their appropriate spawn regions, as defined by spawn points.
-func (g *Game) placeEntity(initial bool) bool {
+// on success, false otherwise.
+// pattern is a regexp that matches only the names of all valid spawn points.
+func (g *Game) placeEntity(pattern string) bool {
   if g.new_ent == nil {
     base.Log().Printf("No new ent")
+    return false
+  }
+  re, err := regexp.Compile(pattern)
+  if err != nil {
+    base.Error().Printf("Failed to compile regexp: '%s': %v", pattern, err)
     return false
   }
   g.new_ent.Info.RoomsExplored[g.new_ent.CurrentRoom()] = true
@@ -86,35 +92,19 @@ func (g *Game) placeEntity(initial bool) bool {
       return false
     }
   }
-  // Check for spawn points, if it is an initial placement
-  placeable := false
-  if initial {
-    haunt := g.new_ent.HauntEnt
-    if haunt != nil {
-      for _, spawn := range g.House.Floors[0].Spawns {
-        // if spawn.Type() != house.SpawnHaunts { continue }
-        // if haunt.Level == LevelMinion && !spawn.Haunt.Minions { continue }
-        // if haunt.Level == LevelServitor && !spawn.Haunt.Servitors { continue }
-        // if haunt.Level == LevelMaster && !spawn.Haunt.Masters { continue }
 
-        x, y := spawn.Pos()
-        dx, dy := spawn.Dims()
-        if ix < x || ix + idx > x + dx { continue }
-        if iy < y || iy + idy > y + dy { continue }
-        placeable = true
-        break
-      }
-    }
-  } else {
-    placeable = true
+  // Check for spawn points
+  for _, spawn := range g.House.Floors[0].Spawns {
+    if !re.MatchString(spawn.Name) { continue }
+    x, y := spawn.Pos()
+    dx, dy := spawn.Dims()
+    if ix < x || ix + idx > x + dx { continue }
+    if iy < y || iy + idy > y + dy { continue }
+    g.Ents = append(g.Ents, g.new_ent)
+    g.new_ent = nil
+    return true
   }
-  if !placeable {
-    return false
-  }
-
-  g.Ents = append(g.Ents, g.new_ent)
-  g.new_ent = nil
-  return true
+  return false
 }
 
 func (e *Entity) ReloadAi() {

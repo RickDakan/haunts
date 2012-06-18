@@ -44,6 +44,7 @@ func startGameScript(gp *GamePanel, path string) {
   }
   gp.script = &gameScript{}
   gp.script.L = lua.NewState()
+  gp.script.L.OpenLibs()
   gp.script.L.SetExecutionLimit(25000)
   registerUtilityFunctions(gp.script.L)
   gp.script.L.Register("loadHouse", loadHouse(gp))
@@ -160,10 +161,23 @@ func spawnDude(gp *GamePanel) lua.GoFunction {
 func placeDude(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
-    ep := MakeEntityPlacer(gp.game, []string{"Angry Shade", "Teen"}, []int{1,2}, 5)
+    re := L.ToString(-1)
+    ep, placed_chan := MakeEntityPlacer(gp.game, re, []string{"Angry Shade", "Teen"}, []int{1,2}, 5)
     gp.AnchorBox.AddChild(ep, gui.Anchor{0.5,0.5,0.5,0.5})
     gp.script.syncEnd()
-    return 0
+
+    placed := <-placed_chan
+    L.NewTable()
+    for i := range placed {
+      L.PushInteger(i + 1)
+      L.PushString(placed[i])
+      L.SetTable(-3)
+    }
+
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(ep)
+    gp.script.syncEnd()
+    return 1
   }
 }
 

@@ -3,7 +3,6 @@ package game
 import (
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/gin"
 )
 
 type hauntSetupLayout struct {
@@ -182,32 +181,32 @@ func (hs *hauntSetup) servitorToMinion() {
 }
 
 func (hs *hauntSetup) Respond(ui *gui.Gui, group gui.EventGroup) bool {
-  if hs.AnchorBox.Respond(ui, group) {
-    return true
-  }
-  if hs.game.new_ent != nil {
-    x,y := gin.In().GetCursor("Mouse").Point()
-    fbx, fby := hs.game.viewer.WindowToBoard(x, y)
-    bx, by := DiscretizePoint32(fbx, fby)
-    hs.game.new_ent.X, hs.game.new_ent.Y = float64(bx), float64(by)
-    if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-      ent := hs.game.new_ent
-      if hs.game.placeEntity(true) {
-        if hs.mode == LevelMaster {
-          hs.points = ent.HauntEnt.Cost
-          hs.minion_points = ent.HauntEnt.Minions
-          hs.masterToServitor()
-        } else if hs.mode == LevelServitor {
-          hs.points-=ent.HauntEnt.Cost
-          if ent.HauntEnt.Cost <= hs.points {
-            hs.game.new_ent = MakeEntity(ent.Name, hs.game)
-            hs.game.viewer.AddDrawable(hs.game.new_ent)
-          }
-        }
-      }
-      return true
-    }
-  }
+  // if hs.AnchorBox.Respond(ui, group) {
+  //   return true
+  // }
+  // if hs.game.new_ent != nil {
+  //   x,y := gin.In().GetCursor("Mouse").Point()
+  //   fbx, fby := hs.game.viewer.WindowToBoard(x, y)
+  //   bx, by := DiscretizePoint32(fbx, fby)
+  //   hs.game.new_ent.X, hs.game.new_ent.Y = float64(bx), float64(by)
+  //   if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  //     ent := hs.game.new_ent
+  //     if hs.game.placeEntity(true) {
+  //       if hs.mode == LevelMaster {
+  //         hs.points = ent.HauntEnt.Cost
+  //         hs.minion_points = ent.HauntEnt.Minions
+  //         hs.masterToServitor()
+  //       } else if hs.mode == LevelServitor {
+  //         hs.points-=ent.HauntEnt.Cost
+  //         if ent.HauntEnt.Cost <= hs.points {
+  //           hs.game.new_ent = MakeEntity(ent.Name, hs.game)
+  //           hs.game.viewer.AddDrawable(hs.game.new_ent)
+  //         }
+  //       }
+  //     }
+  //     return true
+  //   }
+  // }
   return false
 }
 

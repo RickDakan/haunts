@@ -3,7 +3,10 @@ function Init()
   loadHouse(map)
   spawnDude("Angry Shade", 20, 20)
   spawnDude("Teen", 10, 20)
-  placeDude()
+  dudes = placeDude("Foo-.*")
+  for i, dude in pairs(dudes) do
+    print(i, dude)
+  end
   showMainBar(true)
   ents = getAllEnts()
 end
