@@ -1,0 +1,13 @@
+{
+  "Name": "Tesla Coil",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/tesla_coil/tesla_coil.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

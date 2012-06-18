@@ -1,0 +1,15 @@
+{
+  "Name": "Iron Maiden",
+  "Dx": 1,
+  "Dy": 1,
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/iron_maiden/iron_maiden.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

@@ -1,0 +1,10 @@
+{
+  "Name": "Door Basic",
+  "Width": 1,
+  "Opened_texture": {
+    "Path": "doors/door_basic_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_basic_closed.png"
+  }
+}

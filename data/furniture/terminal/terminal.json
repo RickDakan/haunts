@@ -1,0 +1,13 @@
+{
+  "Name": "Terminal",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/terminal/terminal.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

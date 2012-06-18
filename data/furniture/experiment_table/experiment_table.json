@@ -1,0 +1,13 @@
+{
+  "Name": "Experiment Table",
+  "Orientations" : [
+    {
+      "Dx": 3,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/experiment_table/experiment_table.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
