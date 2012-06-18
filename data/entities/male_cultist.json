@@ -21,5 +21,6 @@
     "Corpus": 9,
     "Ego": 9,
     "Sight": 10
-  }
+  },
+    "ai_path": "ais/male_cultist.lua"
 }
