@@ -922,11 +922,9 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (hdt *houseDoorTab) Collapse() {
-  PopSpawnRegexp()
   hdt.onEscape()
 }
 func (hdt *houseDoorTab) Expand() {
-  PushSpawnRegexp(".*")
 }
 func (hdt *houseDoorTab) Reload() {
   hdt.onEscape()
@@ -1109,9 +1107,12 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (hdt *houseRelicsTab) Collapse() {
+  PopSpawnRegexp()
   hdt.onEscape()
 }
-func (hdt *houseRelicsTab) Expand() {}
+func (hdt *houseRelicsTab) Expand() {
+  PushSpawnRegexp(".*")
+}
 func (hdt *houseRelicsTab) Reload() {
   hdt.onEscape()
 }
