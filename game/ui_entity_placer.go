@@ -30,7 +30,11 @@ func makeEntityPlacerSelector(game *Game, ep *entityPlacer) hui.Selector {
     if index == -1 {
       return true
     } else {
-      valid = true
+      valid = ep.name_to_cost[ep.names[index]] <= ep.points
+      if !valid {
+        delete(selected, index)
+        return
+      }
     }
     if doit {
       var other int
