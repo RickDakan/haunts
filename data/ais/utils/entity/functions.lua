@@ -56,7 +56,7 @@ end
 function targetAllyTarget()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-	  target = entityInfo(ally).lastEntityThatIAttacked
+	  target = entityInfo(ally).lastEntityIAttacked
 	  if exists(target) then
 	  	return target
 	  end
@@ -69,10 +69,11 @@ end
 -- stat is looking for corpus, ego, hpCur, hpMax, apCur, apMax
 function targetLowestStat(stat)
 	intruders = nearestNEntities (10, "intruder")
-	min = 1000
+	target = nil
+	min = 10000
 	for _, intruder in pairs (intruders) do
-		if GetEntityStats(intruder) [stat] < min then
-			min = GetEntityStats(intruder) [stat]
+		if getEntityStats(intruder) [stat] < min then
+			min = getEntityStats(intruder) [stat]
 			target = intruder
 		end
 	end
@@ -84,10 +85,10 @@ end
 
 function targetHighestStat(stat)
 	intruders = nearestNEntities (10, "intruder")
-	max = 1
+	max = 0
 	for _, intruder in pairs (intruders) do
-		if GetEntityStats(intruder) [stat] > max then
-			max = GetEntityStats(intruder) [stat]
+		if getEntityStats(intruder) [stat] > max then
+			max = getEntityStats(intruder) [stat]
 			target = intruder
 		end
 	end
