@@ -151,6 +151,7 @@ func (a *Ai) loadUtils(dir string) {
       if err != nil {
         return nil
       }
+      base.Log().Printf("Loaded lua utils file '%s': \n%s", path, data)
       a.L.DoString(string(data))
     }
     return nil

@@ -5,7 +5,7 @@
   "Ap"       : 3,
   "Strength" : 7,
   "Damage"   : 3,
-  "Range"    : 10,
+  "Range"    : 6,
   "Target_enemies": true,
   "Conditions": [
      "Agony"

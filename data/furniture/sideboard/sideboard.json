@@ -1,0 +1,13 @@
+{
+  "Name": "Sideboard",
+  "Orientations": [
+    {
+      "Dx": 4,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/sideboard/sideboard.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

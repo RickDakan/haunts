@@ -1,0 +1,13 @@
+{
+  "Name": "Console",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/console/console.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

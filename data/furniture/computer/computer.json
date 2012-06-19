@@ -1,0 +1,13 @@
+{
+  "Name": "Computer",
+  "Orientations": [
+    {
+      "Dx": 1,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/computer/computer.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}
