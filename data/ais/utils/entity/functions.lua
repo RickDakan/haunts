@@ -56,7 +56,7 @@ end
 function targetAllyTarget()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-	  target = entityInfo(ally).lastEntityThatIAttacked
+	  target = entityInfo(ally).lastEntityIAttacked
 	  if exists(target) then
 	  	return target
 	  end
