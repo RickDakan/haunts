@@ -1,0 +1,13 @@
+{
+  "Name": "Bench 02 - Flat",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 5,
+      "Texture": {
+        "Path": "furniture/bench_02/bench_02.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
