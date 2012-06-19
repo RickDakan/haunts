@@ -1164,6 +1164,7 @@ func MakeHouseEditorPanel() Editor {
   he.house = *MakeHouseDef()
   he.HorizontalTable = gui.MakeHorizontalTable()
   he.viewer = MakeHouseViewer(&he.house, 62)
+  he.viewer.Edit_mode = true
   he.HorizontalTable.AddChild(he.viewer)
 
   he.widgets = append(he.widgets, makeHouseDataTab(&he.house, he.viewer))

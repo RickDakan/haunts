@@ -1,0 +1,9 @@
+{
+  "Name": "Greater Fire Resistance",
+  "Strength": 5,
+  "Kind": "Arcane",
+  "Duration": 5,
+  "Resistances": {
+    "Fire": 3
+  }
+}

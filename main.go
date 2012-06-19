@@ -23,7 +23,7 @@ import (
   // Need to pull in all of the actions we define here and not in
   // haunts/game because haunts/game/actions depends on it
   _ "github.com/runningwild/haunts/game/actions"
-  _ "github.com/runningwild/haunts/game/ai2"
+  _ "github.com/runningwild/haunts/game/ai"
 
   "github.com/runningwild/haunts/game/status"
 )
@@ -245,12 +245,6 @@ func main() {
   base.Log().Printf("Version %s", Version())
   sys.Startup()
   err := gl.Init()
-  if err != nil {
-    panic(err)
-  }
-
-  // Startup audio
-  err = base.InitAudio()
   if err != nil {
     panic(err)
   }

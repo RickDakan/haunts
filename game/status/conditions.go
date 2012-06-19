@@ -99,6 +99,12 @@ type BasicConditionDef struct {
   // This Condition will OnRound() exactly Duration + 1 times.
   // If Duration < 0 then it will OnRound() forever.
   Duration int
+
+  // Resistances["Foo"] = -4 would mean that when attacked with an attack of
+  // kind "Foo" that -4 is added to the this entity's defensive value, either
+  // corpus or ego, as appropriate.  In this case it would be a penalty, but
+  // if it were a positive value it would be a resistance.
+  Resistances map[string]int
 }
 
 func (bc *BasicCondition) Name() string {
@@ -124,6 +130,10 @@ func (bc *BasicConditionDef) ModifyBase(base Base, kind Kind) Base {
   base.Attack += bc.Base.Attack
   base.Corpus += bc.Base.Corpus
   base.Ego += bc.Base.Ego
+  if val, ok := bc.Resistances[string(kind)]; ok {
+    base.Corpus += val
+    base.Ego += val
+  }
   return base
 }
 

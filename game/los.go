@@ -350,6 +350,12 @@ func (g *Game) OnRound() {
     return a.(*Entity).Stats == nil || a.(*Entity).Stats.HpCur() > 0
   }).([]*Entity)
 
+  for i := range g.Ents {
+    if g.Ents[i].Side() == g.Side {
+      g.Ents[i].OnRound()
+    }
+  }
+
   // The entity ais must be activated before the master ais, otherwise the
   // masters might be running with stale data if one of the entities has been
   // reloaded.
@@ -360,11 +366,6 @@ func (g *Game) OnRound() {
   g.haunts_ai.Activate()
   g.explorers_ai.Activate()
 
-  for i := range g.Ents {
-    if g.Ents[i].Side() == g.Side {
-      g.Ents[i].OnRound()
-    }
-  }
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
     g.selected_ent.selected = false
@@ -487,9 +488,6 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
         pos = x
     }
     if pos >= door.Pos && pos < door.Pos + door.Width {
-      if !door.Opened {
-        base.Log().Printf("Door is closed!")
-      }
       return door.Opened
     }
   }
@@ -748,6 +746,11 @@ func (g *Game) Think(dt int64) {
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
+    if ent.Side() != SideHaunt && ent.Side() != SideExplorers {
+      // Relics and cleanse points and whatnot matter here, and they might not
+      // be in a 'ready' state.
+      continue
+    }
     state := ent.sprite.Sprite().AnimState()
     if state != "ready" && state != "killed" {
       return
@@ -794,11 +797,13 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   var x0,y0,x,y int
   var room0,room *house.Room
   x, y = line[0][0], line[0][1]
+  if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
   los[x][y] = true
   room = roomAt(g.House.Floors[0], x, y)
   for _,p := range line[1:] {
     x0,y0 = x,y
     x,y = p[0], p[1]
+    if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
     room0 = room
     room = roomAt(g.House.Floors[0], x, y)
     if room == nil { return }
@@ -819,6 +824,13 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
     if dist <= 0 { return }
     los[x][y] = true
   }
+}
+
+func (g *Game) TeamLos(x, y int) bool {
+  if x < 0 || y < 0 || x >= len(g.los_merger) || y >= len(g.los_merger[x]) {
+    return false
+  }
+  return g.los_merger[x][y]
 }
 
 func (g *Game) MergeLos(ents []*Entity) {

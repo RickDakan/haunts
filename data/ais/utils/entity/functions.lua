@@ -1,70 +1,41 @@
-
--- move to within range and attack target
-
-function moveAndAttack (attack, target)
-	ps = allPathablePoints (pos(me()), pos(target), 1, getBasicAttackStats(me(), attack).range)
+function moveWithinRangeAndAttack (min_range, attack, target)
+	max_range = getBasicAttackStats(me(), attack).range
+	if min_range > max_range then
+		min_range = max_range
+	end
+	ps = allPathablePoints (pos(me()), pos(target), min_range, max_range)
 	res = doMove (ps, 1000)
 	if exists(target) then
 		doBasicAttack(attack, target)
 	end
 end
-	
---keep distance
-
-function keepDistanceAndAttack (distance, attack, target)
-	ps = allPathablePoints (pos(me()), pos(target), distance, getBasicAttackStats(me(), attack).range)
-	doMove (ps, 1000)
-	if exists(target) then
-		doBasickAttack(attack, target)
-	end
-end
-
-
-
-
-
---TARGETING FUNCTIONS
----so, would this function, with the print and return and stuff give me something to play off of
-
---nearest Target
-
-function adjacent()
-	intruders = nearestNEntities (10, "intruder")
-	for _, intruder in pairs (intruders) do
-		dist = rangedDistBetweenEntities(me(), intruder, 1, 10)
-		if dist == 1 then
-			target = intruder
-		end
-	end
-	return target
-end
-
 
 function pursue()
-	print(target)
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
 		target = entityInfo(me()).lastEntityIAttacked
+		if exists(target) then
+			return target
+		end
 	end
-	if res == nil then
-		return nil
-	end
+	return nil
 end
 
 function nearest()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = intruder
+		return intruder
 	end
-	return target
+	return nil
 end
 
 
 function retaliate()
-	intruders = nearestNEntities (10, "intruder")
-	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityThatAttackedMe
+	target = entityInfo(me()).lastEntityThatAttackedMe
+	if exists(target) then
+		return target
 	end
+	return nil
 end
 
 		
@@ -73,18 +44,24 @@ end
 function targetAllyAttacker()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-		target = entityInfo(ally).lastEntityThatAttackedMe
+	  target = entityInfo(ally).lastEntityThatAttackedMe
+	  if exists(target) then
+	  	return target
+	  end
 	end	
-	return target
+	return nil
 end
 
 --target enemy your allies are already attacking
 function targetAllyTarget()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-		target = entityInfo(ally).lastEntityThatIAttacked
+	  target = entityInfo(ally).lastEntityThatIAttacked
+	  if exists(target) then
+	  	return target
+	  end
 	end	
-	return target
+	return nil
 end
 	
 
@@ -107,14 +84,14 @@ end
 
 function targetHighestStat(stat)
 	intruders = nearestNEntities (10, "intruder")
-	min = 1
+	max = 1
 	for _, intruder in pairs (intruders) do
-		if GetEntityStats)intruder) [stat] > min then
-			min = GetEntityStats(intruder) [stat]
+		if GetEntityStats(intruder) [stat] > max then
+			max = GetEntityStats(intruder) [stat]
 			target = intruder
 		end
 	end
-	return target, min
+	return target, max
 end
 
 
@@ -141,7 +118,7 @@ end
 
 function allyHasCondition(has, condition)
 	allies = nearestNEntities(50, "denizen")
-	for =, ally in pairst (allies) do
+	for _, ally in pairst (allies) do
 		if has and getConditions(ally) [condition] then
 			return intruder
 		end
@@ -170,23 +147,23 @@ end
 
 
 function ApNeeded(attack)
-	apCur = getEntityStats(me()) [apCur]
-	apCost = getBasicAttackStats(me()), attack) [ap]
-	extra-dist = apCur - apCost
+	apCur = getEntityStats(me()) ["apCur"]
+	apCost = getBasicAttackStats(me(), attack) ["ap"]
+	extra_dist = apCur - apCost
 	return extra_dist
 end
 
 
---target and execute AOE attack
+-- --target and execute AOE attack
 
 
 
-function AOEtargetAndAttack(attack, extra_dist, spec)
-	target = bestAoeAttackPos(attack, extra_dist, spec)
-		-- pos = ???
-		return target
-		end
-	if exists(target) then
-		res = doAoeAttack(target, pos)
-	end
-end
+-- function AOEtargetAndAttack(attack, extra_dist, spec)
+-- 	target = bestAoeAttackPos(attack, extra_dist, spec)
+-- 		-- pos = ???
+-- 		return target
+-- 	-- 	end
+-- 	-- if exists(target) then
+-- 	-- 	res = doAoeAttack(target, pos)
+-- 	-- end
+-- end
