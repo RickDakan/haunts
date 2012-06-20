@@ -1,0 +1,13 @@
+{
+  "Name": "Chaise 01",
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chaise_01/chaise_01.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
