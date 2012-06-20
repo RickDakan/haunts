@@ -55,6 +55,8 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("getSpawnPointsMatching", getSpawnPointsMatching(gp))
   gp.script.L.Register("spawnEntitySomewhereInSpawnPoints", spawnEntitySomewhereInSpawnPoints(gp))
   gp.script.L.Register("placeEntities", placeEntities(gp))
+  gp.script.L.Register("roomAtPos", roomAtPos(gp))
+  gp.script.L.Register("setLosMode", setLosMode(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
 
@@ -249,7 +251,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       L.PushInteger(sp_count)
       L.GetTable(-2)
       if id < 0 || id >= len(gp.game.House.Floors[0].Spawns) {
-        base.Error().Printf("Tried to access un unknown spawn point: %d", id)
+        base.Error().Printf("Tried to access an unknown spawn point: %d", id)
         break
       }
       sp := gp.game.House.Floors[0].Spawns[id]
@@ -260,6 +262,8 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
           if gp.game.IsCellOccupied(x, y) {
             continue
           }
+          // This will choose a random position from all positions and giving
+          // all positions an equal chance of being chosen.
           count++
           if rand.Intn(count) == 0 {
             tx = x
@@ -341,6 +345,69 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
       L.SetTable(-3)
     }
     return 1
+  }
+}
+
+func roomAtPos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    L.PushString("x")
+    L.GetTable(-2)
+    x := L.ToInteger(-1)
+    L.Pop(1)
+    L.PushString("y")
+    L.GetTable(-2)
+    y := L.ToInteger(-1)
+    L.Pop(1)
+    room, _, _ := gp.game.House.Floors[0].RoomFurnSpawnAtPos(x, y)
+    for i, r := range gp.game.House.Floors[0].Rooms {
+      if r == room {
+        L.PushInteger(i)
+        return 1
+      }
+    }
+    base.Error().Printf("Tried to get the room at position (%d,%d), but there is no room there.", x, y)
+    return 0
+  }
+}
+
+func setLosMode(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    mode_str := L.ToString(1)
+    switch mode_str {
+    case "none":
+      gp.game.SetLosMode(LosModeNone, nil)
+    case "all":
+      gp.game.SetLosMode(LosModeAll, nil)
+    case "entities":
+      gp.game.SetLosMode(LosModeEntities, nil)
+    case "rooms":
+      if !L.IsTable(-1) {
+        base.Error().Printf("The second parameter to setLosMode should be an array of rooms if mode == 'rooms'")
+        return 0
+      }
+      L.PushNil()
+      all_rooms := gp.game.House.Floors[0].Rooms
+      var rooms []*house.Room
+      for L.Next(-2) != 0 {
+        index := L.ToInteger(-1)
+        if index < 0 || index > len(all_rooms) {
+          base.Error().Printf("Tried to reference room #%d which doesn't exist.", index)
+          continue
+        }
+        rooms = append(rooms, all_rooms[index])
+        L.Pop(1)
+      }
+      gp.game.SetLosMode(LosModeRooms, rooms)
+
+    default:
+      base.Error().Printf("Unknown los mode '%s'", mode_str)
+      return 0
+    }
+    return 0
   }
 }
 

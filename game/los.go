@@ -17,6 +17,14 @@ const(
   PurposeCleanse
 )
 
+type LosMode int
+const (
+  LosModeNone     LosMode = iota
+  LosModeAll
+  LosModeEntities
+  LosModeRooms
+)
+
 type Game struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
@@ -63,6 +71,8 @@ type Game struct {
 
   // If the user is dragging around a new Entity to place, this is it
   new_ent *Entity
+
+  los_mode LosMode
 
   // Might want to keep several of them for different POVs, but one is
   // fine for now
@@ -320,10 +330,10 @@ func (g *Game) OnRound() {
   // if g.Turn < 2 {
   //   return
   // }
-  // if g.Turn == 2 {
-  //   g.viewer.Los_tex = g.los_tex
-  //   g.OnBegin()
-  // }
+  if g.Turn == 2 {
+    // g.viewer.Los_tex = g.los_tex
+    g.OnBegin()
+  }
 
   for i := range g.Ents {
     if g.Ents[i].Stats != nil && g.Ents[i].Stats.HpCur() <= 0 {
@@ -620,6 +630,9 @@ func (g *Game) setup() {
   }
 
   g.MergeLos(g.Ents)
+  g.los_mode = LosModeAll
+  g.viewer.Los_tex = g.los_tex
+
 
   ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
@@ -659,7 +672,60 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.haunts_selection = gui.MakeVerticalTable()
   g.haunts_selection.AddChild(gui.MakeTextLine("standard", "bar", 300, 1, 1, 1, 1))
   g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
+
+
   return &g
+}
+
+func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
+  g.los_mode = los_mode
+  pix := g.los_tex.Pix()
+  switch g.los_mode {
+  case LosModeNone:
+    for i := range pix {
+      for j := range pix[i] {
+        if pix[i][j] >= house.LosVisibilityThreshold {
+          pix[i][j] = house.LosVisibilityThreshold - 1
+        }
+      }
+    }
+
+  case LosModeAll:
+    for i := range pix {
+      for j := range pix[i] {
+        if pix[i][j] < house.LosVisibilityThreshold {
+          pix[i][j] = house.LosVisibilityThreshold
+        }
+      }
+    }
+
+  case LosModeEntities:
+    // Don't need to do anything here - it's handled on every think
+
+  case LosModeRooms:
+    in_room := make(map[int]bool)
+    for _, room := range rooms {
+      for x := room.X; x < room.X + room.Size.Dx; x++ {
+        for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+          in_room[g.ToVertex(x, y)] = true
+        }
+      }
+    }
+    for i := range pix {
+      for j := range pix[i] {
+        if in_room[g.ToVertex(i, j)] {
+          if pix[i][j] < house.LosVisibilityThreshold {
+            pix[i][j] = house.LosVisibilityThreshold
+          }
+        } else {
+          if pix[i][j] >= house.LosVisibilityThreshold {
+            pix[i][j] = house.LosVisibilityThreshold - 1
+          }
+        }
+
+      }
+    }
+  }
 }
 
 func (g *Game) Think(dt int64) {
@@ -697,7 +763,11 @@ func (g *Game) Think(dt int64) {
       side_ents = append(side_ents, g.Ents[i])
     }
   }
-  g.MergeLos(side_ents)
+
+  if g.los_mode == LosModeEntities {
+    g.MergeLos(side_ents)
+  }
+
   pix := g.los_tex.Pix()
   amt := dt / 5
   mod := false
