@@ -23,6 +23,8 @@ type entityPlacer struct {
 
   // regular expression that matches valid spawn points
   pattern string
+
+  undo_stack []*Entity
 }
 
 func makeEntityPlacerSelector(game *Game, ep *entityPlacer) hui.Selector {
@@ -91,6 +93,16 @@ func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs
       house.PopSpawnRegexp()
       close(placed)
     },
+    func() {
+      if len(ep.undo_stack) > 0 {
+        top_pos := len(ep.undo_stack) - 1
+        top := ep.undo_stack[top_pos]
+        ep.undo_stack = ep.undo_stack[0 : top_pos]
+        g.GetViewer().RemoveDrawable(top)
+        algorithm.Choose2(&g.Ents, func(e *Entity) bool { return e != top })
+        ep.points += ep.name_to_cost[top.Name]
+      }
+    },
   )
   ep.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   ep.AnchorBox.AddChild(ep.roster_chooser, gui.Anchor{0,0.5,0,0.5})
@@ -117,6 +129,7 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         cost := ep.name_to_cost[ent.Name]
         ep.points -= cost
         ep.placed = append(ep.placed, ent.Name)
+        ep.undo_stack = append(ep.undo_stack, ent)
         if cost <= ep.points {
           ep.game.new_ent = MakeEntity(ent.Name, ep.game)
           ep.game.viewer.AddDrawable(ep.game.new_ent)

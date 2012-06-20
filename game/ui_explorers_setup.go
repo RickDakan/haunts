@@ -260,6 +260,7 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
       es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     }
   },
+  nil,
   )
 
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
@@ -289,7 +290,8 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     base.Log().Printf("Selected %d", game.Purpose)
     es.AnchorBox.RemoveChild(es.purpose_table)
     es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-  })
+  },
+  nil)
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil
@@ -358,7 +360,9 @@ func (es *explorerSetup) makeGearChooser(game *Game, explorer_index int) gui.Wid
     } else {
       es.startGame(game)
     }
-  })
+  },
+  nil,
+  )
   return makeGearChooser(ent, rc)
 }
 

@@ -109,6 +109,7 @@ func MakeHauntSetupBar(game *Game) (*hauntSetup, error) {
   hs.roster_chooser = hui.MakeRosterChooser(roster,
     makeEntityPlacer(game, ents),
     func(m map[int]bool) {},
+    nil,
     )
 
   hs.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
@@ -136,6 +137,7 @@ func (hs *hauntSetup) masterToServitor() {
     func(m map[int]bool) {
       hs.servitorToMinion()
     },
+    nil,
   )
 
   hs.AnchorBox.AddChild(hs.roster_chooser, gui.Anchor{0, 0.5, 0, 0.5})

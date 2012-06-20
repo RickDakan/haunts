@@ -58,13 +58,15 @@ type RosterChooser struct {
 
   on_complete func(map[int]bool)
 
+  on_undo func()
+
   // Render regions - makes it easy to remember where we rendered things so we
   // know where to check for clicks.
   render struct {
     up, down    gui.Region
     options     []gui.Region
     all_options gui.Region
-    done, sure  gui.Region
+    done, undo  gui.Region
   }
 }
 
@@ -122,7 +124,7 @@ func SelectExactlyOne(index int, selected map[int]bool, doit bool) (valid bool) 
   return
 }
 
-func MakeRosterChooser(options []Option, selector Selector, on_complete func(map[int]bool)) *RosterChooser {
+func MakeRosterChooser(options []Option, selector Selector, on_complete func(map[int]bool), on_undo func()) *RosterChooser {
   var rc RosterChooser
   rc.options = options
   err := base.LoadAndProcessObject(filepath.Join(base.GetDataDir(), "ui", "widgets", "roster_chooser.json"), "json", &rc.layout)
@@ -137,6 +139,7 @@ func MakeRosterChooser(options []Option, selector Selector, on_complete func(map
   rc.selected = make(map[int]bool)
   rc.selector = selector
   rc.on_complete = on_complete
+  rc.on_undo = on_undo
   rc.render.options = make([]gui.Region, len(rc.options))
   return &rc
 }
@@ -192,6 +195,9 @@ func (rc *RosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       if rc.selector(-1, rc.selected, false) {
         rc.on_complete(rc.selected)
       }
+      return true
+    } else if rc.on_undo != nil && gp.Inside(rc.render.undo) {
+      rc.on_undo()
       return true
     }
   }
@@ -268,7 +274,7 @@ func (rc *RosterChooser) Draw(r gui.Region) {
       gui.Point{x, r.Y},
       gui.Dims{r.Dx/2, int(d.MaxHeight()*2)},
     }
-    rc.render.sure = gui.Region{
+    rc.render.undo = gui.Region{
       gui.Point{x + r.Dx/2, r.Y},
       gui.Dims{r.Dx/2, int(d.MaxHeight()*2)},
     }
@@ -280,12 +286,14 @@ func (rc *RosterChooser) Draw(r gui.Region) {
     }
     d.RenderString("Done", x1, y, 0, d.MaxHeight(), gui.Center)
 
-    if rc.mouse.Inside(rc.render.sure) {
-      gl.Color4d(1, 1, 1, 1)
-    } else {
-      gl.Color4d(0.6, 0.6, 0.6, 1)
+    if rc.on_undo != nil {
+      if rc.mouse.Inside(rc.render.undo) {
+        gl.Color4d(1, 1, 1, 1)
+      } else {
+        gl.Color4d(0.6, 0.6, 0.6, 1)
+      }
+      d.RenderString("Undo", x2, y, 0, d.MaxHeight(), gui.Center)
     }
-    d.RenderString("Rawr", x2, y, 0, d.MaxHeight(), gui.Center)
 
   }
 }

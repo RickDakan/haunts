@@ -80,7 +80,8 @@ func MakeUiSelectMap(gp *GamePanel) (gui.Widget, <-chan string, error) {
       break
     }
     close(out)
-  })
+  },
+  nil)
   ui.chooser = chooser
 
   return &ui, out, nil
