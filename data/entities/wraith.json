@@ -22,5 +22,6 @@
     "Corpus": 9,
     "Ego": 9,
     "Sight": 15
-  }
+  },
+  "ai_path": "ais/wraith_new.lua"
 }

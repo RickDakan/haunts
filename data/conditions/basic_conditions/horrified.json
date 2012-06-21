@@ -2,7 +2,7 @@
   "Name": "Horrified",
   "Strength": 5,
   "Kind": "Terror",
-  "Duration": 3,
+  "Duration": 5,
   "Base": {
     "Ego": -2
   }

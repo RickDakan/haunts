@@ -13,7 +13,7 @@
   ],
   "HauntEnt": {
     "Cost":  1,
-    "Level": "Minion"
+    "Level": "Servitor"
   },
   "Base": {
     "Ap_max": 5,
@@ -22,5 +22,5 @@
     "Ego": 7,
     "Sight": 15
   },
-  "Ai_path": "ais/test.lua"
+  "Ai_path": "ais/shade.lua"
 }

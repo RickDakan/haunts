@@ -2,21 +2,25 @@
 
 function think()
 	target = pursue()
-	if not target then
+	if target == nil then
 		target = retaliate()
 	end
-	if not target then
-		target = targetHasCondition(true, "Horrified")
+	if target == nil then
+		target = targetAllyTarget()
 	end
-	if not target then
-		target = targetHighestStat(ego)
+	if target == nil then
+		target = targetLowestStat("hpCur")
 	end
-	if targetHasCondition (false, "Horrified") then
-		moveAndAttack ("Cosmic Infection", target)
+	if target == nil then
+		target = nearest()
+	end	
+	if target == nil then
+		return
 	end
-	if targetHasCondition (true, "Horrified") then
-		moveAndAttack ("Feast", target)
+	if getConditions(target)["Horrified"] then
+		moveWithinRangeAndAttack (1, "Feast", target)
+	else
+		moveWithinRangeAndAttack (1, "Cosmic Infection", target)
 	end
 end
 think()
-

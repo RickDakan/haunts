@@ -119,9 +119,9 @@ end
 
 function allyHasCondition(has, condition)
 	allies = nearestNEntities(50, "denizen")
-	for _, ally in pairst (allies) do
+	for _, ally in pairs (allies) do
 		if has and getConditions(ally) [condition] then
-			return intruder
+			return ally
 		end
 		if not has and not getConditions(ally) [condition] then
 			return ally

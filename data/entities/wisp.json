@@ -12,7 +12,7 @@
   ],
   "HauntEnt": {
     "Cost": 1,
-    "Level": "Minion"
+    "Level": "Servitor"
   },
   "Base": {
     "Ap_max": 7,
@@ -21,5 +21,5 @@
     "Ego": 7,
     "Sight": 15
   },
-  "Ai_path": "ais/wisp.lua"
+  "Ai_path": "ais/wisp_new.lua"
 }
