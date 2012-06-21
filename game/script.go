@@ -69,6 +69,7 @@ func startGameScript(gp *GamePanel, path string) {
       gp.script.L.SetExecutionLimit(250000)
       gp.script.L.GetField(lua.LUA_GLOBALSINDEX, "Init")
       gp.script.L.Call(0, 0)
+      gp.game.OnRound()
     } ()
   }
 }
@@ -76,10 +77,25 @@ func startGameScript(gp *GamePanel, path string) {
 func (gs *gameScript) OnRound(g *Game) {
   go func() {
     gs.L.SetExecutionLimit(250000)
-    base.Log().Printf("Calling on round")
-    gs.L.GetField(lua.LUA_GLOBALSINDEX, "OnRound")
+    gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundStart")
     gs.L.PushBoolean(g.Side == SideExplorers)
-    gs.L.Call(1, 0)
+    gs.L.PushInteger((g.Turn + 1) / 2)
+    gs.L.Call(2, 0)
+
+    base.Log().Printf("Do round middle")
+    g.WaitOnRoundMiddle()
+    base.Log().Printf("Round middle done")
+
+    gs.L.SetExecutionLimit(250000)
+    gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundEnd")
+    gs.L.PushBoolean(g.Side == SideExplorers)
+    gs.L.PushInteger((g.Turn + 1) / 2)
+    gs.L.Call(2, 0)
+
+    gs.syncStart()
+    g.turn_state = TurnStateStart
+    g.OnRound()
+    gs.syncEnd()
   } ()
 }
 

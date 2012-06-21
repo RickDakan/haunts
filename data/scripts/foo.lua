@@ -18,7 +18,9 @@ end
 function Init()
   map = selectMap()
   loadHouse(map)
+end
 
+function doDenizenSetup()
   -- This creates a list of entities and associated point values.  The order
   -- the names are listed in here is the order they will appear to the user.
   ents = {
@@ -59,10 +61,13 @@ function Init()
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
-  -- match anything with the prefix "servitor-".
+  -- match anything with the prefix "Servitor-".
   setLosModeToRoomsWithSpawnsMatching("Servitor-.*")
   placed = placeEntities("Servitor-.*", 10, ents)
 
+end
+
+function doIntrudersSetup()
   intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
   spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
@@ -75,10 +80,23 @@ function Init()
   setLosMode("entities")
 end
 
-function OnRound(intruders)
-  if not intruders then
-    spawn_points = getSpawnPointsMatching("Minion-.*")
-    p = spawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
-    print("Spawned Angry Shade at ", p.x, p.y)
+function RoundStart(intruders, turn)
+  if turn == 1 then
+    if intruders then
+      doIntrudersSetup()
+    else
+      doDenizenSetup()
+    end
+    return
   end
+  print("start", intruders, turn)
+  -- if not intruders then
+  --   spawn_points = getSpawnPointsMatching("Minion-.*")
+  --   p = spawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
+  --   print("Spawned Angry Shade at ", p.x, p.y)
+  -- end
+end
+
+function RoundEnd(intruders, turn)
+  print("end", intruders, turn)
 end

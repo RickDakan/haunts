@@ -25,6 +25,13 @@ const (
   LosModeRooms
 )
 
+type TurnState int
+const (
+  TurnStateStart  TurnState = iota
+  TurnStateMiddle
+  TurnStateEnd
+)
+
 type Game struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
@@ -46,6 +53,12 @@ type Game struct {
   // Current turn number - incremented on each OnRound() so every two
   // indicates that a complete round has happened.
   Turn int
+  turn_state TurnState
+
+  // these are used to synchronize the scripts with the middle of each round
+  do_round_middle chan struct{}
+  round_middle_done chan struct{}
+  player_active bool
 
   // The purpose that the explorers have for entering the house, chosen at the
   // beginning of the game.
@@ -243,12 +256,16 @@ func (g *Game) checkWinConditions() {
   }
 }
 
+func (g *Game) WaitOnRoundMiddle() {
+  g.do_round_middle <- struct{}{}
+  <-g.round_middle_done
+}
+
 // This is called if the player is ready to end the turn, if the turn ends
 // then the following things happen:
 // 1. The game script gets to run its OnRound() function
 // 2. Entities with stats and HpCur() <= 0 are removed.
 // 3. Entities all have their OnRound() function called.
-// 4. All ais are activated.
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
@@ -349,16 +366,6 @@ func (g *Game) OnRound() {
       g.Ents[i].OnRound()
     }
   }
-
-  // The entity ais must be activated before the master ais, otherwise the
-  // masters might be running with stale data if one of the entities has been
-  // reloaded.
-  for i := range g.Ents {
-    g.Ents[i].Ai.Activate()
-  }
-  g.minion_ai.Activate()
-  g.haunts_ai.Activate()
-  g.explorers_ai.Activate()
 
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
@@ -674,6 +681,9 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
 
 
+  g.do_round_middle = make(chan struct{}, 1)
+  g.round_middle_done = make(chan struct{}, 1)
+
   return &g
 }
 
@@ -814,6 +824,35 @@ func (g *Game) Think(dt int64) {
     }
   }
 
+
+  select {
+  case <-g.do_round_middle:
+    g.turn_state = TurnStateMiddle
+    // The entity ais must be activated before the master ais, otherwise the
+    // masters might be running with stale data if one of the entities has been
+    // reloaded.
+    for i := range g.Ents {
+      g.Ents[i].Ai.Activate()
+    }
+    if g.Side == g.Human {
+      g.player_active = true
+      base.Log().Printf("player_active set to true")
+    } else {
+      if g.Side == SideHaunt {
+        g.minion_ai.Activate()
+        g.haunts_ai.Activate()
+      } else {
+        g.explorers_ai.Activate()
+      }
+    }
+
+  default:
+  }
+  // Don't do actions until we're done with the turn setup
+  if g.turn_state != TurnStateMiddle {
+    return
+  }
+
   // Do Ai - if there is any to do
   if g.Side == SideHaunt {
     if g.minion_ai.Active() {
@@ -844,6 +883,9 @@ func (g *Game) Think(dt int64) {
 
     default:
     }
+  }
+  if !g.player_active && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
+    g.round_middle_done <- struct{}{}
   }
 }
 

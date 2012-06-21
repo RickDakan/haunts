@@ -256,10 +256,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return false
   }
 
-  // if gp.game.Turn <= 1 {
-  //   return gp.game.setupRespond(ui, group)
-  // }
-
   if group.Events[0].Type == gin.Release {
     return false
   }
@@ -308,6 +304,11 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         // Do nothing - we don't cancel an action that's in progress
       }
     }
+  }
+
+  // No actions or selecting ents unless we're in the middle of the turn
+  if gp.game.turn_state != TurnStateMiddle {
+    return false
   }
 
   if gp.game.action_state == noAction {
