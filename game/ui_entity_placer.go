@@ -18,9 +18,6 @@ type entityPlacer struct {
   names        []string
   name_to_cost map[string]int
 
-  // entities that the user has placed
-  placed []string
-
   // regular expression that matches valid spawn points
   pattern string
 
@@ -66,10 +63,9 @@ func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity
   return ents
 }
 
-// Returns an entity placer and a channel that will send a single slice of
-// strings when the user is done with the ui.  The strings will be the names
-// of all of the entities that were placed.
-func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs []int) (*entityPlacer, <-chan []string) {
+// Returns an entity placer and a channel that will send a single slice
+// containing the entities that were placed.
+func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs []int) (*entityPlacer, <-chan []*Entity) {
   house.PushSpawnRegexp(pattern)
   ep := entityPlacer{
     game: g,
@@ -85,11 +81,11 @@ func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs
     roster = append(roster, makeEntLabel(MakeEntity(ep.names[i], g)))
   }
 
-  placed := make(chan []string, 1)
+  placed := make(chan []*Entity, 1)
   ep.roster_chooser = hui.MakeRosterChooser(roster,
     makeEntityPlacerSelector(g, &ep),
     func(m map[int]bool) {
-      placed <- ep.placed
+      placed <- ep.undo_stack
       house.PopSpawnRegexp()
       close(placed)
     },
@@ -128,7 +124,6 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       if ep.game.placeEntity(ep.pattern) {
         cost := ep.name_to_cost[ent.Name]
         ep.points -= cost
-        ep.placed = append(ep.placed, ent.Name)
         ep.undo_stack = append(ep.undo_stack, ent)
         if cost <= ep.points {
           ep.game.new_ent = MakeEntity(ent.Name, ep.game)

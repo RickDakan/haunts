@@ -310,6 +310,8 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
   }
 }
 
+
+
 func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
@@ -339,7 +341,7 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
     L.NewTable()
     for i := range placed {
       L.PushInteger(i + 1)
-      L.PushString(placed[i])
+      pushEntity(L, placed[i])
       L.SetTable(-3)
     }
 
@@ -350,6 +352,60 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func pushPoint(L *lua.State, x, y int) {
+  L.NewTable()
+  L.PushString("x")
+  L.PushInteger(x)
+  L.SetTable(-3)
+  L.PushString("y")
+  L.PushInteger(y)
+  L.SetTable(-3)
+}
+
+func toPoint(L *lua.State, pos int) (x, y int) {
+  L.PushString("x")
+  L.GetTable(pos - 1)
+  x = L.ToInteger(-1)
+  L.Pop(1)
+  L.PushString("y")
+  L.GetTable(pos - 1)
+  y = L.ToInteger(-1)
+  L.Pop(1)
+  return
+}
+
+func pushEntity(L *lua.State, ent *Entity) {
+  L.NewTable()
+  L.PushString("id")
+  L.PushInteger(int(ent.Id))
+  L.SetTable(-3)
+  L.PushString("name")
+  L.PushString(ent.Name)
+  L.SetTable(-3)
+  L.PushString("pos")
+  x, y := ent.Pos()
+  pushPoint(L, x, y)
+  L.SetTable(-3)
+  L.PushString("corpus")
+  L.PushInteger(ent.Stats.Corpus())
+  L.SetTable(-3)
+  L.PushString("ego")
+  L.PushInteger(ent.Stats.Ego())
+  L.SetTable(-3)
+  L.PushString("hpCur")
+  L.PushInteger(ent.Stats.HpCur())
+  L.SetTable(-3)
+  L.PushString("hpMax")
+  L.PushInteger(ent.Stats.HpMax())
+  L.SetTable(-3)
+  L.PushString("apCur")
+  L.PushInteger(ent.Stats.ApCur())
+  L.SetTable(-3)
+  L.PushString("apMax")
+  L.PushInteger(ent.Stats.ApMax())
+  L.SetTable(-3)
+}
+
 func getAllEnts(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
@@ -357,7 +413,7 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
     L.NewTable()
     for i := range gp.game.Ents {
       L.PushInteger(i+1)
-      L.PushInteger(int(gp.game.Ents[i].Id))
+      pushEntity(L, gp.game.Ents[i])
       L.SetTable(-3)
     }
     return 1
@@ -368,14 +424,7 @@ func roomAtPos(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    L.PushString("x")
-    L.GetTable(-2)
-    x := L.ToInteger(-1)
-    L.Pop(1)
-    L.PushString("y")
-    L.GetTable(-2)
-    y := L.ToInteger(-1)
-    L.Pop(1)
+    x, y := toPoint(L, -1)
     room, _, _ := gp.game.House.Floors[0].RoomFurnSpawnAtPos(x, y)
     for i, r := range gp.game.House.Floors[0].Rooms {
       if r == room {

@@ -108,6 +108,7 @@ func (g *Game) placeEntity(pattern string) bool {
 }
 
 func (e *Entity) ReloadAi() {
+  base.Log().Printf("Reloading ai: %s", e.Name)
   if e.Ai_path.String() == "" {
     e.Ai = inactiveAi{}
     return
