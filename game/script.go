@@ -560,6 +560,9 @@ func bindAi(gp *GamePanel) lua.GoFunction {
       default:
         gp.game.haunts_ai = nil
         ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.haunts_ai, DenizensAi)
+        if gp.game.haunts_ai == nil {
+          gp.game.haunts_ai = inactiveAi{}
+        }
       }
     case "intruder":
       switch source {
@@ -571,10 +574,16 @@ func bindAi(gp *GamePanel) lua.GoFunction {
       default:
         gp.game.explorers_ai = nil
         ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.explorers_ai, IntrudersAi)
+        if gp.game.explorers_ai == nil {
+          gp.game.explorers_ai = inactiveAi{}
+        }
       }
     case "minions":
       gp.game.minion_ai = nil
       ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.minion_ai, MinionsAi)
+      if gp.game.minion_ai == nil {
+        gp.game.minion_ai = inactiveAi{}
+      }
     default:
       base.Error().Printf("Specified unknown Ai target '%s'", target)
       return 0

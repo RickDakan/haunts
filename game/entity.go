@@ -129,7 +129,11 @@ func (e *Entity) ReloadAi() {
       base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
       e.Ai.Terminate()
     }
+    e.Ai = nil
     ai_maker(e.Ai_file_override, e.Game(), e, &e.Ai, EntityAi)
+    if e.Ai == nil {
+      e.Ai = inactiveAi{}
+    }
     e.ai_file_load_time = stat.ModTime()
   }
 }
