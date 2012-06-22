@@ -306,11 +306,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  // No actions or selecting ents unless we're in the middle of the turn
-  if gp.game.turn_state != TurnStateMiddle {
-    return false
-  }
-
   if gp.game.action_state == noAction {
     if found,_ := group.FindEvent(gin.MouseLButton); found {
       if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {

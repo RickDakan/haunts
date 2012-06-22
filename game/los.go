@@ -25,11 +25,22 @@ const (
   LosModeRooms
 )
 
-type TurnState int
+type turnState int
 const (
-  TurnStateStart  TurnState = iota
-  TurnStateMiddle
-  TurnStateEnd
+  // Waiting for the script to finish Init()
+  turnStateInit  turnState = iota
+
+  // Waiting for the script to finish RoundStart()
+  turnStateStart
+
+  // Waiting for or running an Ai action
+  turnStateAiAction
+
+  // Waiting for the script to finish OnAction()
+  turnStateScriptOnAction
+
+  // Waiting for the script to finish OnEnd()
+  turnStateEnd
 )
 
 type Game struct {
@@ -53,12 +64,6 @@ type Game struct {
   // Current turn number - incremented on each OnRound() so every two
   // indicates that a complete round has happened.
   Turn int
-  turn_state TurnState
-
-  // these are used to synchronize the scripts with the middle of each round
-  do_round_middle chan struct{}
-  round_middle_done chan struct{}
-  player_active bool
 
   // The purpose that the explorers have for entering the house, chosen at the
   // beginning of the game.
@@ -76,6 +81,8 @@ type Game struct {
 
   // Transient data - none of the following are exported
 
+  player_active bool
+
   viewer *house.HouseViewer
 
   selection_tab      *gui.TabFrame
@@ -85,6 +92,7 @@ type Game struct {
   // If the user is dragging around a new Entity to place, this is it
   new_ent *Entity
 
+  // Indicates what sort of visibility is showing to the user right now.
   los_mode LosMode
 
   // Might want to keep several of them for different POVs, but one is
@@ -115,6 +123,16 @@ type Game struct {
   action_state actionState
   current_exec   ActionExec
   current_action Action
+
+  // Indicates if we're waiting for a script to run or something
+  turn_state  turnState
+
+  // Used to sync up with the script, the value passed is usually nil, but
+  // whenever an action happens it will get passed along this channel too.
+  comm struct {
+    script_to_game chan interface{}
+    game_to_script chan interface{}
+  }
 
   // Goals ******************************************************
 
@@ -182,48 +200,10 @@ func (g *Game) OnBegin() {
 
 // TODO: DEPRECATED
 func (g *Game) PlaceInitialExplorers(ents []*Entity) {
-  // if len(ents) > 9 {
-  //   base.Error().Printf("Cannot place more than 9 ents at a starting position.")
-  //   return
-  // }
-
-  // var sp *house.SpawnPoint
-  // for _, s := range g.House.Floors[0].Spawns {
-  //   if s.Type() == house.SpawnExplorers {
-  //     sp = s
-  //     break
-  //   }
-  // }
-  // if sp == nil {
-  //   base.Error().Printf("No initial explorer positions listed.")
-  //   return
-  // }
-  // if sp.Dx * sp.Dy < len(ents) {
-  //   base.Error().Printf("Not enough space to place the explorers.")
-  //   return
-  // }
-  // x, y := sp.Pos()
-  // base.Log().Printf("Starting %d explorers at (%d, %d)", len(ents), x, y)
-  // var poss [][2]int
-  // for dx := 0; dx < sp.Dx; dx++ {
-  //   for dy := 0; dy < sp.Dy; dy++ {
-  //     poss = append(poss, [2]int{x+dx, y+dy})
-  //   }
-  // }
-  // for i := range ents {
-  //   g.Ents = append(g.Ents, ents[i])
-  //   ents[i].Info.RoomsExplored[ents[i].CurrentRoom()] = true
-  //   g.viewer.AddDrawable(ents[i])
-  //   index := rand.Intn(len(poss))
-  //   pos := poss[index]
-  //   poss[index] = poss[len(poss)-1]
-  //   poss = poss[0:len(poss)-1]
-  //   ents[i].X = float64(pos[0])
-  //   ents[i].Y = float64(pos[1])
-  // }
 }
 
 func (g *Game) checkWinConditions() {
+  return
   // Check for explorer win conditions
   explorer_win := false
 
@@ -256,11 +236,6 @@ func (g *Game) checkWinConditions() {
   }
 }
 
-func (g *Game) WaitOnRoundMiddle() {
-  g.do_round_middle <- struct{}{}
-  <-g.round_middle_done
-}
-
 // This is called if the player is ready to end the turn, if the turn ends
 // then the following things happen:
 // 1. The game script gets to run its OnRound() function
@@ -269,9 +244,13 @@ func (g *Game) WaitOnRoundMiddle() {
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
-  if g.action_state != noAction { return }
+  if g.action_state != noAction { 
+    base.Log().Printf("Bailing because of a current action")
+    return }
   // Any master ai is still active
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) { return }
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
+        base.Log().Printf("Bailing because of %t %t %t", g.Side == SideHaunt, g.minion_ai.Active(), g.haunts_ai.Active())
+return }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -280,76 +259,28 @@ func (g *Game) OnRound() {
     g.Side = SideExplorers
   }
 
-  g.script.OnRound(g)
+  for i := range g.Ents {
+    if g.Ents[i].Side() == g.Side {
+      g.Ents[i].OnRound()
+    }
+  }
 
-  // if g.Turn == 1 {
-  //   var action_name string
-  //   switch g.Purpose {
-  //   case PurposeNone:
-  //     base.Error().Printf("Explorers have not set a purpose")
-
-  //   case PurposeCleanse:
-  //     action_name = "Cleanse"
-  //     // If this is a cleanse scenario we need to choose the active cleanse points
-  //     cleanses := algorithm.Choose(g.Ents, func(a interface{}) bool {
-  //       ent := a.(*Entity)
-  //       return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalCleanse
-  //     }).([]*Entity)
-  //     count := 3
-  //     if len(cleanses) < 3 {
-  //       count = len(cleanses)
-  //     }
-  //     for i := 0; i < count; i++ {
-  //       n := rand.Intn(len(cleanses))
-  //       active := cleanses[n]
-  //       cleanses[n] = cleanses[len(cleanses)-1]
-  //       cleanses = cleanses[0:len(cleanses)-1]
-  //       g.Active_cleanses = append(g.Active_cleanses, active)
-  //     }
-  //     for _, active := range g.Active_cleanses {
-  //       base.Log().Printf("Active cleanse point: %s", active.Name)
-  //     }
-
-  //   case PurposeMystery:
-  //     action_name = "Mystery"
-
-  //   case PurposeRelic:
-  //     action_name = "Relic"
-  //     relics := algorithm.Choose(g.Ents, func(a interface{}) bool {
-  //       ent := a.(*Entity)
-  //       return ent.ObjectEnt != nil && ent.ObjectEnt.Goal == GoalRelic
-  //     }).([]*Entity)
-  //     if len(relics) == 0 {
-  //       base.Warn().Printf("Unable to find any relics for the relic mission")
-  //     } else {
-  //       g.Active_relic = relics[rand.Intn(len(relics))]
-  //       x,y := g.Active_relic.Pos()
-  //       base.Log().Printf("Chose active relic at position %d %d", x, y)
-  //     }
-  //   }
-  //   if action_name != "" {
-  //     for i := range g.Ents {
-  //       ent := g.Ents[i]
-  //       if ent.Side() != SideExplorers { continue }
-  //       action := MakeAction(action_name)
-  //       ent.Actions = append(ent.Actions, action)
-  //       for j := len(ent.Actions) - 1; j > 1; j-- {
-  //         ent.Actions[j], ent.Actions[j-1] = ent.Actions[j-1], ent.Actions[j]
-  //       }
-  //     }
-  //   }
-  // }
-
-  // if g.Turn <= 2 {
-  //   g.viewer.RemoveDrawable(g.new_ent)
-  //   g.new_ent = nil
-  // }
-  // if g.Turn < 2 {
-  //   return
-  // }
-  if g.Turn == 2 {
-    // g.viewer.Los_tex = g.los_tex
-    g.OnBegin()
+  // The entity ais must be activated before the master ais, otherwise the
+  // masters might be running with stale data if one of the entities has been
+  // reloaded.
+  for i := range g.Ents {
+    g.Ents[i].Ai.Activate()
+  }
+  if g.Side == g.Human {
+    g.player_active = true
+    base.Log().Printf("player_active set to true")
+  } else {
+    if g.Side == SideHaunt {
+      g.minion_ai.Activate()
+      g.haunts_ai.Activate()
+    } else {
+      g.explorers_ai.Activate()
+    }
   }
 
   for i := range g.Ents {
@@ -361,11 +292,7 @@ func (g *Game) OnRound() {
     return ent.Stats == nil || ent.Stats.HpCur() > 0
   })
 
-  for i := range g.Ents {
-    if g.Ents[i].Side() == g.Side {
-      g.Ents[i].OnRound()
-    }
-  }
+  g.script.OnRound(g)
 
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
@@ -681,8 +608,8 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
 
 
-  g.do_round_middle = make(chan struct{}, 1)
-  g.round_middle_done = make(chan struct{}, 1)
+  g.comm.script_to_game = make(chan interface{}, 1)
+  g.comm.game_to_script = make(chan interface{}, 1)
 
   return &g
 }
@@ -739,6 +666,47 @@ func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
 }
 
 func (g *Game) Think(dt int64) {
+  switch g.turn_state {
+  case turnStateInit:
+    select {
+      case <-g.comm.script_to_game:
+    base.Log().Printf("ScriptComm: change to turnStateStart")
+        g.turn_state = turnStateStart
+        g.OnRound()
+      default:
+    }
+  case turnStateStart:
+    select {
+      case <-g.comm.script_to_game:
+    base.Log().Printf("ScriptComm: change to turnStateAiAction")
+        g.turn_state = turnStateAiAction
+      default:
+    }
+  case turnStateScriptOnAction:
+    select {
+      case exec := <-g.comm.script_to_game:
+        if g.current_exec != nil {
+          base.Error().Printf("Got an exec from the script when we already had one pending.")
+        } else {
+          if exec != nil {
+            g.current_exec = exec.(ActionExec)
+          } else {
+    base.Log().Printf("ScriptComm: change to turnStateAiAction")
+            g.turn_state = turnStateAiAction
+          }
+        }
+      default:
+    }
+  case turnStateEnd:
+    select {
+    case <-g.comm.script_to_game:
+      g.turn_state = turnStateStart
+    base.Log().Printf("ScriptComm: change to turnStateStart")
+      g.OnRound()
+    default:
+    }
+  }
+
   if g.current_exec != nil {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
@@ -749,12 +717,18 @@ func (g *Game) Think(dt int64) {
   // action.
   if g.action_state == doingAction {
     res := g.current_action.Maintain(dt, g, g.current_exec)
-    g.current_exec = nil
+    if g.current_exec != nil {
+      base.Log().Printf("ScriptComm: sent action")
+      g.comm.game_to_script <- g.current_exec
+      g.current_exec = nil
+    }
     switch res {
       case Complete:
         g.current_action.Cancel()
         g.current_action = nil
         g.action_state = noAction
+        g.turn_state = turnStateScriptOnAction
+        g.comm.game_to_script <- nil
         g.checkWinConditions()
 
       case InProgress:
@@ -807,6 +781,11 @@ func (g *Game) Think(dt int64) {
     return
   }
 
+  // Also don't do an ai stuff if this isn't the appropriate state
+  if g.turn_state != turnStateAiAction {
+    return
+  }
+
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
   for _,ent := range g.Ents {
@@ -822,35 +801,6 @@ func (g *Game) Think(dt int64) {
     if ent.sprite.Sprite().NumPendingCmds() > 0 {
       return
     }
-  }
-
-
-  select {
-  case <-g.do_round_middle:
-    g.turn_state = TurnStateMiddle
-    // The entity ais must be activated before the master ais, otherwise the
-    // masters might be running with stale data if one of the entities has been
-    // reloaded.
-    for i := range g.Ents {
-      g.Ents[i].Ai.Activate()
-    }
-    if g.Side == g.Human {
-      g.player_active = true
-      base.Log().Printf("player_active set to true")
-    } else {
-      if g.Side == SideHaunt {
-        g.minion_ai.Activate()
-        g.haunts_ai.Activate()
-      } else {
-        g.explorers_ai.Activate()
-      }
-    }
-
-  default:
-  }
-  // Don't do actions until we're done with the turn setup
-  if g.turn_state != TurnStateMiddle {
-    return
   }
 
   // Do Ai - if there is any to do
@@ -873,7 +823,6 @@ func (g *Game) Think(dt int64) {
   if g.action_state == waitingAction {
     select {
     case exec := <-g.active_ai.ActionExecs():
-      base.Log().Printf("Got %v from master", exec)
       if exec != nil {
         g.current_exec = exec
       } else {
@@ -884,8 +833,10 @@ func (g *Game) Think(dt int64) {
     default:
     }
   }
-  if !g.player_active && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
-    g.round_middle_done <- struct{}{}
+  if !g.player_active && g.action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
+    g.turn_state = turnStateEnd
+    base.Log().Printf("ScriptComm: change to turnStateEnd")
+    g.comm.game_to_script <- nil
   }
 }
 

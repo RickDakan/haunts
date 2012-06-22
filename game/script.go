@@ -19,10 +19,8 @@ type gameScript struct {
   sync chan struct{}
 }
 
-// syncStart and syncEnd are identical, just wanted different function names
-// so things made more sense
 func (gs *gameScript) syncStart() {
-  gs.sync <- struct{}{}
+  <-gs.sync
 }
 func (gs *gameScript) syncEnd() {
   gs.sync <- struct{}{}
@@ -69,22 +67,50 @@ func startGameScript(gp *GamePanel, path string) {
       gp.script.L.SetExecutionLimit(250000)
       gp.script.L.GetField(lua.LUA_GLOBALSINDEX, "Init")
       gp.script.L.Call(0, 0)
-      gp.game.OnRound()
+      gp.game.comm.script_to_game <- nil
     } ()
   }
 }
 
+// Runs RoundStart
+// Lets the game know that the round middle can begin
+// Runs RoundEnd
 func (gs *gameScript) OnRound(g *Game) {
+  base.Log().Printf("Launching script.OnRound")
   go func() {
+    // // round begins automatically
+    // <-round_middle
+    // for
+    //   <-action stuff
+    // <- round end
+    // <- round end done
     gs.L.SetExecutionLimit(250000)
     gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundStart")
     gs.L.PushBoolean(g.Side == SideExplorers)
     gs.L.PushInteger((g.Turn + 1) / 2)
     gs.L.Call(2, 0)
 
-    base.Log().Printf("Do round middle")
-    g.WaitOnRoundMiddle()
-    base.Log().Printf("Round middle done")
+    // signals to the game that we're done with the startup stuff
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with OnStart")
+
+    for {
+      // The action is sent when it happens, and a nil is sent when it is done
+      // being executed, we want to wait until then so that the game is in a
+      // stable state before we do anything.
+      base.Log().Printf("ScriptComm: Waiting for action")
+      action := <-g.comm.game_to_script
+      base.Log().Printf("ScriptComm: Got action: %v", action)
+      if action == nil {
+        base.Log().Printf("ScriptComm: No more action: bailing")
+        break
+      }
+      <-g.comm.game_to_script
+    base.Log().Printf("ScriptComm: Got action secondary")
+      // Run OnAction here
+      g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with OnAction")
+    }
 
     gs.L.SetExecutionLimit(250000)
     gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundEnd")
@@ -92,10 +118,9 @@ func (gs *gameScript) OnRound(g *Game) {
     gs.L.PushInteger((g.Turn + 1) / 2)
     gs.L.Call(2, 0)
 
-    gs.syncStart()
-    g.turn_state = TurnStateStart
-    g.OnRound()
-    gs.syncEnd()
+    // Signal that we're done with the round end
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with RoundEnd")
   } ()
 }
 
@@ -111,7 +136,7 @@ func (gp *GamePanel) scriptThinkOnce() {
     // If a script has tried to run a function that requires running during
     // Think then it can run now and we'll wait for it to finish before
     // continuing.
-    case <-gp.script.sync:
+    case gp.script.sync <- struct{}{}:
       <-gp.script.sync
     default:
       done = true
