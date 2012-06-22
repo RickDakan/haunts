@@ -18,6 +18,9 @@ end
 function Init()
   map = selectMap()
   loadHouse(map)
+  bindAi("denizen", "human")
+  bindAi("minions", "minions.lua")
+  bindAi("intruder", "human")
 end
 
 function doDenizenSetup()
@@ -65,6 +68,9 @@ function doDenizenSetup()
   setLosModeToRoomsWithSpawnsMatching("Servitor-.*")
   placed = placeEntities("Servitor-.*", 10, ents)
 
+  -- Now that we've placed all of these entities we will put up the main bar
+  -- and let the game begin.
+  showMainBar(true)
 end
 
 function doIntrudersSetup()
@@ -73,9 +79,6 @@ function doIntrudersSetup()
   spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
 
-  -- Now that we've placed all of these entities we will put up the main bar
-  -- and let the game begin.
-  showMainBar(true)
 
   setLosMode("entities")
 end

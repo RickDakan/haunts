@@ -1,6 +1,7 @@
 package game
 
 import (
+  "time"
   "math/rand"
   "path/filepath"
   "io/ioutil"
@@ -57,6 +58,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("setLosMode", setLosMode(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
+  gp.script.L.Register("bindAi", bindAi(gp))
 
   gp.script.sync = make(chan struct{})
   res := gp.script.L.DoString(string(prog))
@@ -504,6 +506,7 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
 func selectMap(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
+    defer gp.script.syncEnd()
     selector, output, err := MakeUiSelectMap(gp)
     if err != nil {
       base.Error().Printf("Error selecting map: %v", err)
@@ -517,8 +520,67 @@ func selectMap(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(selector)
     L.PushString(name)
-    gp.script.syncEnd()
     return 1
+  }
+}
+
+// bindAi(target, source)
+// bindAi("denizen", "denizen.lua")
+// bindAi("intruder", "intruder.lua")
+// bindAi("minions", "minions.lua")
+// bindAi(ent_id, "fudgecake.lua")
+// special sources: "human", "inactive", and in the future: "net"
+// special targets: "denizen", "intruder", "minions", or an entity id
+func bindAi(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    source := L.ToString(-1)
+    if L.IsNumber(-2) {
+      target := EntityId(L.ToInteger(-2))
+      ent := gp.game.EntityById(target)
+      if ent == nil {
+        base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", target)
+        return 0
+      }
+      ent.Ai_file_override = L.ToString(-1)
+      ent.ai_file_load_time = time.Time{}
+      ent.ReloadAi()
+      return 0
+    }
+    target := L.ToString(-2)
+    switch target {
+    case "denizen":
+      switch source {
+      case "human":
+        gp.game.haunts_ai = inactiveAi{}
+      case "net":
+        base.Error().Printf("bindAi('denizen', 'net') is not implemented.")
+        return 0
+      default:
+        gp.game.haunts_ai = nil
+        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.haunts_ai, DenizensAi)
+      }
+    case "intruder":
+      switch source {
+      case "human":
+        gp.game.explorers_ai = inactiveAi{}
+      case "net":
+        base.Error().Printf("bindAi('intruder', 'net') is not implemented.")
+        return 0
+      default:
+        gp.game.explorers_ai = nil
+        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.explorers_ai, IntrudersAi)
+      }
+    case "minions":
+      gp.game.minion_ai = nil
+      ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.minion_ai, MinionsAi)
+    default:
+      base.Error().Printf("Specified unknown Ai target '%s'", target)
+      return 0
+    }
+
+    return 0
   }
 }
 

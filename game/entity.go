@@ -108,12 +108,19 @@ func (g *Game) placeEntity(pattern string) bool {
 }
 
 func (e *Entity) ReloadAi() {
-  base.Log().Printf("Reloading ai: %s", e.Name)
-  if e.Ai_path.String() == "" {
+  base.Log().Printf("Reloading ai: %s <- %s", e.Name, e.Ai_file_override)
+  if e.HauntEnt == nil {
+    base.Log().Printf("No haunt ent")
+  } else {
+    if e.HauntEnt.Level != LevelMinion {
+      base.Log().Printf("not a mionion")
+    }
+  }
+  if e.Ai_file_override == "" {
     e.Ai = inactiveAi{}
     return
   }
-  stat, err := os.Stat(e.Ai_path.String())
+  stat, err := os.Stat(e.Ai_file_override)
   if err != nil {
     return
   }
@@ -122,7 +129,7 @@ func (e *Entity) ReloadAi() {
       base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
       e.Ai.Terminate()
     }
-    ai_maker(e.Ai_path.String(), e.Game(), e, &e.Ai, EntityAi)
+    ai_maker(e.Ai_file_override, e.Game(), e, &e.Ai, EntityAi)
     e.ai_file_load_time = stat.ModTime()
   }
 }
@@ -131,7 +138,7 @@ func (e *Entity) ReloadAi() {
 // loading one from a saved game.
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
-
+  e.Ai_file_override = e.Ai_path.String()
   e.ReloadAi()
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
@@ -357,6 +364,7 @@ type EntityInst struct {
   // loading an ent from a file
   Ai Ai
   ai_file_load_time time.Time
+  Ai_file_override  string
 
   // Info that may be of use to the Ai
   Info Info

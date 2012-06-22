@@ -1,7 +1,7 @@
 package game
 
 import (
-  "path/filepath"
+  // "path/filepath"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
@@ -270,17 +270,17 @@ return }
   // reloaded.
   for i := range g.Ents {
     g.Ents[i].Ai.Activate()
+    base.Log().Printf("EntityActive '%s': %t", g.Ents[i].Name, g.Ents[i].Ai.Active())
   }
-  if g.Side == g.Human {
-    g.player_active = true
-    base.Log().Printf("player_active set to true")
+
+  if g.Side == SideHaunt {
+    g.minion_ai.Activate()
+    base.Log().Printf("minion ai: %t", g.minion_ai.Active())
+    g.haunts_ai.Activate()
+    g.player_active = !g.haunts_ai.Active()
   } else {
-    if g.Side == SideHaunt {
-      g.minion_ai.Activate()
-      g.haunts_ai.Activate()
-    } else {
-      g.explorers_ai.Activate()
-    }
+    g.explorers_ai.Activate()
+    g.player_active = !g.explorers_ai.Active()
   }
 
   for i := range g.Ents {
@@ -568,8 +568,10 @@ func (g *Game) setup() {
   g.viewer.Los_tex = g.los_tex
 
 
-  ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
-  ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
+  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
+  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
+  g.minion_ai = inactiveAi{}
+  g.haunts_ai = inactiveAi{}
   g.explorers_ai = inactiveAi{}
   // if g.Human == SideExplorers {
   //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
