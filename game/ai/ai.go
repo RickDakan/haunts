@@ -10,6 +10,7 @@ import (
   "path/filepath"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/howeyc/fsnotify"
   lua "github.com/xenith-studios/golua"
 )
 
@@ -22,10 +23,19 @@ type Ai struct {
 
   ent *game.Entity
 
+  // Path to the script to run
+  path string
+
   // The actual lua program to run when executing this ai
   Prog string
 
-  // new stuff
+  // Need to store this so that we know what files to reload if anything
+  // changes on disk
+  kind game.AiKind
+
+  // Watch all of the files that this Ai depends on so that we can reload it
+  // if any of them change
+  watcher *fsnotify.Watcher
 
   // Set to true at the beginning of the turn, turned off as soon as the ai is
   // done for the turn.
@@ -60,16 +70,15 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   } else {
     ai_struct = (*dst_iface).(*Ai)
   }
-  prog, err := ioutil.ReadFile(path)
+  ai_struct.path = path
+  var err error
+  ai_struct.watcher, err = fsnotify.NewWatcher()
   if err != nil {
-    base.Error().Printf("Unable to load ai file %s: %v", path, err)
-    return
+    base.Warn().Printf("Unable to create a filewatcher - '%s' will not reload ai files dynamically.", path)
+    ai_struct.watcher = nil
   }
-  ai_struct.Prog = string(prog)
   ai_struct.ent = ent
   ai_struct.game = g
-  ai_struct.L = lua.NewState()
-  ai_struct.L.OpenLibs()
 
   ai_struct.active_set = make(chan bool)
   ai_struct.active_query = make(chan bool)
@@ -77,37 +86,54 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   ai_struct.pause = make(chan struct{})
   ai_struct.terminate = make(chan struct{})
   ai_struct.execs = make(chan game.ActionExec)
+  ai_struct.kind = kind
 
-  switch kind {
+  ai_struct.setupLuaState()
+  go ai_struct.masterRoutine()
+
+  *dst_iface = ai_struct
+}
+
+func (a *Ai) setupLuaState() {
+  prog, err := ioutil.ReadFile(a.path)
+  if err != nil {
+    base.Error().Printf("Unable to load ai file %s: %v", a.path, err)
+    return
+  }
+  a.Prog = string(prog)
+  a.watcher.Watch(a.path)
+  a.L = lua.NewState()
+  a.L.OpenLibs()
+  switch a.kind {
   case game.EntityAi:
-    base.Log().Printf("Adding entity context for %s", ent.Name)
-    ai_struct.addEntityContext()
-    ai_struct.loadUtils("entity")
+    base.Log().Printf("Adding entity context for %s", a.ent.Name)
+    a.addEntityContext()
+    a.loadUtils("entity")
 
   case game.MinionsAi:
-    ai_struct.addMinionsContext()
+    a.addMinionsContext()
 
   case game.DenizensAi:
     base.Log().Printf("Adding denizens context")
-    ai_struct.addDenizensContext()
+    a.addDenizensContext()
 
   case game.IntrudersAi:
-    // ai_struct.addIntrudersContext(g)
+    // a.addIntrudersContext(g)
 
   default:
     panic("Unknown ai kind")
   }
   // Add this to all contexts
-  ai_struct.L.Register("print", func(L *lua.State) int {
+  a.L.Register("print", func(L *lua.State) int {
     var res string
     n := L.GetTop()
     for i := -n; i < 0; i++ {
       res += luaStringifyParam(L, i) + " "
     }
-    base.Log().Printf("Ai(%p): %s", ai_struct, res)
+    base.Log().Printf("Ai(%p): %s", a, res)
     return 0
   })
-  ai_struct.L.Register("randN", func(L *lua.State) int {
+  a.L.Register("randN", func(L *lua.State) int {
     n := L.GetTop()
     if n == 0 || !L.IsNumber(-1) {
       L.PushInteger(0)
@@ -117,9 +143,6 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
     L.PushInteger(rand.Intn(val) + 1)
     return 1
   })
-
-  go ai_struct.masterRoutine()
-  *dst_iface = ai_struct
 }
 
 func luaStringifyParam(L *lua.State, index int) string {
@@ -152,6 +175,7 @@ func (a *Ai) loadUtils(dir string) {
         return nil
       }
       base.Log().Printf("Loaded lua utils file '%s': \n%s", path, data)
+      a.watcher.Watch(path)
       a.L.DoString(string(data))
     }
     return nil
@@ -223,6 +247,20 @@ func (a *Ai) Terminate() {
 }
 
 func (a *Ai) Activate() {
+  reload := false
+  for {
+    select {
+      case <-a.watcher.Event:
+        reload = true
+      default:
+        goto no_more_events
+    }
+  }
+  no_more_events:
+  if reload {
+    a.setupLuaState()
+    base.Log().Printf("Reloaded lua state for '%p'", a)
+  }
   a.active_set <- true
   a.active_set <- true
 }
