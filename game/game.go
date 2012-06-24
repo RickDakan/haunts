@@ -467,7 +467,8 @@ func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
   gp.game = makeGame(gp.house, gp.viewer, side)
-
+  return
+  
   spawnAllRelics(gp.game)
   spawnAllCleanses(gp.game)
 
