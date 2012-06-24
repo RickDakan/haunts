@@ -18,7 +18,7 @@ end
 function Init()
   map = selectMap()
   loadHouse(map)
-  bindAi("denizen", "human")
+  bindAi("denizen", "denizens.lua")
   bindAi("minions", "minions.lua")
   bindAi("intruder", "human")
 end
@@ -74,11 +74,13 @@ function doDenizenSetup()
 end
 
 function doIntrudersSetup()
+  r = pickFromN(1, 1, "Cleanse", "ui/explorer_setup/cleanse.png", "Relic", "ui/explorer_setup/relic.png", "Mystery", "ui/explorer_setup/mystery.png")
+  print("pickFromN", r)
+
   intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
   spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
-
 
   setLosMode("entities")
 end

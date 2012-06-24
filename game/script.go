@@ -8,7 +8,9 @@ import (
   "regexp"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/game/hui"
   lua "github.com/xenith-studios/golua"
 )
 
@@ -58,6 +60,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("setLosMode", setLosMode(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
+  gp.script.L.Register("pickFromN", pickFromN(gp))
   gp.script.L.Register("bindAi", bindAi(gp))
 
   gp.script.sync = make(chan struct{})
@@ -520,6 +523,47 @@ func selectMap(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(selector)
     L.PushString(name)
+    return 1
+  }
+}
+
+// pickFromN(min, max, opt1, opt2, ...)
+func pickFromN(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    num_params := L.GetTop()
+    if num_params < 4 || num_params % 2 == 1 {
+      base.Error().Printf("pickFromN can't handle exactly %d parameters.", num_params)
+      return 0
+    }
+    n := num_params / 2 - 2
+    min := L.ToInteger(-num_params)
+    max := L.ToInteger(-num_params + 1)
+    var options []hui.Option
+    for i := -2*n - 2; i < 0; i+=2 {
+      option := iconWithText{
+        Name: L.ToString(i),
+        Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), L.ToString(i + 1)))},
+      }
+      options = append(options, &option)
+    }
+    var selector hui.Selector
+    if min == 1 && max == 1 {
+      selector = hui.SelectExactlyOne
+    } else {
+      selector = hui.SelectInRange(min, max)
+    }
+    var chooser *hui.RosterChooser
+    done := make(chan struct{})
+    on_complete := func(m map[int]bool) {
+      gp.RemoveChild(chooser)
+      done <- struct{}{}
+    }
+    chooser = hui.MakeRosterChooser(options, selector, on_complete, nil)
+    gp.script.syncStart()
+    gp.AddChild(chooser, gui.Anchor{0.5,0.5, 0.5,0.5})
+    gp.script.syncEnd()
+    L.PushInteger(10)
+    <-done
     return 1
   }
 }
