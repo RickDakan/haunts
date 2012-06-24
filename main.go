@@ -120,22 +120,6 @@ func gameMode() {
   if game_panel.Active() {
     draggingAndZooming(game_panel.GetViewer())
   }
-  if key_map["load"].FramePressCount() > 0 && chooser == nil {
-    callback := func(path string, err error) {
-      ui.DropFocus()
-      ui.RemoveChild(anchor)
-      chooser = nil
-      anchor = nil
-      game_panel.LoadHouseFromPath(path)
-      base.SetStoreVal("last game path", base.TryRelative(datadir, path))
-    }
-    chooser = gui.MakeFileChooser(filepath.Join(datadir, "houses"), callback, gui.MakeFileFilter(fmt.Sprintf(".house")))
-    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
-    ui.AddChild(anchor)
-    ui.TakeFocus(chooser)
-  }
-
   if key_map["load game"].FramePressCount() > 0 && chooser == nil {
     callback := func(path string, err error) {
       ui.DropFocus()
