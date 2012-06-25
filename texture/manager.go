@@ -9,7 +9,7 @@ import (
   "runtime"
   "sync"
   "github.com/runningwild/glop/render"
-  "github.com/runningwild/glop/memory"
+  "github.com/runningwild/memory"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/opengl/glu"
