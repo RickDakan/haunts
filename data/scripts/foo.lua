@@ -102,6 +102,7 @@ function doIntrudersSetup()
       for i,name in pairs(r) do
         print("picked", i, name)
       end
+      setGear(ent, r[1])
     end
   end
 

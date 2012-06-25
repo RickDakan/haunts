@@ -61,6 +61,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
   gp.script.L.Register("pickFromN", pickFromN(gp))
+  gp.script.L.Register("setGear", setGear(gp))
   gp.script.L.Register("bindAi", bindAi(gp))
 
   gp.script.sync = make(chan struct{})
@@ -590,6 +591,24 @@ func pickFromN(gp *GamePanel) lua.GoFunction {
     gp.script.syncEnd()
     <-done
     return 1
+  }
+}
+
+func setGear(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gear_name := L.ToString(-1)
+    L.PushString("id")
+    L.GetTable(-3)
+    id := EntityId(L.ToInteger(-1))
+    ent := gp.game.EntityById(id)
+    if ent == nil {
+      base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", id)
+      return 0
+    }
+    ent.SetGear(gear_name)
+    return 0
   }
 }
 
