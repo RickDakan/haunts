@@ -1,0 +1,13 @@
+{
+  "Name": "Bench 01 - Upholstered",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/bench_01/bench_01.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

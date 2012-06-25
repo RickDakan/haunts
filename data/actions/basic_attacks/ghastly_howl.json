@@ -1,0 +1,16 @@
+{
+  "Name"     : "Ghastly Howl",
+  "Kind"     : "Terror",
+  "Animation": "cast",
+  "Texture"   : {
+    "Path": "actions/icons/grasp.png"
+  },
+  "Ap"       : 5,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 3,
+  "Target_allies": true,
+  "Conditions": [
+     "Focused"
+   ]
+}

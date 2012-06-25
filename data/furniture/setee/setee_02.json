@@ -7,6 +7,13 @@
       "Texture": {
         "Path": "furniture/setee/setee_02.png"
       }
+    },
+    {
+      "Dx": 1,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/setee/setee_02_covered.png"
+      }
     }
   ],
   "Blocks_los" : false

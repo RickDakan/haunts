@@ -21,5 +21,6 @@
     "Corpus": 10,
     "Ego": 9,
     "Sight": 10
-  }
+  },
+  "ai_path": "ais/eidolon.lua"
 }

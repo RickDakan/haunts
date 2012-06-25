@@ -14,7 +14,7 @@
   ],
   "HauntEnt": {
     "Cost":    15,
-    "Minions": 20,
+    "Minions": 0,
     "Level":   "Master"
   },
   "Base": {

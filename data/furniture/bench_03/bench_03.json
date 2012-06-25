@@ -1,0 +1,13 @@
+{
+  "Name": "Bench 03 - Pew",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 5,
+      "Texture": {
+        "Path": "furniture/bench_03/bench_03.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

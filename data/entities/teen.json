@@ -14,6 +14,11 @@
     "Psychic Shroud"
   ],
   "ExplorerEnt": {
+    "Gear_names": [
+      "Curb Stompers",
+      "Tantric Mantra",
+      "Pre-loaded Playlist"
+    ]
   },
   "Base": {
     "Ap_max": 6000,

@@ -5,41 +5,41 @@
 -- shoot them!
 
 
---check to see if adjacent people have Agony - if they do, he wants to move away
-
-
-function moveAndAttack (attack, target)
-	ps = allPathablePoints (pos(me()), pos(target), 1, getBasicAttackStats(me(), attack).range)
-	res = doMove (ps, 1000)
-	if exists(target) then
-		doBasicAttack(attack, target)
-	end
-end
-	
---keep distance
-
-function keepDistanceAndAttack (distance, attack, target)
-	ps = allPathablePoints (pos(me()), pos(target), distance, getBasicAttackStats(me(), attack).range)
-	doMove (ps, 1000)
-	if exists(target) then
-		doBasickAttack(attack, target)
-	end
-end
-
-
+--check to see if adjacent people have Agony - if they do, he wants to move awa
 
 function think()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		if rangedDistBetweenEntities (me(), intruder) >1 then
-			break
+		if rangedDistBetweenEntities (me(), intruder) <2 then
+			if getConditions (intruder) ["Agony"] then
+				moveWithinRangeAndAttack(3, "Envenomed Dart", intruder)
+			else
+				moveWithinRangeAndAttack (1, "Inject", intruder)
+			end
 		end
-		if nil == getConditions (intruder) ["Agony"] then
-			moveAndAttack("Inject", intruder)
+		target = pursue()
+		if target == nil then
+			target = targetAllyTarget()
 		end
+		if target == nil then
+			target = targetAllyAttacker()
+		end
+		if target == nil then
+			target = retaliate()
+		end
+		if target == nil then
+			target = targetLowestStat("ego")
+		end
+		if target == nil then
+			target = nearest()
+		end	
+		if target == nil then
+			return
+		end
+	--	if getConditions(target)["Agony"] then
+		moveWithinRangeAndAttack (3, "Envenomed Dart", target)
+	--	else
+	--		moveWithinRangeAndAttack (1, "Inject", target)
 	end
 end
 think()
-
-
-	

@@ -1,0 +1,13 @@
+{
+  "Name": "Stool 01 - Round",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/stool/stool_01.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

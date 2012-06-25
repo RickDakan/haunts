@@ -1,0 +1,20 @@
+{
+  "Name": "Chair 03",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chair_03/chair_03.png"
+      }
+    },
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chair_03/chair_03_covered.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

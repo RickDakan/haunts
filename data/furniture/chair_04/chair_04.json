@@ -1,0 +1,20 @@
+{
+  "Name": "Chair 04 - Library Chair",
+  "Orientations" : [
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chair_04/chair_04.png"
+      }
+    },
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chair_04/chair_04_covered.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}
