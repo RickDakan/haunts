@@ -12,7 +12,7 @@ import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/memory"
+  "github.com/runningwild/memory"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
