@@ -68,21 +68,45 @@ function doDenizenSetup()
   setLosModeToRoomsWithSpawnsMatching("Servitor-.*")
   placed = placeEntities("Servitor-.*", 10, ents)
 
-  -- Now that we've placed all of these entities we will put up the main bar
-  -- and let the game begin.
-  showMainBar(true)
+  setLosMode("none")
 end
 
 function doIntrudersSetup()
-  r = pickFromN(1, 1, "Cleanse", "ui/explorer_setup/cleanse.png", "Relic", "ui/explorer_setup/relic.png", "Mystery", "ui/explorer_setup/mystery.png")
-  print("pickFromN", r)
+  modes = {}
+  modes["Cleanse"] = "ui/explorer_setup/cleanse.png"
+  modes["Relic"] = "ui/explorer_setup/relic.png"
+  modes["Mystery"] = "ui/explorer_setup/mystery.png"
+  r = pickFromN(1, 1, modes)
+  for i,name in pairs(r) do
+    print("picked", i, name)
+  end
 
   intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
   spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
 
+  ents = getAllEnts()
+
+  for en, ent in pairs(ents) do
+    print("Checking ent: ", ent.name)
+    for i, gear in pairs(ent.gear) do
+      print("gear", en, i, gear)
+    end
+    count = 0
+    for _, _ in pairs(ent.gear) do
+      count = count + 1
+    end
+    if count > 0 then
+      r = pickFromN(1, 1, ent.gear)
+      for i,name in pairs(r) do
+        print("picked", i, name)
+      end
+    end
+  end
+
   setLosMode("entities")
+  showMainBar(true)
 end
 
 function RoundStart(intruders, turn)

@@ -412,6 +412,19 @@ func pushEntity(L *lua.State, ent *Entity) {
   L.PushString("name")
   L.PushString(ent.Name)
   L.SetTable(-3)
+  L.PushString("gear")
+  L.NewTable()
+  if ent.ExplorerEnt != nil {
+    for _, gear_name := range ent.ExplorerEnt.Gear_names {
+      var g Gear
+      g.Defname = gear_name
+      base.GetObject("gear", &g)
+      L.PushString(gear_name)
+      L.PushString(g.Large_icon.Path.String())
+      L.SetTable(-3)
+    }
+  }
+  L.SetTable(-3)
   L.PushString("pos")
   x, y := ent.Pos()
   pushPoint(L, x, y)
@@ -530,21 +543,24 @@ func selectMap(gp *GamePanel) lua.GoFunction {
 // pickFromN(min, max, opt1, opt2, ...)
 func pickFromN(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    num_params := L.GetTop()
-    if num_params < 4 || num_params % 2 == 1 {
-      base.Error().Printf("pickFromN can't handle exactly %d parameters.", num_params)
-      return 0
-    }
-    n := num_params / 2 - 2
-    min := L.ToInteger(-num_params)
-    max := L.ToInteger(-num_params + 1)
+    min := L.ToInteger(-3)
+    max := L.ToInteger(-2)
     var options []hui.Option
-    for i := -2*n - 2; i < 0; i+=2 {
+    var option_names []string
+    L.PushNil()
+    for L.Next(-2) != 0 {
+      name := L.ToString(-2)
+      option_names = append(option_names, name)
+      path := L.ToString(-1)
+      if !filepath.IsAbs(path) {
+        path = filepath.Join(base.GetDataDir(), path)
+      }
       option := iconWithText{
-        Name: L.ToString(i),
-        Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), L.ToString(i + 1)))},
+        Name: name,
+        Icon: texture.Object{ Path: base.Path(path) },
       }
       options = append(options, &option)
+      L.Pop(1)
     }
     var selector hui.Selector
     if min == 1 && max == 1 {
@@ -556,13 +572,22 @@ func pickFromN(gp *GamePanel) lua.GoFunction {
     done := make(chan struct{})
     on_complete := func(m map[int]bool) {
       gp.RemoveChild(chooser)
+      L.NewTable()
+      count := 0
+      for i := range options {
+        if m[i] {
+          count++
+          L.PushInteger(count)
+          L.PushString(option_names[i])
+          L.SetTable(-3)
+        }
+      }
       done <- struct{}{}
     }
     chooser = hui.MakeRosterChooser(options, selector, on_complete, nil)
     gp.script.syncStart()
     gp.AddChild(chooser, gui.Anchor{0.5,0.5, 0.5,0.5})
     gp.script.syncEnd()
-    L.PushInteger(10)
     <-done
     return 1
   }
