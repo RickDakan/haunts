@@ -1,10 +1,10 @@
-function setLosModeToRoomsWithSpawnsMatching(pattern)
+function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   sp = getSpawnPointsMatching(pattern)
   rooms = {}
   for i, spawn in pairs(sp) do
     rooms[i] = roomAtPos(spawn)
   end
-  setLosMode("rooms", rooms)
+  setLosMode(side, "rooms", rooms)
 end
 -- Need the following functions
 -- setLos("entities") -> sets los to all entities on the current side
@@ -31,7 +31,7 @@ function doDenizenSetup()
     {"Master of the Manse", 1},
   }
 
-  setLosModeToRoomsWithSpawnsMatching("Master-.*")
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Master-.*")
 
   -- Now we give the user a ui with which to place these entities.  The user
   -- will have 1 point to spend, and each of the options costs one point, so
@@ -65,10 +65,10 @@ function doDenizenSetup()
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor-".
-  setLosModeToRoomsWithSpawnsMatching("Servitor-.*")
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Servitor-.*")
   placed = placeEntities("Servitor-.*", 10, ents)
 
-  setLosMode("none")
+  setLosMode("denizens", "none")
 end
 
 function doIntrudersSetup()
@@ -88,36 +88,43 @@ function doIntrudersSetup()
 
   ents = getAllEnts()
 
-  for en, ent in pairs(ents) do
-    print("Checking ent: ", ent.name)
-    for i, gear in pairs(ent.gear) do
-      print("gear", en, i, gear)
-    end
-    count = 0
-    for _, _ in pairs(ent.gear) do
-      count = count + 1
-    end
-    if count > 0 then
-      r = pickFromN(1, 1, ent.gear)
-      for i,name in pairs(r) do
-        print("picked", i, name)
-      end
-      setGear(ent, r[1])
-    end
-  end
+  -- for en, ent in pairs(ents) do
+  --   print("Checking ent: ", ent.name)
+  --   for i, gear in pairs(ent.gear) do
+  --     print("gear", en, i, gear)
+  --   end
+  --   count = 0
+  --   for _, _ in pairs(ent.gear) do
+  --     count = count + 1
+  --   end
+  --   if count > 0 then
+  --     r = pickFromN(1, 1, ent.gear)
+  --     for i,name in pairs(r) do
+  --       print("picked", i, name)
+  --     end
+  --     setGear(ent, r[1])
+  --   end
+  -- end
 
-  setLosMode("intruders")
   showMainBar(true)
 end
 
 function RoundStart(intruders, turn)
   if turn == 1 then
     if intruders then
+      setVisibility("intruders")
       doIntrudersSetup()
     else
+      setVisibility("denizens")
       doDenizenSetup()
     end
+      endPlayerInteraction()
     return
+  end
+  if turn == 2 then
+    setVisibility("intruders")
+    setLosMode("intruders", "entities")
+    setLosMode("denizens", "entities")
   end
   print("start", intruders, turn)
   -- if not intruders then

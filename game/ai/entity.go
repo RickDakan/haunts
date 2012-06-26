@@ -181,10 +181,11 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
-    graph := a.ent.Game().Graph(nil)
+    graph := a.ent.Game().Graph(a.ent.Side(), nil)
     src := []int{a.ent.Game().ToVertex(x1, y1)}
     reachable := algorithm.ReachableDestinations(graph, src, dst)
     L.NewTable()
+    base.Log().Printf("%d reachable from (%d, %d) -> (%d, %d)", len(reachable), x1, y1, x2, y2)
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
       L.PushInteger(i+1)

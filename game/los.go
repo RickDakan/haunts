@@ -20,8 +20,7 @@ type LosMode int
 const (
   LosModeNone     LosMode = iota
   LosModeAll
-  LosModeDenizens
-  LosModeIntruders
+  LosModeEntities
   LosModeRooms
 )
 
@@ -42,6 +41,11 @@ const (
   // Waiting for the script to finish OnEnd()
   turnStateEnd
 )
+
+type sideLosData struct {
+  mode LosMode
+  tex  *house.LosTexture
+}
 
 type Game struct {
   // TODO: No idea if this thing can be loaded from the registry - should
@@ -93,12 +97,7 @@ type Game struct {
   new_ent *Entity
 
   los struct {
-    // Indicates what sort of visibility is showing to the user right now.
-    mode LosMode
-
-    // The los textures for both sides
-    tex_intruders *house.LosTexture
-    tex_denizens  *house.LosTexture
+    denizens, intruders sideLosData
 
     // When merging the los from different entities we'll do it here, and we
     // keep it around to avoid reallocating it every time we need it.
@@ -229,6 +228,18 @@ func (g *Game) checkWinConditions() {
   }
 }
 
+func (g *Game) SetVisibility(side Side) {
+  switch side {
+  case SideHaunt:
+    g.viewer.Los_tex = g.los.denizens.tex
+  case SideExplorers:
+    g.viewer.Los_tex = g.los.intruders.tex
+  default:
+    base.Error().Printf("Unable to SetVisibility for side == %d.", side)
+    return
+  }
+}
+
 // This is called if the player is ready to end the turn, if the turn ends
 // then the following things happen:
 // 1. The game script gets to run its OnRound() function
@@ -237,13 +248,9 @@ func (g *Game) checkWinConditions() {
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
-  if g.action_state != noAction { 
-    base.Log().Printf("Bailing because of a current action")
-    return }
+  if g.action_state != noAction { return }
   // Any master ai is still active
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
-        base.Log().Printf("Bailing because of %t %t %t", g.Side == SideHaunt, g.minion_ai.Active(), g.haunts_ai.Active())
-return }
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) { return }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -251,6 +258,7 @@ return }
   } else {
     g.Side = SideExplorers
   }
+  g.viewer.Los_tex.Remap()
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -318,7 +326,7 @@ func (g *Game) GetViewer() *house.HouseViewer {
   return g.viewer
 }
 
-func (g *Game) NumVertex() int {
+func (g *Game) numVertex() int {
   total := 0
   for _,room := range g.House.Floors[0].Rooms {
     total += room.Size.Dx * room.Size.Dy
@@ -428,14 +436,15 @@ func (g *Game) IsCellOccupied(x,y int) bool {
 }
 
 type exclusionGraph struct {
+  side Side
   ex map[*Entity]bool
   g *Game
 }
 func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
-  return eg.g.Adjacent(v, eg.ex)
+  return eg.g.adjacent(v, eg.side, eg.ex)
 }
 func (eg *exclusionGraph) NumVertex() int {
-  return eg.g.NumVertex()
+  return eg.g.numVertex()
 }
 
 func (g *Game) RecalcLos() {
@@ -477,15 +486,15 @@ func (rg *roomGraph) Adjacent(n int) ([]int, []float64) {
   return adj, cost
 }
 
-func (g *Game) Graph(exclude []*Entity) algorithm.Graph {
+func (g *Game) Graph(side Side, exclude []*Entity) algorithm.Graph {
   ex := make(map[*Entity]bool, len(exclude))
   for i := range exclude {
     ex[exclude[i]] = true
   }
-  return &exclusionGraph{ex, g}
+  return &exclusionGraph{side, ex, g}
 }
 
-func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
+func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64) {
   room,x,y := g.FromVertex(v)
   var adj []int
   var weight []float64
@@ -501,6 +510,16 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
       }
     }
   }
+  var data *sideLosData
+  switch side {
+  case SideHaunt:
+    data = &g.los.denizens
+  case SideExplorers:
+    data = &g.los.intruders
+  default:
+    base.Error().Printf("Unable to SetLosMode for side == %d.", side)
+    return nil, nil
+  }
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
       // Only run this loop if exactly one of dx and dy is non-zero
@@ -508,7 +527,7 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
-      if g.los.tex_denizens.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -526,7 +545,7 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
-      if g.los.tex_denizens.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -544,8 +563,8 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
 }
 
 func (g *Game) setup() {
-  g.los.tex_denizens = house.MakeLosTexture()
-  g.los.tex_intruders = house.MakeLosTexture()
+  g.los.denizens.tex = house.MakeLosTexture()
+  g.los.intruders.tex = house.MakeLosTexture()
   g.los.full_merger = make([]bool, house.LosTextureSizeSquared)
   g.los.merger = make([][]bool, house.LosTextureSize)
   for i := range g.los.merger {
@@ -556,32 +575,11 @@ func (g *Game) setup() {
       g.UpdateEntLos(g.Ents[i], true)
     }
   }
+  g.viewer.Los_tex = g.los.denizens.tex
 
-  g.MergeLos(g.Ents)
-  g.los.mode = LosModeAll
-  g.viewer.Los_tex = g.los.tex_denizens
-
-
-  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
-  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.lua"), g, nil, &g.haunts_ai, DenizensAi)
   g.minion_ai = inactiveAi{}
   g.haunts_ai = inactiveAi{}
   g.explorers_ai = inactiveAi{}
-  // if g.Human == SideExplorers {
-  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
-  //   g.explorers_ai = inactiveAi{}
-  // } else {
-  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
-  //   g.haunts_ai = inactiveAi{}
-  // }
-  // ai_maker(filepath.Join(base.GetDataDir(), "ais", "random_minion.xgml"), g, nil, &g.minion_ai, MinionsAi)
-  // if g.Human == SideExplorers {
-  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "denizens.xgml"), g, nil, &g.haunts_ai, DenizensAi)
-  //   g.explorers_ai = inactiveAi{}
-  // } else {
-  //   ai_maker(filepath.Join(base.GetDataDir(), "ais", "intruders.xgml"), g, nil, &g.explorers_ai, IntrudersAi)
-  //   g.haunts_ai = inactiveAi{}
-  // }
 }
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
@@ -610,10 +608,21 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   return &g
 }
 
-func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
-  g.los.mode = los_mode
-  pix := g.los.tex_denizens.Pix()
-  switch g.los.mode {
+func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
+  var data *sideLosData
+  switch side {
+  case SideHaunt:
+    data = &g.los.denizens
+  case SideExplorers:
+    data = &g.los.intruders
+  default:
+    base.Error().Printf("Unable to SetLosMode for side == %d.", side)
+    return
+  }
+  data.mode = mode
+  pix := data.tex.Pix()
+
+  switch data.mode {
   case LosModeNone:
     for i := range pix {
       for j := range pix[i] {
@@ -632,8 +641,7 @@ func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
       }
     }
 
-  case LosModeDenizens:
-  case LosModeIntruders:
+  case LosModeEntities:
     // Don't need to do anything here - it's handled on every think
 
   case LosModeRooms:
@@ -660,6 +668,7 @@ func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
       }
     }
   }
+  data.tex.Remap()
 }
 
 func (g *Game) Think(dt int64) {
@@ -738,45 +747,40 @@ func (g *Game) Think(dt int64) {
     g.Ents[i].Think(dt)
   }
 
-  if g.los.mode == LosModeDenizens || g.los.mode == LosModeIntruders {
-    var side_ents []*Entity
-    var side Side
-    if g.los.mode == LosModeDenizens {
-      side = SideHaunt
-    } else {
-      side = SideExplorers
-    }
-    for i := range g.Ents {
-      if g.Ents[i].Side() == side {
-        g.UpdateEntLos(g.Ents[i], false)
-        side_ents = append(side_ents, g.Ents[i])
-      }
-    }
-    g.MergeLos(side_ents)
+  for i := range g.Ents {
+    g.UpdateEntLos(g.Ents[i], false)
+  }
+  if g.los.denizens.mode == LosModeEntities {
+    g.mergeLos(SideHaunt)
+  }
+  if g.los.intruders.mode == LosModeEntities {
+    g.mergeLos(SideExplorers)
   }
 
-  pix := g.los.tex_denizens.Pix()
-  amt := dt / 5
-  mod := false
-  for i := range pix {
-    for j := range pix[i] {
-      v := int64(pix[i][j])
-      if v < house.LosVisibilityThreshold {
-        v -= amt
-      } else {
-        v += amt
+  for _, tex := range []*house.LosTexture{g.los.denizens.tex, g.los.intruders.tex} {
+    pix := tex.Pix()
+    amt := dt / 5
+    mod := false
+    for i := range pix {
+      for j := range pix[i] {
+        v := int64(pix[i][j])
+        if v < house.LosVisibilityThreshold {
+          v -= amt
+        } else {
+          v += amt
+        }
+        if v < house.LosMinVisibility {
+          v = house.LosMinVisibility
+        }
+        if v < 0 { v = 0 }
+        if v > 255 { v = 255 }
+        mod = mod || (byte(v) != pix[i][j])
+        pix[i][j] = byte(v)
       }
-      if v < house.LosMinVisibility {
-        v = house.LosMinVisibility
-      }
-      if v < 0 { v = 0 }
-      if v > 255 { v = 255 }
-      mod = mod || (byte(v) != pix[i][j])
-      pix[i][j] = byte(v)
     }
-  }
-  if mod {
-    g.los.tex_denizens.Remap()
+    if mod {
+      tex.Remap()
+    }
   }
 
   // Don't do any ai stuff if there is a pending action
@@ -883,11 +887,22 @@ func (g *Game) TeamLos(x, y int) bool {
   return g.los.merger[x][y]
 }
 
-func (g *Game) MergeLos(ents []*Entity) {
+func (g *Game) mergeLos(side Side) {
+  var pix [][]byte
+  switch side {
+  case SideHaunt:
+    pix = g.los.denizens.tex.Pix()
+  case SideExplorers:
+    pix = g.los.intruders.tex.Pix()
+  default:
+    base.Error().Printf("Unable to mergeLos on side %d.", side)
+    return
+  }
   for i := range g.los.full_merger {
     g.los.full_merger[i] = false
   }
-  for _,ent := range ents {
+  for _, ent := range g.Ents {
+    if ent.Side() != side { continue }
     if ent.los == nil { continue }
     for i := ent.los.minx; i <= ent.los.maxx; i++ {
       for j := ent.los.miny; j <= ent.los.maxy; j++ {
@@ -897,7 +912,6 @@ func (g *Game) MergeLos(ents []*Entity) {
       }
     }
   }
-  pix := g.los.tex_denizens.Pix()
   for i := 0; i < len(pix); i++ {
     for j := 0; j < len(pix); j++ {
       if g.los.merger[i][j] { continue }

@@ -63,6 +63,8 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("pickFromN", pickFromN(gp))
   gp.script.L.Register("setGear", setGear(gp))
   gp.script.L.Register("bindAi", bindAi(gp))
+  gp.script.L.Register("setVisibility", setVisibility(gp))
+  gp.script.L.Register("endPlayerInteraction", endPlayerInteraction(gp))
 
   gp.script.sync = make(chan struct{})
   res := gp.script.L.DoString(string(prog))
@@ -481,23 +483,60 @@ func roomAtPos(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func endPlayerInteraction(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gp.game.player_active = false
+    return 0
+  }
+}
+
+func setVisibility(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    side_str := L.ToString(-1)
+    var side Side
+    switch side_str {
+    case "denizens":
+      side = SideHaunt
+    case "intruders":
+      side = SideExplorers
+    default:
+      base.Error().Printf("Cannot pass '%s' as first parameter of setVisibility()", side_str)
+      return 0
+    }
+    gp.game.SetVisibility(side)
+    return 0
+  }
+}
 func setLosMode(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    mode_str := L.ToString(1)
+    side_str := L.ToString(1)
+    mode_str := L.ToString(2)
+    var side Side
+    switch side_str {
+    case "denizens":
+      side = SideHaunt
+    case "intruders":
+      side = SideExplorers
+    default:
+      base.Error().Printf("Cannot pass '%s' as first parameters of setLosMode()", side_str)
+      return 0
+    }
     switch mode_str {
     case "none":
-      gp.game.SetLosMode(LosModeNone, nil)
+      gp.game.SetLosMode(side, LosModeNone, nil)
     case "all":
-      gp.game.SetLosMode(LosModeAll, nil)
-    case "denizens":
-      gp.game.SetLosMode(LosModeDenizens, nil)
-    case "intruders":
-      gp.game.SetLosMode(LosModeIntruders, nil)
+      gp.game.SetLosMode(side, LosModeAll, nil)
+    case "entities":
+      gp.game.SetLosMode(side, LosModeEntities, nil)
     case "rooms":
       if !L.IsTable(-1) {
-        base.Error().Printf("The second parameter to setLosMode should be an array of rooms if mode == 'rooms'")
+        base.Error().Printf("The last parameter to setLosMode should be an array of rooms if mode == 'rooms'")
         return 0
       }
       L.PushNil()
@@ -512,7 +551,7 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
         rooms = append(rooms, all_rooms[index])
         L.Pop(1)
       }
-      gp.game.SetLosMode(LosModeRooms, rooms)
+      gp.game.SetLosMode(side, LosModeRooms, rooms)
 
     default:
       base.Error().Printf("Unknown los mode '%s'", mode_str)

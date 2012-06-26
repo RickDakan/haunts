@@ -276,7 +276,6 @@ func (m *Manager) LoadFromPath(path string) *Data {
   if data,ok := m.registry[path]; ok {
     return data
   }
-  base.Log().Printf("Loading %s\n", path)
   var data Data
   m.registry[path] = &data
 

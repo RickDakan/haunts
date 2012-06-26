@@ -92,9 +92,9 @@ func (a *Move) Readyable() bool {
   return false
 }
 
-func limitPath(g *game.Game, start int, path []int, max int) []int {
+func limitPath(ent *game.Entity, start int, path []int, max int) []int {
   total := 0
-  graph := g.Graph(nil)
+  graph := ent.Game().Graph(ent.Side(), nil)
   for last := 1; last < len(path); last++ {
     adj,cost := graph.Adjacent(start)
     for index := range adj {
@@ -112,7 +112,7 @@ func limitPath(g *game.Game, start int, path []int, max int) []int {
 }
 
 func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(nil)
+  graph := ent.Game().Graph(ent.Side(), nil)
   src := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(graph, src, dst)
   if path == nil {
@@ -121,7 +121,7 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
   if ent.Stats.ApCur() < max_ap {
     max_ap = ent.Stats.ApCur()
   }
-  path = limitPath(ent.Game(), src[0], path, max_ap)
+  path = limitPath(ent, src[0], path, max_ap)
   if len(path) <= 1 {
     return nil
   }
@@ -135,7 +135,7 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
 // (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
 // than max_ap Ap doing this.
 func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist,max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(targets)
+  graph := ent.Game().Graph(ent.Side(), targets)
   var src []int
   for i := range targets {
     src = append(src, ent.Game().ToVertex(targets[i].Pos()))
@@ -153,7 +153,7 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
   if ent.Stats.ApCur() > max_ap {
     max_ap = ent.Stats.ApCur()
   }
-  path = limitPath(ent.Game(), source_cell[0], path, max_ap)
+  path = limitPath(ent, source_cell[0], path, max_ap)
   if len(path) <= 1 {
     return nil
   }
@@ -164,7 +164,7 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
 }
 
 func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist int) int {
-  graph := ent.Game().Graph(targets)
+  graph := ent.Game().Graph(ent.Side(), targets)
   var src []int
   for i := range targets {
     src = append(src, ent.Game().ToVertex(targets[i].Pos()))
@@ -182,13 +182,15 @@ func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min
   return int(cost)
 }
 
-func (a *Move) findPath(g *game.Game, x,y int) {
+func (a *Move) findPath(ent *game.Entity, x,y int) {
+  g := ent.Game()
   dst := g.ToVertex(x, y)
   if dst != a.dst || !a.calculated {
     a.dst = dst
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
-    cost,path := algorithm.Dijkstra(g.Graph(nil), []int{src}, []int{dst})
+    graph := g.Graph(ent.Side(), nil)
+    cost,path := algorithm.Dijkstra(graph, []int{src}, []int{dst})
     if len(path) <= 1 {
       return
     }
@@ -206,7 +208,6 @@ func (a *Move) findPath(g *game.Game, x,y int) {
         }
       }
       current := 0.0
-      graph := g.Graph(nil)
       for i := 1; i < len(a.path); i++ {
         src := g.ToVertex(a.path[i-1][0], a.path[i-1][1])
         dst := g.ToVertex(a.path[i][0], a.path[i][1])
@@ -230,7 +231,7 @@ func (a *Move) Preppable(ent *game.Entity, g *game.Game) bool {
 func (a *Move) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   fx, fy := g.GetViewer().WindowToBoard(gin.In().GetCursor("Mouse").Point())
-  a.findPath(g, int(fx), int(fy))
+  a.findPath(ent, int(fx), int(fy))
   a.threshold = a.ent.Stats.ApCur()
   return true
 }
@@ -238,7 +239,7 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.Actio
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
-    a.findPath(g, int(fx), int(fy))
+    a.findPath(a.ent, int(fx), int(fy))
   }
   if found,_ := group.FindEvent(gin.MouseLButton); found {
     if len(a.path) > 0 {
@@ -281,7 +282,7 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
     exec := ae.(moveExec)
     _, x, y := g.FromVertex(exec.Dst)
     a.ent = g.EntityById(ae.EntityId())
-    a.findPath(g, x, y)
+    a.findPath(a.ent, x, y)
     if len(a.path) == 0 {
       base.Error().Printf("Got a move exec with a path length of 0: %v", exec)
       return game.Complete
