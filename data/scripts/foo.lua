@@ -106,7 +106,7 @@ function doIntrudersSetup()
     end
   end
 
-  setLosMode("entities")
+  setLosMode("intruders")
   showMainBar(true)
 end
 

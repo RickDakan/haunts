@@ -491,8 +491,10 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
       gp.game.SetLosMode(LosModeNone, nil)
     case "all":
       gp.game.SetLosMode(LosModeAll, nil)
-    case "entities":
-      gp.game.SetLosMode(LosModeEntities, nil)
+    case "denizens":
+      gp.game.SetLosMode(LosModeDenizens, nil)
+    case "intruders":
+      gp.game.SetLosMode(LosModeIntruders, nil)
     case "rooms":
       if !L.IsTable(-1) {
         base.Error().Printf("The second parameter to setLosMode should be an array of rooms if mode == 'rooms'")

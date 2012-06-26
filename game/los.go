@@ -20,7 +20,8 @@ type LosMode int
 const (
   LosModeNone     LosMode = iota
   LosModeAll
-  LosModeEntities
+  LosModeDenizens
+  LosModeIntruders
   LosModeRooms
 )
 
@@ -91,17 +92,19 @@ type Game struct {
   // If the user is dragging around a new Entity to place, this is it
   new_ent *Entity
 
-  // Indicates what sort of visibility is showing to the user right now.
-  los_mode LosMode
+  los struct {
+    // Indicates what sort of visibility is showing to the user right now.
+    mode LosMode
 
-  // Might want to keep several of them for different POVs, but one is
-  // fine for now
-  los_tex *house.LosTexture
+    // The los textures for both sides
+    tex_intruders *house.LosTexture
+    tex_denizens  *house.LosTexture
 
-  // When merging the los from different entities we'll do it here, and we
-  // keep it around to avoid reallocating it every time we need it.
-  los_full_merger []bool
-  los_merger [][]bool
+    // When merging the los from different entities we'll do it here, and we
+    // keep it around to avoid reallocating it every time we need it.
+    full_merger []bool
+    merger  [][]bool
+  }
 
   selected_ent *Entity
   hovered_ent *Entity
@@ -505,7 +508,7 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
-      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if g.los.tex_denizens.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -523,7 +526,7 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
       tx := x + dx
       ty := y + dy
       if ent_occupied[[2]int{tx,ty}] { continue }
-      if g.los_tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if g.los.tex_denizens.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
       // TODO: This is obviously inefficient
       troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
       if troom == nil { continue }
@@ -541,11 +544,12 @@ func (g *Game) Adjacent(v int, ex map[*Entity]bool) ([]int, []float64) {
 }
 
 func (g *Game) setup() {
-  g.los_tex = house.MakeLosTexture()
-  g.los_full_merger = make([]bool, house.LosTextureSizeSquared)
-  g.los_merger = make([][]bool, house.LosTextureSize)
-  for i := range g.los_merger {
-    g.los_merger[i] = g.los_full_merger[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
+  g.los.tex_denizens = house.MakeLosTexture()
+  g.los.tex_intruders = house.MakeLosTexture()
+  g.los.full_merger = make([]bool, house.LosTextureSizeSquared)
+  g.los.merger = make([][]bool, house.LosTextureSize)
+  for i := range g.los.merger {
+    g.los.merger[i] = g.los.full_merger[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -554,8 +558,8 @@ func (g *Game) setup() {
   }
 
   g.MergeLos(g.Ents)
-  g.los_mode = LosModeAll
-  g.viewer.Los_tex = g.los_tex
+  g.los.mode = LosModeAll
+  g.viewer.Los_tex = g.los.tex_denizens
 
 
   // ai_maker(filepath.Join(base.GetDataDir(), "ais", "minions.lua"), g, nil, &g.minion_ai, MinionsAi)
@@ -607,9 +611,9 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
 }
 
 func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
-  g.los_mode = los_mode
-  pix := g.los_tex.Pix()
-  switch g.los_mode {
+  g.los.mode = los_mode
+  pix := g.los.tex_denizens.Pix()
+  switch g.los.mode {
   case LosModeNone:
     for i := range pix {
       for j := range pix[i] {
@@ -628,7 +632,8 @@ func (g *Game) SetLosMode(los_mode LosMode, rooms []*house.Room) {
       }
     }
 
-  case LosModeEntities:
+  case LosModeDenizens:
+  case LosModeIntruders:
     // Don't need to do anything here - it's handled on every think
 
   case LosModeRooms:
@@ -732,19 +737,25 @@ func (g *Game) Think(dt int64) {
   for i := range g.Ents {
     g.Ents[i].Think(dt)
   }
-  var side_ents []*Entity
-  for i := range g.Ents {
-    if g.Ents[i].Side() == g.Side {
-      g.UpdateEntLos(g.Ents[i], false)
-      side_ents = append(side_ents, g.Ents[i])
-    }
-  }
 
-  if g.los_mode == LosModeEntities {
+  if g.los.mode == LosModeDenizens || g.los.mode == LosModeIntruders {
+    var side_ents []*Entity
+    var side Side
+    if g.los.mode == LosModeDenizens {
+      side = SideHaunt
+    } else {
+      side = SideExplorers
+    }
+    for i := range g.Ents {
+      if g.Ents[i].Side() == side {
+        g.UpdateEntLos(g.Ents[i], false)
+        side_ents = append(side_ents, g.Ents[i])
+      }
+    }
     g.MergeLos(side_ents)
   }
 
-  pix := g.los_tex.Pix()
+  pix := g.los.tex_denizens.Pix()
   amt := dt / 5
   mod := false
   for i := range pix {
@@ -765,7 +776,7 @@ func (g *Game) Think(dt int64) {
     }
   }
   if mod {
-    g.los_tex.Remap()
+    g.los.tex_denizens.Remap()
   }
 
   // Don't do any ai stuff if there is a pending action
@@ -866,38 +877,38 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
 }
 
 func (g *Game) TeamLos(x, y int) bool {
-  if x < 0 || y < 0 || x >= len(g.los_merger) || y >= len(g.los_merger[x]) {
+  if x < 0 || y < 0 || x >= len(g.los.merger) || y >= len(g.los.merger[x]) {
     return false
   }
-  return g.los_merger[x][y]
+  return g.los.merger[x][y]
 }
 
 func (g *Game) MergeLos(ents []*Entity) {
-  for i := range g.los_full_merger {
-    g.los_full_merger[i] = false
+  for i := range g.los.full_merger {
+    g.los.full_merger[i] = false
   }
   for _,ent := range ents {
     if ent.los == nil { continue }
     for i := ent.los.minx; i <= ent.los.maxx; i++ {
       for j := ent.los.miny; j <= ent.los.maxy; j++ {
         if ent.los.grid[i][j] {
-          g.los_merger[i][j] = true
+          g.los.merger[i][j] = true
         }
       }
     }
   }
-  pix := g.los_tex.Pix()
+  pix := g.los.tex_denizens.Pix()
   for i := 0; i < len(pix); i++ {
     for j := 0; j < len(pix); j++ {
-      if g.los_merger[i][j] { continue }
+      if g.los.merger[i][j] { continue }
       if pix[i][j] >= house.LosVisibilityThreshold {
         pix[i][j] = house.LosVisibilityThreshold - 1
       }
     }
   }
-  for i := range g.los_merger {
-    for j := range g.los_merger[i] {
-      if g.los_merger[i][j] {
+  for i := range g.los.merger {
+    for j := range g.los.merger[i] {
+      if g.los.merger[i][j] {
         if pix[i][j] < house.LosVisibilityThreshold {
           pix[i][j] = house.LosVisibilityThreshold
         }

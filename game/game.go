@@ -92,7 +92,7 @@ func (gp *GamePanel) LoadGame(path string) {
   }
 
   gp.game.setup()
-  gp.game.viewer.Los_tex = gp.game.los_tex
+  gp.game.viewer.Los_tex = gp.game.los.tex_denizens
   gp.main_bar,err = MakeMainBar(gp.game)
   if err != nil {
     base.Warn().Printf("Failed to make main bar: %v", err)
