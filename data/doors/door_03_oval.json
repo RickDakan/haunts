@@ -1,0 +1,10 @@
+{
+  "Name": "Door 03 - Oval Panel",
+  "Width": 1,
+  "Opened_texture": {
+    "Path": "doors/door_03_oval_panel_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_03_oval_panel_closed.png"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "Name": "Door 06 - Sliding Double",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_06_sliding_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_06_sliding_closed.png"
+  }
+}
