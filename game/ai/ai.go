@@ -140,6 +140,10 @@ func (a *Ai) setupLuaState() {
       return 1
     }
     val := L.ToInteger(-1)
+    if val <= 0 {
+      base.Error().Printf("Can't call randN with a value <= 0.")
+      return 0
+    }
     L.PushInteger(rand.Intn(val) + 1)
     return 1
   })
