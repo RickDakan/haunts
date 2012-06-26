@@ -331,14 +331,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       return 0
     }
     gp.game.SpawnEntity(ent, tx, ty)
-
-    L.NewTable()
-    L.PushString("x")
-    L.PushInteger(tx)
-    L.SetTable(-3)
-    L.PushString("y")
-    L.PushInteger(ty)
-    L.SetTable(-3)
+    pushEntity(L, ent)
     return 1
   }
 }
@@ -657,22 +650,25 @@ func setGear(gp *GamePanel) lua.GoFunction {
 // bindAi("denizen", "denizen.lua")
 // bindAi("intruder", "intruder.lua")
 // bindAi("minions", "minions.lua")
-// bindAi(ent_id, "fudgecake.lua")
+// bindAi(ent, "fudgecake.lua")
 // special sources: "human", "inactive", and in the future: "net"
-// special targets: "denizen", "intruder", "minions", or an entity id
+// special targets: "denizen", "intruder", "minions", or an entity table
 func bindAi(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     source := L.ToString(-1)
-    if L.IsNumber(-2) {
-      target := EntityId(L.ToInteger(-2))
+    if L.IsTable(-2) {
+      L.PushString("id")
+      L.GetTable(-3)
+      target := EntityId(L.ToInteger(-1))
+      L.Pop(1)
       ent := gp.game.EntityById(target)
       if ent == nil {
         base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", target)
         return 0
       }
-      ent.Ai_file_override = L.ToString(-1)
+      ent.Ai_file_override = base.Path(filepath.Join(base.GetDataDir(), "ais", filepath.FromSlash(L.ToString(-1))))
       ent.ai_file_load_time = time.Time{}
       ent.ReloadAi()
       return 0

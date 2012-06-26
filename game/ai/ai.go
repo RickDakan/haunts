@@ -106,19 +106,25 @@ func (a *Ai) setupLuaState() {
   a.L.OpenLibs()
   switch a.kind {
   case game.EntityAi:
-    base.Log().Printf("Adding entity context for %s", a.ent.Name)
     a.addEntityContext()
-    a.loadUtils("entity")
+    if a.ent.Side() == game.SideHaunt {
+      a.loadUtils("denizen_entity")
+    }
+    if a.ent.Side() == game.SideExplorers {
+      a.loadUtils("intruder_entity")
+    }
 
   case game.MinionsAi:
     a.addMinionsContext()
+    a.loadUtils("minions")
 
   case game.DenizensAi:
-    base.Log().Printf("Adding denizens context")
     a.addDenizensContext()
+    a.loadUtils("denizens")
 
   case game.IntrudersAi:
-    // a.addIntrudersContext(g)
+    a.addIntrudersContext()
+    a.loadUtils("intruders")
 
   default:
     panic("Unknown ai kind")

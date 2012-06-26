@@ -29,9 +29,7 @@ func activeNonMinionsFunc(a *Ai) lua.GoFunction {
     count := 0
     for _, ent := range a.game.Ents {
       if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
-      base.Log().Printf("Servitor: %s", ent.Name)
       if !ent.Ai.Active() { continue }
-      base.Log().Printf("Is active")
       count++
       L.PushInteger(count)
       L.PushInteger(int(ent.Id))

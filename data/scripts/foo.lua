@@ -18,9 +18,10 @@ end
 function Init()
   map = selectMap()
   loadHouse(map)
-  bindAi("denizen", "denizens.lua")
+  -- bindAi("denizen", "denizens.lua")
+  bindAi("denizen", "human")
   bindAi("minions", "minions.lua")
-  bindAi("intruder", "human")
+  bindAi("intruder", "intruders.lua")
 end
 
 function doDenizenSetup()
@@ -82,10 +83,10 @@ function doIntrudersSetup()
   end
 
   intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
-  spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
+  ent = spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
+  bindAi(ent, "zombie_intruder.lua")
   spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
   spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
-
   ents = getAllEnts()
 
   -- for en, ent in pairs(ents) do
@@ -122,7 +123,7 @@ function RoundStart(intruders, turn)
     return
   end
   if turn == 2 then
-    setVisibility("intruders")
+    setVisibility("denizens")
     setLosMode("intruders", "entities")
     setLosMode("denizens", "entities")
   end
