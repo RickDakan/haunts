@@ -15,13 +15,20 @@ end
 -- 
 -- need an OnAction() function that is called after every action is
 -- completed.
+play_as_denizens = true
 function Init()
   map = selectMap()
   loadHouse(map)
-  -- bindAi("denizen", "denizens.lua")
-  bindAi("denizen", "human")
-  bindAi("minions", "minions.lua")
-  bindAi("intruder", "intruders.lua")
+
+  if play_as_denizens then
+    bindAi("denizen", "human")
+    bindAi("minions", "minions.lua")
+    bindAi("intruder", "intruders.lua")
+  else
+    bindAi("denizen", "denizens.lua")
+    bindAi("minions", "minions.lua")
+    bindAi("intruder", "human")
+  end
 end
 
 function doDenizenSetup()
@@ -69,10 +76,15 @@ function doDenizenSetup()
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitor-.*")
   placed = placeEntities("Servitor-.*", 10, ents)
 
+  -- set the denizens to not be able to see anything - it's not very
+  -- significant since their turn is about to end anyway.
   setLosMode("denizens", "none")
 end
 
 function doIntrudersSetup()
+  -- Let the intruders choose from among one of the three game modes.
+  -- Currently the data isn't stored or used anywhere, but this gives you an
+  -- idea of how a menu can be created.
   modes = {}
   modes["Cleanse"] = "ui/explorer_setup/cleanse.png"
   modes["Relic"] = "ui/explorer_setup/relic.png"
@@ -82,13 +94,18 @@ function doIntrudersSetup()
     print("picked", i, name)
   end
 
+  -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
+  -- and Ghost Hunter there.  Additionally we will mind the
+  -- sample_aoe_occultist.lua ai to the occultist.
   intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
-  ent = spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
-  bindAi(ent, "zombie_intruder.lua")
-  spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
+  spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
+  ent = spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
+  bindAi(ent, "sample_aoe_occultist.lua")
   spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
   ents = getAllEnts()
 
+  -- This lets you pick gear for each entity, you can uncomment this block
+  -- if you want to turn it on.
   -- for en, ent in pairs(ents) do
   --   print("Checking ent: ", ent.name)
   --   for i, gear in pairs(ent.gear) do
@@ -106,12 +123,10 @@ function doIntrudersSetup()
   --     setGear(ent, r[1])
   --   end
   -- end
-
-  showMainBar(true)
 end
 
-function RoundStart(intruders, turn)
-  if turn == 1 then
+function RoundStart(intruders, round)
+  if round == 1 then
     if intruders then
       setVisibility("intruders")
       doIntrudersSetup()
@@ -119,15 +134,25 @@ function RoundStart(intruders, turn)
       setVisibility("denizens")
       doDenizenSetup()
     end
-      endPlayerInteraction()
+    -- Make it clear that the players don't get to activate their units on the
+    -- setup turn.
+    endPlayerInteraction()
     return
   end
-  if turn == 2 then
+
+  -- The start of round 2 is when a player's visibility should be only what
+  -- their units are able to see.  It is important to call setVisibility
+  -- because it sets what the player can see, and it is important to call
+  -- setLosMode because it sets what is technically visible to entities on
+  -- each side.
+  if round == 2 then
     setVisibility("denizens")
     setLosMode("intruders", "entities")
     setLosMode("denizens", "entities")
   end
-  print("start", intruders, turn)
+
+  -- This is sample code to spawn one angry shade at the start of each
+  -- denizens' turn.
   -- if not intruders then
   --   spawn_points = getSpawnPointsMatching("Minion-.*")
   --   p = spawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
@@ -135,6 +160,7 @@ function RoundStart(intruders, turn)
   -- end
 end
 
-function RoundEnd(intruders, turn)
-  print("end", intruders, turn)
+function RoundEnd(intruders, round)
+  showMainBar(intruders == play_as_denizens)
+  print("end", intruders, round)
 end
