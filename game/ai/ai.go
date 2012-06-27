@@ -64,12 +64,7 @@ func init() {
 }
 
 func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kind game.AiKind) {
-  var ai_struct *Ai
-  if *dst_iface == nil {
-    ai_struct = new(Ai)
-  } else {
-    ai_struct = (*dst_iface).(*Ai)
-  }
+  ai_struct := new(Ai)
   ai_struct.path = path
   var err error
   ai_struct.watcher, err = fsnotify.NewWatcher()
@@ -170,6 +165,7 @@ func luaStringifyParam(L *lua.State, index int) string {
 
 func (a *Ai) loadUtils(dir string) {
   root := filepath.Join(base.GetDataDir(), "ais", "utils", dir)
+  a.watcher.Watch(root)
   filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
     if err != nil || info.IsDir() {
       return nil
@@ -185,7 +181,6 @@ func (a *Ai) loadUtils(dir string) {
         return nil
       }
       base.Log().Printf("Loaded lua utils file '%s': \n%s", path, data)
-      a.watcher.Watch(path)
       a.L.DoString(string(data))
     }
     return nil

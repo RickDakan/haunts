@@ -1,7 +1,6 @@
 package game
 
 import (
-  "time"
   "math/rand"
   "path/filepath"
   "io/ioutil"
@@ -669,8 +668,7 @@ func bindAi(gp *GamePanel) lua.GoFunction {
         return 0
       }
       ent.Ai_file_override = base.Path(filepath.Join(base.GetDataDir(), "ais", filepath.FromSlash(L.ToString(-1))))
-      ent.ai_file_load_time = time.Time{}
-      ent.ReloadAi()
+      ent.LoadAi()
       return 0
     }
     target := L.ToString(-2)

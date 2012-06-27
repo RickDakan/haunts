@@ -11,9 +11,7 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
-  "os"
   "regexp"
-  "time"
 )
 
 type Ai interface {
@@ -107,32 +105,16 @@ func (g *Game) placeEntity(pattern string) bool {
   return false
 }
 
-func (e *Entity) ReloadAi() {
+func (e *Entity) LoadAi() {
   filename := e.Ai_file_override.String()
-  base.Log().Printf("Reloading ai: %s <- %s", e.Name, filename)
   if filename == "" {
     e.Ai = inactiveAi{}
     return
   }
-  stat, err := os.Stat(filename)
-  if err != nil {
-    return
-  }
-  if _, ok := e.Ai.(inactiveAi); ok {
-    e.Ai = nil
-  }
-  if e.Ai == nil || stat.ModTime().After(e.ai_file_load_time) {
-    if e.Ai != nil {
-      base.Log().Printf("Reloading %s's ai (id=%d, p=%p), %v changed on disk.", e.Name, e.Id, e, e.Ai_path)
-      e.Ai.Terminate()
-    }
-    e.Ai = nil
-    ai_maker(filename, e.Game(), e, &e.Ai, EntityAi)
-    base.Log().Printf("Made Ai for '%s'", e.Name)
-    if e.Ai == nil {
-      e.Ai = inactiveAi{}
-    }
-    e.ai_file_load_time = stat.ModTime()
+  ai_maker(filename, e.Game(), e, &e.Ai, EntityAi)
+  base.Log().Printf("Made Ai for '%s'", e.Name)
+  if e.Ai == nil {
+    e.Ai = inactiveAi{}
   }
 }
 
@@ -141,7 +123,7 @@ func (e *Entity) ReloadAi() {
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
   e.Ai_file_override = e.Ai_path
-  e.ReloadAi()
+  e.LoadAi()
 
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
     e.los = &losData{}
@@ -365,7 +347,6 @@ type EntityInst struct {
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
   Ai Ai
-  ai_file_load_time time.Time
   Ai_file_override  base.Path
 
   // Info that may be of use to the Ai
@@ -620,8 +601,6 @@ func (e *Entity) OnRound() {
     if e.Stats.HpCur() <= 0 {
       e.sprite.Sprite().Command("defend")
       e.sprite.Sprite().Command("killed")
-    } else {
-      e.ReloadAi()
     }
   }
 }
