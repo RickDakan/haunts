@@ -146,10 +146,15 @@ function RoundStart(intruders, round)
   -- setLosMode because it sets what is technically visible to entities on
   -- each side.
   if round == 2 then
-    setVisibility("denizens")
+    if play_as_denizens then
+      setVisibility("denizens")
+    else
+      setVisibility("intruders")
+    end
     setLosMode("intruders", "entities")
     setLosMode("denizens", "entities")
   end
+  showMainBar(intruders ~= play_as_denizens)
 
   -- This is sample code to spawn one angry shade at the start of each
   -- denizens' turn.
@@ -161,6 +166,5 @@ function RoundStart(intruders, round)
 end
 
 function RoundEnd(intruders, round)
-  showMainBar(intruders == play_as_denizens)
   print("end", intruders, round)
 end

@@ -844,6 +844,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     var eds entityDistSlice
     for _, ent := range g.Ents {
       if ent.Stats == nil { continue }
+      if ent.Stats.HpCur() <= 0 { continue }
       switch kind {
       case "all":
       case "intruder":
