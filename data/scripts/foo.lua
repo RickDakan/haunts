@@ -56,7 +56,7 @@ function doDenizenSetup()
   -- placed is an array containing all of the entities placed, in this case
   -- there will only be one, and we will use that one to determine what
   -- servitors to make available to the user to place.
-  if placed[1] == "Chosen One" then
+  if placed[1].name == "Chosen One" then
     ents = {
       {"Disciple", 1},
       {"Devotee", 1},
