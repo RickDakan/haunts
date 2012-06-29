@@ -18,7 +18,7 @@ end
 play_as_denizens = true
 function Init()
   while true do
-    mediumDialogBox("ui/dialog/sample.json")
+    dialogBox("ui/dialog/sample.json")
   end
   map = selectMap()
   loadHouse(map)

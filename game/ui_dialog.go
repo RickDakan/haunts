@@ -27,19 +27,20 @@ type dialogSection struct {
   }
 }
 
-type mediumDialogLayoutSpec struct {
+type dialogLayoutSpec struct {
   Sections []dialogSection
 }
 
-type mediumDialogLayout struct {
+type dialogLayout struct {
   Background texture.Object
   Next, Prev Button
 
-  Formats map[string]mediumDialogLayoutSpec
+  Formats map[string]dialogLayoutSpec
 }
 
-type mediumDialogData struct {
+type dialogData struct {
   Format string
+  Size   string
   Sections []struct {
     Image   texture.Object
     Text    string
@@ -48,10 +49,10 @@ type mediumDialogData struct {
 }
 
 type MediumDialogBox struct {
-  layout mediumDialogLayout
-  format mediumDialogLayoutSpec
+  layout dialogLayout
+  format dialogLayoutSpec
   // state  mediumDialogState
-  data   mediumDialogData
+  data   dialogData
 
   region gui.Region
 
@@ -64,14 +65,14 @@ type MediumDialogBox struct {
   result chan int
 }
 
-func MakeMediumDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
+func MakeDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
   var mdb MediumDialogBox
   datadir := base.GetDataDir()
-  err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "dialog", "medium.json"), "json", &mdb.layout)
+  err := base.LoadAndProcessObject(filepath.Join(datadir, source), "json", &mdb.data)
   if err != nil {
     return nil, nil, err
   }
-  err = base.LoadAndProcessObject(filepath.Join(datadir, source), "json", &mdb.data)
+  err = base.LoadAndProcessObject(filepath.Join(datadir, "ui", "dialog", fmt.Sprintf("%s.json", mdb.data.Size)), "json", &mdb.layout)
   if err != nil {
     return nil, nil, err
   }
@@ -113,145 +114,12 @@ func MakeMediumDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
 }
 
 
-// type mainBarState struct {
-//   Actions struct {
-//     // target is the action that should be displayed as left-most,
-//     // pos is the action that is currently left-most, which can be fractional.
-//     scroll_target float64
-//     scroll_pos    float64
-
-//     selected Action
-
-//     // The clicked action was clicked in the Ui but hasn't been set as the
-//     // selected action yet because we can't SetCurrentAction during event
-//     // handling.
-//     clicked Action
-
-//     space float64
-//   }
-//   Conditions struct {
-//     scroll_pos float64
-//   }
-//   MouseOver struct {
-//     active   bool
-//     text     string
-//     location mouseOverLocation
-//   }
-// }
-
-// type mouseOverLocation int
-// const (
-//   mouseOverActions = iota
-//   mouseOverConditions
-//   mouseOverGear
-// )
-
-// func buttonFuncEndTurn(mbi interface{}) {
-//   mb := mbi.(*MainBar)
-//   mb.game.player_active = false
-//   base.Log().Printf("player_active set to false")
-// }
-// func buttonFuncActionLeft(mbi interface{}) {
-//   mb := mbi.(*MainBar)
-//   mb.state.Actions.scroll_target -= float64(mb.layout.Actions.Count)
-// }
-// func buttonFuncActionRight(mbi interface{}) {
-//   mb := mbi.(*MainBar)
-//   mb.state.Actions.scroll_target += float64(mb.layout.Actions.Count)
-// }
-// func buttonFuncUnitLeft(mbi interface{}) {
-//   mb := mbi.(*MainBar)
-//   if !mb.game.SetCurrentAction(nil) {
-//     return
-//   }
-//   start_index := len(mb.game.Ents) - 1
-//   for i := 0; i < len(mb.game.Ents); i++ {
-//     if mb.game.Ents[i] == mb.ent {
-//       start_index = i
-//       break
-//     }
-//   }
-//   for i := start_index - 1; i >= 0; i-- {
-//     if mb.game.Ents[i].Side() == mb.game.Side {
-//       mb.game.SelectEnt(mb.game.Ents[i])
-//       return
-//     }
-//   }
-//   for i := len(mb.game.Ents) - 1; i >= start_index; i-- {
-//     if mb.game.Ents[i].Side() == mb.game.Side {
-//       mb.game.SelectEnt(mb.game.Ents[i])
-//       return
-//     }
-//   }
-// }
-// func buttonFuncUnitRight(mbi interface{}) {
-//   mb := mbi.(*MainBar)
-//   if !mb.game.SetCurrentAction(nil) {
-//     return
-//   }
-//   start_index := 0
-//   for i := 0; i < len(mb.game.Ents); i++ {
-//     if mb.game.Ents[i] == mb.ent {
-//       start_index = i
-//       break
-//     }
-//   }
-//   for i := start_index + 1; i < len(mb.game.Ents); i++ {
-//     if mb.game.Ents[i].Side() == mb.game.Side {
-//       mb.game.SelectEnt(mb.game.Ents[i])
-//       return
-//     }
-//   }
-//   for i := 0; i <= start_index; i++ {
-//     if mb.game.Ents[i].Side() == mb.game.Side {
-//       mb.game.SelectEnt(mb.game.Ents[i])
-//       return
-//     }
-//   }
-// }
-
-// func MakeMainBar(game *Game) (*MainBar, error) {
-//   var mb MainBar
-//   datadir := base.GetDataDir()
-//   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "main_bar.json"), "json", &mb.layout)
-//   if err != nil {
-//     return nil, err
-//   }
-//   mb.buttons = []*Button{
-//     &mb.layout.EndTurn,
-//     &mb.layout.UnitLeft,
-//     &mb.layout.UnitRight,
-//     &mb.layout.ActionLeft,
-//     &mb.layout.ActionRight,
-//   }
-//   mb.layout.EndTurn.f = buttonFuncEndTurn
-//   mb.layout.UnitRight.f = buttonFuncUnitRight
-//   mb.layout.UnitRight.key = gin.Tab
-//   mb.layout.UnitLeft.f = buttonFuncUnitLeft
-//   mb.layout.UnitLeft.key = gin.ShiftTab
-//   mb.layout.ActionLeft.f = buttonFuncActionLeft
-//   mb.layout.ActionRight.f = buttonFuncActionRight
-//   mb.game = game
-//   return &mb, nil
-// }
 func (mdb *MediumDialogBox) Requested() gui.Dims {
   return gui.Dims{
     Dx: mdb.layout.Background.Data().Dx(),
     Dy: mdb.layout.Background.Data().Dy(),
   }
 }
-
-// func (mb *MainBar) SelectEnt(ent *Entity) {
-//   if ent == mb.ent {
-//     return
-//   }
-//   mb.ent = ent
-//   mb.state = mainBarState{}
-
-//   if mb.ent == nil {
-//     return
-//   }
-// }
 
 func (mdb *MediumDialogBox) Expandable() (bool, bool) {
   return false, false
