@@ -1,18 +1,68 @@
 {
-  "Format": "TwoOptions",
-  "Size": "large",
-  "Sections":[
-    {
-      "Text": "The monkeys are quite funky, although not mandible chair fridge coolant ignite.",
-      "Image":{
-        "Path": "ui/cute5.png"
-      }
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "This is a box of text.  Nothing else to see here, move along."
+        }
+      ]
     },
-    {
-      "Text": "Kittens kitnz ktnz cittems mittems.",
-      "Image":{
-        "Path": "ui/cute6.png"
-      }
+    "Start2": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "Choice1",
+          "Text": "More text, I can't believe you're still reading this."
+        }
+      ]
+    },
+    "Choice1": {
+      "Format": "TwoOptions",
+      "Sections":[
+        {
+          "Next": "ChoiceA-1",
+          "Text": "The monkeys are quite funky, although not mandible chair fridge coolant ignite.",
+          "Image":{
+            "Path": "ui/cute5.png"
+          }
+        },
+        {
+          "Next": "ChoiceB-1",
+          "Text": "Kittens kitnz ktnz cittems mittems.",
+          "Image":{
+            "Path": "ui/cute6.png"
+          }
+        }
+      ]
+    },
+    "ChoiceA-1": {
+      "Format": "NoOptionsNoImage",
+      "Next": "ChoiceA-2",
+      "Sections":[
+        {
+          "Text": "You picked the first option, nice job, nubcake."
+        }
+      ]
+    },
+    "ChoiceA-2": {
+      "Format": "NoOptionsNoImage",
+      "Next": "ChoiceA-2",
+      "Sections":[
+        {
+          "Text": "You picked the first option, and you are STILL READING TEXt - WHT KIND OF NGMAE IS THIST?!."
+        }
+      ]
+    },
+    "ChoiceB-1": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Text": "You picked the second option, nice job, nubcake."
+        }
+      ]
     }
-  ]
+  }
 }

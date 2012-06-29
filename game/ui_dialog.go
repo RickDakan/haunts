@@ -39,13 +39,19 @@ type dialogLayout struct {
 }
 
 type dialogData struct {
-  Format string
-  Size   string
-  Sections []struct {
-    Image   texture.Object
-    Text    string
-    shading float64
+  Size  string
+  Pages map[string]struct{
+    Format  string
+    Sections []struct {
+      Next    string
+      Image   texture.Object
+      Text    string
+      shading float64
+    }
   }
+
+  prev       []string
+  cur_page   string
 }
 
 type MediumDialogBox struct {
@@ -77,15 +83,32 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
     return nil, nil, err
   }
 
-  var ok bool
-  mdb.format, ok = mdb.layout.Formats[mdb.data.Format]
-  if !ok {
-    return nil, nil, errors.New(fmt.Sprintf("Unknown Medium Dialog Box format '%s'.", mdb.data.Format))
+  if _, ok := mdb.data.Pages["Start"]; !ok {
+    return nil, nil, errors.New("Section 'Start' was not specified.")
   }
 
-  if len(mdb.format.Sections) != len(mdb.data.Sections) {
-    return nil, nil, errors.New(fmt.Sprintf("Format '%s' requires exactly %d sections.", mdb.data.Format, len(mdb.format.Sections)))
+  // Make sure that all of the pages specified by "Next"s are available
+  // in the map
+  for _, page := range mdb.data.Pages {
+    for _, section := range page.Sections {
+      if section.Next == "" {
+        continue
+      }
+      if _, ok := mdb.data.Pages[section.Next]; !ok {
+        return nil, nil, errors.New(fmt.Sprintf("Section '%s' specified but doesn't exist.", section.Next))
+      }
+    }
+    if _, ok := mdb.layout.Formats[page.Format]; !ok {
+      return nil, nil, errors.New(fmt.Sprintf("Unknown dialog box format '%s'.", page.Format))
+    }
+    if len(page.Sections) != len(mdb.layout.Formats[page.Format].Sections) {
+      return nil, nil, errors.New(fmt.Sprintf("Format '%s' requires exactly %d sections.", page.Format, len(mdb.layout.Formats[page.Format].Sections)))
+    }
   }
+
+  mdb.data.cur_page = "Start"
+  mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+
 
   // return nil, nil, errors.New(fmt.Sprintf("Unknown format string: '%s'.", format))
 
@@ -96,6 +119,18 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
 
   mdb.result = make(chan int, 1)
   mdb.layout.Next.f = func(_data interface{}) {
+    sections := mdb.data.Pages[mdb.data.cur_page].Sections
+    if len(sections) == 1 {
+      if sections[0].Next == "" {
+        mdb.result <- -1
+        close(mdb.result)
+      } else {
+        mdb.data.prev = append(mdb.data.prev, mdb.data.cur_page)
+        mdb.data.cur_page = sections[0].Next
+        mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+      }
+    }
+    return
     if !mdb.done {
       mdb.result <- -1
       close(mdb.result)
@@ -103,11 +138,20 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan int, error) {
     mdb.done = true
   }
   mdb.layout.Prev.f = func(_data interface{}) {
-    if !mdb.done {
-      mdb.result <- -2
-      close(mdb.result)
+    if len(mdb.data.prev) > 0 {
+      mdb.data.cur_page = mdb.data.prev[len(mdb.data.prev) - 1]
+      mdb.data.prev = mdb.data.prev[0 : len(mdb.data.prev) - 1]
+      mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
     }
-    mdb.done = true
+    return
+    // if mdb.data.prev != "" {
+    //   mdb.data.cur_page = mdb.data.prev
+    // }
+    // if !mdb.done {
+    //   mdb.result <- -2
+    //   close(mdb.result)
+    // }
+    // mdb.done = true
   }
 
   return &mdb, mdb.result, nil
@@ -135,7 +179,7 @@ func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
   }
   for i := range mdb.format.Sections {
     section := mdb.format.Sections[i]
-    data := &mdb.data.Sections[i]
+    data := &mdb.data.Pages[mdb.data.cur_page].Sections[i]
     if section.Region.Dx * section.Region.Dy <= 0 {
       data.shading = 1.0
     }
@@ -174,8 +218,15 @@ func (mdb *MediumDialogBox) Respond(g *gui.Gui, group gui.EventGroup) bool {
           section.Region.Dx,
           section.Region.Dy) {
         if !mdb.done {
-          mdb.result <- i
-          close(mdb.result)
+          mdb.data.prev = mdb.data.prev[0:0]
+          mdb.data.cur_page = mdb.data.Pages[mdb.data.cur_page].Sections[i].Next
+          if mdb.data.cur_page == "" {
+            mdb.result <- i
+            close(mdb.result)
+          } else {
+            mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+          }
+          break
         }
         mdb.done = true
         break
@@ -197,7 +248,7 @@ func (mdb *MediumDialogBox) Draw(region gui.Region) {
 
   for i := range mdb.format.Sections {
     section := mdb.format.Sections[i]
-    data := mdb.data.Sections[i]
+    data := mdb.data.Pages[mdb.data.cur_page].Sections[i]
     p := section.Paragraph
     d := base.GetDictionary(p.Size)
     var just gui.Justification
