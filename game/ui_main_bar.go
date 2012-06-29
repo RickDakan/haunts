@@ -43,29 +43,26 @@ func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
   return false
 }
 
-func (b *Button) RenderAt(x,y,mx,my int) {
-  b.Texture.Data().Bind()
+func doShading(current float64, in bool, dt int64) float64 {
+  if in {
+    return current * 0.9 + 0.1
+  }
+  if current < 0.40 {
+    return 0.40
+  }
+  return current * 0.9 + 0.04
+}
+
+func (b *Button) Think(x, y, mx, my   int, dt int64) {
   tdx := b.Texture.Data().Dx()
   tdy := b.Texture.Data().Dy()
-  if mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy {
-    b.shade = b.shade * 0.9 + 0.1
-  } else {
-    b.shade = b.shade * 0.9 + 0.04
-  }
-  gl.Color4d(1, 1, 1, b.shade)
-  gl.Begin(gl.QUADS)
-    gl.TexCoord2d(0, 0)
-    gl.Vertex2i(x + b.X, y + b.Y)
+  in := mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy
+  b.shade = doShading(b.shade, in, dt)
+}
 
-    gl.TexCoord2d(0, -1)
-    gl.Vertex2i(x + b.X, y + b.Y + tdy)
-
-    gl.TexCoord2d(1,-1)
-    gl.Vertex2i(x + b.X + tdx, y + b.Y + tdy)
-
-    gl.TexCoord2d(1, 0)
-    gl.Vertex2i(x + b.X + tdx, y + b.Y)
-  gl.End()
+func (b *Button) RenderAt(x,y int) {
+  gl.Color4ub(255, 255, 255, byte(b.shade * 255))
+  b.Texture.Data().RenderNatural(b.X + x, b.Y + y)
 }
 
 type Center struct {
@@ -382,6 +379,10 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
       m.state.MouseOver.location = mouseOverActions
     }
   }
+
+  for _, button := range m.buttons {
+    button.Think(m.region.X, m.region.Y, m.mx, m.my, t)
+  }
 }
 
 // Returns the index of the action the point is over, or -1 if none
@@ -467,7 +468,7 @@ func (m *MainBar) Draw(region gui.Region) {
   gl.End()
 
   for _, button := range m.buttons {
-    button.RenderAt(region.X, region.Y, m.mx, m.my)
+    button.RenderAt(region.X, region.Y)
   }
 
   if m.ent != nil {

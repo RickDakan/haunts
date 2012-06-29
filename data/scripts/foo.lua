@@ -17,8 +17,12 @@ end
 -- completed.
 play_as_denizens = true
 function Init()
+  while true do
+    mediumDialogBox("ui/dialog/sample.json")
+  end
   map = selectMap()
   loadHouse(map)
+
 
   if play_as_denizens then
     bindAi("denizen", "human")

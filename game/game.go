@@ -44,19 +44,19 @@ func MakeGamePanel() *GamePanel {
   startGameScript(&gp, "foo.lua")
   return &gp
 
-  // the logic after this should be done by a lua script
-  gp.house = house.MakeHouseDef()
-  gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.viewer.Edit_mode = true
+  // // the logic after this should be done by a lua script
+  // gp.house = house.MakeHouseDef()
+  // gp.viewer = house.MakeHouseViewer(gp.house, 62)
+  // gp.viewer.Edit_mode = true
 
-  start_menu, err := MakeUiStart(&gp)
-  if err != nil {
-    base.Error().Printf("%v\n", err)
-    panic(err)
-  }
-  gp.AnchorBox.AddChild(start_menu, gui.Anchor{0,0,0,0})
+  // start_menu, err := MakeUiStart(&gp)
+  // if err != nil {
+  //   base.Error().Printf("%v\n", err)
+  //   panic(err)
+  // }
+  // gp.AnchorBox.AddChild(start_menu, gui.Anchor{0,0,0,0})
 
-  return &gp
+  // return &gp
 }
 
 func (gp *GamePanel) SaveGame(filename string) {

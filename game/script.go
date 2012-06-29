@@ -59,6 +59,7 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("setLosMode", setLosMode(gp))
   gp.script.L.Register("getAllEnts", getAllEnts(gp))
   gp.script.L.Register("selectMap", selectMap(gp))
+  gp.script.L.Register("mediumDialogBox", mediumDialogBox(gp))
   gp.script.L.Register("pickFromN", pickFromN(gp))
   gp.script.L.Register("setGear", setGear(gp))
   gp.script.L.Register("bindAi", bindAi(gp))
@@ -570,6 +571,29 @@ func selectMap(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(selector)
     L.PushString(name)
+    return 1
+  }
+}
+
+func mediumDialogBox(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    path := L.ToString(-1)
+    box, output, err := MakeMediumDialogBox(filepath.ToSlash(path))
+    if err != nil {
+      base.Error().Printf("Error making dialog: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(box, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.script.syncEnd()
+
+    res := <-output
+    base.Log().Printf("Dialog box press: %d", res)
+
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(box)
+    L.PushInteger(res)
     return 1
   }
 }
