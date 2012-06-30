@@ -18,7 +18,11 @@ end
 play_as_denizens = true
 function Init()
   while true do
-    dialogBox("ui/dialog/sample.json")
+    choices = dialogBox("ui/dialog/sample.json")
+    print("Choices made:")
+    for _, choice in pairs(choices) do
+      print("Chose: ", choice)
+    end
   end
   map = selectMap()
   loadHouse(map)

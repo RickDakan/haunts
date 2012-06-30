@@ -23,6 +23,7 @@
       "Format": "TwoOptions",
       "Sections":[
         {
+          "Id":   "Cat with a Hat",
           "Next": "ChoiceA-1",
           "Text": "The monkeys are quite funky, although not mandible chair fridge coolant ignite.",
           "Image":{
@@ -30,6 +31,7 @@
           }
         },
         {
+          "Id":   "Cat in a Hand",
           "Next": "ChoiceB-1",
           "Text": "Kittens kitnz ktnz cittems mittems.",
           "Image":{
@@ -40,16 +42,15 @@
     },
     "ChoiceA-1": {
       "Format": "NoOptionsNoImage",
-      "Next": "ChoiceA-2",
       "Sections":[
         {
+          "Next": "ChoiceA-2",
           "Text": "You picked the first option, nice job, nubcake."
         }
       ]
     },
     "ChoiceA-2": {
       "Format": "NoOptionsNoImage",
-      "Next": "ChoiceA-2",
       "Sections":[
         {
           "Text": "You picked the first option, and you are STILL READING TEXt - WHT KIND OF NGMAE IS THIST?!."
@@ -60,7 +61,45 @@
       "Format": "NoOptionsNoImage",
       "Sections":[
         {
-          "Text": "You picked the second option, nice job, nubcake."
+          "Next": "ChoiceB-2",
+          "Text": "You picked the second option, so you aren't done.  Keep clicking next, stupid."
+        }
+      ]
+    },
+    "ChoiceB-2": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "ChoiceB-3",
+          "Text": "Again."
+        }
+      ]
+    },
+    "ChoiceB-3": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "ChoiceB-4",
+          "Text": "One more time."
+        }
+      ]
+    },
+    "ChoiceB-4": {
+      "Format": "TwoOptions",
+      "Sections":[
+        {
+          "Id":   "Adorable2",
+          "Text": "An adorable kitten",
+          "Image":{
+            "Path": "ui/cute2.png"
+          }
+        },
+        {
+          "Id":   "Adorable3",
+          "Text": "A different adorable kitten",
+          "Image":{
+            "Path": "ui/cute3.png"
+          }
         }
       ]
     }

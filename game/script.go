@@ -588,12 +588,20 @@ func dialogBox(gp *GamePanel) lua.GoFunction {
     gp.AnchorBox.AddChild(box, gui.Anchor{0.5,0.5,0.5,0.5})
     gp.script.syncEnd()
 
-    res := <-output
-    base.Log().Printf("Dialog box press: %d", res)
+    var choices []string
+    for choice := range output {
+      choices = append(choices, choice)
+    }
+    base.Log().Printf("Dialog box press: %v", choices)
 
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(box)
-    L.PushInteger(res)
+    L.NewTable()
+    for i, choice := range choices {
+      L.PushInteger(i + 1)
+      L.PushString(choice)
+      L.SetTable(-3)
+    }
     return 1
   }
 }
