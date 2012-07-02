@@ -21,7 +21,7 @@ func registerSummonActions() map[string]func() game.Action {
   for name := range summons_actions {
     cname := name
     makers[cname] = func() game.Action {
-      a := SummonAction{ Defname: cname }
+      a := SummonAction{Defname: cname}
       base.GetObject("actions-summons_actions", &a)
       if a.Ammo > 0 {
         a.Current_ammo = a.Ammo
@@ -52,7 +52,7 @@ type SummonActionDef struct {
   Kind         status.Kind
   Personal_los bool
   Ap           int
-  Ammo         int  // 0 = infinity
+  Ammo         int // 0 = infinity
   Range        int
   Ent_name     string
   Animation    string
@@ -60,14 +60,15 @@ type SummonActionDef struct {
   Texture      texture.Object
 }
 type summonActionTempData struct {
-  ent *game.Entity
-  cx,cy int
-  spawn *game.Entity
+  ent    *game.Entity
+  cx, cy int
+  spawn  *game.Entity
 }
 type summonExec struct {
   game.BasicActionExec
   Pos int
 }
+
 func (a *SummonAction) AP() int {
   return a.Ap
 }
@@ -99,16 +100,20 @@ func (a *SummonAction) Prep(ent *game.Entity, g *game.Game) bool {
 func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
-    bx,by := g.GetViewer().WindowToBoard(cursor.Point())
+    bx, by := g.GetViewer().WindowToBoard(cursor.Point())
     bx += 0.5
     by += 0.5
-    if bx < 0 { bx-- }
-    if by < 0 { by-- }
+    if bx < 0 {
+      bx--
+    }
+    if by < 0 {
+      by--
+    }
     a.cx = int(bx)
     a.cy = int(by)
   }
 
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if g.IsCellOccupied(a.cx, a.cy) {
       return true, nil
     }
@@ -129,7 +134,7 @@ func (a *SummonAction) RenderOnFloor() {
   if a.ent == nil {
     return
   }
-  ex,ey := a.ent.Pos()
+  ex, ey := a.ent.Pos()
   if dist(ex, ey, a.cx, a.cy) <= a.Range && a.ent.HasLos(a.cx, a.cy, 1, 1) {
     gl.Color4ub(255, 255, 255, 200)
   } else {
@@ -167,4 +172,3 @@ func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game
 func (a *SummonAction) Interrupt() bool {
   return true
 }
-

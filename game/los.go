@@ -9,7 +9,8 @@ import (
 )
 
 type Purpose int
-const(
+
+const (
   PurposeNone Purpose = iota
   PurposeRelic
   PurposeMystery
@@ -17,17 +18,19 @@ const(
 )
 
 type LosMode int
+
 const (
-  LosModeNone     LosMode = iota
+  LosModeNone LosMode = iota
   LosModeAll
   LosModeEntities
   LosModeRooms
 )
 
 type turnState int
+
 const (
   // Waiting for the script to finish Init()
-  turnStateInit  turnState = iota
+  turnStateInit turnState = iota
 
   // Waiting for the script to finish RoundStart()
   turnStateStart
@@ -51,7 +54,7 @@ type Game struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
   House *house.HouseDef
-  Ents []*Entity  `registry:"loadfrom-entities"`
+  Ents  []*Entity `registry:"loadfrom-entities"`
 
   // Next unique EntityId to be assigned
   Entity_id EntityId
@@ -82,7 +85,6 @@ type Game struct {
   // If the scenario is not a Relic mission this is always nil
   Active_relic *Entity
 
-
   // Transient data - none of the following are exported
 
   player_active bool
@@ -102,11 +104,11 @@ type Game struct {
     // When merging the los from different entities we'll do it here, and we
     // keep it around to avoid reallocating it every time we need it.
     full_merger []bool
-    merger  [][]bool
+    merger      [][]bool
   }
 
   selected_ent *Entity
-  hovered_ent *Entity
+  hovered_ent  *Entity
 
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
@@ -115,18 +117,18 @@ type Game struct {
   // human or ai is controlling the rest of that side.
   minion_ai Ai
 
-  haunts_ai Ai
+  haunts_ai    Ai
   explorers_ai Ai
 
   // If an Ai is executing currently it is referenced here
   active_ai Ai
 
-  action_state actionState
+  action_state   actionState
   current_exec   ActionExec
   current_action Action
 
   // Indicates if we're waiting for a script to run or something
-  turn_state  turnState
+  turn_state turnState
 
   // Used to sync up with the script, the value passed is usually nil, but
   // whenever an action happens it will get passed along this channel too.
@@ -248,9 +250,13 @@ func (g *Game) SetVisibility(side Side) {
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
-  if g.action_state != noAction { return }
+  if g.action_state != noAction {
+    return
+  }
   // Any master ai is still active
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) { return }
+  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
+    return
+  }
 
   g.Turn++
   if g.Side == SideExplorers {
@@ -308,8 +314,9 @@ func (g *Game) OnRound() {
 }
 
 type actionState int
+
 const (
-  noAction       actionState = iota
+  noAction actionState = iota
 
   // The Ai is running and determining the next action to run
   waitingAction
@@ -328,13 +335,13 @@ func (g *Game) GetViewer() *house.HouseViewer {
 
 func (g *Game) numVertex() int {
   total := 0
-  for _,room := range g.House.Floors[0].Rooms {
+  for _, room := range g.House.Floors[0].Rooms {
     total += room.Size.Dx * room.Size.Dy
   }
   return total
 }
-func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
-  for _,room := range g.House.Floors[0].Rooms {
+func (g *Game) FromVertex(v int) (room *house.Room, x, y int) {
+  for _, room := range g.House.Floors[0].Rooms {
     size := room.Size.Dx * room.Size.Dy
     if v >= size {
       v -= size
@@ -346,11 +353,11 @@ func (g *Game) FromVertex(v int) (room *house.Room, x,y int) {
 }
 func (g *Game) ToVertex(x, y int) int {
   v := 0
-  for _,room := range g.House.Floors[0].Rooms {
-    if x >= room.X && y >= room.Y && x < room.X + room.Size.Dx && y < room.Y + room.Size.Dy {
+  for _, room := range g.House.Floors[0].Rooms {
+    if x >= room.X && y >= room.Y && x < room.X+room.Size.Dx && y < room.Y+room.Size.Dy {
       x -= room.X
       y -= room.Y
-      v += x + y * room.Size.Dx
+      v += x + y*room.Size.Dx
       break
     }
     v += room.Size.Dx * room.Size.Dy
@@ -359,11 +366,11 @@ func (g *Game) ToVertex(x, y int) int {
 }
 
 // x and y are given in room coordinates
-func furnitureAt(room *house.Room, x,y int) *house.Furniture {
-  for _,f := range room.Furniture {
-    fx,fy := f.Pos()
-    fdx,fdy := f.Dims()
-    if x >= fx && x < fx + fdx && y >= fy && y < fy + fdy {
+func furnitureAt(room *house.Room, x, y int) *house.Furniture {
+  for _, f := range room.Furniture {
+    fx, fy := f.Pos()
+    fdx, fdy := f.Dims()
+    if x >= fx && x < fx+fdx && y >= fy && y < fy+fdy {
       return f
     }
   }
@@ -371,19 +378,21 @@ func furnitureAt(room *house.Room, x,y int) *house.Furniture {
 }
 
 // x and y are given in floor coordinates
-func roomAt(floor *house.Floor, x,y int) *house.Room {
-  for _,room := range floor.Rooms {
-    rx,ry := room.Pos()
-    rdx,rdy := room.Dims()
-    if x >= rx && x < rx + rdx && y >= ry && y < ry + rdy {
+func roomAt(floor *house.Floor, x, y int) *house.Room {
+  for _, room := range floor.Rooms {
+    rx, ry := room.Pos()
+    rdx, rdy := room.Dims()
+    if x >= rx && x < rx+rdx && y >= ry && y < ry+rdy {
       return room
     }
   }
   return nil
 }
 
-func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
-  if r == r2 { return true }
+func connected(r, r2 *house.Room, x, y, x2, y2 int) bool {
+  if r == r2 {
+    return true
+  }
   x -= r.X
   y -= r.Y
   x2 -= r2.X
@@ -402,44 +411,53 @@ func connected(r,r2 *house.Room, x,y,x2,y2 int) bool {
     // it as an open door
     return false
   }
-  for _,door := range r.Doors {
-    if door.Facing != facing { continue }
+  for _, door := range r.Doors {
+    if door.Facing != facing {
+      continue
+    }
     var pos int
     switch facing {
-      case house.NearLeft:
+    case house.NearLeft:
       fallthrough
-      case house.FarRight:
-        pos = y
+    case house.FarRight:
+      pos = y
 
-      case house.NearRight:
-        fallthrough
-      case house.FarLeft:
-        pos = x
+    case house.NearRight:
+      fallthrough
+    case house.FarLeft:
+      pos = x
     }
-    if pos >= door.Pos && pos < door.Pos + door.Width {
+    if pos >= door.Pos && pos < door.Pos+door.Width {
       return door.Opened
     }
   }
   return false
 }
 
-func (g *Game) IsCellOccupied(x,y int) bool {
+func (g *Game) IsCellOccupied(x, y int) bool {
   r := roomAt(g.House.Floors[0], x, y)
-  if r == nil { return true }
-  f := furnitureAt(r, x - r.X, y - r.Y)
-  if f != nil { return true }
-  for _,ent := range g.Ents {
-    ex,ey := ent.Pos()
-    if x == ex && y == ey { return true }
+  if r == nil {
+    return true
+  }
+  f := furnitureAt(r, x-r.X, y-r.Y)
+  if f != nil {
+    return true
+  }
+  for _, ent := range g.Ents {
+    ex, ey := ent.Pos()
+    if x == ex && y == ey {
+      return true
+    }
   }
   return false
 }
 
 type exclusionGraph struct {
   side Side
-  ex map[*Entity]bool
-  g *Game
+  ex   map[*Entity]bool
+  g    *Game
 }
+
 func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
   return eg.g.adjacent(v, eg.side, eg.ex)
 }
@@ -495,18 +513,20 @@ func (g *Game) Graph(side Side, exclude []*Entity) algorithm.Graph {
 }
 
 func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64) {
-  room,x,y := g.FromVertex(v)
+  room, x, y := g.FromVertex(v)
   var adj []int
   var weight []float64
   var moves [3][3]float64
   ent_occupied := make(map[[2]int]bool)
-  for _,ent := range g.Ents {
-    if ex[ent] { continue }
-    x,y := ent.Pos()
-    dx,dy := ent.Dims()
+  for _, ent := range g.Ents {
+    if ex[ent] {
+      continue
+    }
+    x, y := ent.Pos()
+    dx, dy := ent.Dims()
     for i := x; i < x+dx; i++ {
       for j := y; j < y+dy; j++ {
-        ent_occupied[[2]int{ i, j }] = true
+        ent_occupied[[2]int{i, j}] = true
       }
     }
   }
@@ -523,16 +543,28 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
       // Only run this loop if exactly one of dx and dy is non-zero
-      if (dx == 0) == (dy == 0) { continue }
+      if (dx == 0) == (dy == 0) {
+        continue
+      }
       tx := x + dx
       ty := y + dy
-      if ent_occupied[[2]int{tx,ty}] { continue }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if ent_occupied[[2]int{tx, ty}] {
+        continue
+      }
+      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+        continue
+      }
       // TODO: This is obviously inefficient
-      troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
-      if troom == nil { continue }
-      if furnitureAt(troom, tx - troom.X, ty - troom.Y) != nil { continue }
-      if !connected(room, troom, x, y, tx, ty) { continue }
+      troom, _, _ := g.FromVertex(g.ToVertex(tx, ty))
+      if troom == nil {
+        continue
+      }
+      if furnitureAt(troom, tx-troom.X, ty-troom.Y) != nil {
+        continue
+      }
+      if !connected(room, troom, x, y, tx, ty) {
+        continue
+      }
       adj = append(adj, g.ToVertex(tx, ty))
       moves[dx+1][dy+1] = 1
       weight = append(weight, 1)
@@ -541,18 +573,34 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
       // Only run this loop if both dx and dy are non-zero (moving diagonal)
-      if (dx == 0) != (dy == 0) { continue }
+      if (dx == 0) != (dy == 0) {
+        continue
+      }
       tx := x + dx
       ty := y + dy
-      if ent_occupied[[2]int{tx,ty}] { continue }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold { continue }
+      if ent_occupied[[2]int{tx, ty}] {
+        continue
+      }
+      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+        continue
+      }
       // TODO: This is obviously inefficient
-      troom,_,_ := g.FromVertex(g.ToVertex(tx, ty))
-      if troom == nil { continue }
-      if furnitureAt(troom, tx - troom.X, ty - troom.Y) != nil { continue }
-      if !connected(room, troom, x, y, tx, ty) { continue }
-      if !connected(troom, room, tx, ty, x, y) { continue }
-      if moves[dx+1][1] == 0 || moves[1][dy+1] == 0 { continue }
+      troom, _, _ := g.FromVertex(g.ToVertex(tx, ty))
+      if troom == nil {
+        continue
+      }
+      if furnitureAt(troom, tx-troom.X, ty-troom.Y) != nil {
+        continue
+      }
+      if !connected(room, troom, x, y, tx, ty) {
+        continue
+      }
+      if !connected(troom, room, tx, ty, x, y) {
+        continue
+      }
+      if moves[dx+1][1] == 0 || moves[1][dy+1] == 0 {
+        continue
+      }
       adj = append(adj, g.ToVertex(tx, ty))
       w := (moves[dx+1][1] + moves[1][dy+1]) / 2
       moves[dx+1][dy+1] = w
@@ -568,7 +616,7 @@ func (g *Game) setup() {
   g.los.full_merger = make([]bool, house.LosTextureSizeSquared)
   g.los.merger = make([][]bool, house.LosTextureSize)
   for i := range g.los.merger {
-    g.los.merger[i] = g.los.full_merger[i * house.LosTextureSize : (i + 1) * house.LosTextureSize]
+    g.los.merger[i] = g.los.full_merger[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
   }
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -600,7 +648,6 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.haunts_selection = gui.MakeVerticalTable()
   g.haunts_selection.AddChild(gui.MakeTextLine("standard", "bar", 300, 1, 1, 1, 1))
   g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
-
 
   g.comm.script_to_game = make(chan interface{}, 1)
   g.comm.game_to_script = make(chan interface{}, 1)
@@ -647,8 +694,8 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
   case LosModeRooms:
     in_room := make(map[int]bool)
     for _, room := range rooms {
-      for x := room.X; x < room.X + room.Size.Dx; x++ {
-        for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+      for x := room.X; x < room.X+room.Size.Dx; x++ {
+        for y := room.Y; y < room.Y+room.Size.Dy; y++ {
           in_room[g.ToVertex(x, y)] = true
         }
       }
@@ -675,39 +722,39 @@ func (g *Game) Think(dt int64) {
   switch g.turn_state {
   case turnStateInit:
     select {
-      case <-g.comm.script_to_game:
-    base.Log().Printf("ScriptComm: change to turnStateStart")
-        g.turn_state = turnStateStart
-        g.OnRound()
-      default:
+    case <-g.comm.script_to_game:
+      base.Log().Printf("ScriptComm: change to turnStateStart")
+      g.turn_state = turnStateStart
+      g.OnRound()
+    default:
     }
   case turnStateStart:
     select {
-      case <-g.comm.script_to_game:
-    base.Log().Printf("ScriptComm: change to turnStateAiAction")
-        g.turn_state = turnStateAiAction
-      default:
+    case <-g.comm.script_to_game:
+      base.Log().Printf("ScriptComm: change to turnStateAiAction")
+      g.turn_state = turnStateAiAction
+    default:
     }
   case turnStateScriptOnAction:
     select {
-      case exec := <-g.comm.script_to_game:
-        if g.current_exec != nil {
-          base.Error().Printf("Got an exec from the script when we already had one pending.")
+    case exec := <-g.comm.script_to_game:
+      if g.current_exec != nil {
+        base.Error().Printf("Got an exec from the script when we already had one pending.")
+      } else {
+        if exec != nil {
+          g.current_exec = exec.(ActionExec)
         } else {
-          if exec != nil {
-            g.current_exec = exec.(ActionExec)
-          } else {
-    base.Log().Printf("ScriptComm: change to turnStateAiAction")
-            g.turn_state = turnStateAiAction
-          }
+          base.Log().Printf("ScriptComm: change to turnStateAiAction")
+          g.turn_state = turnStateAiAction
         }
-      default:
+      }
+    default:
     }
   case turnStateEnd:
     select {
     case <-g.comm.script_to_game:
       g.turn_state = turnStateStart
-    base.Log().Printf("ScriptComm: change to turnStateStart")
+      base.Log().Printf("ScriptComm: change to turnStateStart")
       g.OnRound()
     default:
     }
@@ -729,16 +776,16 @@ func (g *Game) Think(dt int64) {
       g.current_exec = nil
     }
     switch res {
-      case Complete:
-        g.current_action.Cancel()
-        g.current_action = nil
-        g.action_state = noAction
-        g.turn_state = turnStateScriptOnAction
-        g.comm.game_to_script <- nil
-        g.checkWinConditions()
+    case Complete:
+      g.current_action.Cancel()
+      g.current_action = nil
+      g.action_state = noAction
+      g.turn_state = turnStateScriptOnAction
+      g.comm.game_to_script <- nil
+      g.checkWinConditions()
 
-      case InProgress:
-      case CheckForInterrupts:
+    case InProgress:
+    case CheckForInterrupts:
     }
   }
 
@@ -772,8 +819,12 @@ func (g *Game) Think(dt int64) {
         if v < house.LosMinVisibility {
           v = house.LosMinVisibility
         }
-        if v < 0 { v = 0 }
-        if v > 255 { v = 255 }
+        if v < 0 {
+          v = 0
+        }
+        if v > 255 {
+          v = 255
+        }
         mod = mod || (byte(v) != pix[i][j])
         pix[i][j] = byte(v)
       }
@@ -795,7 +846,7 @@ func (g *Game) Think(dt int64) {
 
   // If any entities are not either ready or dead let's wait until they are
   // before we do any of the ai stuff
-  for _,ent := range g.Ents {
+  for _, ent := range g.Ents {
     if ent.Side() != SideHaunt && ent.Side() != SideExplorers {
       // Relics and cleanse points and whatnot matter here, and they might not
       // be in a 'ready' state.
@@ -848,34 +899,54 @@ func (g *Game) Think(dt int64) {
 }
 
 func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
-  var x0,y0,x,y int
-  var room0,room *house.Room
+  var x0, y0, x, y int
+  var room0, room *house.Room
   x, y = line[0][0], line[0][1]
-  if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
+  if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) {
+    return
+  }
   los[x][y] = true
   room = roomAt(g.House.Floors[0], x, y)
-  for _,p := range line[1:] {
-    x0,y0 = x,y
-    x,y = p[0], p[1]
-    if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) { return }
+  for _, p := range line[1:] {
+    x0, y0 = x, y
+    x, y = p[0], p[1]
+    if x < 0 || y < 0 || x >= len(los) || y >= len(los[x]) {
+      return
+    }
     room0 = room
     room = roomAt(g.House.Floors[0], x, y)
-    if room == nil { return }
+    if room == nil {
+      return
+    }
     if x == x0 || y == y0 {
-      if room0 != nil && room0 != room && !connected(room, room0, x, y, x0, y0) { return }
+      if room0 != nil && room0 != room && !connected(room, room0, x, y, x0, y0) {
+        return
+      }
     } else {
       roomA := roomAt(g.House.Floors[0], x0, y0)
       roomB := roomAt(g.House.Floors[0], x, y0)
       roomC := roomAt(g.House.Floors[0], x0, y)
-      if roomA != nil && roomB != nil && roomA != roomB && !connected(roomA, roomB, x0, y0, x, y0) { return }
-      if roomA != nil && roomC != nil && roomA != roomC && !connected(roomA, roomC, x0, y0, x0, y) { return }
-      if roomB != nil && room != roomB && !connected(room, roomB, x, y, x, y0) { return }
-      if roomC != nil && room != roomC && !connected(room, roomC, x, y, x0, y) { return }
+      if roomA != nil && roomB != nil && roomA != roomB && !connected(roomA, roomB, x0, y0, x, y0) {
+        return
+      }
+      if roomA != nil && roomC != nil && roomA != roomC && !connected(roomA, roomC, x0, y0, x0, y) {
+        return
+      }
+      if roomB != nil && room != roomB && !connected(room, roomB, x, y, x, y0) {
+        return
+      }
+      if roomC != nil && room != roomC && !connected(room, roomC, x, y, x0, y) {
+        return
+      }
     }
-    furn := furnitureAt(room, x - room.X, y - room.Y)
-    if furn != nil && furn.Blocks_los { return }
-    dist -= 1  // or whatever
-    if dist <= 0 { return }
+    furn := furnitureAt(room, x-room.X, y-room.Y)
+    if furn != nil && furn.Blocks_los {
+      return
+    }
+    dist -= 1 // or whatever
+    if dist <= 0 {
+      return
+    }
     los[x][y] = true
   }
 }
@@ -902,8 +973,12 @@ func (g *Game) mergeLos(side Side) {
     g.los.full_merger[i] = false
   }
   for _, ent := range g.Ents {
-    if ent.Side() != side { continue }
-    if ent.los == nil { continue }
+    if ent.Side() != side {
+      continue
+    }
+    if ent.los == nil {
+      continue
+    }
     for i := ent.los.minx; i <= ent.los.maxx; i++ {
       for j := ent.los.miny; j <= ent.los.maxy; j++ {
         if ent.los.grid[i][j] {
@@ -914,7 +989,9 @@ func (g *Game) mergeLos(side Side) {
   }
   for i := 0; i < len(pix); i++ {
     for j := 0; j < len(pix); j++ {
-      if g.los.merger[i][j] { continue }
+      if g.los.merger[i][j] {
+        continue
+      }
       if pix[i][j] >= house.LosVisibilityThreshold {
         pix[i][j] = house.LosVisibilityThreshold - 1
       }
@@ -965,9 +1042,13 @@ func (g *Game) DetermineLos(x, y, los_dist int, grid [][]bool) {
 }
 
 func (g *Game) UpdateEntLos(ent *Entity, force bool) {
-  if ent.los == nil || ent.Stats == nil { return }
-  ex,ey := ent.Pos()
-  if !force && ex == ent.los.x && ey == ent.los.y { return }
+  if ent.los == nil || ent.Stats == nil {
+    return
+  }
+  ex, ey := ent.Pos()
+  if !force && ex == ent.los.x && ey == ent.los.y {
+    return
+  }
   ent.los.x = ex
   ent.los.y = ey
 

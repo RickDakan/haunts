@@ -8,7 +8,7 @@ import (
 type SaveWidget struct {
   *gui.VerticalTable
   filename *gui.TextEditLine
-  on_save func(string)
+  on_save  func(string)
 }
 
 func MakeSaveWidget(on_save func(string)) *SaveWidget {

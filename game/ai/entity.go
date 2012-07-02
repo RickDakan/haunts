@@ -46,6 +46,7 @@ type entityDist struct {
   ent  *game.Entity
 }
 type entityDistSlice []entityDist
+
 func (e entityDistSlice) Len() int {
   return len(e)
 }
@@ -57,7 +58,7 @@ func (e entityDistSlice) Swap(i, j int) {
 }
 
 func getActionByName(e *game.Entity, name string) game.Action {
-  for _,action := range e.Actions {
+  for _, action := range e.Actions {
     if action.String() == name {
       return action
     }
@@ -93,11 +94,12 @@ func putPointToTable(L *lua.State, x, y int) {
 // and deallocate lots of these.  Only one ai is ever running at a time so
 // this should be ok.
 var grid [][]bool
+
 func init() {
   raw := make([]bool, house.LosTextureSizeSquared)
   grid = make([][]bool, house.LosTextureSize)
   for i := range grid {
-    grid[i] = raw[i*house.LosTextureSize:(i+1)*house.LosTextureSize]
+    grid[i] = raw[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
   }
 }
 
@@ -126,7 +128,6 @@ func PosFunc(a *Ai) lua.GoFunction {
     return 1
   }
 }
-
 
 // Returns the entity id of the entity that is being controlled by this ai.
 //    Format:
@@ -173,9 +174,9 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 
     a.ent.Game().DetermineLos(x2, y2, max, grid)
     var dst []int
-    for x := x2 - max; x <= x2 + max; x++ {
-      for y := y2 - max; y <= y2 + max; y++ {
-        if x > x2 - min && x < x2 + min && y > y2 - min && y < y2 + min {
+    for x := x2 - max; x <= x2+max; x++ {
+      for y := y2 - max; y <= y2+max; y++ {
+        if x > x2-min && x < x2+min && y > y2-min && y < y2+min {
           continue
         }
         dst = append(dst, a.ent.Game().ToVertex(x, y))
@@ -188,7 +189,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
     base.Log().Printf("%d reachable from (%d, %d) -> (%d, %d)", len(reachable), x1, y1, x2, y2)
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
-      L.PushInteger(i+1)
+      L.PushInteger(i + 1)
       putPointToTable(L, x, y)
       L.SetTable(-3)
     }
@@ -431,7 +432,6 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
     return 1
   }
 }
-
 
 // Computes the ranged distance between two points.
 //    Format:
@@ -816,16 +816,16 @@ func ExistsFunc(a *Ai) lua.GoFunction {
 //    Output:
 //    ents - array[integer] - Array of entity ids.
 func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
-  valid_kinds := map[string]bool {
-    "intruder": true,
-    "denizen": true,
-    "minion": true,
-    "servitor": true,
-    "master": true,
-    "non-minion": true,
+  valid_kinds := map[string]bool{
+    "intruder":     true,
+    "denizen":      true,
+    "minion":       true,
+    "servitor":     true,
+    "master":       true,
+    "non-minion":   true,
     "non-servitor": true,
-    "non-master": true,
-    "all" : true,
+    "non-master":   true,
+    "all":          true,
   }
   return func(L *lua.State) int {
     if !luaCheckParamsOk(L, "nearestNEntities", luaInteger, luaString) {
@@ -843,26 +843,46 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     }
     var eds entityDistSlice
     for _, ent := range g.Ents {
-      if ent.Stats == nil { continue }
-      if ent.Stats.HpCur() <= 0 { continue }
+      if ent.Stats == nil {
+        continue
+      }
+      if ent.Stats.HpCur() <= 0 {
+        continue
+      }
       switch kind {
       case "all":
       case "intruder":
-        if ent.Side() != game.SideExplorers { continue }
+        if ent.Side() != game.SideExplorers {
+          continue
+        }
       case "denizen":
-        if ent.Side() != game.SideHaunt { continue }
+        if ent.Side() != game.SideHaunt {
+          continue
+        }
       case "minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
+          continue
+        }
       case "servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelServitor { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelServitor {
+          continue
+        }
       case "master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster {
+          continue
+        }
       case "non-minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
+          continue
+        }
       case "non-servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor {
+          continue
+        }
       case "non-master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster {
+          continue
+        }
       }
       x, y := ent.Pos()
       dx, dy := ent.Dims()
@@ -885,7 +905,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     // populate it with the entity ids of the results.
     L.NewTable()
     for i := range eds {
-      L.PushInteger(i+1)
+      L.PushInteger(i + 1)
       L.PushInteger(int(eds[i].ent.Id))
       L.SetTable(-3)
     }
@@ -918,15 +938,15 @@ func pushDoor(L *lua.State, floor, room, door int) {
 
 func getFloorRoomDoor(L *lua.State, index int) (floor, room, door int) {
   L.PushString("floor")
-  L.GetTable(index-1)
+  L.GetTable(index - 1)
   floor = L.ToInteger(-1)
   L.Pop(1)
   L.PushString("room")
-  L.GetTable(index-1)
+  L.GetTable(index - 1)
   room = L.ToInteger(-1)
   L.Pop(1)
   L.PushString("door")
-  L.GetTable(index-1)
+  L.GetTable(index - 1)
   door = L.ToInteger(-1)
   L.Pop(1)
   return
@@ -994,7 +1014,7 @@ func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
       return 1
     }
 
-    pushRoom(L, 0, path[len(path) - 1])
+    pushRoom(L, 0, path[len(path)-1])
     return 1
   }
 }
@@ -1052,7 +1072,9 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     }
     L.NewTable()
     for i, v := range path {
-      if i == 0 { continue }  // Skip this one because we're in it already
+      if i == 0 {
+        continue
+      } // Skip this one because we're in it already
       L.PushInteger(i)
       pushRoom(L, 0, v)
       L.SetTable(-3)
@@ -1220,7 +1242,7 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     }
     L.NewTable()
     count := 1
-    for i := -1; i < door.Width + 1; i++ {
+    for i := -1; i < door.Width+1; i++ {
       L.PushInteger(count)
       count++
 
@@ -1331,8 +1353,8 @@ func RoomPositionsFunc(a *Ai) lua.GoFunction {
 
     L.NewTable()
     count := 1
-    for x := room.X; x < room.X + room.Size.Dx; x++ {
-      for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+    for x := room.X; x < room.X+room.Size.Dx; x++ {
+      for y := room.Y; y < room.Y+room.Size.Dy; y++ {
         L.PushInteger(count)
         count++
         putPointToTable(L, x, y)

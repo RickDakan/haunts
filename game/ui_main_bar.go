@@ -11,7 +11,7 @@ import (
 )
 
 type Button struct {
-  X,Y int
+  X, Y    int
   Texture texture.Object
 
   // Color - brighter when the mouse is over it
@@ -26,9 +26,9 @@ type Button struct {
 
 // If x,y is inside the button's region then it will run its function and
 // return true, otherwise it does nothing and returns false.
-func (b *Button) handleClick(x,y int, data interface{}) bool {
+func (b *Button) handleClick(x, y int, data interface{}) bool {
   d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X + d.Dx() || y >= b.Y + d.Dy() {
+  if x < b.X || y < b.Y || x >= b.X+d.Dx() || y >= b.Y+d.Dy() {
     return false
   }
   b.f(data)
@@ -45,32 +45,32 @@ func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
 
 func doShading(current float64, in bool, dt int64) float64 {
   if in {
-    return current * 0.9 + 0.1
+    return current*0.9 + 0.1
   }
   if current < 0.40 {
     return 0.40
   }
-  return current * 0.9 + 0.04
+  return current*0.9 + 0.04
 }
 
-func (b *Button) Think(x, y, mx, my   int, dt int64) {
+func (b *Button) Think(x, y, mx, my int, dt int64) {
   tdx := b.Texture.Data().Dx()
   tdy := b.Texture.Data().Dy()
-  in := mx >= x + b.X && mx < x + b.X + tdx && my >= y + b.Y && my < y + b.Y + tdy
+  in := mx >= x+b.X && mx < x+b.X+tdx && my >= y+b.Y && my < y+b.Y+tdy
   b.shade = doShading(b.shade, in, dt)
 }
 
-func (b *Button) RenderAt(x,y int) {
-  gl.Color4ub(255, 255, 255, byte(b.shade * 255))
-  b.Texture.Data().RenderNatural(b.X + x, b.Y + y)
+func (b *Button) RenderAt(x, y int) {
+  gl.Color4ub(255, 255, 255, byte(b.shade*255))
+  b.Texture.Data().RenderNatural(b.X+x, b.Y+y)
 }
 
 type Center struct {
-  X,Y int
+  X, Y int
 }
 
 type TextArea struct {
-  X,Y           int
+  X, Y          int
   Size          int
   Justification string
 }
@@ -105,20 +105,20 @@ type MainBarLayout struct {
 
   Background texture.Object
   Divider    texture.Object
-  Name   TextArea
-  Ap     TextArea
-  Hp     TextArea
-  Corpus TextArea
-  Ego    TextArea
+  Name       TextArea
+  Ap         TextArea
+  Hp         TextArea
+  Corpus     TextArea
+  Ego        TextArea
 
   Conditions struct {
-    X,Y,Height,Width,Size,Spacing float64
+    X, Y, Height, Width, Size, Spacing float64
   }
 
   Actions struct {
-    X,Y,Width,Icon_size float64
-    Count int
-    Empty texture.Object
+    X, Y, Width, Icon_size float64
+    Count                  int
+    Empty                  texture.Object
   }
 
   Gear struct {
@@ -153,6 +153,7 @@ type mainBarState struct {
 }
 
 type mouseOverLocation int
+
 const (
   mouseOverActions = iota
   mouseOverConditions
@@ -172,7 +173,7 @@ type MainBar struct {
   game *Game
 
   // Position of the mouse
-  mx,my int
+  mx, my int
 }
 
 func buttonFuncEndTurn(mbi interface{}) {
@@ -291,7 +292,7 @@ func (m *MainBar) Rendered() gui.Region {
 }
 
 func pointInsideRect(px, py, x, y, dx, dy int) bool {
-  return px >= x && py >= y && px < x + dx && py < y + dy
+  return px >= x && py >= y && px < x+dx && py < y+dy
 }
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
@@ -308,7 +309,7 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
       }
     }
     if selected_index != -1 {
-      if min < float64(selected_index - m.layout.Actions.Count + 1) {
+      if min < float64(selected_index-m.layout.Actions.Count+1) {
         min = float64(selected_index - m.layout.Actions.Count + 1)
       }
       if max > float64(selected_index) {
@@ -355,8 +356,6 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
   m.state.Actions.scroll_pos *= 0.8
   m.state.Actions.scroll_pos += 0.2 * m.state.Actions.scroll_target
 
-
-
   // Handle mouseover stuff after doing all of the scroll stuff since we don't
   // want to give a mouseover for something that the mouse isn't over after
   // scrolling something.
@@ -386,18 +385,18 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
 }
 
 // Returns the index of the action the point is over, or -1 if none
-func (m *MainBar) pointInsideAction(px,py int) int {
+func (m *MainBar) pointInsideAction(px, py int) int {
   x := int(m.layout.Actions.X)
   y := int(m.layout.Actions.Y)
   x2 := int(m.layout.Actions.X + m.layout.Actions.Width)
   y2 := int(m.layout.Actions.Y + m.layout.Actions.Icon_size)
   if px >= x && py >= y && px < x2 && py < y2 {
-    pos := float64(px - x) / (m.layout.Actions.Icon_size + m.state.Actions.space)
+    pos := float64(px-x) / (m.layout.Actions.Icon_size + m.state.Actions.space)
     pos += m.state.Actions.scroll_pos
     p := int(pos)
     frac := pos - float64(p)
     // Make sure that the click didn't land in the space between two icons
-    if frac < m.layout.Actions.Icon_size / (m.layout.Actions.Icon_size + m.state.Actions.space) {
+    if frac < m.layout.Actions.Icon_size/(m.layout.Actions.Icon_size+m.state.Actions.space) {
       if p >= 0 && p < len(m.ent.Actions) {
         return p
       }
@@ -454,17 +453,17 @@ func (m *MainBar) Draw(region gui.Region) {
   m.layout.Background.Data().Bind()
   gl.Color4d(1, 1, 1, 1)
   gl.Begin(gl.QUADS)
-    gl.TexCoord2d(0, 0)
-    gl.Vertex2i(region.X, region.Y)
+  gl.TexCoord2d(0, 0)
+  gl.Vertex2i(region.X, region.Y)
 
-    gl.TexCoord2d(0, -1)
-    gl.Vertex2i(region.X, region.Y + region.Dy)
+  gl.TexCoord2d(0, -1)
+  gl.Vertex2i(region.X, region.Y+region.Dy)
 
-    gl.TexCoord2d(1,-1)
-    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
+  gl.TexCoord2d(1, -1)
+  gl.Vertex2i(region.X+region.Dx, region.Y+region.Dy)
 
-    gl.TexCoord2d(1, 0)
-    gl.Vertex2i(region.X + region.Dx, region.Y)
+  gl.TexCoord2d(1, 0)
+  gl.Vertex2i(region.X+region.Dx, region.Y)
   gl.End()
 
   for _, button := range m.buttons {
@@ -479,17 +478,17 @@ func (m *MainBar) Draw(region gui.Region) {
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
-      gl.TexCoord2d(0, 0)
-      gl.Vertex2i(cx - tdx / 2, cy - tdy / 2)
+    gl.TexCoord2d(0, 0)
+    gl.Vertex2i(cx-tdx/2, cy-tdy/2)
 
-      gl.TexCoord2d(0, -1)
-      gl.Vertex2i(cx - tdx / 2, cy + tdy / 2)
+    gl.TexCoord2d(0, -1)
+    gl.Vertex2i(cx-tdx/2, cy+tdy/2)
 
-      gl.TexCoord2d(1,-1)
-      gl.Vertex2i(cx + tdx / 2, cy + tdy / 2)
+    gl.TexCoord2d(1, -1)
+    gl.Vertex2i(cx+tdx/2, cy+tdy/2)
 
-      gl.TexCoord2d(1, 0)
-      gl.Vertex2i(cx + tdx / 2, cy - tdy / 2)
+    gl.TexCoord2d(1, 0)
+    gl.Vertex2i(cx+tdx/2, cy-tdy/2)
     gl.End()
 
     m.layout.Name.RenderString(m.ent.Name)
@@ -505,17 +504,17 @@ func (m *MainBar) Draw(region gui.Region) {
     cx = region.X + m.layout.Name.X
     cy = region.Y + m.layout.Name.Y - 5
     gl.Begin(gl.QUADS)
-      gl.TexCoord2d(0, 0)
-      gl.Vertex2i(cx - tdx / 2, cy - tdy / 2)
+    gl.TexCoord2d(0, 0)
+    gl.Vertex2i(cx-tdx/2, cy-tdy/2)
 
-      gl.TexCoord2d(0, -1)
-      gl.Vertex2i(cx - tdx / 2, cy + (tdy + 1) / 2)
+    gl.TexCoord2d(0, -1)
+    gl.Vertex2i(cx-tdx/2, cy+(tdy+1)/2)
 
-      gl.TexCoord2d(1,-1)
-      gl.Vertex2i(cx + (tdx + 1) / 2, cy + (tdy + 1) / 2)
+    gl.TexCoord2d(1, -1)
+    gl.Vertex2i(cx+(tdx+1)/2, cy+(tdy+1)/2)
 
-      gl.TexCoord2d(1, 0)
-      gl.Vertex2i(cx + (tdx + 1) / 2, cy - tdy / 2)
+    gl.TexCoord2d(1, 0)
+    gl.Vertex2i(cx+(tdx+1)/2, cy-tdy/2)
     gl.End()
 
     // Actions
@@ -540,17 +539,17 @@ func (m *MainBar) Draw(region gui.Region) {
       r.PushClipPlanes()
 
       gl.Color4d(1, 1, 1, 1)
-      for i,action := range m.ent.Actions {
+      for i, action := range m.ent.Actions {
 
         // Highlight the selected action
         if action == m.game.current_action {
           gl.Disable(gl.TEXTURE_2D)
           gl.Color4d(1, 0, 0, 1)
           gl.Begin(gl.QUADS)
-            gl.Vertex3d(xpos - 2, m.layout.Actions.Y - 2, 0)
-            gl.Vertex3d(xpos - 2, m.layout.Actions.Y+s + 2, 0)
-            gl.Vertex3d(xpos+s + 2, m.layout.Actions.Y+s + 2, 0)
-            gl.Vertex3d(xpos+s + 2, m.layout.Actions.Y - 2, 0)
+          gl.Vertex3d(xpos-2, m.layout.Actions.Y-2, 0)
+          gl.Vertex3d(xpos-2, m.layout.Actions.Y+s+2, 0)
+          gl.Vertex3d(xpos+s+2, m.layout.Actions.Y+s+2, 0)
+          gl.Vertex3d(xpos+s+2, m.layout.Actions.Y-2, 0)
           gl.End()
         }
         gl.Enable(gl.TEXTURE_2D)
@@ -561,22 +560,22 @@ func (m *MainBar) Draw(region gui.Region) {
           gl.Color4d(0.5, 0.5, 0.5, 1)
         }
         gl.Begin(gl.QUADS)
-          gl.TexCoord2d(0, 0)
-          gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
+        gl.TexCoord2d(0, 0)
+        gl.Vertex3d(xpos, m.layout.Actions.Y, 0)
 
-          gl.TexCoord2d(0, -1)
-          gl.Vertex3d(xpos, m.layout.Actions.Y+s, 0)
+        gl.TexCoord2d(0, -1)
+        gl.Vertex3d(xpos, m.layout.Actions.Y+s, 0)
 
-          gl.TexCoord2d(1, -1)
-          gl.Vertex3d(xpos+s, m.layout.Actions.Y+s, 0)
+        gl.TexCoord2d(1, -1)
+        gl.Vertex3d(xpos+s, m.layout.Actions.Y+s, 0)
 
-          gl.TexCoord2d(1, 0)
-          gl.Vertex3d(xpos+s, m.layout.Actions.Y, 0)
+        gl.TexCoord2d(1, 0)
+        gl.Vertex3d(xpos+s, m.layout.Actions.Y, 0)
         gl.End()
         gl.Disable(gl.TEXTURE_2D)
 
         ypos := m.layout.Actions.Y - d.MaxHeight() - 2
-        d.RenderString(fmt.Sprintf("%d", i+1), xpos + s / 2, ypos, 0, d.MaxHeight(), gui.Center)
+        d.RenderString(fmt.Sprintf("%d", i+1), xpos+s/2, ypos, 0, d.MaxHeight(), gui.Center)
 
         xpos += spacing + m.layout.Actions.Icon_size
       }
@@ -587,7 +586,7 @@ func (m *MainBar) Draw(region gui.Region) {
       if m.state.Actions.selected != nil {
         // a := m.state.Actions.selected
         d := base.GetDictionary(15)
-        x := m.layout.Actions.X + m.layout.Actions.Width / 2
+        x := m.layout.Actions.X + m.layout.Actions.Width/2
         y := float64(m.layout.ActionLeft.Y)
         str := fmt.Sprintf("%s:%dAP", m.state.Actions.selected.String(), m.state.Actions.selected.AP())
         gl.Color4d(1, 1, 1, 1)
@@ -607,8 +606,8 @@ func (m *MainBar) Draw(region gui.Region) {
       r.Dx = int(c.Width)
       r.Dy = int(c.Height)
       r.PushClipPlanes()
-      for _,s := range m.ent.Stats.ConditionNames() {
-        d.RenderString(s, c.X + c.Width / 2, ypos, 0, d.MaxHeight(), gui.Center)
+      for _, s := range m.ent.Stats.ConditionNames() {
+        d.RenderString(s, c.X+c.Width/2, ypos, 0, d.MaxHeight(), gui.Center)
         ypos -= float64(d.MaxHeight())
       }
 
@@ -622,7 +621,7 @@ func (m *MainBar) Draw(region gui.Region) {
       icon := gear.Small_icon.Data()
       icon.RenderNatural(int(layout.X), int(layout.Y))
       d := base.GetDictionary(10)
-      d.RenderString("Gear", layout.X + float64(icon.Dx()) / 2, layout.Y - d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
+      d.RenderString("Gear", layout.X+float64(icon.Dx())/2, layout.Y-d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
     }
   }
 
@@ -630,14 +629,14 @@ func (m *MainBar) Draw(region gui.Region) {
   if m.state.MouseOver.active {
     var x int
     switch m.state.MouseOver.location {
-      case mouseOverActions:
-        x = int(m.layout.Actions.X + m.layout.Actions.Width / 2)
-      case mouseOverConditions:
-        x = int(m.layout.Conditions.X + m.layout.Conditions.Width / 2)
-      case mouseOverGear:
-      default:
-        base.Warn().Printf("Got an unknown mouseover location: %d", m.state.MouseOver.location)
-        m.state.MouseOver.active = false
+    case mouseOverActions:
+      x = int(m.layout.Actions.X + m.layout.Actions.Width/2)
+    case mouseOverConditions:
+      x = int(m.layout.Conditions.X + m.layout.Conditions.Width/2)
+    case mouseOverGear:
+    default:
+      base.Warn().Printf("Got an unknown mouseover location: %d", m.state.MouseOver.location)
+      m.state.MouseOver.active = false
     }
     y := m.layout.Background.Data().Dy() - 40
     d := base.GetDictionary(15)
@@ -652,4 +651,3 @@ func (m *MainBar) DrawFocused(region gui.Region) {
 func (m *MainBar) String() string {
   return "main bar"
 }
-

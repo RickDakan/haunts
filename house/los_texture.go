@@ -40,7 +40,7 @@ func MakeLosTexture() *LosTexture {
   lt.p2d = make([][]byte, LosTextureSize)
   lt.rec = make(chan gl.Texture, 1)
   for i := 0; i < LosTextureSize; i++ {
-    lt.p2d[i] = lt.pix[i * LosTextureSize : (i+1) * LosTextureSize]
+    lt.p2d[i] = lt.pix[i*LosTextureSize : (i+1)*LosTextureSize]
   }
 
   render.Queue(func() {
@@ -63,11 +63,13 @@ func MakeLosTexture() *LosTexture {
 // If the texture has been created this returns true, otherwise it checks for
 // the finished texture and returns true if it is available, false otherwise.
 func (lt *LosTexture) ready() bool {
-  if lt.tex != 0 { return true }
+  if lt.tex != 0 {
+    return true
+  }
   select {
-    case lt.tex = <-lt.rec:
-      return true
-    default:
+  case lt.tex = <-lt.rec:
+    return true
+  default:
   }
   return false
 }
@@ -75,7 +77,9 @@ func (lt *LosTexture) ready() bool {
 // Updates OpenGl with any changes that have been made to the texture.
 // OpenGl calls in this method are run on the render thread
 func (lt *LosTexture) Remap() {
-  if !lt.ready() { return }
+  if !lt.ready() {
+    return
+  }
   render.Queue(func() {
     gl.Enable(gl.TEXTURE_2D)
     lt.tex.Bind(gl.TEXTURE_2D)

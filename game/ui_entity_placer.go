@@ -12,8 +12,8 @@ import (
 type entityPlacer struct {
   *gui.AnchorBox
   roster_chooser *hui.RosterChooser
-  game   *Game
-  points int
+  game           *Game
+  points         int
 
   names        []string
   name_to_cost map[string]int
@@ -37,7 +37,7 @@ func makeEntityPlacerSelector(game *Game, ep *entityPlacer) hui.Selector {
     }
     if doit {
       var other int
-      for k,_ := range selected {
+      for k, _ := range selected {
         other = k
       }
       delete(selected, other)
@@ -68,13 +68,13 @@ func getAllEntsWithSideAndLevel(game *Game, side Side, level EntLevel) []*Entity
 func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs []int) (*entityPlacer, <-chan []*Entity) {
   house.PushSpawnRegexp(pattern)
   ep := entityPlacer{
-    game: g,
-    points: points,
-    names: names,
+    game:         g,
+    points:       points,
+    names:        names,
     name_to_cost: make(map[string]int),
-    pattern: pattern,
+    pattern:      pattern,
   }
-  
+
   var roster []hui.Option
   for i := range ep.names {
     ep.name_to_cost[ep.names[i]] = costs[i]
@@ -93,7 +93,7 @@ func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs
       if len(ep.undo_stack) > 0 {
         top_pos := len(ep.undo_stack) - 1
         top := ep.undo_stack[top_pos]
-        ep.undo_stack = ep.undo_stack[0 : top_pos]
+        ep.undo_stack = ep.undo_stack[0:top_pos]
         g.GetViewer().RemoveDrawable(top)
         algorithm.Choose2(&g.Ents, func(e *Entity) bool { return e != top })
         ep.points += ep.name_to_cost[top.Name]
@@ -101,7 +101,7 @@ func MakeEntityPlacer(g *Game, pattern string, points int, names []string, costs
     },
   )
   ep.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
-  ep.AnchorBox.AddChild(ep.roster_chooser, gui.Anchor{0,0.5,0,0.5})
+  ep.AnchorBox.AddChild(ep.roster_chooser, gui.Anchor{0, 0.5, 0, 0.5})
 
   return &ep, placed
 }
@@ -115,11 +115,11 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
   if ep.game.new_ent != nil {
-    x,y := gin.In().GetCursor("Mouse").Point()
+    x, y := gin.In().GetCursor("Mouse").Point()
     fbx, fby := ep.game.viewer.WindowToBoard(x, y)
     bx, by := DiscretizePoint32(fbx, fby)
     ep.game.new_ent.X, ep.game.new_ent.Y = float64(bx), float64(by)
-    if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
       ent := ep.game.new_ent
       if ep.game.placeEntity(ep.pattern) {
         cost := ep.name_to_cost[ent.Name]
@@ -139,4 +139,3 @@ func (ep *entityPlacer) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 func (ep *entityPlacer) String() string {
   return "entity placer"
 }
-

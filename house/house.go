@@ -140,7 +140,7 @@ type doorState struct {
   // for tracking whether the buffers are dirty
   facing WallFacing
   pos    int
-  room struct {
+  room   struct {
     x, y, dx, dy int
   }
 }
@@ -263,7 +263,7 @@ func (r *Room) Pos() (x, y int) {
 }
 
 type Floor struct {
-  Rooms  []*Room       `registry:"loadfrom-rooms"`
+  Rooms  []*Room `registry:"loadfrom-rooms"`
   Spawns []*SpawnPoint
 }
 
@@ -640,7 +640,6 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   }
   hdt.icon = gui.MakeFileWidget(string(hdt.house.Icon.Path), imagePathFilter)
 
-
   hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
   hdt.VerticalTable.AddChild(hdt.icon)
@@ -650,7 +649,9 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   for _, name := range names {
     n := name
     room_buttons.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      if hdt.temp_room != nil { return }
+      if hdt.temp_room != nil {
+        return
+      }
       hdt.temp_room = &Room{Defname: n}
       base.GetObject("rooms", hdt.temp_room)
       hdt.temp_room.temporary = true
@@ -839,7 +840,7 @@ func (hdt *houseDoorTab) onEscape() {
     }
     if hdt.prev_door != nil {
       hdt.prev_room.Doors = append(hdt.prev_room.Doors, hdt.prev_door)
-      hdt.prev_door.state.pos = -1  // forces it to redo its gl data
+      hdt.prev_door.state.pos = -1 // forces it to redo its gl data
       hdt.prev_door = nil
       hdt.prev_room = nil
     }

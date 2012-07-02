@@ -7,7 +7,6 @@ import (
   "github.com/runningwild/mathgl"
 )
 
-
 // This structure is used for temporary doors (that are being dragged around in
 // the editor) since the normal Door struct only handles one door out of a pair
 // and doesn't know what rooms it connects.
@@ -23,17 +22,16 @@ type HouseViewer struct {
 
   house *HouseDef
 
-  zoom,angle,fx,fy float32
-  floor,ifloor mathgl.Mat4
+  zoom, angle, fx, fy float32
+  floor, ifloor       mathgl.Mat4
 
   // target[xy] are the values that f[xy] approach, this gives us a nice way
   // to change what the camera is looking at
   targetx, targety float32
-  target_on bool
+  target_on        bool
 
   // Need to keep track of time so we can measure time between thinks
   last_timestamp int64
-
 
   drawables     []Drawable
   Los_tex       *LosTexture
@@ -53,11 +51,11 @@ type HouseViewer struct {
 
   // Keeping a variety of slices here so that we don't keep allocating new
   // ones every time we render everything
-  rooms           []RectObject
-  temp_drawables  []Drawable
-  all_furn        []*Furniture
-  spawns          []*SpawnPoint
-  floor_drawers   []FloorDrawer
+  rooms          []RectObject
+  temp_drawables []Drawable
+  all_furn       []*Furniture
+  spawns         []*SpawnPoint
+  floor_drawers  []FloorDrawer
 }
 
 func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
@@ -103,8 +101,8 @@ func (hv *HouseViewer) RemoveDrawable(d Drawable) {
   })
 }
 
-func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x,y,dist float32) {
-  mz := d2p(hv.floor, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0,0,1})
+func (hv *HouseViewer) modelviewToBoard(mx, my float32) (x, y, dist float32) {
+  mz := d2p(hv.floor, mathgl.Vec3{mx, my, 0}, mathgl.Vec3{0, 0, 1})
   v := mathgl.Vec4{X: mx, Y: my, Z: mz, W: 1}
   v.Transform(&hv.ifloor)
   return v.X, v.Y, mz
@@ -120,14 +118,14 @@ func (hv *HouseViewer) boardToModelview(mx, my float32) (x, y, z float32) {
 func (hv *HouseViewer) WindowToBoard(wx, wy int) (float32, float32) {
   hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
 
-  fx,fy,_ := hv.modelviewToBoard(float32(wx), float32(wy))
+  fx, fy, _ := hv.modelviewToBoard(float32(wx), float32(wy))
   return fx, fy
 }
 
 func (hv *HouseViewer) BoardToWindow(bx, by float32) (int, int) {
   hv.floor, hv.ifloor, _, _, _, _ = makeRoomMats(&roomDef{}, hv.Render_region, hv.fx, hv.fy, hv.angle, hv.zoom)
 
-  fx,fy,_ := hv.boardToModelview(bx, by)
+  fx, fy, _ := hv.boardToModelview(bx, by)
   return int(fx), int(fy)
 }
 
@@ -165,77 +163,85 @@ func (hv *HouseViewer) String() string {
   return "house viewer"
 }
 
-func roomOverlapOnce(a,b *Room) bool {
-  x1in := a.X + a.Size.Dx > b.X && a.X + a.Size.Dx <= b.X + b.Size.Dx
-  x2in := b.X + b.Size.Dx > a.X && b.X + b.Size.Dx <= a.X + a.Size.Dx
-  y1in := a.Y + a.Size.Dy > b.Y && a.Y + a.Size.Dy <= b.Y + b.Size.Dy
-  y2in := b.Y + b.Size.Dy > a.Y && b.Y + b.Size.Dy <= a.Y + a.Size.Dy
+func roomOverlapOnce(a, b *Room) bool {
+  x1in := a.X+a.Size.Dx > b.X && a.X+a.Size.Dx <= b.X+b.Size.Dx
+  x2in := b.X+b.Size.Dx > a.X && b.X+b.Size.Dx <= a.X+a.Size.Dx
+  y1in := a.Y+a.Size.Dy > b.Y && a.Y+a.Size.Dy <= b.Y+b.Size.Dy
+  y2in := b.Y+b.Size.Dy > a.Y && b.Y+b.Size.Dy <= a.Y+a.Size.Dy
   return (x1in || x2in) && (y1in || y2in)
 }
 
-func roomOverlap(a,b *Room) bool {
+func roomOverlap(a, b *Room) bool {
   return roomOverlapOnce(a, b) || roomOverlapOnce(b, a)
 }
 
-func (hv *HouseViewer) FindClosestDoorPos(door *Door, bx,by float32) (*Room) {
+func (hv *HouseViewer) FindClosestDoorPos(door *Door, bx, by float32) *Room {
   current_floor := 0
-  best := 1.0e9  // If this is unsafe then the house is larger than earth
+  best := 1.0e9 // If this is unsafe then the house is larger than earth
   var best_room *Room
 
   clamp_int := func(n, min, max int) int {
-    if n < min { return min }
-    if n > max { return max }
+    if n < min {
+      return min
+    }
+    if n > max {
+      return max
+    }
     return n
   }
-  for _,room := range hv.house.Floors[current_floor].Rooms {
-    fl := math.Abs(float64(by) - float64(room.Y + room.Size.Dy))
-    fr := math.Abs(float64(bx) - float64(room.X + room.Size.Dx))
+  for _, room := range hv.house.Floors[current_floor].Rooms {
+    fl := math.Abs(float64(by) - float64(room.Y+room.Size.Dy))
+    fr := math.Abs(float64(bx) - float64(room.X+room.Size.Dx))
     if bx < float32(room.X) {
       fl += float64(room.X) - float64(bx)
     }
-    if bx > float32(room.X + room.Size.Dx) {
-      fl += float64(bx) - float64(room.X + room.Size.Dx)
+    if bx > float32(room.X+room.Size.Dx) {
+      fl += float64(bx) - float64(room.X+room.Size.Dx)
     }
     if by < float32(room.Y) {
       fr += float64(room.Y) - float64(by)
     }
-    if by > float32(room.Y + room.Size.Dy) {
-      fr += float64(by) - float64(room.Y + room.Size.Dy)
+    if by > float32(room.Y+room.Size.Dy) {
+      fr += float64(by) - float64(room.Y+room.Size.Dy)
     }
-    if best <= fl && best <= fr { continue }
+    if best <= fl && best <= fr {
+      continue
+    }
     best_room = room
     switch {
-      case fl < fr:
-        best = fl
-        door.Facing = FarLeft
-        door.Pos = clamp_int(int(bx - float32(room.X) - float32(door.Width) / 2), 0, room.Size.Dx - door.Width)
+    case fl < fr:
+      best = fl
+      door.Facing = FarLeft
+      door.Pos = clamp_int(int(bx-float32(room.X)-float32(door.Width)/2), 0, room.Size.Dx-door.Width)
 
-//      case fr < fl:  this case must be true, so we just call it default here
-      default:
-        best = fr
-        door.Facing = FarRight
-        door.Pos = clamp_int(int(by - float32(room.Y) - float32(door.Width) / 2), 0, room.Size.Dy - door.Width)
+      //      case fr < fl:  this case must be true, so we just call it default here
+    default:
+      best = fr
+      door.Facing = FarRight
+      door.Pos = clamp_int(int(by-float32(room.Y)-float32(door.Width)/2), 0, room.Size.Dy-door.Width)
     }
   }
   return best_room
 }
 
-func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {
+func (hv *HouseViewer) FindClosestExistingDoor(bx, by float32) (*Room, *Door) {
   current_floor := 0
-  for _,room := range hv.house.Floors[current_floor].Rooms {
-    for _,door := range room.Doors {
-      if door.Facing != FarLeft && door.Facing != FarRight { continue }
-      var vx,vy float32
+  for _, room := range hv.house.Floors[current_floor].Rooms {
+    for _, door := range room.Doors {
+      if door.Facing != FarLeft && door.Facing != FarRight {
+        continue
+      }
+      var vx, vy float32
       if door.Facing == FarLeft {
-        vx = float32(room.X + door.Pos) + float32(door.Width) / 2
+        vx = float32(room.X+door.Pos) + float32(door.Width)/2
         vy = float32(room.Y + room.Size.Dy)
       } else {
         // door.Facing == FarRight
         vx = float32(room.X + room.Size.Dx)
-        vy = float32(room.Y + door.Pos) + float32(door.Width) / 2
+        vy = float32(room.Y+door.Pos) + float32(door.Width)/2
       }
-      dsq := (vx - bx) * (vx - bx) + (vy - by) * (vy - by)
-      if dsq <= float32(door.Width * door.Width) {
+      dsq := (vx-bx)*(vx-bx) + (vy-by)*(vy-by)
+      if dsq <= float32(door.Width*door.Width) {
         return room, door
       }
     }
@@ -245,14 +251,15 @@ func (hv *HouseViewer) FindClosestExistingDoor(bx,by float32) (*Room, *Door) {
 
 type offsetDrawable struct {
   Drawable
-  dx,dy int
+  dx, dy int
 }
+
 func (o offsetDrawable) FPos() (float64, float64) {
-  x,y := o.Drawable.FPos()
+  x, y := o.Drawable.FPos()
   return x + float64(o.dx), y + float64(o.dy)
 }
 func (o offsetDrawable) Pos() (int, int) {
-  x,y := o.Drawable.Pos()
+  x, y := o.Drawable.Pos()
   return x + o.dx, y + o.dy
 }
 

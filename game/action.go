@@ -13,7 +13,7 @@ import (
 var action_map map[string]func() Action
 
 func MakeAction(name string) Action {
-  f,ok := action_map[name]
+  f, ok := action_map[name]
   if !ok {
     base.Error().Printf("Unable to find an Action named '%s'", name)
   }
@@ -21,6 +21,7 @@ func MakeAction(name string) Action {
 }
 
 var action_makers []func() map[string]func() Action
+
 // Ahahahahahaha
 func RegisterActionMakers(f func() map[string]func() Action) {
   action_makers = append(action_makers, f)
@@ -28,10 +29,10 @@ func RegisterActionMakers(f func() map[string]func() Action) {
 
 func RegisterActions() {
   action_map = make(map[string]func() Action)
-  for _,maker := range action_makers {
+  for _, maker := range action_makers {
     m := maker()
-    for name,f := range m {
-      if _,ok := action_map[name]; ok {
+    for name, f := range m {
+      if _, ok := action_map[name]; ok {
         panic(fmt.Sprintf("Tried to register more than one action by the same name: '%s'", name))
       }
       action_map[name] = f
@@ -41,9 +42,10 @@ func RegisterActions() {
 
 // Acceptable values to be returned from Action.Maintain()
 type MaintenanceStatus int
+
 const (
   // The Action is in progress and should not be interrupted.
-  InProgress         MaintenanceStatus = iota
+  InProgress MaintenanceStatus = iota
 
   // The Action is interrupted and can be interrupted immediately.
   CheckForInterrupts
@@ -58,6 +60,7 @@ type BasicActionExec struct {
   Ent   EntityId
   Index int
 }
+
 func (bae BasicActionExec) EntityId() EntityId {
   return bae.Ent
 }

@@ -30,7 +30,7 @@ func (gs *gameScript) syncEnd() {
 
 func startGameScript(gp *GamePanel, path string) {
   // Clear out the panel, now the script can do whatever it wants
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   base.Log().Printf("startGameScript")
   if !filepath.IsAbs(path) {
     path = filepath.Join(base.GetDataDir(), "scripts", path)
@@ -76,7 +76,7 @@ func startGameScript(gp *GamePanel, path string) {
       gp.script.L.GetField(lua.LUA_GLOBALSINDEX, "Init")
       gp.script.L.Call(0, 0)
       gp.game.comm.script_to_game <- nil
-    } ()
+    }()
   }
 }
 
@@ -114,10 +114,10 @@ func (gs *gameScript) OnRound(g *Game) {
         break
       }
       <-g.comm.game_to_script
-    base.Log().Printf("ScriptComm: Got action secondary")
+      base.Log().Printf("ScriptComm: Got action secondary")
       // Run OnAction here
       g.comm.script_to_game <- nil
-    base.Log().Printf("ScriptComm: Done with OnAction")
+      base.Log().Printf("ScriptComm: Done with OnAction")
     }
 
     gs.L.SetExecutionLimit(250000)
@@ -129,7 +129,7 @@ func (gs *gameScript) OnRound(g *Game) {
     // Signal that we're done with the round end
     g.comm.script_to_game <- nil
     base.Log().Printf("ScriptComm: Done with RoundEnd")
-  } ()
+  }()
 }
 
 // Can be called occassionally and will allow a script to progress whenever
@@ -165,13 +165,13 @@ func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
         return
       }
     }
-  } ()
+  }()
 
   return done_chan
 }
 
 func loadHouse(gp *GamePanel) lua.GoFunction {
-  return func(L* lua.State) int {
+  return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
 
@@ -187,9 +187,9 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
     gp.game = makeGame(gp.house, gp.viewer, SideExplorers)
     gp.game.script = gp.script
 
-    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
+    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
 
-    gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     base.Log().Printf("Done making stuff")
     return 0
   }
@@ -211,12 +211,12 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
 
     if show {
       var err error
-      gp.main_bar,err = MakeMainBar(gp.game)
+      gp.main_bar, err = MakeMainBar(gp.game)
       if err != nil {
         base.Error().Printf("%v", err)
         return 0
       }
-      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
+      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
     }
     base.Log().Printf("Num kids: %d", len(gp.AnchorBox.GetChildren()))
     return 0
@@ -286,7 +286,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
     defer gp.script.syncEnd()
     name := L.ToString(-2)
 
-    var tx,ty int
+    var tx, ty int
     count := 0
     sp_count := 1
     L.PushInteger(sp_count)
@@ -306,8 +306,8 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       sp := gp.game.House.Floors[0].Spawns[id]
       sx, sy := sp.Pos()
       sdx, sdy := sp.Dims()
-      for x := sx; x < sx + sdx; x++ {
-        for y := sy; y < sy + sdy; y++ {
+      for x := sx; x < sx+sdx; x++ {
+        for y := sy; y < sy+sdy; y++ {
           if gp.game.IsCellOccupied(x, y) {
             continue
           }
@@ -336,8 +336,6 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
   }
 }
 
-
-
 func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
@@ -360,7 +358,7 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
     }
 
     ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
-    gp.AnchorBox.AddChild(ep, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.AnchorBox.AddChild(ep, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     gp.script.syncEnd()
 
     placed := <-placed_chan
@@ -451,7 +449,7 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
     defer gp.script.syncEnd()
     L.NewTable()
     for i := range gp.game.Ents {
-      L.PushInteger(i+1)
+      L.PushInteger(i + 1)
       pushEntity(L, gp.game.Ents[i])
       L.SetTable(-3)
     }
@@ -563,7 +561,7 @@ func selectMap(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error selecting map: %v", err)
       return 0
     }
-    gp.AnchorBox.AddChild(selector, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.AnchorBox.AddChild(selector, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     gp.script.syncEnd()
 
     name := <-output
@@ -585,7 +583,7 @@ func dialogBox(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error making dialog: %v", err)
       return 0
     }
-    gp.AnchorBox.AddChild(box, gui.Anchor{0.5,0.5,0.5,0.5})
+    gp.AnchorBox.AddChild(box, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     gp.script.syncEnd()
 
     var choices []string
@@ -623,7 +621,7 @@ func pickFromN(gp *GamePanel) lua.GoFunction {
       }
       option := iconWithText{
         Name: name,
-        Icon: texture.Object{ Path: base.Path(path) },
+        Icon: texture.Object{Path: base.Path(path)},
       }
       options = append(options, &option)
       L.Pop(1)
@@ -652,7 +650,7 @@ func pickFromN(gp *GamePanel) lua.GoFunction {
     }
     chooser = hui.MakeRosterChooser(options, selector, on_complete, nil)
     gp.script.syncStart()
-    gp.AddChild(chooser, gui.Anchor{0.5,0.5, 0.5,0.5})
+    gp.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     gp.script.syncEnd()
     <-done
     return 1

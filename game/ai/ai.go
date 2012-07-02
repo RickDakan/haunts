@@ -39,12 +39,12 @@ type Ai struct {
 
   // Set to true at the beginning of the turn, turned off as soon as the ai is
   // done for the turn.
-  active bool
-  evaluating bool
-  active_set chan bool
+  active       bool
+  evaluating   bool
+  active_set   chan bool
   active_query chan bool
-  exec_query chan struct{}
-  terminate chan struct{}
+  exec_query   chan struct{}
+  terminate    chan struct{}
 
   // Once we send an Action for execution we have to wait until it is done
   // before we make the next one.  This channel is used to handle that.
@@ -214,8 +214,8 @@ func (a *Ai) masterRoutine() {
     case <-a.exec_query:
       if a.active {
         select {
-          case a.pause <- struct{}{}:
-          default:
+        case a.pause <- struct{}{}:
+        default:
         }
       }
       if a.active && !a.evaluating {
@@ -241,7 +241,7 @@ func (a *Ai) masterRoutine() {
           a.active_set <- false
           a.execs <- nil
           base.Log().Printf("Sent nil value")
-        } ()
+        }()
       }
     }
   }
@@ -255,13 +255,13 @@ func (a *Ai) Activate() {
   reload := false
   for {
     select {
-      case <-a.watcher.Event:
-        reload = true
-      default:
-        goto no_more_events
+    case <-a.watcher.Event:
+      reload = true
+    default:
+      goto no_more_events
     }
   }
-  no_more_events:
+no_more_events:
   if reload {
     a.setupLuaState()
     base.Log().Printf("Reloaded lua state for '%p'", a)
@@ -276,15 +276,16 @@ func (a *Ai) Active() bool {
 
 func (a *Ai) ActionExecs() <-chan game.ActionExec {
   select {
-    case a.pause <- struct{}{}:
-    default:
+  case a.pause <- struct{}{}:
+  default:
   }
   a.exec_query <- struct{}{}
   return a.execs
 }
 
 type luaType int
-const(
+
+const (
   luaInteger luaType = iota
   luaString
   luaTable
@@ -303,7 +304,7 @@ func makeLuaSigniature(name string, params []luaType) string {
     default:
       sig += "<unknown type>"
     }
-    if i != len(params) - 1 {
+    if i != len(params)-1 {
       sig += ", "
     }
   }
@@ -320,7 +321,7 @@ func luaCheckParamsOk(L *lua.State, name string, params ...luaType) bool {
   }
   for i := -n; i < 0; i++ {
     ok := false
-    switch params[i + n] {
+    switch params[i+n] {
     case luaInteger:
       ok = L.IsNumber(i)
     case luaString:
@@ -352,16 +353,19 @@ func luaNumParamsOk(L *lua.State, num_params int, name string) bool {
   return true
 }
 
-func rangedDistBetween(e1,e2 *game.Entity) int {
-  e1x,e1y := e1.Pos()
-  e2x,e2y := e2.Pos()
+func rangedDistBetween(e1, e2 *game.Entity) int {
+  e1x, e1y := e1.Pos()
+  e2x, e2y := e2.Pos()
   dx := e1x - e2x
   dy := e1y - e2y
-  if dx < 0 { dx = -dx }
-  if dy < 0 { dy = -dy }
+  if dx < 0 {
+    dx = -dx
+  }
+  if dy < 0 {
+    dy = -dy
+  }
   if dx > dy {
     return dx
   }
   return dy
 }
-

@@ -23,7 +23,7 @@ func registerBasicAttacks() map[string]func() game.Action {
   for name := range attack_actions {
     cname := name
     makers[cname] = func() game.Action {
-      a := BasicAttack{ Defname: cname }
+      a := BasicAttack{Defname: cname}
       base.GetObject("actions-attack_actions", &a)
       if !a.Target_allies && !a.Target_enemies {
         base.Error().Printf("Basic Attack '%s' cannot target anything!  Either Target_allies or Target_enemies must be true", a.Name)
@@ -56,7 +56,7 @@ type BasicAttackDef struct {
   Name           string
   Kind           status.Kind
   Ap             int
-  Ammo           int  // 0 = infinity
+  Ammo           int // 0 = infinity
   Strength       int
   Range          int
   Damage         int
@@ -85,6 +85,7 @@ type basicAttackExec struct {
   game.BasicActionExec
   Target game.EntityId
 }
+
 func init() {
   gob.Register(basicAttackExec{})
 }
@@ -93,11 +94,14 @@ func init() {
 type BasicAttackResult struct {
   Hit bool
 }
+
 var exec_id int
+
 // TODO: This thing leaks memory since we never bother to purge it.  It would
 // make the most sense to purge it OnRound(), but we'd have to make a way to
 // register OnRound callbacks with the game.
 var results map[int]BasicAttackResult
+
 func init() {
   results = make(map[int]BasicAttackResult)
 }
@@ -109,11 +113,15 @@ func GetBasicAttackResult(e game.ActionExec) *BasicAttackResult {
   return &res
 }
 
-func dist(x,y,x2,y2 int) int {
+func dist(x, y, x2, y2 int) int {
   dx := x - x2
-  if dx < 0 { dx = -dx }
+  if dx < 0 {
+    dx = -dx
+  }
   dy := y - y2
-  if dy < 0 { dy = -dy }
+  if dy < 0 {
+    dy = -dy
+  }
   if dx > dy {
     return dx
   }
@@ -138,14 +146,26 @@ func (a *BasicAttack) Readyable() bool {
   return true
 }
 func (a *BasicAttack) validTarget(source, target *game.Entity) bool {
-  if source.Stats == nil || target.Stats == nil { return false }
-  if distBetweenEnts(source, target) > a.Range { return false }
-  x2,y2 := target.Pos()
-  dx,dy := target.Dims()
-  if !source.HasLos(x2, y2, dx, dy) { return false }
-  if target.Stats.HpCur() <= 0 { return false }
-  if source.Side() == target.Side() && !a.Target_allies { return false }
-  if source.Side() != target.Side() && !a.Target_enemies { return false }
+  if source.Stats == nil || target.Stats == nil {
+    return false
+  }
+  if distBetweenEnts(source, target) > a.Range {
+    return false
+  }
+  x2, y2 := target.Pos()
+  dx, dy := target.Dims()
+  if !source.HasLos(x2, y2, dx, dy) {
+    return false
+  }
+  if target.Stats.HpCur() <= 0 {
+    return false
+  }
+  if source.Side() == target.Side() && !a.Target_allies {
+    return false
+  }
+  if source.Side() != target.Side() && !a.Target_enemies {
+    return false
+  }
   return true
 }
 func (a *BasicAttack) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
@@ -187,7 +207,7 @@ func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if target == nil || !a.validTarget(a.ent, target) {
       return true, nil
     }
@@ -199,14 +219,14 @@ func (a *BasicAttack) RenderOnFloor() {
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
   gl.Color4d(1.0, 0.2, 0.2, 0.8)
-  for _,ent := range a.targets {
-    ix,iy := ent.Pos()
+  for _, ent := range a.targets {
+    ix, iy := ent.Pos()
     x := float64(ix)
     y := float64(iy)
-    gl.Vertex2d(x + 0, y + 0)
-    gl.Vertex2d(x + 0, y + 1)
-    gl.Vertex2d(x + 1, y + 1)
-    gl.Vertex2d(x + 1, y + 0)
+    gl.Vertex2d(x+0, y+0)
+    gl.Vertex2d(x+0, y+1)
+    gl.Vertex2d(x+1, y+1)
+    gl.Vertex2d(x+1, y+0)
   }
   gl.End()
 }
@@ -245,7 +265,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     var defender_cmds []string
     if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
-      for _,name := range a.Conditions {
+      for _, name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
       }
       a.target.Stats.ApplyDamage(0, -a.Damage, a.Kind)
@@ -254,10 +274,10 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
       } else {
         defender_cmds = []string{"defend", "damaged"}
       }
-      results[a.exec.id] = BasicAttackResult{Hit:true}
+      results[a.exec.id] = BasicAttackResult{Hit: true}
     } else {
       defender_cmds = []string{"defend", "undamaged"}
-      results[a.exec.id] = BasicAttackResult{Hit:false}
+      results[a.exec.id] = BasicAttackResult{Hit: false}
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
@@ -271,4 +291,3 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
 func (a *BasicAttack) Interrupt() bool {
   return true
 }
-

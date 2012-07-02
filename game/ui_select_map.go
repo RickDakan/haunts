@@ -23,6 +23,7 @@ type MapOption struct {
 
   house_def *house.HouseDef
 }
+
 func (mo *MapOption) Draw(hovered, selected, selectable bool, region gui.Region) {
   var s byte
   switch {
@@ -81,7 +82,7 @@ func MakeUiSelectMap(gp *GamePanel) (gui.Widget, <-chan string, error) {
     }
     close(out)
   },
-  nil)
+    nil)
   ui.chooser = chooser
 
   return &ui, out, nil

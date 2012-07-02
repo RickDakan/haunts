@@ -114,5 +114,5 @@ package game
 // }
 
 // func (ui *UiStart) DrawFocused(region gui.Region) {
-  
+
 // }

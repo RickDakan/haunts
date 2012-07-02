@@ -244,11 +244,10 @@ func alphaMult(a, b byte) byte {
   return byte((int(a) * int(b)) >> 8)
 }
 
-var Num_rows float32 = 1150;
-var Noise_rate float32 = 60;
-var Num_steps float32 = 3;
-var Foo int = 0;
-
+var Num_rows float32 = 1150
+var Noise_rate float32 = 60
+var Num_steps float32 = 3
+var Foo int = 0
 
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
@@ -380,20 +379,20 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
       base.SetUniformI("gorey", "foo", Foo)
-      base.SetUniformF("gorey", "num_rows", Num_rows);
-      base.SetUniformF("gorey", "noise_rate", Noise_rate);
-      base.SetUniformF("gorey", "num_steps", Num_steps);
+      base.SetUniformF("gorey", "num_rows", Num_rows)
+      base.SetUniformF("gorey", "noise_rate", Noise_rate)
+      base.SetUniformF("gorey", "num_steps", Num_steps)
     }
     if plane.mat == &floor && strings.Contains(string(room.Floor.Path), "gradient.png") {
       base.EnableShader("gorey")
       base.SetUniformI("gorey", "tex", 0)
-      base.SetUniformI("gorey", "foo", Foo);
-      base.SetUniformF("gorey", "num_rows", Num_rows);
-      base.SetUniformF("gorey", "noise_rate", Noise_rate);
-      base.SetUniformF("gorey", "num_steps", Num_steps);
+      base.SetUniformI("gorey", "foo", Foo)
+      base.SetUniformF("gorey", "num_rows", Num_rows)
+      base.SetUniformF("gorey", "noise_rate", Noise_rate)
+      base.SetUniformF("gorey", "num_steps", Num_steps)
       zexp := math.Log(float64(zoom))
       frac := 1 - 1/zexp
-      frac = (frac - 0.6) * 5.0;
+      frac = (frac - 0.6) * 5.0
       switch {
       case frac > 0.7:
         base.SetUniformI("gorey", "range", 1)
@@ -516,11 +515,11 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
 
 func (room *Room) setupGlStuff() {
   if room.X == room.gl.x &&
-     room.Y == room.gl.y &&
-     room.Size.Dx == room.gl.dx &&
-     room.Size.Dy == room.gl.dy &&
-     room.Wall.Data().Dx() == room.gl.wall_tex_dx &&
-     room.Wall.Data().Dy() == room.gl.wall_tex_dy {
+    room.Y == room.gl.y &&
+    room.Size.Dx == room.gl.dx &&
+    room.Size.Dy == room.gl.dy &&
+    room.Wall.Data().Dx() == room.gl.wall_tex_dx &&
+    room.Wall.Data().Dy() == room.gl.wall_tex_dy {
     return
   }
   room.gl.x = room.X

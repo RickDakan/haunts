@@ -20,7 +20,7 @@ type shaderDef struct {
   Name string
 
   // Paths to the vertex and fragment shaders
-  Vertex_path string
+  Vertex_path   string
   Fragment_path string
 }
 
@@ -85,7 +85,7 @@ func InitShaders() {
     names := GetAllNamesInRegistry("shaders")
     for _, name := range names {
       // Load the shader files
-      shader := Shader{ Defname: name }
+      shader := Shader{Defname: name}
       GetObject("shaders", &shader)
       vdata, err := ioutil.ReadFile(filepath.Join(GetDataDir(), shader.Vertex_path))
       if err != nil {

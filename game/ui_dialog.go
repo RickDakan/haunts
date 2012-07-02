@@ -13,12 +13,12 @@ import (
 
 type Paragraph struct {
   X, Y, Dx, Size int
-  Justification string
+  Justification  string
 }
 
 type dialogSection struct {
   // Center of the image
-  X, Y int
+  X, Y      int
   Paragraph Paragraph
 
   // The clickable region
@@ -40,9 +40,9 @@ type dialogLayout struct {
 
 type dialogData struct {
   Size  string
-  Pages map[string]struct{
-    Format  string
-    Next    string  // Just to error check - this should always be empty
+  Pages map[string]struct {
+    Format   string
+    Next     string // Just to error check - this should always be empty
     Sections []struct {
       Id      string
       Next    string
@@ -52,22 +52,22 @@ type dialogData struct {
     }
   }
 
-  prev       []string
-  cur_page   string
+  prev     []string
+  cur_page string
 }
 
 type MediumDialogBox struct {
   layout dialogLayout
   format dialogLayoutSpec
   // state  mediumDialogState
-  data   dialogData
+  data dialogData
 
   region gui.Region
 
   buttons []*Button
 
   // Position of the mouse
-  mx,my int
+  mx, my int
 
   done   bool
   result chan string
@@ -114,10 +114,9 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
   mdb.data.cur_page = "Start"
   mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
 
-
   // return nil, nil, errors.New(fmt.Sprintf("Unknown format string: '%s'.", format))
 
-  mdb.buttons = []*Button {
+  mdb.buttons = []*Button{
     &mdb.layout.Next,
     &mdb.layout.Prev,
   }
@@ -140,15 +139,14 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
   }
   mdb.layout.Prev.f = func(_data interface{}) {
     if len(mdb.data.prev) > 0 {
-      mdb.data.cur_page = mdb.data.prev[len(mdb.data.prev) - 1]
-      mdb.data.prev = mdb.data.prev[0 : len(mdb.data.prev) - 1]
+      mdb.data.cur_page = mdb.data.prev[len(mdb.data.prev)-1]
+      mdb.data.prev = mdb.data.prev[0 : len(mdb.data.prev)-1]
       mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
     }
   }
 
   return &mdb, mdb.result, nil
 }
-
 
 func (mdb *MediumDialogBox) Requested() gui.Dims {
   return gui.Dims{
@@ -175,10 +173,10 @@ func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
   for i := range mdb.format.Sections {
     section := mdb.format.Sections[i]
     data := &mdb.data.Pages[mdb.data.cur_page].Sections[i]
-    if section.Region.Dx * section.Region.Dy <= 0 {
+    if section.Region.Dx*section.Region.Dy <= 0 {
       data.shading = 1.0
     }
-    in := pointInsideRect(mdb.mx, mdb.my, mdb.region.X + section.Region.X, mdb.region.Y + section.Region.Y, section.Region.Dx, section.Region.Dy)
+    in := pointInsideRect(mdb.mx, mdb.my, mdb.region.X+section.Region.X, mdb.region.Y+section.Region.Y, section.Region.Dx, section.Region.Dy)
     data.shading = doShading(data.shading, in, t)
   }
 }
@@ -200,18 +198,18 @@ func (mdb *MediumDialogBox) Respond(g *gui.Gui, group gui.EventGroup) bool {
 
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     for _, button := range mdb.buttons {
-      if button.handleClick(mdb.mx - mdb.region.X, mdb.my - mdb.region.Y, mdb) {
+      if button.handleClick(mdb.mx-mdb.region.X, mdb.my-mdb.region.Y, mdb) {
         return true
       }
     }
     for i, section := range mdb.format.Sections {
       if pointInsideRect(
-          mdb.mx,
-          mdb.my,
-          mdb.region.X + section.Region.X,
-          mdb.region.Y + section.Region.Y,
-          section.Region.Dx,
-          section.Region.Dy) {
+        mdb.mx,
+        mdb.my,
+        mdb.region.X+section.Region.X,
+        mdb.region.Y+section.Region.Y,
+        section.Region.Dx,
+        section.Region.Dy) {
         if !mdb.done {
           mdb.data.prev = mdb.data.prev[0:0]
           mdb.result <- mdb.data.Pages[mdb.data.cur_page].Sections[i].Id
@@ -262,17 +260,16 @@ func (mdb *MediumDialogBox) Draw(region gui.Region) {
       p.Justification = "left"
     }
     gl.Color4ub(255, 255, 255, 255)
-    d.RenderParagraph(data.Text, float64(p.X + region.X), float64(p.Y + region.Y) - d.MaxHeight(), 0, float64(p.Dx), d.MaxHeight(), just)
+    d.RenderParagraph(data.Text, float64(p.X+region.X), float64(p.Y+region.Y)-d.MaxHeight(), 0, float64(p.Dx), d.MaxHeight(), just)
 
-    gl.Color4ub(255, 255, 255, byte(data.shading * 255))
+    gl.Color4ub(255, 255, 255, byte(data.shading*255))
     tex := data.Image.Data()
-    tex.RenderNatural(region.X + section.X - tex.Dx() / 2 , region.Y +  section.Y - tex.Dy() / 2)
+    tex.RenderNatural(region.X+section.X-tex.Dx()/2, region.Y+section.Y-tex.Dy()/2)
   }
 }
 
-func (mdb *MediumDialogBox) DrawFocused(region gui.Region) { }
+func (mdb *MediumDialogBox) DrawFocused(region gui.Region) {}
 
 func (mdb *MediumDialogBox) String() string {
   return "medium dialog box"
 }
-

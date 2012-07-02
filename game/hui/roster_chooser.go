@@ -1,4 +1,4 @@
-package hui  // haunts ui
+package hui // haunts ui
 
 import (
   "github.com/runningwild/opengl/gl"
@@ -20,7 +20,7 @@ type Option interface {
 
 type RosterChooserLayout struct {
   Num_options int
-  Option struct {
+  Option      struct {
     Dx, Dy int
   }
   Up, Down texture.Object
@@ -115,7 +115,7 @@ func SelectExactlyOne(index int, selected map[int]bool, doit bool) (valid bool) 
   }
   if doit {
     var other int
-    for k,_ := range selected {
+    for k, _ := range selected {
       other = k
     }
     delete(selected, other)
@@ -134,7 +134,7 @@ func MakeRosterChooser(options []Option, selector Selector, on_complete func(map
   }
   rc.Request_dims = gui.Dims{
     rc.layout.Down.Data().Dx() + rc.layout.Option.Dx,
-    rc.layout.Num_options * rc.layout.Option.Dy + 2*int(base.GetDictionary(15).MaxHeight()),
+    rc.layout.Num_options*rc.layout.Option.Dy + 2*int(base.GetDictionary(15).MaxHeight()),
   }
   rc.selected = make(map[int]bool)
   rc.selector = selector
@@ -161,28 +161,28 @@ func (rc *RosterChooser) Think(ui *gui.Gui, t int64) {
   if rc.focus < 0 {
     rc.focus = 0
   }
-  rc.focus_pos = (1-rc.layout.Speed) * rc.focus_pos + rc.layout.Speed * float64(rc.focus)
+  rc.focus_pos = (1-rc.layout.Speed)*rc.focus_pos + rc.layout.Speed*float64(rc.focus)
 
   rc.mouse.X, rc.mouse.Y = gin.In().GetCursor("Mouse").Point()
 }
 
 func (rc *RosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if found, event := group.FindEvent('l'); found && event.Type == gin.Press {
-    rc.focus+=rc.layout.Num_options
+    rc.focus += rc.layout.Num_options
     return true
   }
   if found, event := group.FindEvent('o'); found && event.Type == gin.Press {
-    rc.focus-=rc.layout.Num_options
+    rc.focus -= rc.layout.Num_options
     return true
   }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     x, y := event.Key.Cursor().Point()
     gp := gui.Point{x, y}
     if gp.Inside(rc.render.down) {
-      rc.focus+=rc.layout.Num_options
+      rc.focus += rc.layout.Num_options
       return true
     } else if gp.Inside(rc.render.up) {
-      rc.focus-=rc.layout.Num_options
+      rc.focus -= rc.layout.Num_options
       return true
     } else if gp.Inside(rc.render.all_options) {
       for i := range rc.render.options {
@@ -210,7 +210,7 @@ func (rc *RosterChooser) Draw(r gui.Region) {
   defer r.PopClipPlanes()
   gl.Enable(gl.TEXTURE_2D)
 
-  {  // Up button
+  { // Up button
     x := r.X
     y := r.Y + r.Dy - rc.layout.Up.Data().Dy()
     rc.render.up.X = x
@@ -225,7 +225,7 @@ func (rc *RosterChooser) Draw(r gui.Region) {
     rc.layout.Up.Data().RenderNatural(x, y)
   }
 
-  {  // Down button
+  { // Down button
     x := r.X
     y := r.Y + rc.layout.Down.Data().Dy()
     rc.render.down.X = x
@@ -240,16 +240,16 @@ func (rc *RosterChooser) Draw(r gui.Region) {
     rc.layout.Down.Data().RenderNatural(x, y)
   }
 
-  {  // Options
+  { // Options
     rc.render.all_options.X = r.X + rc.layout.Down.Data().Dx()
-    rc.render.all_options.Y = r.Y + r.Dy - rc.layout.Num_options * rc.layout.Option.Dy
+    rc.render.all_options.Y = r.Y + r.Dy - rc.layout.Num_options*rc.layout.Option.Dy
     rc.render.all_options.Dx = rc.layout.Option.Dx
     rc.render.all_options.Dy = rc.layout.Num_options * rc.layout.Option.Dy
     rc.render.all_options.PushClipPlanes()
     x := rc.render.all_options.X
-    y := r.Y + r.Dy - rc.layout.Option.Dy + int(float64(rc.layout.Option.Dy) * rc.focus_pos)
+    y := r.Y + r.Dy - rc.layout.Option.Dy + int(float64(rc.layout.Option.Dy)*rc.focus_pos)
     for i := range rc.options {
-        rc.render.options[i] = gui.Region{
+      rc.render.options[i] = gui.Region{
         gui.Point{x, y},
         gui.Dims{rc.layout.Option.Dx, rc.layout.Option.Dy},
       }
@@ -257,26 +257,26 @@ func (rc *RosterChooser) Draw(r gui.Region) {
       selected := rc.selected[i]
       selectable := rc.selector(i, rc.selected, false)
       rc.options[i].Draw(hovered, selected, selectable, rc.render.options[i])
-      y-=rc.layout.Option.Dy
+      y -= rc.layout.Option.Dy
     }
 
     rc.render.all_options.PopClipPlanes()
   }
 
-  {  // Text
+  { // Text
     d := base.GetDictionary(15)
     x := r.X
-    y := float64(r.Y) + d.MaxHeight() / 2
-    x1 := float64(x + r.Dx / 3)
-    x2 := float64(x + (2 * r.Dx) / 3)
+    y := float64(r.Y) + d.MaxHeight()/2
+    x1 := float64(x + r.Dx/3)
+    x2 := float64(x + (2*r.Dx)/3)
 
     rc.render.done = gui.Region{
       gui.Point{x, r.Y},
-      gui.Dims{r.Dx/2, int(d.MaxHeight()*2)},
+      gui.Dims{r.Dx / 2, int(d.MaxHeight() * 2)},
     }
     rc.render.undo = gui.Region{
       gui.Point{x + r.Dx/2, r.Y},
-      gui.Dims{r.Dx/2, int(d.MaxHeight()*2)},
+      gui.Dims{r.Dx / 2, int(d.MaxHeight() * 2)},
     }
 
     if rc.mouse.Inside(rc.render.done) {
@@ -305,4 +305,3 @@ func (rc *RosterChooser) DrawFocused(gui.Region) {
 func (rc *RosterChooser) String() string {
   return "roster chooser"
 }
-

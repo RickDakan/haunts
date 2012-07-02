@@ -33,9 +33,10 @@ type Condition interface {
 
 var condition_registerers []func()
 var condition_makers map[string]func() Condition
+
 func RegisterAllConditions() {
   condition_makers = make(map[string]func() Condition)
-  for _,f := range condition_registerers {
+  for _, f := range condition_registerers {
     f()
   }
 }
@@ -55,10 +56,10 @@ func registerBasicConditions() {
   base.RegisterRegistry(registry_name, make(map[string]*BasicConditionDef))
   base.RegisterAllObjectsInDir(registry_name, filepath.Join(base.GetDataDir(), "conditions", "basic_conditions"), ".json", "json")
   names := base.GetAllNamesInRegistry(registry_name)
-  for _,name := range names {
+  for _, name := range names {
     cname := name
     f := func() Condition {
-      c := BasicCondition{ Defname: cname }
+      c := BasicCondition{Defname: cname}
       base.GetObject(registry_name, &c)
       return &c
     }
@@ -140,7 +141,7 @@ func (bc *BasicConditionDef) ModifyBase(base Base, kind Kind) Base {
 func (bc *BasicCondition) OnRound() (dmg *Damage, complete bool) {
   var d Dynamic
   if bc.Dynamic != d {
-    dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
+    dmg = &Damage{Dynamic: bc.Dynamic, Kind: bc.Kind()}
   }
   bc.Time++
   complete = (bc.Time == bc.Duration)

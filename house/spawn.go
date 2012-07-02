@@ -10,6 +10,7 @@ import (
 )
 
 var spawn_regex []*regexp.Regexp
+
 func PushSpawnRegexp(pattern string) {
   re, err := regexp.Compile(pattern)
   if err != nil {
@@ -26,7 +27,7 @@ func PopSpawnRegexp() {
     base.Error().Printf("Tried to pop an empty stack.")
     return
   }
-  spawn_regex = spawn_regex[0 : len(spawn_regex) - 1]
+  spawn_regex = spawn_regex[0 : len(spawn_regex)-1]
 }
 func topSpawnRegexp() *regexp.Regexp {
   if len(spawn_regex) == 0 {
@@ -36,33 +37,34 @@ func topSpawnRegexp() *regexp.Regexp {
 }
 
 type SpawnPoint struct {
-  Name  string
-  Dx,Dy int
-  X,Y   int
+  Name   string
+  Dx, Dy int
+  X, Y   int
 
   // just for the shader
   temporary, invalid bool
 }
-func (sp *SpawnPoint) Dims() (int,int) {
+
+func (sp *SpawnPoint) Dims() (int, int) {
   return sp.Dx, sp.Dy
 }
-func (sp *SpawnPoint) Pos() (int,int) {
+func (sp *SpawnPoint) Pos() (int, int) {
   return sp.X, sp.Y
 }
-func (sp *SpawnPoint) FPos() (float64,float64) {
+func (sp *SpawnPoint) FPos() (float64, float64) {
   return float64(sp.X), float64(sp.Y)
 }
-func (sp *SpawnPoint) Color() (r,g,b,a byte) {
+func (sp *SpawnPoint) Color() (r, g, b, a byte) {
   return 255, 255, 255, 255
 }
 func (sp *SpawnPoint) Render(pos mathgl.Vec2, width float32) {
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4d(1, 1, 1, 0.1)
   gl.Begin(gl.QUADS)
-    gl.Vertex2f(pos.X-width/2, pos.Y)
-    gl.Vertex2f(pos.X-width/2, pos.Y+width)
-    gl.Vertex2f(pos.X+width/2, pos.Y+width)
-    gl.Vertex2f(pos.X+width/2, pos.Y)
+  gl.Vertex2f(pos.X-width/2, pos.Y)
+  gl.Vertex2f(pos.X-width/2, pos.Y+width)
+  gl.Vertex2f(pos.X+width/2, pos.Y+width)
+  gl.Vertex2f(pos.X+width/2, pos.Y)
   gl.End()
 }
 func (sp *SpawnPoint) RenderOnFloor() {
@@ -88,7 +90,7 @@ func (sp *SpawnPoint) RenderOnFloor() {
   h := fnv.New32()
   h.Write([]byte(prefix))
   hs := h.Sum32()
-  gl.Color4ub(byte(hs % 256), byte((hs / 256) % 256), byte((hs / (256*256)) % 256), byte(255 * rgba[3]))
+  gl.Color4ub(byte(hs%256), byte((hs/256)%256), byte((hs/(256*256))%256), byte(255*rgba[3]))
 
   base.EnableShader("box")
   base.SetUniformF("box", "dx", float32(sp.Dx))

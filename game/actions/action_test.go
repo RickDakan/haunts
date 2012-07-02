@@ -14,7 +14,7 @@ import (
 var datadir string
 
 func init() {
-  datadir,_ = filepath.Abs("../../data_test")
+  datadir, _ = filepath.Abs("../../data_test")
   base.SetDatadir(datadir)
 }
 
@@ -22,7 +22,7 @@ func ActionSpec(c gospec.Context) {
   game.RegisterActions()
   c.Specify("Actions are loaded properly.", func() {
     basic := game.MakeAction("Basic Test")
-    _,ok := basic.(*actions.BasicAttack)
+    _, ok := basic.(*actions.BasicAttack)
     c.Expect(ok, Equals, true)
   })
 
@@ -42,10 +42,10 @@ func ActionSpec(c gospec.Context) {
     err = dec.Decode(&as2)
     c.Assume(err, Equals, nil)
 
-    _,ok := as2[0].(*actions.Move)
+    _, ok := as2[0].(*actions.Move)
     c.Expect(ok, Equals, true)
 
-    _,ok = as2[1].(*actions.BasicAttack)
+    _, ok = as2[1].(*actions.BasicAttack)
     c.Expect(ok, Equals, true)
 
   })

@@ -28,8 +28,12 @@ func activeNonMinionsFunc(a *Ai) lua.GoFunction {
     L.NewTable()
     count := 0
     for _, ent := range a.game.Ents {
-      if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
-      if !ent.Ai.Active() { continue }
+      if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
+        continue
+      }
+      if !ent.Ai.Active() {
+        continue
+      }
       count++
       L.PushInteger(count)
       L.PushInteger(int(ent.Id))

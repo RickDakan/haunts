@@ -7,7 +7,7 @@ import (
 )
 
 func MakeFurniture(name string) *Furniture {
-  f := Furniture{ Defname: name }
+  f := Furniture{Defname: name}
   base.GetObject("furniture", &f)
   return &f
 }
@@ -27,7 +27,7 @@ type Furniture struct {
   *furnitureDef
 
   // Position of this object in board coordinates.
-  X,Y int
+  X, Y int
 
   // Index into furnitureDef.Texture_paths
   Rotation int
@@ -44,12 +44,12 @@ type Furniture struct {
 
 // Changes the position of this object such that it fits within the specified
 // dimensions, if possible
-func (f *Furniture) Constrain(dx,dy int) {
-  cdx,cdy := f.Dims()
-  if f.X + cdx > dx {
+func (f *Furniture) Constrain(dx, dy int) {
+  cdx, cdy := f.Dims()
+  if f.X+cdx > dx {
     f.X += dx - f.X + cdx
   }
-  if f.Y + cdy > dy {
+  if f.Y+cdy > dy {
     f.Y += dy - f.Y + cdy
   }
 }
@@ -71,7 +71,7 @@ func (f *Furniture) RotateRight() {
 }
 
 type furnitureOrientation struct {
-  Dx,Dy int
+  Dx, Dy  int
   Texture texture.Object `registry:"autoload"`
 }
 
@@ -97,7 +97,7 @@ func (f *Furniture) Dims() (int, int) {
   return orientation.Dx, orientation.Dy
 }
 
-func (f *Furniture) Color() (r,g,b,a byte) {
+func (f *Furniture) Color() (r, g, b, a byte) {
   if f.temporary {
     if f.invalid {
       return 255, 127, 127, 200

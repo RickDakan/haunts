@@ -13,9 +13,10 @@ import (
 )
 
 type entityLabel struct {
-  ent *Entity
+  ent                           *Entity
   hovered, selected, selectable bool
 }
+
 func makeEntLabel(ent *Entity) *entityLabel {
   var e entityLabel
   e.ent = ent
@@ -40,21 +41,21 @@ func (e *entityLabel) Draw(hovered, selected, selectable bool, region gui.Region
   }
   gl.Color4d(f, f, f, 1)
   gl.Begin(gl.QUADS)
-    gl.Vertex2i(region.X, region.Y)
-    gl.Vertex2i(region.X, region.Y + region.Dy)
+  gl.Vertex2i(region.X, region.Y)
+  gl.Vertex2i(region.X, region.Y+region.Dy)
 
-    gl.Vertex2i(region.X, region.Y + region.Dy)
-    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
+  gl.Vertex2i(region.X, region.Y+region.Dy)
+  gl.Vertex2i(region.X+region.Dx, region.Y+region.Dy)
 
-    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
-    gl.Vertex2i(region.X + region.Dx, region.Y)
+  gl.Vertex2i(region.X+region.Dx, region.Y+region.Dy)
+  gl.Vertex2i(region.X+region.Dx, region.Y)
 
-    gl.Vertex2i(region.X + region.Dx, region.Y)
-    gl.Vertex2i(region.X, region.Y)
+  gl.Vertex2i(region.X+region.Dx, region.Y)
+  gl.Vertex2i(region.X, region.Y)
   gl.End()
   d := base.GetDictionary(15)
   gl.Color4d(0, 0, 0, 1)
-  d.RenderString(e.ent.Name, float64(region.X) + 210, float64(region.Y) + 100 - d.MaxHeight()/2, 0, d.MaxHeight(), gui.Center)
+  d.RenderString(e.ent.Name, float64(region.X)+210, float64(region.Y)+100-d.MaxHeight()/2, 0, d.MaxHeight(), gui.Center)
   if selectable || selected {
     f = 1
   }
@@ -77,6 +78,7 @@ type iconWithText struct {
   Icon texture.Object
   Data interface{}
 }
+
 func (c *iconWithText) Draw(hovered, selected, selectable bool, region gui.Region) {
   var f float64
   switch {
@@ -122,14 +124,14 @@ func (c *iconWithText) Think(dt int64) {
 type rosterLayout struct {
   Dx, Dy int
   Buffer int
-  Ent struct {
+  Ent    struct {
     X, Y int
   }
 }
 
 type explorerSetupLayout struct {
   Purposes []iconWithText
-  Purpose struct {
+  Purpose  struct {
     Dx, Dy int
   }
   Roster rosterLayout
@@ -143,7 +145,8 @@ type hoverButton struct {
   amt  float64
   f    func()
 }
-func makeHoverButton(dx,dy int, text string, icon texture.Object, f func()) *hoverButton {
+
+func makeHoverButton(dx, dy int, text string, icon texture.Object, f func()) *hoverButton {
   var hb hoverButton
   hb.Request_dims.Dx = dx
   hb.Request_dims.Dy = dy
@@ -161,15 +164,15 @@ func (hb *hoverButton) Think(ui *gui.Gui, t int64) {
   hb.over = m.Inside(hb.Render_region)
   frac := 0.9
   if hb.over {
-    hb.amt = frac * hb.amt + (1-frac) * 1
+    hb.amt = frac*hb.amt + (1-frac)*1
   } else {
-    hb.amt = frac * hb.amt + (1-frac) * 0.5
+    hb.amt = frac*hb.amt + (1-frac)*0.5
   }
 }
 func (hb *hoverButton) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    x,y := gin.In().GetCursor("Mouse").Point()
-    p := gui.Point{x,y}
+    x, y := gin.In().GetCursor("Mouse").Point()
+    p := gui.Point{x, y}
     if p.Inside(hb.Render_region) {
       hb.f()
       return true
@@ -183,31 +186,29 @@ func (hb *hoverButton) Draw(r gui.Region) {
   gl.Disable(gl.TEXTURE_2D)
   gl.Color4d(hb.amt, hb.amt, hb.amt, hb.amt)
   gl.Begin(gl.QUADS)
-    gl.Vertex2i(r.X, r.Y)
-    gl.Vertex2i(r.X, r.Y + r.Dy)
-    gl.Vertex2i(r.X + r.Dx, r.Y + r.Dy)
-    gl.Vertex2i(r.X + r.Dx, r.Y)
+  gl.Vertex2i(r.X, r.Y)
+  gl.Vertex2i(r.X, r.Y+r.Dy)
+  gl.Vertex2i(r.X+r.Dx, r.Y+r.Dy)
+  gl.Vertex2i(r.X+r.Dx, r.Y)
   gl.End()
   hb.icon.Data().Bind()
   gl.Enable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
-    gl.TexCoord2d(0, 0)
-    gl.Vertex2i(r.X, r.Y)
+  gl.TexCoord2d(0, 0)
+  gl.Vertex2i(r.X, r.Y)
 
-    gl.TexCoord2d(0, -1)
-    gl.Vertex2i(r.X, r.Y + r.Dy)
+  gl.TexCoord2d(0, -1)
+  gl.Vertex2i(r.X, r.Y+r.Dy)
 
-    gl.TexCoord2d(1, -1)
-    gl.Vertex2i(r.X + r.Dx/2, r.Y + r.Dy)
+  gl.TexCoord2d(1, -1)
+  gl.Vertex2i(r.X+r.Dx/2, r.Y+r.Dy)
 
-    gl.TexCoord2d(1, 0)
-    gl.Vertex2i(r.X + r.Dx/2, r.Y)
+  gl.TexCoord2d(1, 0)
+  gl.Vertex2i(r.X+r.Dx/2, r.Y)
   gl.End()
 }
 func (hb *hoverButton) DrawFocused(r gui.Region) {
 }
-
-
 
 // This is the UI that the explorers player uses to select his roster at the
 // beginning of the game.  It will necessarily be centered on the screen
@@ -246,21 +247,21 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   }
 
   es.roster_chooser = hui.MakeRosterChooser(roster,
-  hui.SelectInRange(3,3),
-  func(m map[int]bool) {
-    es.ents = es.ents[0:0]
-    for i := range m {
-      es.ents = append(es.ents, roster[i].(*entityLabel).ent)
-    }
-    es.AnchorBox.RemoveChild(es.roster_chooser)
-    es.gear_chooser = es.makeGearChooser(game, 0)
-    if es.gear_chooser == nil {
-      es.startGame(game)
-    } else {
-      es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    }
-  },
-  nil,
+    hui.SelectInRange(3, 3),
+    func(m map[int]bool) {
+      es.ents = es.ents[0:0]
+      for i := range m {
+        es.ents = append(es.ents, roster[i].(*entityLabel).ent)
+      }
+      es.AnchorBox.RemoveChild(es.roster_chooser)
+      es.gear_chooser = es.makeGearChooser(game, 0)
+      if es.gear_chooser == nil {
+        es.startGame(game)
+      } else {
+        es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+      }
+    },
+    nil,
   )
 
   es.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
@@ -268,17 +269,17 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
   purposes := []hui.Option{
     &iconWithText{
       Name: "Relic",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "relic.png"))},
+      Icon: texture.Object{Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "relic.png"))},
       Data: PurposeRelic,
     },
     &iconWithText{
       Name: "Cleanse",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "cleanse.png"))},
+      Icon: texture.Object{Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "cleanse.png"))},
       Data: PurposeCleanse,
     },
     &iconWithText{
       Name: "Mystery",
-      Icon: texture.Object{ Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "mystery.png"))},
+      Icon: texture.Object{Path: base.Path(filepath.Join(base.GetDataDir(), "ui", "explorer_setup", "mystery.png"))},
       Data: PurposeMystery,
     },
   }
@@ -291,7 +292,7 @@ func MakeExplorerSetupBar(game *Game) (*explorerSetup, error) {
     es.AnchorBox.RemoveChild(es.purpose_table)
     es.AnchorBox.AddChild(es.roster_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   },
-  nil)
+    nil)
   es.AnchorBox.AddChild(es.purpose_table, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   return &es, nil
@@ -303,23 +304,24 @@ type gearChooser struct {
   ent     *Entity
   chooser *hui.RosterChooser
 }
+
 func makeGearChooser(ent *Entity, chooser *hui.RosterChooser) *gearChooser {
   var gc gearChooser
   gc.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   gc.ent = ent
   gc.chooser = chooser
-  gc.AnchorBox.AddChild(gc.chooser, gui.Anchor{0.5,0.5,0.5,0.5})
+  gc.AnchorBox.AddChild(gc.chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   return &gc
 }
 func (g *gearChooser) Draw(region gui.Region) {
   g.AnchorBox.Draw(region)
-  x := region.X + g.chooser.Render_region.X / 2 - 50
-  y := region.Y + region.Dy / 2
+  x := region.X + g.chooser.Render_region.X/2 - 50
+  y := region.Y + region.Dy/2
   gl.Color4ub(255, 255, 255, 255)
   g.ent.Render(mathgl.Vec2{float32(x), float32(y)}, 100)
   d := base.GetDictionary(15)
   gl.Color4ub(255, 255, 255, 255)
-  d.RenderString(g.ent.Name, float64(x + 50), float64(y) - d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
+  d.RenderString(g.ent.Name, float64(x+50), float64(y)-d.MaxHeight(), 0, d.MaxHeight(), gui.Center)
 }
 
 func (es *explorerSetup) startGame(game *Game) {
@@ -338,7 +340,7 @@ func (es *explorerSetup) makeGearChooser(game *Game, explorer_index int) gui.Wid
   }
   ent := es.ents[explorer_index]
   if len(ent.ExplorerEnt.Gear_names) == 0 {
-    return es.makeGearChooser(game, explorer_index + 1)
+    return es.makeGearChooser(game, explorer_index+1)
   }
   var gear []hui.Option
   for _, name := range ent.ExplorerEnt.Gear_names {
@@ -355,13 +357,13 @@ func (es *explorerSetup) makeGearChooser(game *Game, explorer_index int) gui.Wid
     }
     if explorer_index < 2 {
       es.AnchorBox.RemoveChild(es.gear_chooser)
-      es.gear_chooser = es.makeGearChooser(game, explorer_index + 1)
+      es.gear_chooser = es.makeGearChooser(game, explorer_index+1)
       es.AnchorBox.AddChild(es.gear_chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     } else {
       es.startGame(game)
     }
   },
-  nil,
+    nil,
   )
   return makeGearChooser(ent, rc)
 }
@@ -385,4 +387,3 @@ func (es *explorerSetup) Draw(r gui.Region) {
 func (es *explorerSetup) String() string {
   return "explorer setup"
 }
-

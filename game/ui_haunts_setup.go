@@ -7,12 +7,11 @@ import (
 
 type hauntSetupLayout struct {
   Purposes []iconWithText
-  Purpose struct {
+  Purpose  struct {
     Dx, Dy int
   }
   Roster rosterLayout
 }
-
 
 // This is the UI that the haunts player uses to select his roster at the
 // beginning of the game.  It will necessarily be centered on the screen
@@ -23,7 +22,7 @@ type hauntSetup struct {
 
   roster_chooser *hui.RosterChooser
 
-  points int
+  points        int
   minion_points int
 
   mode EntLevel
@@ -41,7 +40,7 @@ func makeEntityPlacer(game *Game, ents []*Entity) hui.Selector {
     }
     if doit {
       var other int
-      for k,_ := range selected {
+      for k, _ := range selected {
         other = k
       }
       delete(selected, other)
@@ -69,7 +68,7 @@ func (hs *hauntSetup) makeServitorPlacer(ents []*Entity) hui.Selector {
     }
     if doit && valid {
       var other int
-      for k,_ := range selected {
+      for k, _ := range selected {
         other = k
       }
       delete(selected, other)
@@ -110,7 +109,7 @@ func MakeHauntSetupBar(game *Game) (*hauntSetup, error) {
     makeEntityPlacer(game, ents),
     func(m map[int]bool) {},
     nil,
-    )
+  )
 
   hs.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   hs.AnchorBox.AddChild(hs.roster_chooser, gui.Anchor{0, 0.5, 0, 0.5})
@@ -220,4 +219,3 @@ func (hs *hauntSetup) Draw(r gui.Region) {
 func (hs *hauntSetup) String() string {
   return "haunt setup"
 }
-

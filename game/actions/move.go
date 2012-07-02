@@ -24,7 +24,7 @@ func registerMoves() map[string]func() game.Action {
   for name := range move_actions {
     cname := name
     makers[cname] = func() game.Action {
-      a := Move{ Defname: cname }
+      a := Move{Defname: cname}
       base.GetObject("actions-move_actions", &a)
       return &a
     }
@@ -61,14 +61,15 @@ type Move struct {
   threshold int
 }
 type MoveDef struct {
-  Name     string
-  Texture  texture.Object
+  Name    string
+  Texture texture.Object
 }
 
 type moveExec struct {
   game.BasicActionExec
   Dst int
 }
+
 func init() {
   gob.Register(moveExec{})
 }
@@ -96,12 +97,12 @@ func limitPath(ent *game.Entity, start int, path []int, max int) []int {
   total := 0
   graph := ent.Game().Graph(ent.Side(), nil)
   for last := 1; last < len(path); last++ {
-    adj,cost := graph.Adjacent(start)
+    adj, cost := graph.Adjacent(start)
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total >= max && last < len(path) - 1 {
-          return path[0 : last + 1]
+        if total >= max && last < len(path)-1 {
+          return path[0 : last+1]
         }
         start = adj[index]
         break
@@ -134,7 +135,7 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
 // Attempts to move such that the shortest path from any location
 // (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
 // than max_ap Ap doing this.
-func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist,max_ap int) game.ActionExec {
+func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist, max_ap int) game.ActionExec {
   graph := ent.Game().Graph(ent.Side(), targets)
   var src []int
   for i := range targets {
@@ -163,7 +164,7 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
   return exec
 }
 
-func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,max_dist int) int {
+func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist int) int {
   graph := ent.Game().Graph(ent.Side(), targets)
   var src []int
   for i := range targets {
@@ -182,7 +183,7 @@ func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min
   return int(cost)
 }
 
-func (a *Move) findPath(ent *game.Entity, x,y int) {
+func (a *Move) findPath(ent *game.Entity, x, y int) {
   g := ent.Game()
   dst := g.ToVertex(x, y)
   if dst != a.dst || !a.calculated {
@@ -190,13 +191,13 @@ func (a *Move) findPath(ent *game.Entity, x,y int) {
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
     graph := g.Graph(ent.Side(), nil)
-    cost,path := algorithm.Dijkstra(graph, []int{src}, []int{dst})
+    cost, path := algorithm.Dijkstra(graph, []int{src}, []int{dst})
     if len(path) <= 1 {
       return
     }
     a.path = algorithm.Map(path, [][2]int{}, func(a interface{}) interface{} {
-      _,x,y := g.FromVertex(a.(int))
-      return [2]int{ int(x), int(y) }
+      _, x, y := g.FromVertex(a.(int))
+      return [2]int{int(x), int(y)}
     }).([][2]int)
     a.cost = int(cost)
 
@@ -241,7 +242,7 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.Actio
     fx, fy := g.GetViewer().WindowToBoard(cursor.Point())
     a.findPath(a.ent, int(fx), int(fy))
   }
-  if found,_ := group.FindEvent(gin.MouseLButton); found {
+  if found, _ := group.FindEvent(gin.MouseLButton); found {
     if len(a.path) > 0 {
       if a.cost <= a.ent.Stats.ApCur() {
         var exec moveExec
@@ -267,7 +268,7 @@ func (a *Move) RenderOnFloor() {
   path_tex.Bind()
   gl.Color4ub(255, 255, 255, 128)
   base.EnableShader("path")
-  base.SetUniformF("path", "threshold", float32(a.threshold) / 255)
+  base.SetUniformF("path", "threshold", float32(a.threshold)/255)
   base.SetUniformF("path", "size", house.LosTextureSize)
   texture.RenderAdvanced(0, 0, house.LosTextureSize, house.LosTextureSize, 3.1415926535, false)
   base.EnableShader("")
@@ -296,10 +297,10 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
   }
   // Do stuff
   factor := float32(math.Pow(2, a.ent.Walking_speed))
-  dist := a.ent.DoAdvance(factor * float32(dt) / 200, a.path[0][0], a.path[0][1])
+  dist := a.ent.DoAdvance(factor*float32(dt)/200, a.path[0][0], a.path[0][1])
   for dist > 0 {
     if len(a.path) == 1 {
-      a.ent.DoAdvance(0,0,0)
+      a.ent.DoAdvance(0, 0, 0)
       a.ent.Info.RoomsExplored[a.ent.CurrentRoom()] = true
       a.ent = nil
       return game.Complete
@@ -313,4 +314,3 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
 func (a *Move) Interrupt() bool {
   return true
 }
-
