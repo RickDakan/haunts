@@ -1,0 +1,24 @@
+{
+  "Name": "Sigil",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/sigil",
+  "Still": {
+    "Path": "entities/sigil_still.png"
+  },
+  "Action_names": [
+    "Ectoplasmic Discharge"
+  ],
+  "HauntEnt": {
+    "Cost": 1,
+    "Level": "Minion"
+  },
+  "Base": {
+    "Ap_max": 5,
+    "Hp_max": 3,
+    "Corpus": 7,
+    "Ego": 7,
+    "Sight": 15
+  },
+  "Ai_path": "ais/basic.xgml"
+}
