@@ -10,16 +10,25 @@
 
 
 function think()
-	target
-	
-	
-	
-	
-	
-	
-function buffAlly(attack, target)
-	if allyHasCondition(false, "Inspired") then
-	target = ally
+	intruders = nearestNEntities (10, "intruder")
+	for _, intruder in pairs (intruders) do
+		if rangedDistBetweenEntities (me(), intruder) <3 then
+			moveWithinRangeAndAttack(3, "Crozier", intruder)
+		else
+		target = allyHasCondition(false, "Inspired")
+			if target ~= nil then
+				moveWithinRangeAndAttack (1, "Voice of the Beyond", target)
+			else
+				target = targetHasCondition(false, "Panic")
+				if target ~= nil then
+					moveWithinRangeAndAttack (5, "Revelations of Despair", target)
+				else
+					target = targetLowestStat("ego")
+						moveWithinRangeAndAttack (5, "Crozier", target)
+				end
+			end
+		end
+		think()
 	end
-	return target
 end
+think()

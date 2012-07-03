@@ -12,7 +12,7 @@
     "Paramagnetic Pulse",
     "EMR Inhibitor"
   ],
-  "Walking_speed": -1,
+  "Walking_speed": 1,
   "ExplorerEnt": {
     "Gear_names": [
 	"Pick Me Ups",
@@ -21,10 +21,10 @@
     ]
   },
   "Base": {
-    "Ap_max": 6,
-    "Hp_max": 2000,
+    "Ap_max": 8,
+    "Hp_max": 20,
     "Corpus": 12,
     "Ego": 8,
-    "Sight": 30
+    "Sight": 15
   }
 }

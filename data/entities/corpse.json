@@ -17,10 +17,10 @@
   },
   "Base": {
     "Ap_max": 6,
-    "Hp_max": 6,
+    "Hp_max": 9,
     "Corpus": 9,
-    "Ego": 9,
-    "Sight": 10
+    "Ego": 6,
+    "Sight": 20
   },
   "Ai_path": "ais/corpse.lua"
 }

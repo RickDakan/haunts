@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/grasp.png"
   },
-  "Ap"       : 6,
+  "Ap"       : 4,
   "Strength" : 5,
   "Damage"   : 0,
   "Range"    : 7,
