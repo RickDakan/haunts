@@ -17,7 +17,7 @@ end
 -- completed.
 play_as_denizens = true
 function Init()
-  while true do
+  while false do
     choices = dialogBox("ui/dialog/sample.json")
     print("Choices made:")
     for _, choice in pairs(choices) do
@@ -97,11 +97,13 @@ function doIntrudersSetup()
   modes["Cleanse"] = "ui/explorer_setup/cleanse.png"
   modes["Relic"] = "ui/explorer_setup/relic.png"
   modes["Mystery"] = "ui/explorer_setup/mystery.png"
+  print("Last time picked: ",   store.mode)
   r = pickFromN(1, 1, modes)
   for i,name in pairs(r) do
-    print("picked", i, name)
+    print("This time picked: ", i, name)
   end
-
+  store.mode = r[1]
+  saveStore()
   -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
   -- and Ghost Hunter there.  Additionally we will mind the
   -- sample_aoe_occultist.lua ai to the occultist.

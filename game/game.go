@@ -41,7 +41,8 @@ type GamePanel struct {
 func MakeGamePanel() *GamePanel {
   var gp GamePanel
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  startGameScript(&gp, "foo.lua")
+  var p Player
+  startGameScript(&gp, "foo.lua", &p)
   return &gp
 
   // // the logic after this should be done by a lua script

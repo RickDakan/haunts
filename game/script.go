@@ -1,9 +1,12 @@
 package game
 
 import (
+  "fmt"
+  "bytes"
   "math/rand"
   "path/filepath"
   "io/ioutil"
+  "os"
   "regexp"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
@@ -28,7 +31,7 @@ func (gs *gameScript) syncEnd() {
   gs.sync <- struct{}{}
 }
 
-func startGameScript(gp *GamePanel, path string) {
+func startGameScript(gp *GamePanel, path string, player *Player) {
   // Clear out the panel, now the script can do whatever it wants
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   base.Log().Printf("startGameScript")
@@ -65,7 +68,14 @@ func startGameScript(gp *GamePanel, path string) {
   gp.script.L.Register("bindAi", bindAi(gp))
   gp.script.L.Register("setVisibility", setVisibility(gp))
   gp.script.L.Register("endPlayerInteraction", endPlayerInteraction(gp))
-
+  gp.script.L.Register("saveStore", saveStore(gp, player))
+  if player.Lua_store != nil {
+    luaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
+    gp.script.L.SetGlobal("store")
+  } else {
+    gp.script.L.NewTable()
+    gp.script.L.SetGlobal("store")
+  }
   gp.script.sync = make(chan struct{})
   res := gp.script.L.DoString(string(prog))
   if !res {
@@ -77,6 +87,26 @@ func startGameScript(gp *GamePanel, path string) {
       gp.script.L.Call(0, 0)
       gp.game.comm.script_to_game <- nil
     }()
+  }
+}
+
+func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
+  return func(L *lua.State) int {
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    path := filepath.Join(base.GetDataDir(), "players", fmt.Sprintf("%s.gob", player.Name))
+    f, err := os.Open(path)
+    if err != nil {
+      base.Warn().Printf("Unable to save player to file %s.", path)
+      return 0
+    }
+    defer f.Close()
+    err = EncodePlayer(f, player)
+    if err != nil {
+      base.Warn().Printf("Unable to encode player to file %s.", path)
+      return 0
+    }
+    return 0
   }
 }
 
