@@ -11,7 +11,7 @@ function Think()
 			target = targetAllyTarget()
 		end
 		if target == nil then
-			target = targetLowestStat("hpCur")
+			target = targetLowestStat("HpCur")
 		end
 		if target == nil then
 			target = nearest()

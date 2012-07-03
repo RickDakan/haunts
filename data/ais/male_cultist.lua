@@ -28,7 +28,7 @@ function Think()
 			target = retaliate()
 		end
 		if target == nil then
-			target = targetLowestStat("ego")
+			target = targetLowestStat("Ego")
 		end
 		if target == nil then
 			target = nearest()

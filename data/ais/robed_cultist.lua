@@ -8,12 +8,12 @@ end
 function retaliate(melee)
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(Me).lastEntityThatAttackedMe
+		target = Me.Info().LastEntityThatAttackedMe
 		if exists (target) then
 			if rangedDistBetweenEntities (Me, target) == 1 then
 				return doBasicAttack (melee, target)
 			else
-				ps = allPathablePoints (Me.Pos, pos (target), 1, 1)
+				ps = AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
 					return doMove (ps, 1000)
 				end
@@ -25,12 +25,12 @@ end
 function pursue(melee)
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(Me).lastEntityIAttacked
+		target = Me.Info().LastEntityThatIAttacked
 		if exists (target) then
 			if rangedDistBetweenEntities (Me, target) == 1 then
 				return doBasicAttack (melee, target)
 			else
-				ps = allPathablePoints (Me.Pos, pos (target), 1, 1)
+				ps = AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
 				  return doMove (ps, 1000)
 				end

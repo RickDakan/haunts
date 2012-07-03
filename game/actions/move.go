@@ -77,8 +77,8 @@ func init() {
 
 func (a *Move) Push(L *lua.State) {
   L.NewTable()
-  L.PushString("type")
-  L.PushString("move")
+  L.PushString("Type")
+  L.PushString("Move")
   L.SetTable(-3)
 }
 

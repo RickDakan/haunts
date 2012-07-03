@@ -1,9 +1,9 @@
 function moveWithinRangeAndAttack (min_range, attack, target)
-	max_range = getBasicAttackStats(Me, attack).range
+	max_range = Me.Actions[attack].Range
 	if min_range > max_range then
 		min_range = max_range
 	end
-	ps = allPathablePoints (Me.Pos, pos(target), min_range, max_range)
+	ps = AllPathablePoints (Me.Pos, target.Pos, min_range, max_range)
 	res = doMove (ps, 1000)
 	if exists(target) then
 		doBasicAttack(attack, target)
@@ -13,7 +13,7 @@ end
 function pursue()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(Me).lastEntityIAttacked
+		target = Me.Info().LastEntityThatIAttacked
 		if exists(target) then
 			return target
 		end
@@ -31,7 +31,7 @@ end
 
 
 function retaliate()
-	target = entityInfo(Me).lastEntityThatAttackedMe
+	target = Me.Info().LastEntityThatAttackedMe
 	if exists(target) then
 		return target
 	end
@@ -44,7 +44,7 @@ end
 function targetAllyAttacker()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-	  target = entityInfo(ally).lastEntityThatAttackedMe
+	  target = ally.Info().LastEntityThatAttackedMe
 	  if exists(target) then
 	  	return target
 	  end
@@ -56,7 +56,7 @@ end
 function targetAllyTarget()
 	allies = nearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-	  target = entityInfo(ally).lastEntityIAttacked
+	  target = ally.LastEntityThatIAttacked
 	  if exists(target) then
 	  	return target
 	  end
@@ -66,14 +66,14 @@ end
 	
 
 -- target lowest stat
--- stat is looking for corpus, ego, hpCur, hpMax, apCur, apMax
+-- stat is looking for Corpus, Ego, HpCur, HpMax, ApCur, ApMax
 function targetLowestStat(stat)
 	intruders = nearestNEntities (10, "intruder")
 	target = nil
 	min = 10000
 	for _, intruder in pairs (intruders) do
-		if getEntityStats(intruder) [stat] < min then
-			min = getEntityStats(intruder) [stat]
+		if intruder[stat] < min then
+			min = intruder[stat]
 			target = intruder
 		end
 	end
@@ -87,8 +87,8 @@ function targetHighestStat(stat)
 	intruders = nearestNEntities (10, "intruder")
 	max = 0
 	for _, intruder in pairs (intruders) do
-		if getEntityStats(intruder) [stat] > max then
-			max = getEntityStats(intruder) [stat]
+		if intruder[stat] > max then
+			max = intruder[stat]
 			target = intruder
 		end
 	end
@@ -105,10 +105,10 @@ end
 function targetHasCondition(has, condition)
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		if has and getConditions(intruder) [condition] then
+		if has and intruder.Conditions[condition] then
 			return intruder
 		end
-		if not has and not getConditions(intruder) [condition] then
+		if not has and not intruder.Conditions[condition] then
 			return intruder
 		end
 	end
@@ -120,10 +120,10 @@ end
 function allyHasCondition(has, condition)
 	allies = nearestNEntities(50, "denizen")
 	for _, ally in pairs (allies) do
-		if has and getConditions(ally) [condition] then
+		if has and ally.Conditions[condition] then
 			return ally
 		end
-		if not has and not getConditions(ally) [condition] then
+		if not has and not ally.Conditions[condition] then
 			return ally
 		end
 	end
@@ -148,9 +148,9 @@ end
 
 
 function ApNeeded(attack)
-	apCur = getEntityStats(Me) ["apCur"]
-	apCost = getBasicAttackStats(Me, attack) ["ap"]
-	extra_dist = apCur - apCost
+	ApCur = Me.ApCur
+	ApCost = Me.Actions[attack].Ap
+	extra_dist = ApCur - ApCost
 	return extra_dist
 end
 

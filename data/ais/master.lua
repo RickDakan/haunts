@@ -8,12 +8,10 @@
 
 --needs a target?
 function aoePlaceAndAttack(attack, spec)
-	me_stats = getEntityStats(Me)
-	attack_stats = getAoeAttackStats(Me, attack)
-	gz = bestAoeAttackPos (attack, me_stats.apCur - attack_stats.ap, spec)
-	dsts = allPathablePoints(Me.Pos, gz, 1, attack_stats.range)
+	gz = bestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
+	dsts = AllPathablePoints(Me.Pos, gz, 1, Me.Actions[attack].Range)
 	doMove(dsts, 1000)
-	if rangedDistBetweenPositions (Me.Pos, gz) > attack_stats.range then
+	if RangedDistBetweenPositions (Me.Pos, gz) > Me.Actions[attack].Range then
 		return
 	else
 		doAoeAttack(attack, gz)

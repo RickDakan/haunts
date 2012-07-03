@@ -2,8 +2,7 @@
 -- door to that room, go to the door, open it, step through it, repeat.
 
 function Think()
-  stats = getEntityStats(Me)
-  if stats.apCur == 0 then
+  if Me.ApCur == 0 then
     return
   end
   unexplored = nearbyUnexploredRoom()

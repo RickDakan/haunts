@@ -11,21 +11,21 @@ while true do
   end
 
   mypos = Me.Pos
-  hispos = pos(intruders[1])
+  hispos = intruders[1].Pos
   attack = "Ectoplasmic Discharge"
-  stats = getBasicAttackStats(Me, attack)
+  stats = Me.Actions[attack]
 
   -- We want to be withing range to hit our target, but we don't want to be
   -- much closer than we need to be.  So if our range is 7 we will try to get
   -- within 5-7 of our target, if it is 4 we will get within 2-4, etc...
-  min = stats.range - 2
+  min = stats.Range - 2
   if min < 1 then
     min = 1
   end
 
   -- This gives us all points that we could walk to right now that are within
-  -- the appropriate ranged distance we are looking for (min and stats.range)
-  ps = allPathablePoints(mypos, hispos, min, stats.range)
+  -- the appropriate ranged distance we are looking for (min and stats.Range)
+  ps = AllPathablePoints(mypos, hispos, min, stats.Range)
 
   -- If there is no way we can path there then we give up.  Alternatively we
   -- could have kept track of other nearby intruders and tried to target one

@@ -13,22 +13,14 @@ import (
 
 func (a *Ai) addEntityContext() {
   a.loadUtils("entity")
-  game.LuaPushEntity(L, a.ent)
+  game.LuaPushEntity(a.L, a.ent)
   a.L.SetGlobal("Me")
+  a.L.Pop(1)
 
-  a.L.Register("pos", PosFunc(a))
-  a.L.Register("allPathablePoints", AllPathablePointsFunc(a))
-  a.L.Register("rangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
+  a.L.Register("AllPathablePoints", AllPathablePointsFunc(a))
+  a.L.Register("RangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
   a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
   a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
-
-  // An entity table should have all of this.
-  a.L.Register("getEntityStats", GetEntityStatsFunc(a))
-  a.L.Register("getConditions", GetConditionsFunc(a))
-  a.L.Register("getActions", GetActionsFunc(a))
-  a.L.Register("entityInfo", EntityInfoFunc(a))
-  a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
-  a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
 
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
   a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
@@ -109,54 +101,11 @@ func init() {
   }
 }
 
-// Returns the position of the specified entity.
-//    Format:
-//    p = pos(id)
-//
-//    Inputs:
-//    id - integer - Entity id of the entity whose position this should return.
-//
-//    Outputs:
-//    p - table[x,y] - The position of the specified entity.
-func PosFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "pos", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      L.PushNil()
-      return 1
-    }
-    x, y := ent.Pos()
-    putPointToTable(L, x, y)
-    return 1
-  }
-}
-
-// Returns the entity id of the entity that is being controlled by this ai.
-//    Format:
-//    myid = me()
-//
-//    Outputs:
-//    myid - integer
-func MeFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "me") {
-      return 0
-    }
-
-    game.LuaPushEntity(L, a.ent)
-    return 1
-  }
-}
-
 // Returns an array of all points that can be reached by walking from a
 // specific location that end in a certain general area.  Assumes that a 1x1
 // unit is doing the walking.
 //    Format:
-//    points = allPathablePoints(src, dst, min, max)
+//    points = AllPathablePoints(src, dst, min, max)
 //
 //    Inputs:
 //    src - table[x,y] - Where the path starts.
@@ -168,7 +117,7 @@ func MeFunc(a *Ai) lua.GoFunction {
 //    points - array[table[x,y]]
 func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allPathablePoints", luaTable, luaTable, luaInteger, luaInteger) {
+    if !luaCheckParamsOk(L, "AllPathablePoints", luaTable, luaTable, luaInteger, luaInteger) {
       return 0
     }
     min := L.ToInteger(-2)
@@ -200,39 +149,6 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
       putPointToTable(L, x, y)
       L.SetTable(-3)
     }
-    return 1
-  }
-}
-
-// Gets some basic persistent data about an entity.
-//    Format:
-//    info = entityInfo(id)
-//
-//    Inputs:
-//    id - integer - Entity id of some entity
-//
-//    Outputs:
-//    info - table - Table containing the following values:
-//                   lastEntityIAttacked      (integer)
-//                   lastEntityThatAttackedMe (integer)
-func EntityInfoFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "entityInfo", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    L.PushString("lastEntityIAttacked")
-    L.PushInteger(int(ent.Info.LastEntThatIAttacked))
-    L.SetTable(-3)
-    L.PushString("lastEntityThatAttackedMe")
-    L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
-    L.SetTable(-3)
     return 1
   }
 }
@@ -442,7 +358,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 
 // Computes the ranged distance between two points.
 //    Format:
-//    dist = rangedDistBetweenPositions(p1, p2)
+//    dist = RangedDistBetweenPositions(p1, p2)
 //
 //    Input:
 //    p1 - table[x,y]
@@ -452,7 +368,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 //    dist - integer - The ranged distance between the two positions.
 func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "rangedDistBetweenPositions", luaTable, luaTable) {
+    if !luaCheckParamsOk(L, "RangedDistBetweenPositions", luaTable, luaTable) {
       return 0
     }
     x1, y1 := getPointFromTable(L)
@@ -486,7 +402,7 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 //    Output:
 //    dist - integer - The ranged distance between the two specified entities,
 //                     this will not necessarily be the same as
-//                     rangedDistBetweenPositions(pos(e1), pos(e2)) if at
+//                     RangedDistBetweenPositions(pos(e1), pos(e2)) if at
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
@@ -520,262 +436,6 @@ func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
     }
 
     L.PushInteger(rangedDistBetween(e1, e2))
-    return 1
-  }
-}
-
-// Gets some stats about a basic attack.  If the specified action is not a
-// basic attack this function will return nil.  It is an error to query an
-// entity for an action that it does not have.
-//    Format:
-//    stats = getBasicAttackStats(id, name)
-//
-//    Input:
-//    id   - integer - Entity id of the entity with the action to query.
-//    name - string  - Name of the action to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    ap       (integer)
-//                    damage   (integer)
-//                    strength (integer)
-//                    range    (integer)
-//                    ammo     (integer)
-func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getBasicAttackStats", luaInteger, luaString) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-2))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    name := L.ToString(-1)
-    for _, action := range ent.Actions {
-      if action.String() == name {
-        attack, ok := action.(*actions.BasicAttack)
-        if !ok {
-          // It's not a basic attack, that's ok but we have to return nil.
-          L.PushNil()
-          return 1
-        }
-        L.NewTable()
-        L.PushString("ap")
-        L.PushInteger(attack.Ap)
-        L.SetTable(-3)
-        L.PushString("damage")
-        L.PushInteger(attack.Damage)
-        L.SetTable(-3)
-        L.PushString("strength")
-        L.PushInteger(attack.Strength)
-        L.SetTable(-3)
-        L.PushString("range")
-        L.PushInteger(attack.Range)
-        L.SetTable(-3)
-        L.PushString("ammo")
-        if attack.Current_ammo == -1 {
-          L.PushInteger(1000)
-        } else {
-          L.PushInteger(attack.Current_ammo)
-        }
-        L.SetTable(-3)
-        return 1
-      }
-    }
-    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
-    return 0
-  }
-}
-
-// Gets some stats about an aoe attack.  If the specified action is not an
-// aoe attack this function will return nil.  It is an error to query an
-// entity for an action that it does not have.
-//    Format:
-//    stats = getAoeAttackStats(id, name)
-//
-//    Input:
-//    id   - integer - Entity id of the entity with the action to query.
-//    name - string  - Name of the action to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    ap       (integer)
-//                    damage   (integer)
-//                    strength (integer)
-//                    range    (integer)
-//                    diameter (integer)
-//                    ammo     (integer)
-func GetAoeAttackStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getAoeAttackStats", luaInteger, luaString) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-2))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    name := L.ToString(-1)
-    for _, action := range ent.Actions {
-      if action.String() == name {
-        attack, ok := action.(*actions.AoeAttack)
-        if !ok {
-          // It's not a basic attack, that's ok but we have to return nil.
-          L.PushNil()
-          return 1
-        }
-        L.NewTable()
-        L.PushString("ap")
-        L.PushInteger(attack.Ap)
-        L.SetTable(-3)
-        L.PushString("damage")
-        L.PushInteger(attack.Damage)
-        L.SetTable(-3)
-        L.PushString("strength")
-        L.PushInteger(attack.Strength)
-        L.SetTable(-3)
-        L.PushString("range")
-        L.PushInteger(attack.Range)
-        L.SetTable(-3)
-        L.PushString("diameter")
-        L.PushInteger(attack.Diameter)
-        L.SetTable(-3)
-        L.PushString("ammo")
-        if attack.Current_ammo == -1 {
-          L.PushInteger(1000)
-        } else {
-          L.PushInteger(attack.Current_ammo)
-        }
-        L.SetTable(-3)
-        return 1
-      }
-    }
-    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
-    return 0
-  }
-}
-
-// Gets some stats about an entity.
-//    Format:
-//    stats = getEntityStats(id)
-//
-//    Input:
-//    id   - integer - Entity id of the entity to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    corpus (integer)
-//                    ego    (integer)
-//                    hpCur  (integer)
-//                    hpMax  (integer)
-//                    apCur  (integer)
-//                    apMax  (integer)
-func GetEntityStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getEntityStats", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    if ent.Stats == nil {
-      luaDoError(L, fmt.Sprintf("Tried to query stats for entity with id=%d who doesn't have stats.", id))
-      return 0
-    }
-
-    L.NewTable()
-    L.PushString("corpus")
-    L.PushInteger(ent.Stats.Corpus())
-    L.SetTable(-3)
-    L.PushString("ego")
-    L.PushInteger(ent.Stats.Ego())
-    L.SetTable(-3)
-    L.PushString("hpCur")
-    L.PushInteger(ent.Stats.HpCur())
-    L.SetTable(-3)
-    L.PushString("hpMax")
-    L.PushInteger(ent.Stats.HpMax())
-    L.SetTable(-3)
-    L.PushString("apCur")
-    L.PushInteger(ent.Stats.ApCur())
-    L.SetTable(-3)
-    L.PushString("apMax")
-    L.PushInteger(ent.Stats.ApMax())
-    L.SetTable(-3)
-
-    return 1
-  }
-}
-
-// Returns a list of all conditions affecting an entity.
-//    Format:
-//    conditions = getConditions(id)
-//
-//    Input:
-//    id - integer - Entity id of the entity whose conditions to query.
-//
-//    Output:
-//    conditions - table - Contains a mapping from name to a true boolean for
-//                         every condition currently affecting the specified
-//                         entity.
-func GetConditionsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getConditions", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    for _, condition := range ent.Stats.ConditionNames() {
-      L.PushString(condition)
-      L.PushBoolean(true)
-      L.SetTable(-3)
-    }
-    return 1
-  }
-}
-
-// Returns a list of all actions that an entity has.
-//    Format:
-//    actions = getActions(id)
-//
-//    Input:
-//    id - integer - Entity id of the entity whose actions to query.
-//
-//    Output:
-//    actions - table - Contains a mapping from name to a true boolean for
-//                      every action that the specified entity has.
-func GetActionsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getActions", luaInteger) {
-      return 0
-    }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getActions(int)"))
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    for _, action := range ent.Actions {
-      L.PushString(action.String())
-      L.PushBoolean(true)
-      L.SetTable(-3)
-    }
     return 1
   }
 }

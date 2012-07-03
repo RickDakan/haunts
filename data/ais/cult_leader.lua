@@ -23,7 +23,7 @@ function Think()
 				if target ~= nil then
 					moveWithinRangeAndAttack (5, "Revelations of Despair", target)
 				else
-					target = targetLowestStat("ego")
+					target = targetLowestStat("Ego")
 						moveWithinRangeAndAttack (5, "Crozier", target)
 				end
 			end

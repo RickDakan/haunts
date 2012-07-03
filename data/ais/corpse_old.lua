@@ -25,7 +25,7 @@ if intruder then
     -- but if we can't get to that one for some reason then we'll pick a
     -- different one.
     for _, intruder in pairs(intruders) do
-      ps = allPathablePoints(mypos, pos(intruder), 1, 1)
+      ps = AllPathablePoints(mypos, intruder.Pos, 1, 1)
       if ps[1] then
         doMove(ps, 1000)
         break
@@ -34,7 +34,7 @@ if intruder then
   end
 else
   -- If there are no intruders in sight we walk around randomly
-  ps = allPathablePoints(mypos, mypos, 1, 3)
+  ps = AllPathablePoints(mypos, mypos, 1, 3)
   r = randN(table.getn(ps))
   target = ps[randN(table.getn(ps))]
   a = {}

@@ -90,13 +90,13 @@ func init() {
 
 func (a *Interact) Push(L *lua.State) {
   L.NewTable()
-  L.PushString("type")
-  L.PushString("interact")
+  L.PushString("Type")
+  L.PushString("Interact")
   L.SetTable(-3)
-  L.PushString("ap")
+  L.PushString("Ap")
   L.PushInteger(a.Ap)
   L.SetTable(-3)
-  L.PushString("range")
+  L.PushString("Range")
   L.PushInteger(a.Range)
   L.SetTable(-3)
 }

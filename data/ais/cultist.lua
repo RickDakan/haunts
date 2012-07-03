@@ -19,7 +19,7 @@ function Think()
 		target = targetHasCondition(true, "Blindness")
 	end
 	if not target then
-		target = targetLowestStat(hpCur)
+		target = targetLowestStat(HpCur)
 	end
 	moveAndAttack("Sacrificial Blade", target)
 	end

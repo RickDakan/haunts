@@ -5,20 +5,17 @@ function Think()
     return
   end
 
-  me_stats = getEntityStats(Me)
-  abj_stats = getAoeAttackStats(Me, "Abjuration")
-
   -- gz, or 'ground zero', is where we're going to center our aoe
-  gz = bestAoeAttackPos("Abjuration", me_stats.apCur - abj_stats.ap, "enemies only")
+  gz = bestAoeAttackPos("Abjuration", Me.ApCur - Me.Actions["Abjuration"].Ap, "enemies only")
 
   -- find all positions from which we could center our aoe on gz
-  dsts = allPathablePoints(Me.Pos, gz, 1, abj_stats.range)
+  dsts = AllPathablePoints(Me.Pos, gz, 1, Me.Actions["Abjuration"].Range)
 
   -- move to any one of the closest positions in dsts
   doMove(dsts, 1000)
 
   -- if we're still out of range then we'll just have to try again next turn
-  if rangedDistBetweenPositions(Me.Pos, gz) > abj_stats.range then
+  if RangedDistBetweenPositions(Me.Pos, gz) > Me.Actions["Abjuration"].Range then
     return
   else
     doAoeAttack("Abjuration", gz)

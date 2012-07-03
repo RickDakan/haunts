@@ -134,6 +134,16 @@ func LuaDecodeTable(r io.Reader, L *lua.State) error {
   return nil
 }
 
+// Gets the id out of the table at the specified index and returns the
+// associated Entity, or nil if there is none.
+func LuaToEntity(L *lua.State, game *Game, index int) *Entity {
+  L.PushString("id")
+  L.GetTable(index - 1)
+  id := EntityId(L.ToInteger(-1))
+  L.Pop(1)
+  return game.EntityById(id)
+}
+
 // Pushes an entity onto the stack, it is a table containing the following:
 // e.id -> EntityId of this entity
 // e.name -> Name as displayed to the user
@@ -189,12 +199,17 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   }
   L.SetTable(-3)
 
-  L.PushString("LastEntityThatIAttacked")
-  L.PushInteger(int(ent.Info.LastEntThatIAttacked))
-  L.SetTable(-3)
-  L.PushString("lastEntityThatAttackedMe")
-  L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
-  L.SetTable(-3)
+  L.PushString("Info")
+  L.PushGoFunction(func(L *lua.State) int {
+    L.NewTable()
+    L.PushString("LastEntityThatIAttacked")
+    L.PushInteger(int(ent.Info.LastEntThatIAttacked))
+    L.SetTable(-3)
+    L.PushString("LastEntityThatAttackedMe")
+    L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
+    L.SetTable(-3)
+    return 1
+  })
 
   L.PushString("Pos")
   x, y := ent.Pos()
