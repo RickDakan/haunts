@@ -12,6 +12,7 @@ import (
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
+  lua "github.com/xenith-studios/golua"
 )
 
 func registerAoeAttacks() map[string]func() game.Action {
@@ -81,6 +82,35 @@ type aoeExec struct {
 
 func init() {
   gob.Register(aoeExec{})
+}
+
+func (a *AoeAttack) Push(L *lua.State) {
+  L.NewTable()
+  L.PushString("type")
+  L.PushString("aoe attack")
+  L.SetTable(-3)
+  L.PushString("ap")
+  L.PushInteger(a.Ap)
+  L.SetTable(-3)
+  L.PushString("damage")
+  L.PushInteger(a.Damage)
+  L.SetTable(-3)
+  L.PushString("strength")
+  L.PushInteger(a.Strength)
+  L.SetTable(-3)
+  L.PushString("range")
+  L.PushInteger(a.Range)
+  L.SetTable(-3)
+  L.PushString("diameter")
+  L.PushInteger(a.Diameter)
+  L.SetTable(-3)
+  L.PushString("ammo")
+  if a.Current_ammo == -1 {
+    L.PushInteger(1000)
+  } else {
+    L.PushInteger(a.Current_ammo)
+  }
+  L.SetTable(-3)
 }
 
 func (a *AoeAttack) AP() int {

@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
+  lua "github.com/xenith-studios/golua"
 )
 
 func registerSummonActions() map[string]func() game.Action {
@@ -67,6 +68,33 @@ type summonActionTempData struct {
 type summonExec struct {
   game.BasicActionExec
   Pos int
+}
+
+func (a *SummonAction) Push(L *lua.State) {
+  L.NewTable()
+  L.PushString("type")
+  L.PushString("summon")
+  L.SetTable(-3)
+  L.PushString("ap")
+  L.PushInteger(a.Ap)
+  L.SetTable(-3)
+  L.PushString("name")
+  L.PushString(a.Ent_name)
+  L.SetTable(-3)
+  L.PushString("los")
+  L.PushBoolean(a.Personal_los)
+  L.SetTable(-3)
+  L.PushString("range")
+  L.PushInteger(a.Range)
+  L.SetTable(-3)
+  L.PushString("ammo")
+  if a.Current_ammo == -1 {
+    L.PushInteger(1000)
+  } else {
+    L.PushInteger(a.Current_ammo)
+  }
+  L.SetTable(-3)
+
 }
 
 func (a *SummonAction) AP() int {

@@ -12,6 +12,7 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game/status"
+  lua "github.com/xenith-studios/golua"
 )
 
 func registerInteracts() map[string]func() game.Action {
@@ -86,6 +87,20 @@ func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interac
 func init() {
   gob.Register(interactExec{})
 }
+
+func (a *Interact) Push(L *lua.State) {
+  L.NewTable()
+  L.PushString("type")
+  L.PushString("interact")
+  L.SetTable(-3)
+  L.PushString("ap")
+  L.PushInteger(a.Ap)
+  L.SetTable(-3)
+  L.PushString("range")
+  L.PushInteger(a.Range)
+  L.SetTable(-3)
+}
+
 func (a *Interact) AP() int {
   return a.Ap
 }

@@ -18,12 +18,16 @@ func (a *Ai) addEntityContext() {
   a.L.Register("rangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
   a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
   a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
+
   a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
   a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
+
+  // An entity table should have all of this.
   a.L.Register("getEntityStats", GetEntityStatsFunc(a))
   a.L.Register("getConditions", GetConditionsFunc(a))
   a.L.Register("getActions", GetActionsFunc(a))
   a.L.Register("entityInfo", EntityInfoFunc(a))
+
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
   a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
   a.L.Register("bestAoeAttackPos", BestAoeAttackPosFunc(a))

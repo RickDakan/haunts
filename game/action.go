@@ -8,6 +8,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/house"
+  lua "github.com/xenith-studios/golua"
 )
 
 var action_map map[string]func() Action
@@ -161,4 +162,7 @@ type Action interface {
   // point for an interrupt to happen.  Should return true if the action
   // should take place.
   Interrupt() bool
+
+  // Pushes a table containing information about the action onto the stack.
+  Push(L *lua.State)
 }

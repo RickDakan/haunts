@@ -428,6 +428,12 @@ func toPoint(L *lua.State, pos int) (x, y int) {
   return
 }
 
+// Pushes an entity onto the stack, it is a table containing the following:
+// e.id -> EntityId of this entity
+// e.name -> Name as displayed to the user
+// e.gear_options -> Table mapping gear to icon for all available gear
+// e.gear -> Name of the selected gear, nil if none is selected
+// e.actions -> Array of actions this entity has available
 func pushEntity(L *lua.State, ent *Entity) {
   L.NewTable()
   L.PushString("id")
@@ -436,7 +442,8 @@ func pushEntity(L *lua.State, ent *Entity) {
   L.PushString("name")
   L.PushString(ent.Name)
   L.SetTable(-3)
-  L.PushString("gear")
+
+  L.PushString("gear_options")
   L.NewTable()
   if ent.ExplorerEnt != nil {
     for _, gear_name := range ent.ExplorerEnt.Gear_names {
@@ -449,10 +456,45 @@ func pushEntity(L *lua.State, ent *Entity) {
     }
   }
   L.SetTable(-3)
+
+  L.PushString("gear")
+  if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
+    L.PushString(ent.ExplorerEnt.Gear.Name)
+  } else {
+    L.PushNil()
+  }
+  L.SetTable(-3)
+
+  L.PushString("actions")
+  L.NewTable()
+  for _, action := range ent.Actions {
+    L.PushString(action.String())
+    action.Push(L)
+    L.SetTable(-3)
+  }
+  L.SetTable(-3)
+
+  L.PushString("conditions")
+  L.NewTable()
+  for _, condition := range ent.Stats.ConditionNames() {
+    L.PushString(condition)
+    L.PushBoolean(true)
+    L.SetTable(-3)
+  }
+  L.SetTable(-3)
+
+  L.PushString("lastEntityIAttacked")
+  L.PushInteger(int(ent.Info.LastEntThatIAttacked))
+  L.SetTable(-3)
+  L.PushString("lastEntityThatAttackedMe")
+  L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
+  L.SetTable(-3)
+
   L.PushString("pos")
   x, y := ent.Pos()
   pushPoint(L, x, y)
   L.SetTable(-3)
+
   L.PushString("corpus")
   L.PushInteger(ent.Stats.Corpus())
   L.SetTable(-3)

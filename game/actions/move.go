@@ -13,6 +13,7 @@ import (
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   gl "github.com/chsc/gogl/gl21"
+  lua "github.com/xenith-studios/golua"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -72,6 +73,13 @@ type moveExec struct {
 
 func init() {
   gob.Register(moveExec{})
+}
+
+func (a *Move) Push(L *lua.State) {
+  L.NewTable()
+  L.PushString("type")
+  L.PushString("move")
+  L.SetTable(-3)
 }
 
 func (a *Move) AP() int {
