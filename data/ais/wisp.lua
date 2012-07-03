@@ -10,10 +10,10 @@ while true do
     break
   end
 
-  mypos = pos(me())
+  mypos = Me.Pos
   hispos = pos(intruders[1])
   attack = "Ectoplasmic Discharge"
-  stats = getBasicAttackStats(me(), attack)
+  stats = getBasicAttackStats(Me, attack)
 
   -- We want to be withing range to hit our target, but we don't want to be
   -- much closer than we need to be.  So if our range is 7 we will try to get

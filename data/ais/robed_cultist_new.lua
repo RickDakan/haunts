@@ -1,9 +1,9 @@
 --robed cultist new
 
-function think()
-	conditions = getConditions(me())
+function Think()
+	conditions = getConditions(Me)
 	if not conditions ["Focused"] then
-		doBasicAttack("Cultic Mantra", me())
+		doBasicAttack("Cultic Mantra", Me)
 	else
 	target = pursue()
 	if target == nil then
@@ -15,4 +15,3 @@ function think()
 	end
 	moveWithinRangeAndAttack (1, "Sacrificial Blade", target)
 end
-think()

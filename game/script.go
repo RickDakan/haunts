@@ -70,7 +70,7 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   gp.script.L.Register("endPlayerInteraction", endPlayerInteraction(gp))
   gp.script.L.Register("saveStore", saveStore(gp, player))
   if player.Lua_store != nil {
-    luaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
+    LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
     gp.script.L.SetGlobal("store")
   } else {
     gp.script.L.NewTable()
@@ -361,7 +361,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       return 0
     }
     gp.game.SpawnEntity(ent, tx, ty)
-    pushEntity(L, ent)
+    LuaPushEntity(L, ent)
     return 1
   }
 }
@@ -395,7 +395,7 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
     L.NewTable()
     for i := range placed {
       L.PushInteger(i + 1)
-      pushEntity(L, placed[i])
+      LuaPushEntity(L, placed[i])
       L.SetTable(-3)
     }
 
@@ -428,93 +428,6 @@ func toPoint(L *lua.State, pos int) (x, y int) {
   return
 }
 
-// Pushes an entity onto the stack, it is a table containing the following:
-// e.id -> EntityId of this entity
-// e.name -> Name as displayed to the user
-// e.gear_options -> Table mapping gear to icon for all available gear
-// e.gear -> Name of the selected gear, nil if none is selected
-// e.actions -> Array of actions this entity has available
-func pushEntity(L *lua.State, ent *Entity) {
-  L.NewTable()
-  L.PushString("id")
-  L.PushInteger(int(ent.Id))
-  L.SetTable(-3)
-  L.PushString("name")
-  L.PushString(ent.Name)
-  L.SetTable(-3)
-
-  L.PushString("gear_options")
-  L.NewTable()
-  if ent.ExplorerEnt != nil {
-    for _, gear_name := range ent.ExplorerEnt.Gear_names {
-      var g Gear
-      g.Defname = gear_name
-      base.GetObject("gear", &g)
-      L.PushString(gear_name)
-      L.PushString(g.Large_icon.Path.String())
-      L.SetTable(-3)
-    }
-  }
-  L.SetTable(-3)
-
-  L.PushString("gear")
-  if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
-    L.PushString(ent.ExplorerEnt.Gear.Name)
-  } else {
-    L.PushNil()
-  }
-  L.SetTable(-3)
-
-  L.PushString("actions")
-  L.NewTable()
-  for _, action := range ent.Actions {
-    L.PushString(action.String())
-    action.Push(L)
-    L.SetTable(-3)
-  }
-  L.SetTable(-3)
-
-  L.PushString("conditions")
-  L.NewTable()
-  for _, condition := range ent.Stats.ConditionNames() {
-    L.PushString(condition)
-    L.PushBoolean(true)
-    L.SetTable(-3)
-  }
-  L.SetTable(-3)
-
-  L.PushString("lastEntityIAttacked")
-  L.PushInteger(int(ent.Info.LastEntThatIAttacked))
-  L.SetTable(-3)
-  L.PushString("lastEntityThatAttackedMe")
-  L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
-  L.SetTable(-3)
-
-  L.PushString("pos")
-  x, y := ent.Pos()
-  pushPoint(L, x, y)
-  L.SetTable(-3)
-
-  L.PushString("corpus")
-  L.PushInteger(ent.Stats.Corpus())
-  L.SetTable(-3)
-  L.PushString("ego")
-  L.PushInteger(ent.Stats.Ego())
-  L.SetTable(-3)
-  L.PushString("hpCur")
-  L.PushInteger(ent.Stats.HpCur())
-  L.SetTable(-3)
-  L.PushString("hpMax")
-  L.PushInteger(ent.Stats.HpMax())
-  L.SetTable(-3)
-  L.PushString("apCur")
-  L.PushInteger(ent.Stats.ApCur())
-  L.SetTable(-3)
-  L.PushString("apMax")
-  L.PushInteger(ent.Stats.ApMax())
-  L.SetTable(-3)
-}
-
 func getAllEnts(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
@@ -522,7 +435,7 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
     L.NewTable()
     for i := range gp.game.Ents {
       L.PushInteger(i + 1)
-      pushEntity(L, gp.game.Ents[i])
+      LuaPushEntity(L, gp.game.Ents[i])
       L.SetTable(-3)
     }
     return 1

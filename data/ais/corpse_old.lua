@@ -1,9 +1,9 @@
 intruders = nearestNEntities(3, "intruder")
-mypos = pos(me())
+mypos = Me.Pos
 
 intruder = intruders[1]
 if intruder then
-  if rangedDistBetween(me(), intruder) == 1 then
+  if rangedDistBetween(Me, intruder) == 1 then
     -- If we're right next to someone then we will either try to disease
     -- them, if they aren't already diseased, otherwise we will just
     -- attack them as much as possible

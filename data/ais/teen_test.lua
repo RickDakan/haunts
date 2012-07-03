@@ -6,7 +6,7 @@
 function pursue()
 	denizens = nearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do
-		target = entityInfo(me()).lastEntityIAttacked
+		target = entityInfo(Me).lastEntityIAttacked
 		if exists(target) then
 			return target
 		end
@@ -118,9 +118,9 @@ end
 
 
 
-function(think)
-	if getEntityStats(me()).hpCur < 5 and not getCondition(me()) ["Psychic Shroud"] then
-		doBasicAttack ("Psychic Shroud", me())
+function Think()
+	if getEntityStats(Me).hpCur < 5 and not getCondition(Me) ["Psychic Shroud"] then
+		doBasicAttack ("Psychic Shroud", Me)
 	end
 	denizens = nearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do
@@ -141,13 +141,12 @@ function(think)
 	if target == nil then
 		return
 	end
-	if rangedDistBetweenEntities (me(), target) <2 then
+	if rangedDistBetweenEntities (Me, target) <2 then
 		MoveWithinRangeAndAttack(1, "Kick", target)
 	else
 		MoveWithinRangeAndAttack (2, "Pistol", target)
 	end
 end
-think()
 
 			
 		

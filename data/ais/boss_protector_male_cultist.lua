@@ -20,7 +20,7 @@ function protectMaster(master, intruders)
     if rangedDistBetweenEntities(master, intruder) <= range then
       -- We found an intruder that is too close to the master, so we will go
       -- after him.
-      ps = allPathablePoints(pos(me()), pos(intruder), 1, 1)
+      ps = allPathablePoints(Me.Pos, pos(intruder), 1, 1)
       if ps[1] then
         loc = doMove(ps, 1000)
         if loc then
@@ -37,7 +37,7 @@ function protectMaster(master, intruders)
   return nil
 end
 
-function think()
+function Think()
   intruders = nearestNEntities(10, "intruder")
   master = nearestNEntities(1, "master")[1]
 
@@ -57,17 +57,17 @@ function think()
         end
       end
       -- We took out the target, so check again for a new target
-      think()
+      Think()
     end
   end
 
   -- If we made it here then we are free to just attack the nearest intruder
   intruder = intruders[1]
-  ps = allPathablePoints(pos(me()), pos(intruder), 1, 1)
+  ps = allPathablePoints(Me.Pos, pos(intruder), 1, 1)
   if ps[1] then
     loc = doMove(ps, 1000)
   end
-  if rangedDistBetweenEntities(me(), intruder) == 1 then
+  if rangedDistBetweenEntities(Me, intruder) == 1 then
     while exists(intruder) do
       res = doBasicAttack("Kick", intruder)
       if res == nil then
@@ -78,7 +78,6 @@ function think()
     return
   end
 
-  think()
+  Think()
 end
 
-think()

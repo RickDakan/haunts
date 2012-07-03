@@ -13,21 +13,22 @@ import (
 
 func (a *Ai) addEntityContext() {
   a.loadUtils("entity")
+  game.LuaPushEntity(L, a.ent)
+  a.L.SetGlobal("Me")
+
   a.L.Register("pos", PosFunc(a))
-  a.L.Register("me", MeFunc(a))
   a.L.Register("allPathablePoints", AllPathablePointsFunc(a))
   a.L.Register("rangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
   a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
   a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
-
-  a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
-  a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
 
   // An entity table should have all of this.
   a.L.Register("getEntityStats", GetEntityStatsFunc(a))
   a.L.Register("getConditions", GetConditionsFunc(a))
   a.L.Register("getActions", GetActionsFunc(a))
   a.L.Register("entityInfo", EntityInfoFunc(a))
+  a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
+  a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
 
   a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
   a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
@@ -145,7 +146,8 @@ func MeFunc(a *Ai) lua.GoFunction {
     if !luaCheckParamsOk(L, "me") {
       return 0
     }
-    L.PushInteger(int(a.ent.Id))
+
+    game.LuaPushEntity(L, a.ent)
     return 1
   }
 }

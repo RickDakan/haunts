@@ -5,7 +5,7 @@
 function pursue()
 	denizens = nearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do
-		target = entityInfo(me()).lastEntityIAttacked
+		target = entityInfo(Me).lastEntityIAttacked
 		if exists(target) then
 			return target
 		end
@@ -114,31 +114,25 @@ function allyHasCondition(has, condition)
 end
 
 function aoePlaceAndAttack(attack, spec)
-	me_stats = getEntityStats(me())
-	attack_stats = getAoeAttackStats(me(), attack)
+	me_stats = getEntityStats(Me)
+	attack_stats = getAoeAttackStats(Me, attack)
 	gz = bestAoeAttackPos (attack, me_stats.apCur - attack_stats.ap, spec)
-	dsts = allPathablePoints(pos(me()), gz, 1, attack_stats.range)
+	dsts = allPathablePoints(Me.Pos, gz, 1, attack_stats.range)
 	doMove(dsts, 1000)
-	if rangedDistBetweenPositions (pos(me()), gz) > attack_stats.range then
+	if rangedDistBetweenPositions (Me.Pos, gz) > attack_stats.range then
 		return
 	else
 		doAoeAttack(attack, gz)
 	end
 end
 
-function think()
-	aoePlaceAndAttack("Abjuration", "enemies only")
-	think()
-end
-think()
-
 -- Check for Ammo on First Aid
 
-function think()
+function Think()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		if getEntityStats(intruder).hpCur <6 and rangedDistBetweenEntites (me(), intruder) <5 then
-			if getBasicAttackStats(me(), "aid").ammo >0 then
+		if getEntityStats(intruder).hpCur <6 and rangedDistBetweenEntites (Me, intruder) <5 then
+			if getBasicAttackStats(Me, "aid").ammo >0 then
 				moveWithinRangeAndAttack (1, "Aid", intruder)
 			end
 		end
@@ -156,7 +150,6 @@ function think()
 		MoveWithinRangeAndAttack (2, "Dire Curse", target)
 	end
 end
-think()
 	
 --Targetting AOE Abjuration here, looking for at least two dudes together, unless Master present
 

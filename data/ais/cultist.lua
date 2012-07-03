@@ -2,10 +2,10 @@
 
 -- am I buffed?
 
-function think()
-	conditions = getConditions (me())
+function Think()
+	conditions = getConditions (Me)
 		if not conditions ["Focused"] then 
-			doBasicAttack ("Cultic Mantra", me())
+			doBasicAttack ("Cultic Mantra", Me)
 		end
 	end
 	target = pursue()
@@ -24,8 +24,3 @@ function think()
 	moveAndAttack("Sacrificial Blade", target)
 	end
 end
-think()
-
-		
-		
-		

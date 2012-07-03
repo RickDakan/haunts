@@ -1,11 +1,12 @@
 package game
 
 import (
-  lua "github.com/xenith-studios/golua"
   "fmt"
   "io"
   "encoding/binary"
   "errors"
+  "github.com/runningwild/haunts/base"
+  lua "github.com/xenith-studios/golua"
 )
 
 type luaEncodable int32
@@ -21,7 +22,7 @@ const (
 // Encodes a lua value, only bool, number, nil, table, and string can be
 // encoded.  If an unencodable value is encountered an error will be
 // returned.
-func luaEncodeValue(w io.Writer, L *lua.State, index int) error {
+func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
   var err1, err2, err3 error
   switch {
   case L.IsBoolean(index):
@@ -38,7 +39,7 @@ func luaEncodeValue(w io.Writer, L *lua.State, index int) error {
     err1 = binary.Write(w, binary.LittleEndian, luaNil)
   case L.IsTable(index):
     err1 = binary.Write(w, binary.LittleEndian, luaTable)
-    err2 = luaEncodeTable(w, L, index)
+    err2 = LuaEncodeTable(w, L, index)
   case L.IsString(index):
     err1 = binary.Write(w, binary.LittleEndian, luaString)
     str := L.ToString(index)
@@ -59,7 +60,7 @@ func luaEncodeValue(w io.Writer, L *lua.State, index int) error {
 }
 
 // Decodes a value from the reader and pushes it onto the stack
-func luaDecodeValue(r io.Reader, L *lua.State) error {
+func LuaDecodeValue(r io.Reader, L *lua.State) error {
   var le luaEncodable
   err := binary.Read(r, binary.LittleEndian, &le)
   if err != nil {
@@ -77,7 +78,7 @@ func luaDecodeValue(r io.Reader, L *lua.State) error {
   case luaNil:
     L.PushNil()
   case luaTable:
-    err = luaDecodeTable(r, L)
+    err = LuaDecodeTable(r, L)
   case luaString:
     var length uint32
     err = binary.Read(r, binary.LittleEndian, &length)
@@ -96,15 +97,15 @@ func luaDecodeValue(r io.Reader, L *lua.State) error {
   return nil
 }
 
-func luaEncodeTable(w io.Writer, L *lua.State, index int) error {
+func LuaEncodeTable(w io.Writer, L *lua.State, index int) error {
   L.PushNil()
   for L.Next(index-1) != 0 {
     binary.Write(w, binary.LittleEndian, byte(1))
-    err := luaEncodeValue(w, L, -2)
+    err := LuaEncodeValue(w, L, -2)
     if err != nil {
       return err
     }
-    err = luaEncodeValue(w, L, -1)
+    err = LuaEncodeValue(w, L, -1)
     if err != nil {
       return err
     }
@@ -114,13 +115,13 @@ func luaEncodeTable(w io.Writer, L *lua.State, index int) error {
 }
 
 // decodes a lua table and pushes it onto the stack
-func luaDecodeTable(r io.Reader, L *lua.State) error {
+func LuaDecodeTable(r io.Reader, L *lua.State) error {
   L.NewTable()
   var cont byte
   err := binary.Read(r, binary.LittleEndian, &cont)
   for cont != 0 && err == nil {
     for i := 0; i < 2 && err == nil; i++ {
-      err = luaDecodeValue(r, L)
+      err = LuaDecodeValue(r, L)
     }
     if err == nil {
       err = binary.Read(r, binary.LittleEndian, &cont)
@@ -131,4 +132,91 @@ func luaDecodeTable(r io.Reader, L *lua.State) error {
     return err
   }
   return nil
+}
+
+// Pushes an entity onto the stack, it is a table containing the following:
+// e.id -> EntityId of this entity
+// e.name -> Name as displayed to the user
+// e.gear_options -> Table mapping gear to icon for all available gear
+// e.gear -> Name of the selected gear, nil if none is selected
+// e.actions -> Array of actions this entity has available
+func LuaPushEntity(L *lua.State, ent *Entity) {
+  L.NewTable()
+  L.PushString("id")
+  L.PushInteger(int(ent.Id))
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(ent.Name)
+  L.SetTable(-3)
+
+  L.PushString("GearOptions")
+  L.NewTable()
+  if ent.ExplorerEnt != nil {
+    for _, gear_name := range ent.ExplorerEnt.Gear_names {
+      var g Gear
+      g.Defname = gear_name
+      base.GetObject("gear", &g)
+      L.PushString(gear_name)
+      L.PushString(g.Large_icon.Path.String())
+      L.SetTable(-3)
+    }
+  }
+  L.SetTable(-3)
+
+  L.PushString("Gear")
+  if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
+    L.PushString(ent.ExplorerEnt.Gear.Name)
+  } else {
+    L.PushNil()
+  }
+  L.SetTable(-3)
+
+  L.PushString("Actions")
+  L.NewTable()
+  for _, action := range ent.Actions {
+    L.PushString(action.String())
+    action.Push(L)
+    L.SetTable(-3)
+  }
+  L.SetTable(-3)
+
+  L.PushString("Conditions")
+  L.NewTable()
+  for _, condition := range ent.Stats.ConditionNames() {
+    L.PushString(condition)
+    L.PushBoolean(true)
+    L.SetTable(-3)
+  }
+  L.SetTable(-3)
+
+  L.PushString("LastEntityThatIAttacked")
+  L.PushInteger(int(ent.Info.LastEntThatIAttacked))
+  L.SetTable(-3)
+  L.PushString("lastEntityThatAttackedMe")
+  L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
+  L.SetTable(-3)
+
+  L.PushString("Pos")
+  x, y := ent.Pos()
+  pushPoint(L, x, y)
+  L.SetTable(-3)
+
+  L.PushString("Corpus")
+  L.PushInteger(ent.Stats.Corpus())
+  L.SetTable(-3)
+  L.PushString("Ego")
+  L.PushInteger(ent.Stats.Ego())
+  L.SetTable(-3)
+  L.PushString("HpCur")
+  L.PushInteger(ent.Stats.HpCur())
+  L.SetTable(-3)
+  L.PushString("HpMax")
+  L.PushInteger(ent.Stats.HpMax())
+  L.SetTable(-3)
+  L.PushString("ApCur")
+  L.PushInteger(ent.Stats.ApCur())
+  L.SetTable(-3)
+  L.PushString("ApMax")
+  L.PushInteger(ent.Stats.ApMax())
+  L.SetTable(-3)
 }

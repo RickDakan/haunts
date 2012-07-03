@@ -1,19 +1,16 @@
 -- aoe_test
 function aoePlaceAndAttack(attack, spec)
-	me_stats = getEntityStats(me())
-	attack_stats = getAoeAttackStats(me(), attack)
-	gz = bestAoeAttackPos (attack, me_stats.apCur - attack_stats.ap, spec)
-	dsts = allPathablePoints(pos(me()), gz, 1, attack_stats.range)
+	gz = bestAoeAttackPos (attack, Me.apCur - Me.actions[attack].ap, spec)
+	dsts = allPathablePoints(Me.Pos, gz, 1, Me.actions[attack].range)
 	doMove(dsts, 1000)
-	if rangedDistBetweenPositions (pos(me()), gz) > attack_stats.range then
+	if rangedDistBetweenPositions (Me.pos, gz) > Me.actions[attack].range then
 		return
 	else
 		doAoeAttack(attack, gz)
 	end
 end
 
-function think()
+function Think()
 	aoePlaceAndAttack("Abjuration", "enemies only")
-	think()
+	Think()
 end
-think()

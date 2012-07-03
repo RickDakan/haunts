@@ -1,6 +1,6 @@
 --eidolon
 
-function think()
+function Think()
 	target = pursue()
 	if target == nil then
 		target = retaliate()
@@ -23,4 +23,3 @@ function think()
 		moveWithinRangeAndAttack (1, "Cosmic Infection", target)
 	end
 end
-think()

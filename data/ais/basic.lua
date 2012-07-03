@@ -1,9 +1,10 @@
 
-function think()
+function Think()
   intruders = nearestNEntities(3, "intruder")
 
-  stats = getAoeAttackStats(me(), "Abjuration")
-  mystats = getEntityStats(me())
+  stats = Me.
+  stats = getAoeAttackStats(Me, "Abjuration")
+  mystats = getEntityStats(Me)
   if intruders[1] then
     movement = mystats.apCur - stats.ap
     if movement < 0 then
@@ -14,7 +15,7 @@ function think()
     print("range", stats.range)
     print("target", target.x, target.y)
     if not (target.x == 0 and target.y == 0) then
-      ps = allPathablePoints(pos(me()), target, 1, stats.range)
+      ps = allPathablePoints(Me.Pos, target, 1, stats.range)
       res = doMove(ps, 1000)
       print("taget", target.x, target.y)
       res = doAoeAttack("Abjuration", target)
@@ -22,7 +23,7 @@ function think()
         return nil
       end
     else
-      ps = allPathablePoints(pos(me()), pos(intruders[1]), stats.range, stats.range)
+      ps = allPathablePoints(Me.Pos, pos(intruders[1]), stats.range, stats.range)
       doMove(ps, 1000)
       return
     end
@@ -30,5 +31,3 @@ function think()
     return
   end
 end
-
-think()

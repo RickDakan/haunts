@@ -17,7 +17,7 @@ type Player struct {
   Name string
 
   // This is the value of the global table named 'store' in the lua scripts.
-  // Serialied/deserialized with luaEncodeTable/luaDecodeTable
+  // Serialied/deserialized with LuaEncodeTable/LuaDecodeTable
   // This data persists for the lifetime of the player.
   Lua_store []byte
 

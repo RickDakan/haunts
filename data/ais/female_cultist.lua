@@ -1,5 +1,5 @@
 --female cultist
-function think()
+function Think()
 	target = pursue()
 	if target == nil then
 		target = retaliate()
@@ -25,7 +25,3 @@ function think()
 		moveWithinRangeAndAttack (1, "Parasitic Gift", target)
 	end
 end
-think()
-		
-		
-		

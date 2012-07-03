@@ -2,7 +2,7 @@
 -- 	But I put them here for reference right now 
 
 function moveAndAttack (attack, target)
-	ps = allPathablePoints (pos(me()), pos(target), 1, getBasicAttackStats(me(), attack).range)
+	ps = allPathablePoints (Me.Pos, pos(target), 1, getBasicAttackStats(Me, attack).range)
 	res = doMove (ps, 1000)
 	if exists(target) then
 		doBasicAttack(attack, target)
@@ -13,7 +13,7 @@ function pursue()
 	print(target)
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityIAttacked
+		target = entityInfo(Me).lastEntityIAttacked
 	end
 	if res == nil then
 		return nil
@@ -24,7 +24,7 @@ end
 function retaliate()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityThatAttackedMe
+		target = entityInfo(Me).lastEntityThatAttackedMe
 	end
 	return target
 end
@@ -85,7 +85,7 @@ end
 
 --The Female Cultist AI would begin here, assuming all the above is in the Utility folder
 
-function think()
+function Think()
 	target = pursue()
 	if not target then
 		target = retaliate()
@@ -107,8 +107,3 @@ function think()
 		moveAndAttack ("Parasitic Gift", target)
 	end
 end
-think()
-		
-		
-		
-		

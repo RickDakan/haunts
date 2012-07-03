@@ -1,8 +1,8 @@
 --intruders = nearestNEntities(3, "intruder")
---mypos = pos(me())
+--mypos = Me.Pos
 
 --intruder = intruders[1]
-function think()
+function Think()
 	target = pursue()
 	if target == nil then
 		target = retaliate()
@@ -25,4 +25,4 @@ function think()
 		moveWithinRangeAndAttack (1, "Diseased Kiss", target)
 	end
 end
-think()
+

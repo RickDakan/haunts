@@ -1,9 +1,9 @@
 function moveWithinRangeAndAttack (min_range, attack, target)
-	max_range = getBasicAttackStats(me(), attack).range
+	max_range = getBasicAttackStats(Me, attack).range
 	if min_range > max_range then
 		min_range = max_range
 	end
-	ps = allPathablePoints (pos(me()), pos(target), min_range, max_range)
+	ps = allPathablePoints (Me.Pos, pos(target), min_range, max_range)
 	res = doMove (ps, 1000)
 	if exists(target) then
 		doBasicAttack(attack, target)
@@ -13,7 +13,7 @@ end
 function pursue()
 	intruders = nearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityIAttacked
+		target = entityInfo(Me).lastEntityIAttacked
 		if exists(target) then
 			return target
 		end
@@ -31,7 +31,7 @@ end
 
 
 function retaliate()
-	target = entityInfo(me()).lastEntityThatAttackedMe
+	target = entityInfo(Me).lastEntityThatAttackedMe
 	if exists(target) then
 		return target
 	end
@@ -148,8 +148,8 @@ end
 
 
 function ApNeeded(attack)
-	apCur = getEntityStats(me()) ["apCur"]
-	apCost = getBasicAttackStats(me(), attack) ["ap"]
+	apCur = getEntityStats(Me) ["apCur"]
+	apCost = getBasicAttackStats(Me, attack) ["ap"]
 	extra_dist = apCur - apCost
 	return extra_dist
 end

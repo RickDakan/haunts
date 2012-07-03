@@ -1,4 +1,4 @@
-ps = allPathablePoints(pos(me()), pos(me()), 1, 5)
+ps = allPathablePoints(Me.Pos, Me.Pos, 1, 5)
 r = randN(table.getn(ps))
 target = ps[randN(table.getn(ps))]
 a = {}

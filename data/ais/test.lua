@@ -1,8 +1,8 @@
 -- Find a random room, make a path, find the next room in the path, find the
 -- door to that room, go to the door, open it, step through it, repeat.
 
-function think()
-  stats = getEntityStats(me())
+function Think()
+  stats = getEntityStats(Me)
   if stats.apCur == 0 then
     return
   end
@@ -12,22 +12,22 @@ function think()
     -- We've explored the whole house
     return
   end
-  path = roomPath(roomContaining(me()), unexplored)
+  path = roomPath(roomContaining(Me), unexplored)
   if not path then
     -- Can't get there for some odd reason
     return
   end
-  doors = allDoorsBetween(roomContaining(me()), path[1])
+  doors = allDoorsBetween(roomContaining(Me), path[1])
   if table.getn(doors) == 0 then
     -- No doors, shouldn't have made this path
-    print("There should be doors between", roomContaining(me()), path[1])
+    print("There should be doors between", roomContaining(Me), path[1])
     return
   end
   ps = doorPositions(doors[1])
   res = doMove(ps, 1000)
   if res then
     -- We successfully moved towards the door, so we should rethink
-    think()
+    Think()
     return
   end
   -- If it failed it was probably because we were already on the door, so just
@@ -39,11 +39,5 @@ function think()
   -- Either way the door should be open now and we can try to walk through it
   ps = roomPositions(path[1])
   doMove(ps, 1000)
-  think()
+  Think()
 end
-
-
-
-
-
-think()
