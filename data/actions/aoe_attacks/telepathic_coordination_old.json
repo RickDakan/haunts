@@ -1,0 +1,16 @@
+{
+  "Name"      : "Telepathic Coordination Old",
+  "Kind"      : "Poison",
+  "Ap"        : 3,
+  "Strength"  : 7,
+  "Damage"    : 0,
+  "Range"     : 10,
+  "Diameter"  : 2,
+  "Animation" : "cast",
+  "Texture"   : {
+    "Path": "actions/icons/coordination.png"
+  },
+  "Conditions": [
+    "Telepathic Coordination"
+  ]
+}

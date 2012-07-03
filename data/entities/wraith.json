@@ -18,7 +18,7 @@
   },
   "Base": {
     "Ap_max": 6,
-    "Hp_max": 6,
+    "Hp_max": 12,
     "Corpus": 9,
     "Ego": 9,
     "Sight": 15

@@ -12,6 +12,7 @@ import (
 )
 
 func (a *Ai) addEntityContext() {
+  a.loadUtils("entity")
   a.L.Register("pos", PosFunc(a))
   a.L.Register("me", MeFunc(a))
   a.L.Register("allPathablePoints", AllPathablePointsFunc(a))

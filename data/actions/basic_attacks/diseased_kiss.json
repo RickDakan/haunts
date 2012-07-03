@@ -11,6 +11,6 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Conditions": [
-     "Diseased Kiss"
+     "Poison"
    ]
 }

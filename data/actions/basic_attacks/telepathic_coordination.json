@@ -1,0 +1,16 @@
+{
+  "Name"      : "Telepathic Coordination",
+  "Kind"      : "Poison",
+  "Ap"        : 3,
+  "Strength"  : 7,
+  "Damage"    : 0,
+  "Range"     : 10,
+  "Target_enemies": true,
+  "Animation" : "cast",
+  "Texture"   : {
+    "Path": "actions/icons/coordination.png"
+  },
+  "Conditions": [
+    "Telepathic Target"
+  ]
+}

@@ -9,7 +9,7 @@
   "Texture"   : {
     "Path": "actions/icons/coordination.png"
   },
-  "Target_enemies": true,
+  "Target_allies": true,
   "Conditions": [
     "Invigorated",
 	"Inspired",
