@@ -8,9 +8,9 @@
 --check to see if adjacent people have Agony - if they do, he wants to move awa
 
 function Think()
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		if rangedDistBetweenEntities (Me, intruder) <2 then
+		if RangedDistBetweenEntities (Me, intruder) <2 then
 			if getConditions (intruder) ["Agony"] then
 				moveWithinRangeAndAttack(3, "Envenomed Dart", intruder)
 			else

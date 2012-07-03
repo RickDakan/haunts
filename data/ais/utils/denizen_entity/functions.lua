@@ -4,17 +4,17 @@ function moveWithinRangeAndAttack (min_range, attack, target)
 		min_range = max_range
 	end
 	ps = AllPathablePoints (Me.Pos, target.Pos, min_range, max_range)
-	res = doMove (ps, 1000)
-	if exists(target) then
-		doBasicAttack(attack, target)
+	res = DoMove (ps, 1000)
+	if Exists(target) then
+		DoBasicAttack(attack, target)
 	end
 end
 
 function pursue()
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
 		target = Me.Info().LastEntityThatIAttacked
-		if exists(target) then
+		if Exists(target) then
 			return target
 		end
 	end
@@ -22,7 +22,7 @@ function pursue()
 end
 
 function nearest()
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
 		return intruder
 	end
@@ -32,7 +32,7 @@ end
 
 function retaliate()
 	target = Me.Info().LastEntityThatAttackedMe
-	if exists(target) then
+	if Exists(target) then
 		return target
 	end
 	return nil
@@ -42,10 +42,10 @@ end
 --target enemy that attacked nearest ally
 
 function targetAllyAttacker()
-	allies = nearestNEntities (50, "denizen")
+	allies = NearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
 	  target = ally.Info().LastEntityThatAttackedMe
-	  if exists(target) then
+	  if Exists(target) then
 	  	return target
 	  end
 	end	
@@ -54,10 +54,10 @@ end
 
 --target enemy your allies are already attacking
 function targetAllyTarget()
-	allies = nearestNEntities (50, "denizen")
+	allies = NearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
 	  target = ally.LastEntityThatIAttacked
-	  if exists(target) then
+	  if Exists(target) then
 	  	return target
 	  end
 	end	
@@ -68,7 +68,7 @@ end
 -- target lowest stat
 -- stat is looking for Corpus, Ego, HpCur, HpMax, ApCur, ApMax
 function targetLowestStat(stat)
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	target = nil
 	min = 10000
 	for _, intruder in pairs (intruders) do
@@ -84,7 +84,7 @@ end
 -- HOW?
 
 function targetHighestStat(stat)
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	max = 0
 	for _, intruder in pairs (intruders) do
 		if intruder[stat] > max then
@@ -103,7 +103,7 @@ end
 -- false - the target will not have the condition
 
 function targetHasCondition(has, condition)
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
 		if has and intruder.Conditions[condition] then
 			return intruder
@@ -118,7 +118,7 @@ end
 -- BUFFing friends. Find friends who need a condition
 
 function allyHasCondition(has, condition)
-	allies = nearestNEntities(50, "denizen")
+	allies = NearestNEntities(50, "denizen")
 	for _, ally in pairs (allies) do
 		if has and ally.Conditions[condition] then
 			return ally
@@ -160,11 +160,11 @@ end
 
 
 -- function AOEtargetAndAttack(attack, extra_dist, spec)
--- 	target = bestAoeAttackPos(attack, extra_dist, spec)
+-- 	target = BestAoeAttackPos(attack, extra_dist, spec)
 -- 		-- pos = ???
 -- 		return target
 -- 	-- 	end
--- 	-- if exists(target) then
--- 	-- 	res = doAoeAttack(target, pos)
+-- 	-- if Exists(target) then
+-- 	-- 	res = DoAoeAttack(target, pos)
 -- 	-- end
 -- end

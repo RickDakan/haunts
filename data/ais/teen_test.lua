@@ -5,9 +5,9 @@
 
 function Think()
 	if Me.HpCur < 5 and not Me.Conditions["Psychic Shroud"] then
-		doBasicAttack ("Psychic Shroud", Me)
+		DoBasicAttack ("Psychic Shroud", Me)
 	end
-	denizens = nearestNEntities (50, "denizen")
+	denizens = NearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do
 		if denizen.Corpus >10 and not denizen.Conditions["Telepathic Target"] then
 			MoveWithinRangeAndAttack (1, "Telepathic Coordination", denizen)
@@ -26,7 +26,7 @@ function Think()
 	if target == nil then
 		return
 	end
-	if rangedDistBetweenEntities (Me, target) <2 then
+	if RangedDistBetweenEntities (Me, target) <2 then
 		MoveWithinRangeAndAttack(1, "Kick", target)
 	else
 		MoveWithinRangeAndAttack (2, "Pistol", target)

@@ -15,12 +15,12 @@ function protectMaster(master, intruders)
 
     -- Check if the intruder is close enough to the master to hit it with
     -- a basic attack.
-    if rangedDistBetweenEntities(master, intruder) <= range then
+    if RangedDistBetweenEntities(master, intruder) <= range then
       -- We found an intruder that is too close to the master, so we will go
       -- after him.
       ps = AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
       if ps[1] then
-        loc = doMove(ps, 1000)
+        loc = DoMove(ps, 1000)
         if loc then
           return intruder
         end
@@ -36,8 +36,8 @@ function protectMaster(master, intruders)
 end
 
 function Think()
-  intruders = nearestNEntities(10, "intruder")
-  master = nearestNEntities(1, "master")[1]
+  intruders = NearestNEntities(10, "intruder")
+  master = NearestNEntities(1, "master")[1]
 
   -- If there are no intruders then we just stay put.
   if table.getn(intruders) == 0 then
@@ -48,8 +48,8 @@ function Think()
   if master then
     target = protectMaster(master, intruders)
     if target then
-      while exists(target) do
-        res = doBasicAttack("Kick", target)
+      while Exists(target) do
+        res = DoBasicAttack("Kick", target)
         if res == nil then
           return
         end
@@ -63,11 +63,11 @@ function Think()
   intruder = intruders[1]
   ps = AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
   if ps[1] then
-    loc = doMove(ps, 1000)
+    loc = DoMove(ps, 1000)
   end
-  if rangedDistBetweenEntities(Me, intruder) == 1 then
-    while exists(intruder) do
-      res = doBasicAttack("Kick", intruder)
+  if RangedDistBetweenEntities(Me, intruder) == 1 then
+    while Exists(intruder) do
+      res = DoBasicAttack("Kick", intruder)
       if res == nil then
         return
       end

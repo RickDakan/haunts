@@ -1,4 +1,4 @@
-intruders = nearestNEntities(3, "intruder")
+intruders = NearestNEntities(3, "intruder")
 mypos = Me.Pos
 
 intruder = intruders[1]
@@ -14,8 +14,8 @@ if intruder then
     else
       attack = "Diseased Kiss"
     end
-    while exists(intruder) do
-      res = doBasicAttack(attack, intruder)
+    while Exists(intruder) do
+      res = DoBasicAttack(attack, intruder)
       if res.hit then
         attack = "Pummel"
       end
@@ -27,7 +27,7 @@ if intruder then
     for _, intruder in pairs(intruders) do
       ps = AllPathablePoints(mypos, intruder.Pos, 1, 1)
       if ps[1] then
-        doMove(ps, 1000)
+        DoMove(ps, 1000)
         break
       end
     end
@@ -39,5 +39,5 @@ else
   target = ps[randN(table.getn(ps))]
   a = {}
   a[1] = target
-  res = doMove(a, 1000)
+  res = DoMove(a, 1000)
 end

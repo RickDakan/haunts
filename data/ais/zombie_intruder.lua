@@ -3,4 +3,4 @@ r = randN(table.getn(ps))
 target = ps[randN(table.getn(ps))]
 a = {}
 a[1] = target
-res = doMove(a, 1000)
+res = DoMove(a, 1000)

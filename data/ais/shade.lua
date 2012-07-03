@@ -1,6 +1,6 @@
 function Think()
 	target = retaliate()
-	if target ~= nil and rangedDistBetweenEntities (Me, target) <2 then
+	if target ~= nil and RangedDistBetweenEntities (Me, target) <2 then
 		moveWithinRangeAndAttack(1, "Chill Touch", target)
 	else
 		target = pursue()

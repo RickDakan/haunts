@@ -3,7 +3,7 @@
 while true do
   -- We'll only concern ourselves with trying to attack the closest intruder,
   -- a more complicated script might want to keep track of more than one.
-  intruders = nearestNEntities(1, "intruder")
+  intruders = NearestNEntities(1, "intruder")
 
   -- If there are no intruders in sight we just hang out and wait
   if not intruders[1] then
@@ -37,12 +37,12 @@ while true do
   -- We move to one of the target spaces, the closest space might be the one
   -- we are currently standing on, in which case we won't move and we will
   -- skip to attacking.
-  doMove(ps, 1000)
+  DoMove(ps, 1000)
 
   -- This does an attack with the basic attack we specified earlier on our
   -- target.  The result will have a value (res.hit) that is a boolean
   -- indicating whether or not our attack hit its target.
-  res = doBasicAttack(attack, intruders[1])
+  res = DoBasicAttack(attack, intruders[1])
   if res == nil then
     break
   end

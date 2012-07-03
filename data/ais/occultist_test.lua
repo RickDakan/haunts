@@ -1,7 +1,7 @@
 -- Check for Ammo on First Aid
 
 function Think()
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
 		if intruder.HpCur <6 and rangedDistBetweenEntites (Me, intruder) <5 then
 			if Me.Actions["aid"].Ammo > 0 then

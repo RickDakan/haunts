@@ -3,7 +3,7 @@
 function Think()
 	conditions = getConditions(Me)
 	if not conditions ["Focused"] then
-		doBasicAttack("Cultic Mantra", Me)
+		DoBasicAttack("Cultic Mantra", Me)
 	else
 	target = pursue()
 	if target == nil then

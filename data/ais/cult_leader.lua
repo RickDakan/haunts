@@ -10,9 +10,9 @@
 
 
 function Think()
-	intruders = nearestNEntities (10, "intruder")
+	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		if rangedDistBetweenEntities (Me, intruder) <3 then
+		if RangedDistBetweenEntities (Me, intruder) <3 then
 			moveWithinRangeAndAttack(3, "Crozier", intruder)
 		else
 		target = allyHasCondition(false, "Inspired")

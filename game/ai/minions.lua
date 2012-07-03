@@ -5,8 +5,8 @@ for minions[1] != nil do
 end
 
 
-intruder = nearestNEntities(1, "intruder")
+intruder = NearestNEntities(1, "intruder")
 if 
 if intruder[1] != nil then
-  doBasicAttack("rawrcakes", intruder[1])
+  DoBasicAttack("rawrcakes", intruder[1])
 end

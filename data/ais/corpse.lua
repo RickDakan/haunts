@@ -1,4 +1,4 @@
---intruders = nearestNEntities(3, "intruder")
+--intruders = NearestNEntities(3, "intruder")
 --mypos = Me.Pos
 
 --intruder = intruders[1]

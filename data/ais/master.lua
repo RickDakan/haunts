@@ -8,13 +8,13 @@
 
 --needs a target?
 function aoePlaceAndAttack(attack, spec)
-	gz = bestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
+	gz = BestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
 	dsts = AllPathablePoints(Me.Pos, gz, 1, Me.Actions[attack].Range)
-	doMove(dsts, 1000)
+	DoMove(dsts, 1000)
 	if RangedDistBetweenPositions (Me.Pos, gz) > Me.Actions[attack].Range then
 		return
 	else
-		doAoeAttack(attack, gz)
+		DoAoeAttack(attack, gz)
 	end
 end
 

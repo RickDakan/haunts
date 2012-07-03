@@ -19,24 +19,24 @@ func (a *Ai) addEntityContext() {
 
   a.L.Register("AllPathablePoints", AllPathablePointsFunc(a))
   a.L.Register("RangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
-  a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
-  a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
+  a.L.Register("RangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
+  a.L.Register("NearestNEntities", NearestNEntitiesFunc(a.ent))
 
-  a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
-  a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
-  a.L.Register("bestAoeAttackPos", BestAoeAttackPosFunc(a))
-  a.L.Register("doMove", DoMoveFunc(a))
-  a.L.Register("exists", ExistsFunc(a))
+  a.L.Register("DoBasicAttack", DoBasicAttackFunc(a))
+  a.L.Register("DoAoeAttack", DoAoeAttackFunc(a))
+  a.L.Register("BestAoeAttackPos", BestAoeAttackPosFunc(a))
+  a.L.Register("DoMove", DoMoveFunc(a))
+  a.L.Register("Exists", ExistsFunc(a))
 
-  a.L.Register("nearbyUnexploredRoom", NearbyUnexploredRoomFunc(a))
-  a.L.Register("roomPath", RoomPathFunc(a))
-  a.L.Register("roomContaining", RoomContainingFunc(a))
-  a.L.Register("allDoorsBetween", AllDoorsBetween(a))
-  a.L.Register("allDoorsOn", AllDoorsOn(a))
-  a.L.Register("doorPositions", DoorPositionsFunc(a))
-  a.L.Register("doorIsOpen", DoorIsOpenFunc(a))
-  a.L.Register("doDoorToggle", DoDoorToggleFunc(a))
-  a.L.Register("roomPositions", RoomPositionsFunc(a))
+  a.L.Register("NearbyUnexploredRoom", NearbyUnexploredRoomFunc(a))
+  a.L.Register("RoomPath", RoomPathFunc(a))
+  a.L.Register("RoomContaining", RoomContainingFunc(a))
+  a.L.Register("AllDoorsBetween", AllDoorsBetween(a))
+  a.L.Register("AllDoorsOn", AllDoorsOn(a))
+  a.L.Register("DoorPositions", DoorPositionsFunc(a))
+  a.L.Register("DoorIsOpen", DoorIsOpenFunc(a))
+  a.L.Register("DoDoorToggle", DoDoorToggleFunc(a))
+  a.L.Register("RoomPositions", RoomPositionsFunc(a))
 }
 
 type entityDist struct {
@@ -155,7 +155,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 
 // Performs a basic attack against the specifed target.
 //    Format:
-//    res = doBasicAttack(attack, target)
+//    res = DoBasicAttack(attack, target)
 //
 //    Inputs:
 //    attack - string  - Name of the attack to use.
@@ -167,7 +167,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 //                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doBasicAttack", luaString, luaInteger) {
+    if !luaCheckParamsOk(L, "DoBasicAttack", luaString, luaInteger) {
       return 0
     }
     me := a.ent
@@ -210,7 +210,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 
 // Performs an aoe attack against centered at the specified position.
 //    Format:
-//    res = doAoeAttack(attack, pos)
+//    res = DoAoeAttack(attack, pos)
 //
 //    Inputs:
 //    attack - string     - Name of the attack to use.
@@ -220,7 +220,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 //    res - boolean - true if the action performed, nil otherwise.
 func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doAoeAttack", luaString, luaTable) {
+    if !luaCheckParamsOk(L, "DoAoeAttack", luaString, luaTable) {
       return 0
     }
     me := a.ent
@@ -250,7 +250,7 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
 
 // Performs an aoe attack against centered at the specified position.
 //    Format:
-//    target = bestAoeAttackPos(attack, extra_dist, spec)
+//    target = BestAoeAttackPos(attack, extra_dist, spec)
 //
 //    Inputs:
 //    attack     - string  - Name of the attack to use.
@@ -262,7 +262,7 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
 //    pos - table[x,y] - Position to place aoe for maximum results.
 func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "bestAoeAttackPos", luaString, luaInteger, luaString) {
+    if !luaCheckParamsOk(L, "BestAoeAttackPos", luaString, luaInteger, luaString) {
       return 0
     }
     me := a.ent
@@ -286,7 +286,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
     case "enemies only":
       spec = actions.AiAoeHitNoAllies
     default:
-      luaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for bestAoeAttackPos().", L.ToString(-1)))
+      luaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for BestAoeAttackPos().", L.ToString(-1)))
       return 0
     }
     x, y := attack.AiBestTarget(me, L.ToInteger(-2), spec)
@@ -299,7 +299,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 // points.  The movement can be restricted to not spend more than a certain
 // amount of ap.
 //    Format:
-//    p = doMove(dsts, max_ap)
+//    p = DoMove(dsts, max_ap)
 //
 //    Input:
 //    dsts  - array[table[x,y]] - Array of all points that are acceptable
@@ -312,7 +312,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doMove", luaTable, luaInteger) {
+    if !luaCheckParamsOk(L, "DoMove", luaTable, luaInteger) {
       return 0
     }
     me := a.ent
@@ -393,7 +393,7 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 
 // Computes the ranged distance between two entities.
 //    Format:
-//    dist = rangedDistBetweenEntities(e1, e2)
+//    dist = RangedDistBetweenEntities(e1, e2)
 //
 //    Input:
 //    e1 - integer - An entity id.
@@ -406,7 +406,7 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "rangedDistBetweenEntities", luaInteger, luaInteger) {
+    if !luaCheckParamsOk(L, "RangedDistBetweenEntities", luaInteger, luaInteger) {
       return 0
     }
     id1 := game.EntityId(L.ToInteger(-2))
@@ -495,14 +495,14 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     "all":          true,
   }
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "nearestNEntities", luaInteger, luaString) {
+    if !luaCheckParamsOk(L, "NearestNEntities", luaInteger, luaString) {
       return 0
     }
     g := me.Game()
     max := L.ToInteger(-2)
     kind := L.ToString(-1)
     if !valid_kinds[kind] {
-      err_str := fmt.Sprintf("nearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
+      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
       base.Warn().Printf(err_str)
       L.PushString(err_str)
       L.Error()
@@ -646,7 +646,7 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
 // going through only explored rooms.  It will return one of the closest such
 // rooms.
 //    Format
-//    r = nearbyUnexploredRoom()
+//    r = NearbyUnexploredRoom()
 //
 //    Input:
 //    none
@@ -655,7 +655,7 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
 //    r - room - An unexplored room, or nil if no such room exists.
 func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "nearbyUnexploredRoom") {
+    if !luaCheckParamsOk(L, "NearbyUnexploredRoom") {
       return 0
     }
 
