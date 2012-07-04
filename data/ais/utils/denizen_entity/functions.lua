@@ -11,7 +11,7 @@ function moveWithinRangeAndAttack (min_range, attack, target)
 end
 
 function pursue()
-	target = Me().Info().LastEntityThatIAttacked
+	target = Me().Info.LastEntityThatIAttacked
 	if Exists(target) then
 		return target
 	end
@@ -28,7 +28,7 @@ end
 
 
 function retaliate()
-	target = Me().Info().LastEntityThatAttackedMe
+	target = Me().Info.LastEntityThatAttackedMe
 	if Exists(target) then
 		return target
 	end
@@ -41,7 +41,7 @@ end
 function targetAllyAttacker()
 	allies = NearestNEntities (50, "denizen")
 	for _, ally in pairs (allies) do
-	  target = ally.Info().LastEntityThatAttackedMe
+	  target = ally.Info.LastEntityThatAttackedMe
 	  if Exists(target) then
 	  	return target
 	  end

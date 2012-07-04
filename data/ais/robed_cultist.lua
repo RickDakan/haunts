@@ -8,7 +8,7 @@ end
 function retaliate(melee)
 	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = Me().Info().LastEntityThatAttackedMe
+		target = Me().Info.LastEntityThatAttackedMe
 		if Exists (target) then
 			if RangedDistBetweenEntities (Me(), target) == 1 then
 				return DoBasicAttack (melee, target)
@@ -25,7 +25,7 @@ end
 function pursue(melee)
 	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = Me().Info().LastEntityThatIAttacked
+		target = Me().Info.LastEntityThatIAttacked
 		if Exists (target) then
 			if RangedDistBetweenEntities (Me(), target) == 1 then
 				return DoBasicAttack (melee, target)

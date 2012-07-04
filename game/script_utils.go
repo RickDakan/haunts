@@ -151,6 +151,10 @@ func LuaToEntity(L *lua.State, game *Game, index int) *Entity {
 // e.gear -> Name of the selected gear, nil if none is selected
 // e.actions -> Array of actions this entity has available
 func LuaPushEntity(L *lua.State, ent *Entity) {
+  if ent == nil {
+    L.PushNil()
+    return
+  }
   L.NewTable()
   L.PushString("id")
   L.PushInteger(int(ent.Id))
@@ -200,26 +204,24 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   L.SetTable(-3)
 
   L.PushString("Info")
-  L.PushGoFunction(func(L *lua.State) int {
-    L.NewTable()
-    L.PushString("LastEntityThatIAttacked")
-    e := ent.Game().EntityById(ent.Info.LastEntThatIAttacked)
-    if e != nil {
-      LuaPushEntity(L, e)
-    } else {
-      L.PushNil()
+  L.NewTable()
+  L.NewTable()
+  L.PushString("__index")
+  L.PushGoFunctionAsCFunction(func(L *lua.State) int {
+    str := L.ToString(-1)
+    switch str {
+    case "LastEntityThatIAttacked":
+      LuaPushEntity(L, ent.Game().EntityById(ent.Info.LastEntThatIAttacked))
+      return 1
+    case "LastEntityThatAttackedMe":
+      LuaPushEntity(L, ent.Game().EntityById(ent.Info.LastEntThatAttackedMe))
+      return 1
     }
-    L.SetTable(-3)
-    L.PushString("LastEntityThatAttackedMe")
-    e = ent.Game().EntityById(ent.Info.LastEntThatAttackedMe)
-    if e != nil {
-      LuaPushEntity(L, e)
-    } else {
-      L.PushNil()
-    }
-    L.SetTable(-3)
-    return 1
+    base.Warn().Printf("Unknown Info field '%s'.", str)
+    return 0
   })
+  L.SetTable(-3)
+  L.SetMetaTable(-2)
   L.SetTable(-3)
 
   L.PushString("Pos")

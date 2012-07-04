@@ -1,7 +1,7 @@
 function pursue()
   denizens = NearestNEntities (50, "denizen")
   for _, denizen in pairs (denizens) do
-    target = Me().Info().LastEntityThatIAttacked
+    target = Me().Info.LastEntityThatIAttacked
     if Exists(target) then
       return target
     end
@@ -23,7 +23,7 @@ end
 function targetAllyAttacker()
   allies = NearestNEntities (10, "intruder")
   for _, ally in pairs (allies) do
-    target = ally.Info().LastEntityThatAttackedMe
+    target = ally.Info.LastEntityThatAttackedMe
     if Exists(target) then
       return target
     end
@@ -35,7 +35,7 @@ end
 function targetAllyTarget()
   allies = NearestNEntities (10, "intruder")
   for _, ally in pairs (allies) do
-    target = ally.Info().LastEntityThatIAttacked
+    target = ally.Info.LastEntityThatIAttacked
     if Exists(target) then
       return target
     end
