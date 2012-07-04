@@ -1,9 +1,9 @@
 --robed cultist new
 
 function Think()
-	conditions = getConditions(Me)
+	conditions = getConditions(Me())
 	if not conditions ["Focused"] then
-		DoBasicAttack("Cultic Mantra", Me)
+		DoBasicAttack("Cultic Mantra", Me())
 	else
 	target = pursue()
 	if target == nil then

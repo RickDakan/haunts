@@ -2,7 +2,7 @@
 -- door to that room, go to the door, open it, step through it, repeat.
 
 function Think()
-  if Me.ApCur == 0 then
+  if Me().ApCur == 0 then
     return
   end
   unexplored = NearbyUnexploredRoom()
@@ -11,15 +11,15 @@ function Think()
     -- We've explored the whole house
     return
   end
-  path = RoomPath(RoomContaining(Me), unexplored)
+  path = RoomPath(RoomContaining(Me()), unexplored)
   if not path then
     -- Can't get there for some odd reason
     return
   end
-  doors = AllDoorsBetween(RoomContaining(Me), path[1])
+  doors = AllDoorsBetween(RoomContaining(Me()), path[1])
   if table.getn(doors) == 0 then
     -- No doors, shouldn't have made this path
-    print("There should be doors between", RoomContaining(Me), path[1])
+    print("There should be doors between", RoomContaining(Me()), path[1])
     return
   end
   ps = DoorPositions(doors[1])

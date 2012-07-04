@@ -1,19 +1,19 @@
 function mantra(buff, condition)
-	conditions = getConditions (Me)
+	conditions = getConditions (Me())
 	if not conditions [condition] then 
-		DoBasicAttack (buff, Me)
+		DoBasicAttack (buff, Me())
 	end
 end
 				
 function retaliate(melee)
 	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = Me.Info().LastEntityThatAttackedMe
+		target = Me().Info().LastEntityThatAttackedMe
 		if Exists (target) then
-			if RangedDistBetweenEntities (Me, target) == 1 then
+			if RangedDistBetweenEntities (Me(), target) == 1 then
 				return DoBasicAttack (melee, target)
 			else
-				ps = AllPathablePoints (Me.Pos, pos (target), 1, 1)
+				ps = AllPathablePoints (Me().Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
 					return DoMove (ps, 1000)
 				end
@@ -25,12 +25,12 @@ end
 function pursue(melee)
 	intruders = NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = Me.Info().LastEntityThatIAttacked
+		target = Me().Info().LastEntityThatIAttacked
 		if Exists (target) then
-			if RangedDistBetweenEntities (Me, target) == 1 then
+			if RangedDistBetweenEntities (Me(), target) == 1 then
 				return DoBasicAttack (melee, target)
 			else
-				ps = AllPathablePoints (Me.Pos, pos (target), 1, 1)
+				ps = AllPathablePoints (Me().Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
 				  return DoMove (ps, 1000)
 				end

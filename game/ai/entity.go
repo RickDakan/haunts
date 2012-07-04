@@ -13,9 +13,10 @@ import (
 
 func (a *Ai) addEntityContext() {
   a.loadUtils("entity")
-  game.LuaPushEntity(a.L, a.ent)
-  a.L.SetGlobal("Me")
-  a.L.Pop(1)
+  a.L.Register("Me", func(L *lua.State) int {
+    game.LuaPushEntity(L, a.ent)
+    return 1
+  })
 
   a.L.Register("AllPathablePoints", AllPathablePointsFunc(a))
   a.L.Register("RangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
@@ -167,7 +168,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 //                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "DoBasicAttack", luaString, luaInteger) {
+    if !luaCheckParamsOk(L, "DoBasicAttack", luaString, luaTable) {
       return 0
     }
     me := a.ent
@@ -177,10 +178,9 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
       luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
       return 0
     }
-    id := game.EntityId(L.ToInteger(-1))
-    target := me.Game().EntityById(id)
+    target := game.LuaToEntity(L, a.ent.Game(), -1)
     if action == nil {
-      luaDoError(L, fmt.Sprintf("Tried to target entity with id=%d who doesn't exist.", id))
+      luaDoError(L, fmt.Sprintf("Tried to target an entity who doesn't exist."))
       return 0
     }
     attack, ok := action.(*actions.BasicAttack)
@@ -406,33 +406,22 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "RangedDistBetweenEntities", luaInteger, luaInteger) {
+    if !luaCheckParamsOk(L, "RangedDistBetweenEntities", luaTable, luaTable) {
       return 0
     }
-    id1 := game.EntityId(L.ToInteger(-2))
-    id2 := game.EntityId(L.ToInteger(-1))
-    e1 := a.ent.Game().EntityById(id1)
-    if e1 == nil {
-      L.PushNil()
-      return 1
-    }
-    x, y := e1.Pos()
-    dx, dy := e1.Dims()
-    if !a.ent.HasLos(x, y, dx, dy) {
-      L.PushNil()
-      return 1
-    }
-    e2 := a.ent.Game().EntityById(id2)
-    if e2 == nil {
-      L.PushNil()
-      return 1
-    }
-
-    x, y = e2.Pos()
-    dx, dy = e2.Dims()
-    if !a.ent.HasLos(x, y, dx, dy) {
-      L.PushNil()
-      return 1
+    e1 := game.LuaToEntity(L, a.ent.Game(), -2)
+    e2 := game.LuaToEntity(L, a.ent.Game(), -1)
+    for _, e := range []*game.Entity{e1, e2} {
+      if e == nil {
+        L.PushNil()
+        return 1
+      }
+      x, y := e.Pos()
+      dx, dy := e.Dims()
+      if !a.ent.HasLos(x, y, dx, dy) {
+        L.PushNil()
+        return 1
+      }
     }
 
     L.PushInteger(rangedDistBetween(e1, e2))
@@ -452,15 +441,13 @@ func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
 //    e - boolean - True if the entity exists and has positive hp.
 func ExistsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "exists", luaInteger) {
+    // if !luaCheckParamsOk(L, "exists", luaTable) {
+    //   return 0
+    // }
+    if L.IsNil(-1) {
       return 0
     }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected exists(int)"))
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
+    ent := game.LuaToEntity(L, a.ent.Game(), -1)
     L.PushBoolean(ent != nil && ent.Stats != nil && ent.Stats.HpCur() > 0)
     return 1
   }
@@ -573,7 +560,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     L.NewTable()
     for i := range eds {
       L.PushInteger(i + 1)
-      L.PushInteger(int(eds[i].ent.Id))
+      game.LuaPushEntity(L, eds[i].ent)
       L.SetTable(-3)
     }
     return 1
@@ -764,12 +751,10 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
 //    seen right now.
 func RoomContainingFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomContaining", luaInteger) {
+    if !luaCheckParamsOk(L, "roomContaining", luaTable) {
       return 0
     }
-
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
+    ent := game.LuaToEntity(L, a.ent.Game(), -1)
     if ent == nil || (ent.Side() != a.ent.Side() && !a.ent.Game().TeamLos(ent.Pos())) {
       L.PushNil()
     } else {

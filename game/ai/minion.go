@@ -47,18 +47,17 @@ func execMinionFunc(a *Ai) lua.GoFunction {
     if !luaNumParamsOk(L, 1, "execMinion") {
       return 0
     }
-    id := game.EntityId(L.ToInteger(0))
-    ent := a.game.EntityById(id)
+    ent := game.LuaToEntity(L, a.ent.Game(), -1)
     if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which doesn't exist.", id))
+      luaDoError(L, "Tried to execMinion entity which doesn't exist.")
       return 0
     }
     if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
-      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", id))
+      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", ent.Id))
       return 0
     }
     if !ent.Ai.Active() {
-      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", id))
+      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", ent.Id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

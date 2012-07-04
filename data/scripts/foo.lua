@@ -15,7 +15,7 @@ end
 -- 
 -- need an OnAction() function that is called after every action is
 -- completed.
-play_as_denizens = true
+play_as_denizens = false
 function Init()
   while false do
     choices = dialogBox("ui/dialog/sample.json")
@@ -64,7 +64,7 @@ function doDenizenSetup()
   -- placed is an array containing all of the entities placed, in this case
   -- there will only be one, and we will use that one to determine what
   -- servitors to make available to the user to place.
-  if placed[1].name == "Chosen One" then
+  if placed[1].Name == "Chosen One" then
     ents = {
       {"Disciple", 1},
       {"Devotee", 1},
@@ -117,7 +117,7 @@ function doIntrudersSetup()
   -- This lets you pick gear for each entity, you can uncomment this block
   -- if you want to turn it on.
   -- for en, ent in pairs(ents) do
-  --   print("Checking ent: ", ent.name)
+  --   print("Checking ent: ", ent.Name)
   --   for i, gear in pairs(ent.gear) do
   --     print("gear", en, i, gear)
   --   end

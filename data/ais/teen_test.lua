@@ -4,8 +4,8 @@
 -- also WILL have Minions, Denizens, Intruders added to 
 
 function Think()
-	if Me.HpCur < 5 and not Me.Conditions["Psychic Shroud"] then
-		DoBasicAttack ("Psychic Shroud", Me)
+	if Me().HpCur < 5 and not Me().Conditions["Psychic Shroud"] then
+		DoBasicAttack ("Psychic Shroud", Me())
 	end
 	denizens = NearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do
@@ -26,7 +26,7 @@ function Think()
 	if target == nil then
 		return
 	end
-	if RangedDistBetweenEntities (Me, target) <2 then
+	if RangedDistBetweenEntities (Me(), target) <2 then
 		MoveWithinRangeAndAttack(1, "Kick", target)
 	else
 		MoveWithinRangeAndAttack (2, "Pistol", target)

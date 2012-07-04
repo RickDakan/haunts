@@ -114,7 +114,7 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
 // Lets the game know that the round middle can begin
 // Runs RoundEnd
 func (gs *gameScript) OnRound(g *Game) {
-  base.Log().Printf("Launching script.OnRound")
+  base.Log().Printf("Launching script.RoundStart")
   go func() {
     // // round begins automatically
     // <-round_middle
@@ -130,7 +130,7 @@ func (gs *gameScript) OnRound(g *Game) {
 
     // signals to the game that we're done with the startup stuff
     g.comm.script_to_game <- nil
-    base.Log().Printf("ScriptComm: Done with OnStart")
+    base.Log().Printf("ScriptComm: Done with RoundStart")
 
     for {
       // The action is sent when it happens, and a nil is sent when it is done

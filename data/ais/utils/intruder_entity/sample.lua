@@ -1,7 +1,7 @@
 function pursue()
   denizens = NearestNEntities (50, "denizen")
   for _, denizen in pairs (denizens) do
-    target = Me.Info().LastEntityThatIAttacked
+    target = Me().Info().LastEntityThatIAttacked
     if Exists(target) then
       return target
     end
@@ -110,10 +110,10 @@ function allyHasCondition(has, condition)
 end
 
 function aoePlaceAndAttack(attack, spec)
-  gz = BestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
-  dsts = AllPathablePoints(Me.Pos, gz, 1, Me.Actions[attack].Range)
+  gz = BestAoeAttackPos (attack, Me().ApCur - Me().Actions[attack].Ap, spec)
+  dsts = AllPathablePoints(Me().Pos, gz, 1, Me().Actions[attack].Range)
   DoMove(dsts, 1000)
-  if RangedDistBetweenPositions (Me.Pos, gz) > Me.Actions[attack].Range then
+  if RangedDistBetweenPositions (Me().Pos, gz) > Me().Actions[attack].Range then
     return
   else
     DoAoeAttack(attack, gz)

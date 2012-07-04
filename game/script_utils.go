@@ -203,13 +203,24 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   L.PushGoFunction(func(L *lua.State) int {
     L.NewTable()
     L.PushString("LastEntityThatIAttacked")
-    L.PushInteger(int(ent.Info.LastEntThatIAttacked))
+    e := ent.Game().EntityById(ent.Info.LastEntThatIAttacked)
+    if e != nil {
+      LuaPushEntity(L, e)
+    } else {
+      L.PushNil()
+    }
     L.SetTable(-3)
     L.PushString("LastEntityThatAttackedMe")
-    L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
+    e = ent.Game().EntityById(ent.Info.LastEntThatAttackedMe)
+    if e != nil {
+      LuaPushEntity(L, e)
+    } else {
+      L.PushNil()
+    }
     L.SetTable(-3)
     return 1
   })
+  L.SetTable(-3)
 
   L.PushString("Pos")
   x, y := ent.Pos()

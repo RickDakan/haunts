@@ -1,9 +1,9 @@
 function moveWithinRangeAndAttack (min_range, attack, target)
-	max_range = Me.Actions[attack].Range
+	max_range = Me().Actions[attack].Range
 	if min_range > max_range then
 		min_range = max_range
 	end
-	ps = AllPathablePoints (Me.Pos, target.Pos, min_range, max_range)
+	ps = AllPathablePoints (Me().Pos, target.Pos, min_range, max_range)
 	res = DoMove (ps, 1000)
 	if Exists(target) then
 		DoBasicAttack(attack, target)
@@ -11,12 +11,9 @@ function moveWithinRangeAndAttack (min_range, attack, target)
 end
 
 function pursue()
-	intruders = NearestNEntities (10, "intruder")
-	for _, intruder in pairs (intruders) do
-		target = Me.Info().LastEntityThatIAttacked
-		if Exists(target) then
-			return target
-		end
+	target = Me().Info().LastEntityThatIAttacked
+	if Exists(target) then
+		return target
 	end
 	return nil
 end
@@ -31,7 +28,7 @@ end
 
 
 function retaliate()
-	target = Me.Info().LastEntityThatAttackedMe
+	target = Me().Info().LastEntityThatAttackedMe
 	if Exists(target) then
 		return target
 	end
@@ -148,8 +145,8 @@ end
 
 
 function ApNeeded(attack)
-	ApCur = Me.ApCur
-	ApCost = Me.Actions[attack].Ap
+	ApCur = Me().ApCur
+	ApCost = Me().Actions[attack].Ap
 	extra_dist = ApCur - ApCost
 	return extra_dist
 end

@@ -148,6 +148,7 @@ func (a *Ai) setupLuaState() {
     L.PushInteger(rand.Intn(val) + 1)
     return 1
   })
+  a.L.DoString(a.Prog)
 }
 
 func luaStringifyParam(L *lua.State, index int) string {
@@ -230,8 +231,9 @@ func (a *Ai) masterRoutine() {
           // Reset the execution limit in case it was set to 0 due to a
           // previous error
           a.L.SetExecutionLimit(2500)
-          res := a.L.DoString(a.Prog)
-          base.Log().Printf("Res: %t", res)
+          a.L.GetField(lua.LUA_GLOBALSINDEX, "Think")
+          a.L.Call(0, 0)
+
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {

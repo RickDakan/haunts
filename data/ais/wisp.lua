@@ -10,10 +10,10 @@ while true do
     break
   end
 
-  mypos = Me.Pos
+  mypos = Me().Pos
   hispos = intruders[1].Pos
   attack = "Ectoplasmic Discharge"
-  stats = Me.Actions[attack]
+  stats = Me().Actions[attack]
 
   -- We want to be withing range to hit our target, but we don't want to be
   -- much closer than we need to be.  So if our range is 7 we will try to get

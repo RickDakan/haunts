@@ -3,9 +3,9 @@
 -- am I buffed?
 
 function Think()
-	conditions = getConditions (Me)
+	conditions = getConditions (Me())
 		if not conditions ["Focused"] then 
-			DoBasicAttack ("Cultic Mantra", Me)
+			DoBasicAttack ("Cultic Mantra", Me())
 		end
 	end
 	target = pursue()

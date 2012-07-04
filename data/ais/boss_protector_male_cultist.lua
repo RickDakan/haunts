@@ -18,7 +18,7 @@ function protectMaster(master, intruders)
     if RangedDistBetweenEntities(master, intruder) <= range then
       -- We found an intruder that is too close to the master, so we will go
       -- after him.
-      ps = AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
+      ps = AllPathablePoints(Me().Pos, intruder.Pos, 1, 1)
       if ps[1] then
         loc = DoMove(ps, 1000)
         if loc then
@@ -61,11 +61,11 @@ function Think()
 
   -- If we made it here then we are free to just attack the nearest intruder
   intruder = intruders[1]
-  ps = AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
+  ps = AllPathablePoints(Me().Pos, intruder.Pos, 1, 1)
   if ps[1] then
     loc = DoMove(ps, 1000)
   end
-  if RangedDistBetweenEntities(Me, intruder) == 1 then
+  if RangedDistBetweenEntities(Me(), intruder) == 1 then
     while Exists(intruder) do
       res = DoBasicAttack("Kick", intruder)
       if res == nil then
