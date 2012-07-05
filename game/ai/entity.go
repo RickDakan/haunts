@@ -75,11 +75,11 @@ func getActionByName(e *game.Entity, name string) game.Action {
 
 // Assuming a table, t, on the top of the stack, returns t[x], t[y]
 func getPointFromTable(L *lua.State) (int, int) {
-  L.PushString("x")
+  L.PushString("X")
   L.GetTable(-2)
   x := L.ToInteger(-1)
   L.Pop(1)
-  L.PushString("y")
+  L.PushString("Y")
   L.GetTable(-2)
   y := L.ToInteger(-1)
   L.Pop(1)
@@ -89,10 +89,10 @@ func getPointFromTable(L *lua.State) (int, int) {
 // Makes a table with the keys x and y and leaves it on the top of the stack.
 func putPointToTable(L *lua.State, x, y int) {
   L.NewTable()
-  L.PushString("x")
+  L.PushString("X")
   L.PushInteger(x)
   L.SetTable(-3)
-  L.PushString("y")
+  L.PushString("Y")
   L.PushInteger(y)
   L.SetTable(-3)
 }

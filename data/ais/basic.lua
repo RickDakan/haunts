@@ -9,7 +9,7 @@ function Think()
       movement = 0
     end
     target = Utils.BestAoeAttackPos("Abjuration", movement, "enemies only")
-    if not (target.x == 0 and target.y == 0) then
+    if not (target.X == 0 and target.Y == 0) then
       ps = Utils.AllPathablePoints(Me.Pos, target, 1, range)
       res = Actions.Move(ps, 1000)
       res = Actions.AoeAttack("Abjuration", target)
