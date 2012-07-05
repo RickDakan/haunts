@@ -163,13 +163,25 @@ func (room *Room) renderFurniture(floor mathgl.Mat4, base_alpha byte, drawables 
     }
     all = append(all, offsetDrawable{d, -room.X, -room.Y})
   }
+
+  // Do not include temporary objects in the ordering, since they will likely
+  // overlap with other objects and make it difficult to determine the proper
+  // ordering.  Just draw the temporary ones last.
+  var temps []RectObject
   for _, f := range room.Furniture {
-    all = append(all, f)
+    if f.temporary {
+      temps = append(temps, f)
+    } else {
+      all = append(all, f)
+    }
   }
   all = OrderRectObjects(all)
+  for i := range all {
+    temps = append(temps, all[i])
+  }
 
-  for i := len(all) - 1; i >= 0; i-- {
-    d := all[i].(Drawable)
+  for i := len(temps) - 1; i >= 0; i-- {
+    d := temps[i].(Drawable)
     fx, fy := d.FPos()
     near_x, near_y := float32(fx), float32(fy)
     idx, idy := d.Dims()
