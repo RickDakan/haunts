@@ -15,12 +15,12 @@ function protectMaster(master, intruders)
 
     -- Check if the intruder is close enough to the master to hit it with
     -- a basic attack.
-    if RangedDistBetweenEntities(master, intruder) <= range then
+    if Utils.RangedDistBetweenEntities(master, intruder) <= range then
       -- We found an intruder that is too close to the master, so we will go
       -- after him.
-      ps = AllPathablePoints(Me().Pos, intruder.Pos, 1, 1)
+      ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
       if ps[1] then
-        loc = DoMove(ps, 1000)
+        loc = Actions.Move(ps, 1000)
         if loc then
           return intruder
         end
@@ -36,8 +36,8 @@ function protectMaster(master, intruders)
 end
 
 function Think()
-  intruders = NearestNEntities(10, "intruder")
-  master = NearestNEntities(1, "master")[1]
+  intruders = Utils.NearestNEntities(10, "intruder")
+  master = Utils.NearestNEntities(1, "master")[1]
 
   -- If there are no intruders then we just stay put.
   if table.getn(intruders) == 0 then
@@ -48,8 +48,8 @@ function Think()
   if master then
     target = protectMaster(master, intruders)
     if target then
-      while Exists(target) do
-        res = DoBasicAttack("Kick", target)
+      while Utils.Exists(target) do
+        res = Actions.BasicAttack("Kick", target)
         if res == nil then
           return
         end
@@ -61,13 +61,13 @@ function Think()
 
   -- If we made it here then we are free to just attack the nearest intruder
   intruder = intruders[1]
-  ps = AllPathablePoints(Me().Pos, intruder.Pos, 1, 1)
+  ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
   if ps[1] then
-    loc = DoMove(ps, 1000)
+    loc = Actions.Move(ps, 1000)
   end
-  if RangedDistBetweenEntities(Me(), intruder) == 1 then
-    while Exists(intruder) do
-      res = DoBasicAttack("Kick", intruder)
+  if Utils.RangedDistBetweenEntities(Me, intruder) == 1 then
+    while Utils.Exists(intruder) do
+      res = Actions.BasicAttack("Kick", intruder)
       if res == nil then
         return
       end

@@ -2,28 +2,28 @@
 -- door to that room, go to the door, open it, step through it, repeat.
 
 function Think()
-  if Me().ApCur == 0 then
+  if Me.ApCur == 0 then
     return
   end
-  unexplored = NearbyUnexploredRoom()
+  unexplored = Utils.NearbyUnexploredRoom()
   print(unexplored)
   if not unexplored then
     -- We've explored the whole house
     return
   end
-  path = RoomPath(RoomContaining(Me()), unexplored)
+  path = Utils.RoomPath(Utils.RoomContaining(Me), unexplored)
   if not path then
     -- Can't get there for some odd reason
     return
   end
-  doors = AllDoorsBetween(RoomContaining(Me()), path[1])
+  doors = Utils.AllDoorsBetween(Utils.RoomContaining(Me), path[1])
   if table.getn(doors) == 0 then
     -- No doors, shouldn't have made this path
-    print("There should be doors between", RoomContaining(Me()), path[1])
+    print("There should be doors between", Utils.RoomContaining(Me), path[1])
     return
   end
-  ps = DoorPositions(doors[1])
-  res = DoMove(ps, 1000)
+  ps = Utils.DoorPositions(doors[1])
+  res = Actions.Move(ps, 1000)
   if res then
     -- We successfully moved towards the door, so we should rethink
     Think()
@@ -31,12 +31,12 @@ function Think()
   end
   -- If it failed it was probably because we were already on the door, so just
   -- assume that for now and try to open it
-  print("DoorIsOpen(", DoorIsOpen(doors[1]), ")")
-  if not DoorIsOpen(doors[1]) then
-    DoDoorToggle(doors[1])
+  print("Utils.DoorIsOpen(", Utils.DoorIsOpen(doors[1]), ")")
+  if not Utils.DoorIsOpen(doors[1]) then
+    Actions.DoorToggle(doors[1])
   end
   -- Either way the door should be open now and we can try to walk through it
-  ps = RoomPositions(path[1])
-  DoMove(ps, 1000)
+  ps = Utils.RoomPositions(path[1])
+  Actions.Move(ps, 1000)
   Think()
 end

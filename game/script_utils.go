@@ -5,6 +5,7 @@ import (
   "io"
   "encoding/binary"
   "errors"
+  "sort"
   "github.com/runningwild/haunts/base"
   lua "github.com/xenith-studios/golua"
 )
@@ -144,6 +145,44 @@ func LuaToEntity(L *lua.State, game *Game, index int) *Entity {
   return game.EntityById(id)
 }
 
+type FunctionTable map[string]func()
+
+func LuaPushSmartFunctionTable(L *lua.State, ft FunctionTable) {
+  // Copy it just in case - I can't imagine someone changing it after passing
+  // it to this function, but I don't want to take any chances.
+  myft := make(FunctionTable)
+  for n, f := range ft {
+    myft[n] = f
+  }
+  names := make([]string, len(myft))[0:0]
+  for name := range myft {
+    names = append(names, name)
+  }
+  sort.Strings(names)
+  valid_selectors := "["
+  for i, name := range names {
+    if i > 0 {
+      valid_selectors += ", "
+    }
+    valid_selectors += fmt.Sprintf("'%s'", name)
+  }
+  valid_selectors += "]."
+
+  L.NewTable()
+  L.PushString("__index")
+  L.PushGoFunctionAsCFunction(func(L *lua.State) int {
+    name := L.ToString(-1)
+    if f, ok := myft[name]; ok {
+      f()
+    } else {
+      base.Error().Printf("'%s' is not a valid selector, valid seletors are %s", name, valid_selectors)
+      L.PushNil()
+    }
+    return 1
+  })
+  L.SetTable(-3)
+}
+
 // Pushes an entity onto the stack, it is a table containing the following:
 // e.id -> EntityId of this entity
 // e.name -> Name as displayed to the user
@@ -155,6 +194,8 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
     L.PushNil()
     return
   }
+  // id and Name can be added to the ent table as static data since they 
+  // never change.
   L.NewTable()
   L.PushString("id")
   L.PushInteger(int(ent.Id))
@@ -163,88 +204,76 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   L.PushString(ent.Name)
   L.SetTable(-3)
 
-  L.PushString("GearOptions")
-  L.NewTable()
-  if ent.ExplorerEnt != nil {
-    for _, gear_name := range ent.ExplorerEnt.Gear_names {
-      var g Gear
-      g.Defname = gear_name
-      base.GetObject("gear", &g)
-      L.PushString(gear_name)
-      L.PushString(g.Large_icon.Path.String())
-      L.SetTable(-3)
-    }
-  }
-  L.SetTable(-3)
-
-  L.PushString("Gear")
-  if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
-    L.PushString(ent.ExplorerEnt.Gear.Name)
-  } else {
-    L.PushNil()
-  }
-  L.SetTable(-3)
-
-  L.PushString("Actions")
-  L.NewTable()
-  for _, action := range ent.Actions {
-    L.PushString(action.String())
-    action.Push(L)
-    L.SetTable(-3)
-  }
-  L.SetTable(-3)
-
-  L.PushString("Conditions")
-  L.NewTable()
-  for _, condition := range ent.Stats.ConditionNames() {
-    L.PushString(condition)
-    L.PushBoolean(true)
-    L.SetTable(-3)
-  }
-  L.SetTable(-3)
-
-  L.PushString("Info")
-  L.NewTable()
-  L.NewTable()
-  L.PushString("__index")
-  L.PushGoFunctionAsCFunction(func(L *lua.State) int {
-    str := L.ToString(-1)
-    switch str {
-    case "LastEntityThatIAttacked":
+  // Meta table for the Entity so that any dynamic data is generated
+  // on-the-fly
+  LuaPushSmartFunctionTable(L, FunctionTable{
+    "Conditions": func() {
+      L.NewTable()
+      for _, condition := range ent.Stats.ConditionNames() {
+        L.PushString(condition)
+        L.PushBoolean(true)
+        L.SetTable(-3)
+      }
+    },
+    "GearOptions": func() {
+      L.NewTable()
+      if ent.ExplorerEnt != nil {
+        for _, gear_name := range ent.ExplorerEnt.Gear_names {
+          var g Gear
+          g.Defname = gear_name
+          base.GetObject("gear", &g)
+          L.PushString(gear_name)
+          L.PushString(g.Large_icon.Path.String())
+          L.SetTable(-3)
+        }
+      }
+    },
+    "Gear": func() {
+      if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
+        L.PushString(ent.ExplorerEnt.Gear.Name)
+      } else {
+        L.PushNil()
+      }
+    },
+    "Actions": func() {
+      L.NewTable()
+      for _, action := range ent.Actions {
+        L.PushString(action.String())
+        action.Push(L)
+        L.SetTable(-3)
+      }
+    },
+    "Pos": func() {
+      x, y := ent.Pos()
+      pushPoint(L, x, y)
+    },
+    "Corpus": func() {
+      L.PushInteger(ent.Stats.Corpus())
+    },
+    "Ego": func() {
+      L.PushInteger(ent.Stats.Ego())
+    },
+    "HpCur": func() {
+      L.PushInteger(ent.Stats.HpCur())
+    },
+    "HpMax": func() {
+      L.PushInteger(ent.Stats.HpMax())
+    },
+    "ApCur": func() {
+      L.PushInteger(ent.Stats.ApCur())
+    },
+    "ApMax": func() {
+      L.PushInteger(ent.Stats.ApMax())
+    },
+    "Info": func() {
+      L.NewTable()
+      L.PushString("LastEntityThatIAttacked")
       LuaPushEntity(L, ent.Game().EntityById(ent.Info.LastEntThatIAttacked))
-      return 1
-    case "LastEntityThatAttackedMe":
+      L.SetTable(-3)
+      L.PushString("LastEntThatAttackedMe")
       LuaPushEntity(L, ent.Game().EntityById(ent.Info.LastEntThatAttackedMe))
-      return 1
-    }
-    base.Warn().Printf("Unknown Info field '%s'.", str)
-    return 0
+      L.SetTable(-3)
+    },
   })
-  L.SetTable(-3)
   L.SetMetaTable(-2)
-  L.SetTable(-3)
-
-  L.PushString("Pos")
-  x, y := ent.Pos()
-  pushPoint(L, x, y)
-  L.SetTable(-3)
-
-  L.PushString("Corpus")
-  L.PushInteger(ent.Stats.Corpus())
-  L.SetTable(-3)
-  L.PushString("Ego")
-  L.PushInteger(ent.Stats.Ego())
-  L.SetTable(-3)
-  L.PushString("HpCur")
-  L.PushInteger(ent.Stats.HpCur())
-  L.SetTable(-3)
-  L.PushString("HpMax")
-  L.PushInteger(ent.Stats.HpMax())
-  L.SetTable(-3)
-  L.PushString("ApCur")
-  L.PushInteger(ent.Stats.ApCur())
-  L.SetTable(-3)
-  L.PushString("ApMax")
-  L.PushInteger(ent.Stats.ApMax())
-  L.SetTable(-3)
 }

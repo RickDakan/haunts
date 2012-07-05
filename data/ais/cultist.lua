@@ -3,9 +3,8 @@
 -- am I buffed?
 
 function Think()
-	conditions = getConditions (Me())
-		if not conditions ["Focused"] then 
-			DoBasicAttack ("Cultic Mantra", Me())
+		if not Me.Conditions ["Focused"] then 
+			Actions.BasicAttack ("Cultic Mantra", Me)
 		end
 	end
 	target = pursue()

@@ -19,7 +19,7 @@ function Think()
 	if target == nil then
 		return
 	end
-	if getConditions(target)["Blindness"] then
+	if target.Conditions["Blindness"] then
 		moveWithinRangeAndAttack (1, "Envenomed Blade", target)
 	else
 		moveWithinRangeAndAttack (1, "Parasitic Gift", target)

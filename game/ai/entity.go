@@ -13,31 +13,39 @@ import (
 
 func (a *Ai) addEntityContext() {
   a.loadUtils("entity")
-  a.L.Register("Me", func(L *lua.State) int {
-    game.LuaPushEntity(L, a.ent)
-    return 1
+
+  game.LuaPushEntity(a.L, a.ent)
+  a.L.SetGlobal("Me")
+
+  a.L.NewTable()
+  game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
+    "BasicAttack": func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
+    "AoeAttack":   func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
+    "Move":        func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
+    "DoorToggle":  func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
   })
+  a.L.SetMetaTable(-2)
+  a.L.SetGlobal("Actions")
 
-  a.L.Register("AllPathablePoints", AllPathablePointsFunc(a))
-  a.L.Register("RangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
-  a.L.Register("RangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
-  a.L.Register("NearestNEntities", NearestNEntitiesFunc(a.ent))
-
-  a.L.Register("DoBasicAttack", DoBasicAttackFunc(a))
-  a.L.Register("DoAoeAttack", DoAoeAttackFunc(a))
-  a.L.Register("BestAoeAttackPos", BestAoeAttackPosFunc(a))
-  a.L.Register("DoMove", DoMoveFunc(a))
-  a.L.Register("Exists", ExistsFunc(a))
-
-  a.L.Register("NearbyUnexploredRoom", NearbyUnexploredRoomFunc(a))
-  a.L.Register("RoomPath", RoomPathFunc(a))
-  a.L.Register("RoomContaining", RoomContainingFunc(a))
-  a.L.Register("AllDoorsBetween", AllDoorsBetween(a))
-  a.L.Register("AllDoorsOn", AllDoorsOn(a))
-  a.L.Register("DoorPositions", DoorPositionsFunc(a))
-  a.L.Register("DoorIsOpen", DoorIsOpenFunc(a))
-  a.L.Register("DoDoorToggle", DoDoorToggleFunc(a))
-  a.L.Register("RoomPositions", RoomPositionsFunc(a))
+  a.L.NewTable()
+  game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
+    "AllPathablePoints":          func() { a.L.PushGoFunctionAsCFunction(AllPathablePointsFunc(a)) },
+    "RangedDistBetweenPositions": func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenPositionsFunc(a)) },
+    "RangedDistBetweenEntities":  func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenEntitiesFunc(a)) },
+    "NearestNEntities":           func() { a.L.PushGoFunctionAsCFunction(NearestNEntitiesFunc(a.ent)) },
+    "Exists":                     func() { a.L.PushGoFunctionAsCFunction(ExistsFunc(a)) },
+    "BestAoeAttackPos":           func() { a.L.PushGoFunctionAsCFunction(BestAoeAttackPosFunc(a)) },
+    "NearbyUnexploredRoom":       func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomFunc(a)) },
+    "RoomPath":                   func() { a.L.PushGoFunctionAsCFunction(RoomPathFunc(a)) },
+    "RoomContaining":             func() { a.L.PushGoFunctionAsCFunction(RoomContainingFunc(a)) },
+    "AllDoorsBetween":            func() { a.L.PushGoFunctionAsCFunction(AllDoorsBetween(a)) },
+    "AllDoorsOn":                 func() { a.L.PushGoFunctionAsCFunction(AllDoorsOn(a)) },
+    "DoorPositions":              func() { a.L.PushGoFunctionAsCFunction(DoorPositionsFunc(a)) },
+    "DoorIsOpen":                 func() { a.L.PushGoFunctionAsCFunction(DoorIsOpenFunc(a)) },
+    "RoomPositions":              func() { a.L.PushGoFunctionAsCFunction(RoomPositionsFunc(a)) },
+  })
+  a.L.SetMetaTable(-2)
+  a.L.SetGlobal("Utils")
 }
 
 type entityDist struct {

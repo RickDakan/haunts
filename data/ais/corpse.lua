@@ -1,5 +1,5 @@
---intruders = NearestNEntities(3, "intruder")
---mypos = Me().Pos
+--intruders = Utils.NearestNEntities(3, "intruder")
+--mypos = Me.Pos
 
 --intruder = intruders[1]
 function Think()

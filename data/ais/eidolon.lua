@@ -17,7 +17,7 @@ function Think()
 	if target == nil then
 		return
 	end
-	if getConditions(target)["Horrified"] then
+	if target.Conditions["Horrified"] then
 		moveWithinRangeAndAttack (1, "Feast", target)
 	else
 		moveWithinRangeAndAttack (1, "Cosmic Infection", target)

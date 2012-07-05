@@ -59,6 +59,7 @@ function doDenizenSetup()
   placed = {}
   while table.getn(placed) == 0 do
     placed = placeEntities("Master-.*", 1, ents)
+    
   end
 
   -- placed is an array containing all of the entities placed, in this case
