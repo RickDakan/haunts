@@ -4,7 +4,7 @@
 
 function Think()
 		if not Me.Conditions ["Focused"] then 
-			Actions.BasicAttack ("Cultic Mantra", Me)
+			Do.BasicAttack ("Cultic Mantra", Me)
 		end
 	end
 	target = pursue()

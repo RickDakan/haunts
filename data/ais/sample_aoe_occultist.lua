@@ -12,13 +12,13 @@ function Think()
   dsts = Utils.AllPathablePoints(Me.Pos, gz, 1, Me.Actions["Abjuration"].Range)
 
   -- move to any one of the closest positions in dsts
-  Actions.Move(dsts, 1000)
+  Do.Move(dsts, 1000)
 
   -- if we're still out of range then we'll just have to try again next turn
   if Utils.RangedDistBetweenPositions(Me.Pos, gz) > Me.Actions["Abjuration"].Range then
     return
   else
-    Actions.AoeAttack("Abjuration", gz)
+    Do.AoeAttack("Abjuration", gz)
   end
 
   -- More attacks if possible

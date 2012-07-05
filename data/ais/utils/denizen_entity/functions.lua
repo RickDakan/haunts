@@ -4,9 +4,9 @@ function moveWithinRangeAndAttack (min_range, attack, target)
 		min_range = max_range
 	end
 	ps = Utils.AllPathablePoints (Me.Pos, target.Pos, min_range, max_range)
-	res = Actions.Move (ps, 1000)
+	res = Do.Move (ps, 1000)
 	if Utils.Exists(target) then
-		Actions.BasicAttack(attack, target)
+		Do.BasicAttack(attack, target)
 	end
 end
 
@@ -162,6 +162,6 @@ end
 -- 		return target
 -- 	-- 	end
 -- 	-- if Utils.Exists(target) then
--- 	-- 	res = Actions.AoeAttack(target, pos)
+-- 	-- 	res = Do.AoeAttack(target, pos)
 -- 	-- end
 -- end

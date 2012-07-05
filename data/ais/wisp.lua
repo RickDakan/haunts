@@ -37,12 +37,12 @@ while true do
   -- We move to one of the target spaces, the closest space might be the one
   -- we are currently standing on, in which case we won't move and we will
   -- skip to attacking.
-  Actions.Move(ps, 1000)
+  Do.Move(ps, 1000)
 
   -- This does an attack with the basic attack we specified earlier on our
   -- target.  The result will have a value (res.hit) that is a boolean
   -- indicating whether or not our attack hit its target.
-  res = Actions.BasicAttack(attack, intruders[1])
+  res = Do.BasicAttack(attack, intruders[1])
   if res == nil then
     break
   end

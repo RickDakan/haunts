@@ -5,7 +5,7 @@
 
 function Think()
 	if Me.HpCur < 5 and not Me.Conditions["Psychic Shroud"] then
-		Actions.BasicAttack ("Psychic Shroud", Me)
+		Do.BasicAttack ("Psychic Shroud", Me)
 	end
 	denizens = Utils.NearestNEntities (50, "denizen")
 	for _, denizen in pairs (denizens) do

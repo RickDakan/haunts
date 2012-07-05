@@ -11,14 +11,14 @@ function Think()
     target = Utils.BestAoeAttackPos("Abjuration", movement, "enemies only")
     if not (target.X == 0 and target.Y == 0) then
       ps = Utils.AllPathablePoints(Me.Pos, target, 1, range)
-      res = Actions.Move(ps, 1000)
-      res = Actions.AoeAttack("Abjuration", target)
+      res = Do.Move(ps, 1000)
+      res = Do.AoeAttack("Abjuration", target)
       if res == nil then
         return nil
       end
     else
       ps = Utils.AllPathablePoints(Me.Pos, intruders[1].Pos, range, range)
-      Actions.Move(ps, 1000)
+      Do.Move(ps, 1000)
       return
     end
   else

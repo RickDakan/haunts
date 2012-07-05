@@ -112,11 +112,11 @@ end
 function aoePlaceAndAttack(attack, spec)
   gz = Utils.BestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
   dsts = Utils.AllPathablePoints(Me.Pos, gz, 1, Me.Actions[attack].Range)
-  Actions.Move(dsts, 1000)
+  Do.Move(dsts, 1000)
   if Utils.RangedDistBetweenPositions (Me.Pos, gz) > Me.Actions[attack].Range then
     return
   else
-    Actions.AoeAttack(attack, gz)
+    Do.AoeAttack(attack, gz)
   end
 end
 

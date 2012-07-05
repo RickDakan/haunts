@@ -25,7 +25,7 @@ func (a *Ai) addEntityContext() {
     "DoorToggle":  func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
   })
   a.L.SetMetaTable(-2)
-  a.L.SetGlobal("Actions")
+  a.L.SetGlobal("Do")
 
   a.L.NewTable()
   game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{

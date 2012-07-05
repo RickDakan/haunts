@@ -20,7 +20,7 @@ function protectMaster(master, intruders)
       -- after him.
       ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
       if ps[1] then
-        loc = Actions.Move(ps, 1000)
+        loc = Do.Move(ps, 1000)
         if loc then
           return intruder
         end
@@ -49,7 +49,7 @@ function Think()
     target = protectMaster(master, intruders)
     if target then
       while Utils.Exists(target) do
-        res = Actions.BasicAttack("Kick", target)
+        res = Do.BasicAttack("Kick", target)
         if res == nil then
           return
         end
@@ -63,11 +63,11 @@ function Think()
   intruder = intruders[1]
   ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
   if ps[1] then
-    loc = Actions.Move(ps, 1000)
+    loc = Do.Move(ps, 1000)
   end
   if Utils.RangedDistBetweenEntities(Me, intruder) == 1 then
     while Utils.Exists(intruder) do
-      res = Actions.BasicAttack("Kick", intruder)
+      res = Do.BasicAttack("Kick", intruder)
       if res == nil then
         return
       end

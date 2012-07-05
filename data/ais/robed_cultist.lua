@@ -1,6 +1,6 @@
 function mantra(buff, condition)
 	if not Me.Conditions[condition] then 
-		Actions.BasicAttack (buff, Me)
+		Do.BasicAttack (buff, Me)
 	end
 end
 				
@@ -10,11 +10,11 @@ function retaliate(melee)
 		target = Me.Info.LastEntityThatAttackedMe
 		if Utils.Exists (target) then
 			if Utils.RangedDistBetweenEntities (Me, target) == 1 then
-				return Actions.BasicAttack (melee, target)
+				return Do.BasicAttack (melee, target)
 			else
 				ps = Utils.AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
-					return Actions.Move (ps, 1000)
+					return Do.Move (ps, 1000)
 				end
 			end
 		end
@@ -27,11 +27,11 @@ function pursue(melee)
 		target = Me.Info.LastEntityThatIAttacked
 		if Utils.Exists (target) then
 			if Utils.RangedDistBetweenEntities (Me, target) == 1 then
-				return Actions.BasicAttack (melee, target)
+				return Do.BasicAttack (melee, target)
 			else
 				ps = Utils.AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
-				  return Actions.Move (ps, 1000)
+				  return Do.Move (ps, 1000)
 				end
 			end
 		end

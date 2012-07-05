@@ -14,7 +14,7 @@ if intruder then
       attack = "Diseased Kiss"
     end
     while Utils.Exists(intruder) do
-      res = Actions.BasicAttack(attack, intruder)
+      res = Do.BasicAttack(attack, intruder)
       if res.hit then
         attack = "Pummel"
       end
@@ -26,7 +26,7 @@ if intruder then
     for _, intruder in pairs(intruders) do
       ps = Utils.AllPathablePoints(mypos, intruder.Pos, 1, 1)
       if ps[1] then
-        Actions.Move(ps, 1000)
+        Do.Move(ps, 1000)
         break
       end
     end
@@ -38,5 +38,5 @@ else
   target = ps[randN(table.getn(ps))]
   a = {}
   a[1] = target
-  res = Actions.Move(a, 1000)
+  res = Do.Move(a, 1000)
 end

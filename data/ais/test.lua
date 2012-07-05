@@ -23,7 +23,7 @@ function Think()
     return
   end
   ps = Utils.DoorPositions(doors[1])
-  res = Actions.Move(ps, 1000)
+  res = Do.Move(ps, 1000)
   if res then
     -- We successfully moved towards the door, so we should rethink
     Think()
@@ -33,10 +33,10 @@ function Think()
   -- assume that for now and try to open it
   print("Utils.DoorIsOpen(", Utils.DoorIsOpen(doors[1]), ")")
   if not Utils.DoorIsOpen(doors[1]) then
-    Actions.DoorToggle(doors[1])
+    Do.DoorToggle(doors[1])
   end
   -- Either way the door should be open now and we can try to walk through it
   ps = Utils.RoomPositions(path[1])
-  Actions.Move(ps, 1000)
+  Do.Move(ps, 1000)
   Think()
 end
