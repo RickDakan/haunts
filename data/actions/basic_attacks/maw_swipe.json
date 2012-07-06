@@ -1,0 +1,13 @@
+{
+  "Name"     : "Swipe",
+  "Kind"     : "Fire",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/pummel.png"
+  },
+  "Target_enemies": true,
+  "Ap"       : 2,
+  "Strength" : 6,
+  "Damage"   : 2,
+  "Range"    : 1
+}

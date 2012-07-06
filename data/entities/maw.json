@@ -1,0 +1,24 @@
+{
+  "Name": "Transdimensional Maw",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/maw",
+  "Still": {
+    "Path": "entities/maw_still.png"
+  },
+  "Action_names": [
+    "Swipe"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 6,
+    "Hp_max": 12,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 10
+  },
+  "Ai_path": "ais/maw.lua"
+}
