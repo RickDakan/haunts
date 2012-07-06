@@ -231,8 +231,10 @@ func (a *Ai) masterRoutine() {
           // Reset the execution limit in case it was set to 0 due to a
           // previous error
           a.L.SetExecutionLimit(2500)
-          a.L.GetField(lua.LUA_GLOBALSINDEX, "Think")
-          a.L.Call(0, 0)
+
+          // DoString will panic, and we can catch that, calling it manually
+          // will exit() if it fails, which we cannot catch
+          a.L.DoString("Think()")
 
           if a.ent == nil {
             base.Log().Printf("Completed master")
