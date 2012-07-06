@@ -197,11 +197,14 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   // id and Name can be added to the ent table as static data since they 
   // never change.
   L.NewTable()
+  L.PushString("Name")
+  L.PushString(ent.Name)
+  L.SetTable(-3)
   L.PushString("id")
   L.PushInteger(int(ent.Id))
   L.SetTable(-3)
-  L.PushString("Name")
-  L.PushString(ent.Name)
+  L.PushString("type")
+  L.PushString("Entity")
   L.SetTable(-3)
 
   // Meta table for the Entity so that any dynamic data is generated
@@ -245,7 +248,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
     },
     "Pos": func() {
       x, y := ent.Pos()
-      pushPoint(L, x, y)
+      LuaPushPoint(L, x, y)
     },
     "Corpus": func() {
       L.PushInteger(ent.Stats.Corpus())
@@ -276,4 +279,26 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
     },
   })
   L.SetMetaTable(-2)
+}
+
+func LuaPushPoint(L *lua.State, x, y int) {
+  L.NewTable()
+  L.PushString("X")
+  L.PushInteger(x)
+  L.SetTable(-3)
+  L.PushString("Y")
+  L.PushInteger(y)
+  L.SetTable(-3)
+}
+
+func LuaToPoint(L *lua.State, pos int) (x, y int) {
+  L.PushString("X")
+  L.GetTable(pos - 1)
+  x = L.ToInteger(-1)
+  L.Pop(1)
+  L.PushString("Y")
+  L.GetTable(pos - 1)
+  y = L.ToInteger(-1)
+  L.Pop(1)
+  return
 }

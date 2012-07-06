@@ -290,6 +290,7 @@ type luaType int
 const (
   luaInteger luaType = iota
   luaString
+  luaEntity
   luaTable
 )
 
@@ -301,6 +302,8 @@ func makeLuaSigniature(name string, params []luaType) string {
       sig += "integer"
     case luaString:
       sig += "string"
+    case luaEntity:
+      sig += "Entity"
     case luaTable:
       sig += "table"
     default:
@@ -328,6 +331,16 @@ func luaCheckParamsOk(L *lua.State, name string, params ...luaType) bool {
       ok = L.IsNumber(i)
     case luaString:
       ok = L.IsString(i)
+    case luaEntity:
+      if L.IsTable(i) {
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.ToString(-2) == "type" && L.ToString(-1) == "Entity" {
+            ok = true
+          }
+          L.Pop(1)
+        }
+      }
     case luaTable:
       ok = L.IsTable(i)
     }

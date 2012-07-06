@@ -284,26 +284,30 @@ func getSpawnPointsMatching(gp *GamePanel) lua.GoFunction {
       count++
       L.PushInteger(count)
       L.NewTable()
-      x, y := sp.Pos()
-      dx, dy := sp.Dims()
-      L.PushString("id")
-      L.PushInteger(index)
-      L.SetTable(-3)
-      L.PushString("name")
-      L.PushString(sp.Name)
-      L.SetTable(-3)
-      L.PushString("x")
-      L.PushInteger(x)
-      L.SetTable(-3)
-      L.PushString("y")
-      L.PushInteger(y)
-      L.SetTable(-3)
-      L.PushString("dx")
-      L.PushInteger(dx)
-      L.SetTable(-3)
-      L.PushString("dy")
-      L.PushInteger(dy)
-      L.SetTable(-3)
+      {
+        x, y := sp.Pos()
+        dx, dy := sp.Dims()
+        L.PushString("id")
+        L.PushInteger(index)
+        L.SetTable(-3)
+        L.PushString("Name")
+        L.PushString(sp.Name)
+        L.SetTable(-3)
+        L.PushString("Pos")
+        LuaPushPoint(L, x, y)
+        L.SetTable(-3)
+        L.PushString("Dims")
+        L.NewTable()
+        {
+          L.PushString("Dx")
+          L.PushInteger(dx)
+          L.SetTable(-3)
+          L.PushString("Dy")
+          L.PushInteger(dy)
+          L.SetTable(-3)
+        }
+        L.SetTable(-3)
+      }
       L.SetTable(-3)
     }
     return 1
@@ -406,28 +410,6 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func pushPoint(L *lua.State, x, y int) {
-  L.NewTable()
-  L.PushString("x")
-  L.PushInteger(x)
-  L.SetTable(-3)
-  L.PushString("y")
-  L.PushInteger(y)
-  L.SetTable(-3)
-}
-
-func toPoint(L *lua.State, pos int) (x, y int) {
-  L.PushString("x")
-  L.GetTable(pos - 1)
-  x = L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("y")
-  L.GetTable(pos - 1)
-  y = L.ToInteger(-1)
-  L.Pop(1)
-  return
-}
-
 func getAllEnts(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
@@ -446,7 +428,7 @@ func roomAtPos(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    x, y := toPoint(L, -1)
+    x, y := LuaToPoint(L, -1)
     room, _, _ := gp.game.House.Floors[0].RoomFurnSpawnAtPos(x, y)
     for i, r := range gp.game.House.Floors[0].Rooms {
       if r == room {

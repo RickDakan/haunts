@@ -2,7 +2,7 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   sp = getSpawnPointsMatching(pattern)
   rooms = {}
   for i, spawn in pairs(sp) do
-    rooms[i] = roomAtPos(spawn)
+    rooms[i] = roomAtPos(spawn.Pos)
   end
   setLosMode(side, "rooms", rooms)
 end

@@ -73,30 +73,6 @@ func getActionByName(e *game.Entity, name string) game.Action {
   return nil
 }
 
-// Assuming a table, t, on the top of the stack, returns t[x], t[y]
-func getPointFromTable(L *lua.State) (int, int) {
-  L.PushString("X")
-  L.GetTable(-2)
-  x := L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("Y")
-  L.GetTable(-2)
-  y := L.ToInteger(-1)
-  L.Pop(1)
-  return x, y
-}
-
-// Makes a table with the keys x and y and leaves it on the top of the stack.
-func putPointToTable(L *lua.State, x, y int) {
-  L.NewTable()
-  L.PushString("X")
-  L.PushInteger(x)
-  L.SetTable(-3)
-  L.PushString("Y")
-  L.PushInteger(y)
-  L.SetTable(-3)
-}
-
 // Used for doing los computation in the ai, so we don't have to allocate
 // and deallocate lots of these.  Only one ai is ever running at a time so
 // this should be ok.
@@ -131,11 +107,8 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
     }
     min := L.ToInteger(-2)
     max := L.ToInteger(-1)
-    L.Pop(2)
-    x2, y2 := getPointFromTable(L)
-    L.Pop(1)
-    x1, y1 := getPointFromTable(L)
-    L.Pop(1)
+    x1, y1 := game.LuaToPoint(L, -4)
+    x2, y2 := game.LuaToPoint(L, -3)
 
     a.ent.Game().DetermineLos(x2, y2, max, grid)
     var dst []int
@@ -155,7 +128,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
       L.PushInteger(i + 1)
-      putPointToTable(L, x, y)
+      game.LuaPushPoint(L, x, y)
       L.SetTable(-3)
     }
     return 1
@@ -176,7 +149,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
 //                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "DoBasicAttack", luaString, luaTable) {
+    if !luaCheckParamsOk(L, "DoBasicAttack", luaString, luaEntity) {
       return 0
     }
     me := a.ent
@@ -228,7 +201,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 //    res - boolean - true if the action performed, nil otherwise.
 func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "DoAoeAttack", luaString, luaTable) {
+    if !luaCheckParamsOk(L, "DoAoeAttack", luaString, luaEntity) {
       return 0
     }
     me := a.ent
@@ -243,7 +216,7 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
       luaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
       return 0
     }
-    tx, ty := getPointFromTable(L)
+    tx, ty := game.LuaToPoint(L, -1)
     exec := attack.AiAttackPosition(me, tx, ty)
     if exec != nil {
       a.execs <- exec
@@ -298,7 +271,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
       return 0
     }
     x, y := attack.AiBestTarget(me, L.ToInteger(-2), spec)
-    putPointToTable(L, x, y)
+    game.LuaPushPoint(L, x, y)
     return 1
   }
 }
@@ -331,7 +304,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
     for i := 1; i <= n; i++ {
       L.PushInteger(i)
       L.GetTable(-2)
-      x, y := getPointFromTable(L)
+      x, y := game.LuaToPoint(L, -1)
       dsts = append(dsts, me.Game().ToVertex(x, y))
       L.Pop(1)
     }
@@ -354,7 +327,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
       <-a.pause
       // TODO: Need to get a resolution
       x, y := me.Pos()
-      putPointToTable(L, x, y)
+      game.LuaPushPoint(L, x, y)
       base.Log().Printf("Finished move")
     } else {
       base.Log().Printf("Didn't bother moving")
@@ -379,9 +352,8 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
     if !luaCheckParamsOk(L, "RangedDistBetweenPositions", luaTable, luaTable) {
       return 0
     }
-    x1, y1 := getPointFromTable(L)
-    L.Pop(1)
-    x2, y2 := getPointFromTable(L)
+    x1, y1 := game.LuaToPoint(L, -2)
+    x2, y2 := game.LuaToPoint(L, -1)
     dx := x2 - x1
     if dx < 0 {
       dx = -dx
@@ -414,7 +386,7 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "RangedDistBetweenEntities", luaTable, luaTable) {
+    if !luaCheckParamsOk(L, "RangedDistBetweenEntities", luaEntity, luaEntity) {
       return 0
     }
     e1 := game.LuaToEntity(L, a.ent.Game(), -2)
@@ -759,7 +731,7 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
 //    seen right now.
 func RoomContainingFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomContaining", luaTable) {
+    if !luaCheckParamsOk(L, "roomContaining", luaEntity) {
       return 0
     }
     ent := game.LuaToEntity(L, a.ent.Game(), -1)
@@ -905,15 +877,7 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     for i := -1; i < door.Width+1; i++ {
       L.PushInteger(count)
       count++
-
-      L.NewTable()
-      L.PushString("x")
-      L.PushInteger(room.X + x + dx*i)
-      L.SetTable(-3)
-      L.PushString("y")
-      L.PushInteger(room.Y + y + dy*i)
-      L.SetTable(-3)
-
+      game.LuaPushPoint(L, room.X+x+dx*i, room.Y+y+dy*i)
       L.SetTable(-3)
     }
     return 1
@@ -1017,7 +981,7 @@ func RoomPositionsFunc(a *Ai) lua.GoFunction {
       for y := room.Y; y < room.Y+room.Size.Dy; y++ {
         L.PushInteger(count)
         count++
-        putPointToTable(L, x, y)
+        game.LuaPushPoint(L, x, y)
         L.SetTable(-3)
       }
     }
