@@ -33,7 +33,7 @@ func activeMinionsFunc(a *Ai) lua.GoFunction {
       }
       count++
       L.PushInteger(count)
-      L.PushInteger(int(ent.Id))
+      game.LuaPushEntity(L, ent)
       L.SetTable(-3)
     }
     base.Log().Printf("activeMinions: %d", count)
@@ -47,7 +47,7 @@ func execMinionFunc(a *Ai) lua.GoFunction {
     if !luaNumParamsOk(L, 1, "execMinion") {
       return 0
     }
-    ent := game.LuaToEntity(L, a.ent.Game(), -1)
+    ent := game.LuaToEntity(L, a.game, -1)
     if ent == nil {
       luaDoError(L, "Tried to execMinion entity which doesn't exist.")
       return 0

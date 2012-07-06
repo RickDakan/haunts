@@ -36,7 +36,7 @@ func activeNonMinionsFunc(a *Ai) lua.GoFunction {
       }
       count++
       L.PushInteger(count)
-      L.PushInteger(int(ent.Id))
+      game.LuaPushEntity(L, ent)
       L.SetTable(-3)
     }
     return 1
@@ -49,18 +49,17 @@ func execNonMinionFunc(a *Ai) lua.GoFunction {
     if !luaNumParamsOk(L, 1, "execNonMinion") {
       return 0
     }
-    id := game.EntityId(L.ToInteger(0))
-    ent := a.game.EntityById(id)
+    ent := game.LuaToEntity(L, a.game, -1)
     if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which doesn't exist.", id))
+      luaDoError(L, "Tried to execNonMinion an invalid entity.")
       return 0
     }
     if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is a minion.", id))
+      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is a minion.", ent.Id))
       return 0
     }
     if !ent.Ai.Active() {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is not active.", id))
+      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is not active.", ent.Id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()
