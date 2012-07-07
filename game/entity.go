@@ -234,8 +234,8 @@ func (ei *entityDef) Side() Side {
   if ei.ObjectEnt != nil {
     types++
   }
-  if types != 1 {
-    base.Error().Printf("Entity '%s' must specify exactly one ent type.", ei.Name)
+  if types > 1 {
+    base.Error().Printf("Entity '%s' must specify exactly zero or one ent type.", ei.Name)
     return SideNone
   }
 
@@ -255,9 +255,11 @@ func (ei *entityDef) Side() Side {
 
   case ei.ObjectEnt != nil:
     return SideObject
+
+  default:
+    return SideNpc
   }
 
-  base.Error().Printf("This code should have been unreachable - offending entity: '%s'", ei.Name)
   return SideNone
 }
 func (ei *entityDef) Dims() (int, int) {
@@ -312,6 +314,7 @@ const (
   SideNone Side = iota
   SideExplorers
   SideHaunt
+  SideNpc
   SideObject
 )
 

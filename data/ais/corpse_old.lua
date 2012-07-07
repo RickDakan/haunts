@@ -15,7 +15,7 @@ if intruder then
     end
     while Utils.Exists(intruder) do
       res = Do.BasicAttack(attack, intruder)
-      if res.hit then
+      if res.Hit then
         attack = "Pummel"
       end
     end

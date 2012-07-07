@@ -102,7 +102,7 @@ func init() {
 //    points - array[table[x,y]]
 func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "AllPathablePoints", luaTable, luaTable, luaInteger, luaInteger) {
+    if !luaCheckParamsOk(L, "AllPathablePoints", luaPoint, luaPoint, luaInteger, luaInteger) {
       return 0
     }
     min := L.ToInteger(-2)
@@ -201,7 +201,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 //    res - boolean - true if the action performed, nil otherwise.
 func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "DoAoeAttack", luaString, luaEntity) {
+    if !luaCheckParamsOk(L, "DoAoeAttack", luaString, luaPoint) {
       return 0
     }
     me := a.ent
@@ -270,9 +270,15 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
       luaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for BestAoeAttackPos().", L.ToString(-1)))
       return 0
     }
-    x, y := attack.AiBestTarget(me, L.ToInteger(-2), spec)
+    x, y, hits := attack.AiBestTarget(me, L.ToInteger(-2), spec)
     game.LuaPushPoint(L, x, y)
-    return 1
+    L.NewTable()
+    for i := range hits {
+      L.PushInteger(i + 1)
+      game.LuaPushEntity(L, hits[i])
+      L.SetTable(-3)
+    }
+    return 2
   }
 }
 
@@ -293,12 +299,16 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "DoMove", luaTable, luaInteger) {
+    if !luaCheckParamsOk(L, "DoMove", luaArray, luaInteger) {
       return 0
     }
     me := a.ent
     max_ap := L.ToInteger(-1)
     L.Pop(1)
+    cur_ap := me.Stats.ApCur()
+    if max_ap > cur_ap {
+      max_ap = cur_ap
+    }
     n := int(L.ObjLen(-1))
     dsts := make([]int, n)[0:0]
     for i := 1; i <= n; i++ {
@@ -349,7 +359,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 //    dist - integer - The ranged distance between the two positions.
 func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "RangedDistBetweenPositions", luaTable, luaTable) {
+    if !luaCheckParamsOk(L, "RangedDistBetweenPositions", luaPoint, luaPoint) {
       return 0
     }
     x1, y1 := game.LuaToPoint(L, -2)
@@ -671,7 +681,7 @@ func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
 //    but including dst.
 func RoomPathFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomPath", luaTable, luaTable) {
+    if !luaCheckParamsOk(L, "roomPath", luaRoom, luaRoom) {
       return 0
     }
 
@@ -756,7 +766,7 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
 //    doors - array[door] - List of all doors connecting r1 and r2.
 func AllDoorsBetween(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allDoorsBetween", luaTable, luaTable) {
+    if !luaCheckParamsOk(L, "allDoorsBetween", luaRoom, luaRoom) {
       return 0
     }
     f1, r1, _ := getFloorRoomDoor(L, -1)
@@ -808,7 +818,7 @@ func AllDoorsBetween(a *Ai) lua.GoFunction {
 //    doors - array[door] - List of all doors attached to the specified room.
 func AllDoorsOn(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allDoorsOn", luaTable) {
+    if !luaCheckParamsOk(L, "allDoorsOn", luaRoom) {
       return 0
     }
     f, r, _ := getFloorRoomDoor(L, -1)
@@ -840,7 +850,7 @@ func AllDoorsOn(a *Ai) lua.GoFunction {
 //    and closed from.
 func DoorPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doorPositions", luaTable) {
+    if !luaCheckParamsOk(L, "doorPositions", luaDoor) {
       return 0
     }
     f, r, d := getFloorRoomDoor(L, -1)
@@ -895,7 +905,7 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
 //    open - boolean - True if the door is open, false otherwise.
 func DoorIsOpenFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doorIsOpen", luaTable) {
+    if !luaCheckParamsOk(L, "doorIsOpen", luaDoor) {
       return 0
     }
     f, r, d := getFloorRoomDoor(L, -1)
@@ -920,7 +930,7 @@ func DoorIsOpenFunc(a *Ai) lua.GoFunction {
 //    res will be nil if the action could not be performed for some reason.
 func DoDoorToggleFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doDoorToggle", luaTable) {
+    if !luaCheckParamsOk(L, "doDoorToggle", luaDoor) {
       return 0
     }
     f, r, d := getFloorRoomDoor(L, -1)
@@ -965,7 +975,7 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
 //    ps - array[table[x,y]] - List of all position inside the specified room.
 func RoomPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomPositions", luaTable) {
+    if !luaCheckParamsOk(L, "roomPositions", luaRoom) {
       return 0
     }
     f, r, _ := getFloorRoomDoor(L, -1)

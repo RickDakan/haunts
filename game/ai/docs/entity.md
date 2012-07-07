@@ -8,6 +8,13 @@ For an entity called ent the following fields are available:
     ent.Name
     -- The name of the entity, as displayed to the user
     
+    ent.Side.Denizen
+    ent.Side.Intruder
+    ent.Side.Npc
+    ent.Side.Object
+    -- Each entity has these booleans that identify which side it is on, or if it is an Npc or
+    -- Object.  All entities will identify as belonging to exactly one of these groups.
+
     ent.Conditions
     -- A table mapping conditions names to true boolean value
 

@@ -293,6 +293,10 @@ const (
   luaInteger luaType = iota
   luaString
   luaEntity
+  luaPoint
+  luaRoom
+  luaDoor
+  luaArray
   luaTable
 )
 
@@ -306,6 +310,14 @@ func makeLuaSigniature(name string, params []luaType) string {
       sig += "string"
     case luaEntity:
       sig += "Entity"
+    case luaPoint:
+      sig += "Point"
+    case luaRoom:
+      sig += "Room"
+    case luaDoor:
+      sig += "Door"
+    case luaArray:
+      sig += "Array"
     case luaTable:
       sig += "table"
     default:
@@ -343,6 +355,76 @@ func luaCheckParamsOk(L *lua.State, name string, params ...luaType) bool {
           L.Pop(1)
         }
       }
+    case luaPoint:
+      if L.IsTable(i) {
+        var x, y bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.ToString(-2) == "X" {
+            x = true
+          }
+          if L.ToString(-2) == "Y" {
+            y = true
+          }
+          L.Pop(1)
+        }
+        ok = x && y
+      }
+    case luaRoom:
+      if L.IsTable(i) {
+        var floor, room, door bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          switch L.ToString(-2) {
+          case "floor":
+            floor = true
+          case "room":
+            room = true
+          case "door":
+            door = true
+          }
+          L.Pop(1)
+        }
+        ok = floor && room && !door
+      }
+    case luaDoor:
+      if L.IsTable(i) {
+        var floor, room, door bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          switch L.ToString(-2) {
+          case "floor":
+            floor = true
+          case "room":
+            room = true
+          case "door":
+            door = true
+          }
+          L.Pop(1)
+        }
+        ok = floor && room && door
+      }
+    case luaArray:
+      // Make sure that all of the indices 1..length are there, and no others.
+      check := make(map[int]int)
+      if L.IsTable(i) {
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.IsNumber(-2) {
+            check[L.ToInteger(-2)]++
+          } else {
+            break
+          }
+          L.Pop(1)
+        }
+      }
+      count := 0
+      for i := 1; i <= len(check); i++ {
+        if _, ok := check[i]; ok {
+          count++
+        }
+      }
+      ok = (count == len(check))
     case luaTable:
       ok = L.IsTable(i)
     }

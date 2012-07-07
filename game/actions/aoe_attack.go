@@ -196,7 +196,7 @@ const (
   AiAoeHitNoAllies
 )
 
-func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTarget) (x, y int) {
+func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTarget) (x, y int, targets []*game.Entity) {
   ex, ey := ent.Pos()
   max := 0
   best_dist := 10000
@@ -213,7 +213,7 @@ func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTar
       if !ent.HasLos(x, y, 1, 1) {
         continue
       }
-      targets := a.getTargetsAt(ent.Game(), x, y)
+      targets = a.getTargetsAt(ent.Game(), x, y)
       ok := true
       count := 0
       for i := range targets {
@@ -246,7 +246,7 @@ func (a *AoeAttack) AiBestTarget(ent *game.Entity, extra_dist int, spec AiAoeTar
       }
     }
   }
-  return bx, by
+  return bx, by, a.getTargetsAt(ent.Game(), bx, by)
 }
 func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec {
   if !ent.HasLos(x, y, 1, 1) {

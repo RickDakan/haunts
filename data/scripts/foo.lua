@@ -75,6 +75,7 @@ function doDenizenSetup()
     ents = {
       {"Corpse", 1},
       {"Vengeful Wraith", 1},
+      {"Poltergeist", 1},
       {"Angry Shade", 1},
     }
   end
