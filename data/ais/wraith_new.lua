@@ -15,5 +15,4 @@ function Think()
 			end
 		end
 	end
-	Think()
 end
