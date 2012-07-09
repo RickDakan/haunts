@@ -7,17 +7,18 @@ import (
   "errors"
   "sort"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
 )
 
 type luaEncodable int32
 
 const (
-  luaBool luaEncodable = iota
-  luaNumber
-  luaNil
-  luaTable
-  luaString
+  luaEncBool luaEncodable = iota
+  luaEncNumber
+  luaEncNil
+  luaEncTable
+  luaEncString
 )
 
 // Encodes a lua value, only bool, number, nil, table, and string can be
@@ -27,22 +28,22 @@ func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
   var err1, err2, err3 error
   switch {
   case L.IsBoolean(index):
-    err1 = binary.Write(w, binary.LittleEndian, luaBool)
+    err1 = binary.Write(w, binary.LittleEndian, luaEncBool)
     var v byte = 0
     if L.ToBoolean(index) {
       v = 1
     }
     err2 = binary.Write(w, binary.LittleEndian, v)
   case L.IsNumber(index):
-    err1 = binary.Write(w, binary.LittleEndian, luaNumber)
+    err1 = binary.Write(w, binary.LittleEndian, luaEncNumber)
     err2 = binary.Write(w, binary.LittleEndian, L.ToNumber(index))
   case L.IsNil(index):
-    err1 = binary.Write(w, binary.LittleEndian, luaNil)
+    err1 = binary.Write(w, binary.LittleEndian, luaEncNil)
   case L.IsTable(index):
-    err1 = binary.Write(w, binary.LittleEndian, luaTable)
+    err1 = binary.Write(w, binary.LittleEndian, luaEncTable)
     err2 = LuaEncodeTable(w, L, index)
   case L.IsString(index):
-    err1 = binary.Write(w, binary.LittleEndian, luaString)
+    err1 = binary.Write(w, binary.LittleEndian, luaEncString)
     str := L.ToString(index)
     err2 = binary.Write(w, binary.LittleEndian, uint32(len(str)))
     err3 = binary.Write(w, binary.LittleEndian, []byte(str))
@@ -68,19 +69,19 @@ func LuaDecodeValue(r io.Reader, L *lua.State) error {
     return err
   }
   switch le {
-  case luaBool:
+  case luaEncBool:
     var v byte
     err = binary.Read(r, binary.LittleEndian, &v)
     L.PushBoolean(v == 1)
-  case luaNumber:
+  case luaEncNumber:
     var f float64
     err = binary.Read(r, binary.LittleEndian, &f)
     L.PushNumber(f)
-  case luaNil:
+  case luaEncNil:
     L.PushNil()
-  case luaTable:
+  case luaEncTable:
     err = LuaDecodeTable(r, L)
-  case luaString:
+  case luaEncString:
     var length uint32
     err = binary.Read(r, binary.LittleEndian, &length)
     if err != nil {
@@ -301,4 +302,249 @@ func LuaToPoint(L *lua.State, pos int) (x, y int) {
   y = L.ToInteger(-1)
   L.Pop(1)
   return
+}
+
+func LuaPushSpawnPoint(L *lua.State, game *Game, sp *house.SpawnPoint) {
+  index := -1
+  for i, spawn := range game.House.Floors[0].Spawns {
+    if spawn == sp {
+      index = i
+    }
+  }
+  if index == -1 {
+    LuaDoError(L, "Unable to push SpawnPoint, not found in the house.")
+    L.NewTable()
+    L.PushString("id")
+    L.PushInteger(-1)
+    L.SetTable(-3)
+    L.PushString("type")
+    L.PushString("SpawnPoint")
+    L.SetTable(-3)
+    return
+  }
+  L.NewTable()
+  x, y := sp.Pos()
+  dx, dy := sp.Dims()
+  L.PushString("id")
+  L.PushInteger(index)
+  L.SetTable(-3)
+  L.PushString("type")
+  L.PushString("SpawnPoint")
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(sp.Name)
+  L.SetTable(-3)
+  L.PushString("Pos")
+  LuaPushPoint(L, x, y)
+  L.SetTable(-3)
+  L.PushString("Dims")
+  L.NewTable()
+  {
+    L.PushString("Dx")
+    L.PushInteger(dx)
+    L.SetTable(-3)
+    L.PushString("Dy")
+    L.PushInteger(dy)
+    L.SetTable(-3)
+  }
+  L.SetTable(-3)
+}
+
+func LuaToSpawnPoint(L *lua.State, game *Game, pos int) *house.SpawnPoint {
+  L.PushString("id")
+  L.GetTable(pos - 1)
+  index := L.ToInteger(-1)
+  L.Pop(1)
+  if index < 0 || index >= len(game.House.Floors[0].Spawns) {
+    return nil
+  }
+  return game.House.Floors[0].Spawns[index]
+}
+
+type LuaType int
+
+const (
+  LuaInteger LuaType = iota
+  LuaBoolean
+  LuaString
+  LuaEntity
+  LuaPoint
+  LuaRoom
+  LuaDoor
+  LuaSpawnPoint
+  LuaArray
+  LuaTable
+  LuaAnything
+)
+
+func luaMakeSigniature(name string, params []LuaType) string {
+  sig := name + "("
+  for i := range params {
+    switch params[i] {
+    case LuaInteger:
+      sig += "integer"
+    case LuaBoolean:
+      sig += "boolean"
+    case LuaString:
+      sig += "string"
+    case LuaEntity:
+      sig += "Entity"
+    case LuaPoint:
+      sig += "Point"
+    case LuaRoom:
+      sig += "Room"
+    case LuaDoor:
+      sig += "Door"
+    case LuaSpawnPoint:
+      sig += "SpawnPoint"
+    case LuaArray:
+      sig += "Array"
+    case LuaTable:
+      sig += "table"
+    case LuaAnything:
+      sig += "anything"
+    default:
+      sig += "<unknown type>"
+    }
+    if i != len(params)-1 {
+      sig += ", "
+    }
+  }
+  sig += ")"
+  return sig
+}
+
+func LuaCheckParamsOk(L *lua.State, name string, params ...LuaType) bool {
+  fmt.Sprintf("%s(")
+  n := L.GetTop()
+  if n != len(params) {
+    LuaDoError(L, fmt.Sprintf("Got %d parameters to %s.", n, luaMakeSigniature(name, params)))
+    return false
+  }
+  for i := -n; i < 0; i++ {
+    ok := false
+    switch params[i+n] {
+    case LuaInteger:
+      ok = L.IsNumber(i)
+    case LuaBoolean:
+      ok = L.IsBoolean(i)
+    case LuaString:
+      ok = L.IsString(i)
+    case LuaEntity:
+      if L.IsTable(i) {
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.ToString(-2) == "type" && L.ToString(-1) == "Entity" {
+            ok = true
+          }
+          L.Pop(1)
+        }
+      }
+    case LuaPoint:
+      if L.IsTable(i) {
+        var x, y bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.ToString(-2) == "X" {
+            x = true
+          }
+          if L.ToString(-2) == "Y" {
+            y = true
+          }
+          L.Pop(1)
+        }
+        ok = x && y
+      }
+    case LuaRoom:
+      if L.IsTable(i) {
+        var floor, room, door bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          switch L.ToString(-2) {
+          case "floor":
+            floor = true
+          case "room":
+            room = true
+          case "door":
+            door = true
+          }
+          L.Pop(1)
+        }
+        ok = floor && room && !door
+      }
+    case LuaDoor:
+      if L.IsTable(i) {
+        var floor, room, door bool
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          switch L.ToString(-2) {
+          case "floor":
+            floor = true
+          case "room":
+            room = true
+          case "door":
+            door = true
+          }
+          L.Pop(1)
+        }
+        ok = floor && room && door
+      }
+    case LuaSpawnPoint:
+      if L.IsTable(i) {
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.ToString(-2) == "type" && L.ToString(-1) == "SpawnPoint" {
+            ok = true
+          }
+          L.Pop(1)
+        }
+      }
+    case LuaArray:
+      // Make sure that all of the indices 1..length are there, and no others.
+      check := make(map[int]int)
+      if L.IsTable(i) {
+        L.PushNil()
+        for L.Next(i-1) != 0 {
+          if L.IsNumber(-2) {
+            check[L.ToInteger(-2)]++
+          } else {
+            break
+          }
+          L.Pop(1)
+        }
+      }
+      count := 0
+      for i := 1; i <= len(check); i++ {
+        if _, ok := check[i]; ok {
+          count++
+        }
+      }
+      ok = (count == len(check))
+    case LuaTable:
+      ok = L.IsTable(i)
+    case LuaAnything:
+      ok = true
+    }
+    if !ok {
+      LuaDoError(L, fmt.Sprintf("Unexpected parameters to %s.", luaMakeSigniature(name, params)))
+      return false
+    }
+  }
+  return true
+}
+
+func LuaDoError(L *lua.State, err_str string) {
+  base.Error().Printf(err_str)
+  L.PushString(err_str)
+  L.SetExecutionLimit(1)
+}
+
+func LuaNumParamsOk(L *lua.State, num_params int, name string) bool {
+  n := L.GetTop()
+  if n != num_params {
+    err_str := fmt.Sprintf("%s expects exactly %d parameters, got %d.", name, num_params, n)
+    LuaDoError(L, err_str)
+    return false
+  }
+  return true
 }

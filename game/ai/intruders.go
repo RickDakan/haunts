@@ -21,7 +21,7 @@ func (a *Ai) addIntrudersContext() {
 //     intruders.
 func activeIntrudersFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 0, "activeIntruders") {
+    if !game.LuaNumParamsOk(L, 0, "activeIntruders") {
       return 0
     }
     L.NewTable()
@@ -46,21 +46,21 @@ func activeIntrudersFunc(a *Ai) lua.GoFunction {
 func execIntruderFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Exec intruder")
-    if !luaNumParamsOk(L, 1, "execIntruder") {
+    if !game.LuaNumParamsOk(L, 1, "execIntruder") {
       return 0
     }
     id := game.EntityId(L.ToInteger(0))
     ent := a.game.EntityById(id)
     if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which doesn't exist.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which doesn't exist.", id))
       return 0
     }
     if ent.ExplorerEnt == nil {
-      luaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not an intruder.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not an intruder.", id))
       return 0
     }
     if !ent.Ai.Active() {
-      luaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not active.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not active.", id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

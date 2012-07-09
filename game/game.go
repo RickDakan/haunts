@@ -179,12 +179,19 @@ func (gp *GamePanel) Draw(region gui.Region) {
   defer region.PopClipPlanes()
 }
 
-func (g *Game) SpawnEntity(spawn *Entity, x, y int) {
+func (g *Game) SpawnEntity(spawn *Entity, x, y int) bool {
+  for i := range g.Ents {
+    cx, cy := g.Ents[i].Pos()
+    if cx == x && cy == y {
+      base.Warn().Printf("Can't spawn entity at (%d, %d) - already occupied by '%s'.", x, y, g.Ents[i].Name)
+      return false
+    }
+  }
   spawn.X = float64(x)
   spawn.Y = float64(y)
   g.viewer.AddDrawable(spawn)
   g.Ents = append(g.Ents, spawn)
-  base.Log().Printf("Spaned %s with %d hp", spawn.Name, spawn.Stats.HpMax())
+  return true
 }
 
 func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {

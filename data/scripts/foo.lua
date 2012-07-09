@@ -1,10 +1,10 @@
 function setLosModeToRoomsWithSpawnsMatching(side, pattern)
-  sp = getSpawnPointsMatching(pattern)
+  sp = Script.GetSpawnPointsMatching(pattern)
   rooms = {}
   for i, spawn in pairs(sp) do
-    rooms[i] = roomAtPos(spawn.Pos)
+    rooms[i] = Script.RoomAtPos(spawn.Pos)
   end
-  setLosMode(side, "rooms", rooms)
+  Script.SetLosMode(side, rooms)
 end
 -- Need the following functions
 -- setLos("entities") -> sets los to all entities on the current side
@@ -18,24 +18,24 @@ end
 play_as_denizens = false
 function Init()
   while false do
-    choices = dialogBox("ui/dialog/sample.json")
+    choices = Script.DialogBox("ui/dialog/sample.json")
     print("Choices made:")
     for _, choice in pairs(choices) do
       print("Chose: ", choice)
     end
   end
-  map = selectMap()
-  loadHouse(map)
+  house = Script.SelectHouse()
+  Script.LoadHouse(house)
 
 
   if play_as_denizens then
-    bindAi("denizen", "human")
-    bindAi("minions", "minions.lua")
-    bindAi("intruder", "intruders.lua")
+    Script.BindAi("denizen", "human")
+    Script.BindAi("minions", "minions.lua")
+    Script.BindAi("intruder", "intruders.lua")
   else
-    bindAi("denizen", "denizens.lua")
-    bindAi("minions", "minions.lua")
-    bindAi("intruder", "human")
+    Script.BindAi("denizen", "denizens.lua")
+    Script.BindAi("minions", "minions.lua")
+    Script.BindAi("intruder", "human")
   end
 end
 
@@ -58,7 +58,7 @@ function doDenizenSetup()
   -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
   while table.getn(placed) == 0 do
-    placed = placeEntities("Master-.*", 1, ents)
+    placed = Script.PlaceEntities("Master-.*", 1, ents)
     
   end
 
@@ -84,11 +84,11 @@ function doDenizenSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor-".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitor-.*")
-  placed = placeEntities("Servitor-.*", 10, ents)
+  placed = Script.PlaceEntities("Servitor-.*", 10, ents)
 
   -- set the denizens to not be able to see anything - it's not very
   -- significant since their turn is about to end anyway.
-  setLosMode("denizens", "none")
+  Script.SetLosMode("denizens", "none")
 end
 
 function doIntrudersSetup()
@@ -100,21 +100,25 @@ function doIntrudersSetup()
   modes["Relic"] = "ui/explorer_setup/relic.png"
   modes["Mystery"] = "ui/explorer_setup/mystery.png"
   print("Last time picked: ",   store.mode)
-  r = pickFromN(1, 1, modes)
+  r = Script.PickFromN(1, 1, modes)
   for i,name in pairs(r) do
     print("This time picked: ", i, name)
   end
   store.mode = r[1]
-  saveStore()
+  Script.SaveStore()
   -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
   -- and Ghost Hunter there.  Additionally we will mind the
   -- sample_aoe_occultist.lua ai to the occultist.
-  intruder_spawn = getSpawnPointsMatching("Intruders-FrontDoor")
-  spawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
-  ent = spawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
-  bindAi(ent, "sample_aoe_occultist.lua")
-  spawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
-  ents = getAllEnts()
+  intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
+  print("intruder spawn:", intruder_spawn)
+  for k,v in pairs(intruder_spawn) do
+    print("kv: ", k, v)
+  end
+  Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
+  Script.BindAi(ent, "sample_aoe_occultist.lua")
+  Script.SpawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
+  ents = Script.GetAllEnts()
 
   -- This lets you pick gear for each entity, you can uncomment this block
   -- if you want to turn it on.
@@ -140,15 +144,15 @@ end
 function RoundStart(intruders, round)
   if round == 1 then
     if intruders then
-      setVisibility("intruders")
+      Script.SetVisibility("intruders")
       doIntrudersSetup()
     else
-      setVisibility("denizens")
+      Script.SetVisibility("denizens")
       doDenizenSetup()
     end
     -- Make it clear that the players don't get to activate their units on the
     -- setup turn.
-    endPlayerInteraction()
+    Script.EndPlayerInteraction()
     return
   end
 
@@ -159,20 +163,20 @@ function RoundStart(intruders, round)
   -- each side.
   if round == 2 then
     if play_as_denizens then
-      setVisibility("denizens")
+      Script.SetVisibility("denizens")
     else
-      setVisibility("intruders")
+      Script.SetVisibility("intruders")
     end
-    setLosMode("intruders", "entities")
-    setLosMode("denizens", "entities")
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "entities")
   end
-  showMainBar(intruders ~= play_as_denizens)
+  Script.ShowMainBar(intruders ~= play_as_denizens)
 
   -- This is sample code to spawn one angry shade at the start of each
   -- denizens' turn.
   -- if not intruders then
-  --   spawn_points = getSpawnPointsMatching("Minion-.*")
-  --   p = spawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
+  --   spawn_points = Script.GetSpawnPointsMatching("Minion-.*")
+  --   p = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawn_points)
   --   print("Spawned Angry Shade at ", p.x, p.y)
   -- end
 end

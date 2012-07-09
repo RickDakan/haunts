@@ -593,25 +593,26 @@ func (e *Entity) Think(dt int64) {
   }
 }
 
-func (e *Entity) SetGear(gear_name string) {
+func (e *Entity) SetGear(gear_name string) bool {
   if e.ExplorerEnt == nil {
     base.Error().Printf("Tried to set gear on a non-explorer entity.")
-    return
+    return false
   }
   if e.ExplorerEnt.Gear != nil {
     base.Error().Printf("Tried to set gear on an explorer that already had gear.")
-    return
+    return false
   }
   var g Gear
   g.Defname = gear_name
   base.GetObject("gear", &g)
   if g.Name == "" {
     base.Error().Printf("Tried to load gear '%s' that doesn't exist.", gear_name)
-    return
+    return false
   }
   e.ExplorerEnt.Gear = &g
   e.Actions = append(e.Actions, MakeAction(g.Action))
   e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
+  return true
 }
 
 func (e *Entity) OnRound() {

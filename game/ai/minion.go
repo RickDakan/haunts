@@ -19,7 +19,7 @@ func (a *Ai) addMinionsContext() {
 //     minions.
 func activeMinionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaNumParamsOk(L, 0, "activeMinions") {
+    if !game.LuaNumParamsOk(L, 0, "activeMinions") {
       return 0
     }
     L.NewTable()
@@ -44,20 +44,20 @@ func activeMinionsFunc(a *Ai) lua.GoFunction {
 func execMinionFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Exec minion")
-    if !luaNumParamsOk(L, 1, "execMinion") {
+    if !game.LuaNumParamsOk(L, 1, "execMinion") {
       return 0
     }
     ent := game.LuaToEntity(L, a.game, -1)
     if ent == nil {
-      luaDoError(L, "Tried to execMinion entity which doesn't exist.")
+      game.LuaDoError(L, "Tried to execMinion entity which doesn't exist.")
       return 0
     }
     if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
-      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", ent.Id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", ent.Id))
       return 0
     }
     if !ent.Ai.Active() {
-      luaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", ent.Id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", ent.Id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

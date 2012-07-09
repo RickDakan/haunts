@@ -51,24 +51,31 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   gp.script.L = lua.NewState()
   gp.script.L.OpenLibs()
   gp.script.L.SetExecutionLimit(25000)
+
+  gp.script.L.NewTable()
+  LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
+    "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
+    "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
+    "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
+    "SpawnEntityAtPosition":             func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntityAtPosition(gp)) },
+    "GetSpawnPointsMatching":            func() { gp.script.L.PushGoFunctionAsCFunction(getSpawnPointsMatching(gp)) },
+    "SpawnEntitySomewhereInSpawnPoints": func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntitySomewhereInSpawnPoints(gp)) },
+    "PlaceEntities":                     func() { gp.script.L.PushGoFunctionAsCFunction(placeEntities(gp)) },
+    "RoomAtPos":                         func() { gp.script.L.PushGoFunctionAsCFunction(roomAtPos(gp)) },
+    "SetLosMode":                        func() { gp.script.L.PushGoFunctionAsCFunction(setLosMode(gp)) },
+    "GetAllEnts":                        func() { gp.script.L.PushGoFunctionAsCFunction(getAllEnts(gp)) },
+    "DialogBox":                         func() { gp.script.L.PushGoFunctionAsCFunction(dialogBox(gp)) },
+    "PickFromN":                         func() { gp.script.L.PushGoFunctionAsCFunction(pickFromN(gp)) },
+    "SetGear":                           func() { gp.script.L.PushGoFunctionAsCFunction(setGear(gp)) },
+    "BindAi":                            func() { gp.script.L.PushGoFunctionAsCFunction(bindAi(gp)) },
+    "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
+    "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
+    "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
+  })
+  gp.script.L.SetMetaTable(-2)
+  gp.script.L.SetGlobal("Script")
+
   registerUtilityFunctions(gp.script.L)
-  gp.script.L.Register("loadHouse", loadHouse(gp))
-  gp.script.L.Register("showMainBar", showMainBar(gp))
-  gp.script.L.Register("spawnEntityAtPosition", spawnEntityAtPosition(gp))
-  gp.script.L.Register("getSpawnPointsMatching", getSpawnPointsMatching(gp))
-  gp.script.L.Register("spawnEntitySomewhereInSpawnPoints", spawnEntitySomewhereInSpawnPoints(gp))
-  gp.script.L.Register("placeEntities", placeEntities(gp))
-  gp.script.L.Register("roomAtPos", roomAtPos(gp))
-  gp.script.L.Register("setLosMode", setLosMode(gp))
-  gp.script.L.Register("getAllEnts", getAllEnts(gp))
-  gp.script.L.Register("selectMap", selectMap(gp))
-  gp.script.L.Register("dialogBox", dialogBox(gp))
-  gp.script.L.Register("pickFromN", pickFromN(gp))
-  gp.script.L.Register("setGear", setGear(gp))
-  gp.script.L.Register("bindAi", bindAi(gp))
-  gp.script.L.Register("setVisibility", setVisibility(gp))
-  gp.script.L.Register("endPlayerInteraction", endPlayerInteraction(gp))
-  gp.script.L.Register("saveStore", saveStore(gp, player))
   if player.Lua_store != nil {
     LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
     gp.script.L.SetGlobal("store")
@@ -83,30 +90,11 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   } else {
     go func() {
       gp.script.L.SetExecutionLimit(250000)
+      // gp.script.L.DoString("Init")
       gp.script.L.GetField(lua.LUA_GLOBALSINDEX, "Init")
       gp.script.L.Call(0, 0)
       gp.game.comm.script_to_game <- nil
     }()
-  }
-}
-
-func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    path := filepath.Join(base.GetDataDir(), "players", fmt.Sprintf("%s.gob", player.Name))
-    f, err := os.Open(path)
-    if err != nil {
-      base.Warn().Printf("Unable to save player to file %s.", path)
-      return 0
-    }
-    defer f.Close()
-    err = EncodePlayer(f, player)
-    if err != nil {
-      base.Warn().Printf("Unable to encode player to file %s.", path)
-      return 0
-    }
-    return 0
   }
 }
 
@@ -200,8 +188,35 @@ func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
   return done_chan
 }
 
+func selectHouse(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SelectHouse") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    selector, output, err := MakeUiSelectMap(gp)
+    if err != nil {
+      base.Error().Printf("Error selecting map: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(selector, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    gp.script.syncEnd()
+
+    name := <-output
+
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(selector)
+    L.PushString(name)
+    return 1
+  }
+}
+
 func loadHouse(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "LoadHouse", LuaString) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
 
@@ -227,6 +242,9 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
 
 func showMainBar(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "ShowMainBar", LuaBoolean) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     show := L.ToBoolean(-1)
@@ -243,7 +261,7 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
       var err error
       gp.main_bar, err = MakeMainBar(gp.game)
       if err != nil {
-        base.Error().Printf("%v", err)
+        LuaDoError(L, err.Error())
         return 0
       }
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
@@ -255,59 +273,45 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
 
 func spawnEntityAtPosition(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SpawnEntityAtPosition", LuaString, LuaPoint) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    name := L.ToString(-3)
-    x := L.ToInteger(-2)
-    y := L.ToInteger(-1)
-    gp.game.SpawnEntity(MakeEntity(name, gp.game), x, y)
-    return 0
+    name := L.ToString(-2)
+    x, y := LuaToPoint(L, -1)
+    ent := MakeEntity(name, gp.game)
+    if gp.game.SpawnEntity(ent, x, y) {
+      LuaPushEntity(L, ent)
+    } else {
+      L.PushNil()
+    }
+    return 1
   }
 }
 
 func getSpawnPointsMatching(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "GetSpawnPointsMatching", LuaString) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     spawn_pattern := L.ToString(-1)
     re, err := regexp.Compile(spawn_pattern)
     if err != nil {
-      base.Error().Printf("Failed to compile regexp '%s': %v", spawn_pattern, err)
+      LuaDoError(L, fmt.Sprintf("Failed to compile regexp '%s': %v", spawn_pattern, err))
       return 0
     }
     L.NewTable()
     count := 0
-    for index, sp := range gp.game.House.Floors[0].Spawns {
+    for _, sp := range gp.game.House.Floors[0].Spawns {
       if !re.MatchString(sp.Name) {
         continue
       }
       count++
       L.PushInteger(count)
-      L.NewTable()
-      {
-        x, y := sp.Pos()
-        dx, dy := sp.Dims()
-        L.PushString("id")
-        L.PushInteger(index)
-        L.SetTable(-3)
-        L.PushString("Name")
-        L.PushString(sp.Name)
-        L.SetTable(-3)
-        L.PushString("Pos")
-        LuaPushPoint(L, x, y)
-        L.SetTable(-3)
-        L.PushString("Dims")
-        L.NewTable()
-        {
-          L.PushString("Dx")
-          L.PushInteger(dx)
-          L.SetTable(-3)
-          L.PushString("Dy")
-          L.PushInteger(dy)
-          L.SetTable(-3)
-        }
-        L.SetTable(-3)
-      }
+      LuaPushSpawnPoint(L, gp.game, sp)
       L.SetTable(-3)
     }
     return 1
@@ -316,28 +320,22 @@ func getSpawnPointsMatching(gp *GamePanel) lua.GoFunction {
 
 func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SpawnEntitySomewhereInSpawnPoints", LuaString, LuaArray) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     name := L.ToString(-2)
 
     var tx, ty int
     count := 0
-    sp_count := 1
-    L.PushInteger(sp_count)
-    L.GetTable(-2)
-    for !L.IsNil(-1) {
-      L.PushString("id")
-      L.GetTable(-2)
-      id := L.ToInteger(-1)
-      L.Pop(2)
-      sp_count++
-      L.PushInteger(sp_count)
-      L.GetTable(-2)
-      if id < 0 || id >= len(gp.game.House.Floors[0].Spawns) {
-        base.Error().Printf("Tried to access an unknown spawn point: %d", id)
-        break
+    L.PushNil()
+    for L.Next(-2) != 0 {
+      sp := LuaToSpawnPoint(L, gp.game, -1)
+      L.Pop(1)
+      if sp == nil {
+        continue
       }
-      sp := gp.game.House.Floors[0].Spawns[id]
       sx, sy := sp.Pos()
       sdx, sdy := sp.Dims()
       for x := sx; x < sx+sdx; x++ {
@@ -364,14 +362,20 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Cannot make an entity named '%s', no such thing.", name)
       return 0
     }
-    gp.game.SpawnEntity(ent, tx, ty)
-    LuaPushEntity(L, ent)
+    if gp.game.SpawnEntity(ent, tx, ty) {
+      LuaPushEntity(L, ent)
+    } else {
+      L.PushNil()
+    }
     return 1
   }
 }
 
 func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlaceEntities", LuaString, LuaInteger, LuaTable) {
+      return 0
+    }
     gp.script.syncStart()
     pattern := L.ToString(-3)
     points := L.ToInteger(-2)
@@ -410,8 +414,31 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func roomAtPos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "RoomAtPos", LuaPoint) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    x, y := LuaToPoint(L, -1)
+    room, _, _ := gp.game.House.Floors[0].RoomFurnSpawnAtPos(x, y)
+    for i, r := range gp.game.House.Floors[0].Rooms {
+      if r == room {
+        L.PushInteger(i)
+        return 1
+      }
+    }
+    LuaDoError(L, fmt.Sprintf("Tried to get the room at position (%d,%d), but there is no room there.", x, y))
+    return 0
+  }
+}
+
 func getAllEnts(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "GetAllEnts") {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     L.NewTable()
@@ -424,124 +451,11 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func roomAtPos(gp *GamePanel) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    x, y := LuaToPoint(L, -1)
-    room, _, _ := gp.game.House.Floors[0].RoomFurnSpawnAtPos(x, y)
-    for i, r := range gp.game.House.Floors[0].Rooms {
-      if r == room {
-        L.PushInteger(i)
-        return 1
-      }
-    }
-    base.Error().Printf("Tried to get the room at position (%d,%d), but there is no room there.", x, y)
-    return 0
-  }
-}
-
-func endPlayerInteraction(gp *GamePanel) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    gp.game.player_active = false
-    return 0
-  }
-}
-
-func setVisibility(gp *GamePanel) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    side_str := L.ToString(-1)
-    var side Side
-    switch side_str {
-    case "denizens":
-      side = SideHaunt
-    case "intruders":
-      side = SideExplorers
-    default:
-      base.Error().Printf("Cannot pass '%s' as first parameter of setVisibility()", side_str)
-      return 0
-    }
-    gp.game.SetVisibility(side)
-    return 0
-  }
-}
-func setLosMode(gp *GamePanel) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    side_str := L.ToString(1)
-    mode_str := L.ToString(2)
-    var side Side
-    switch side_str {
-    case "denizens":
-      side = SideHaunt
-    case "intruders":
-      side = SideExplorers
-    default:
-      base.Error().Printf("Cannot pass '%s' as first parameters of setLosMode()", side_str)
-      return 0
-    }
-    switch mode_str {
-    case "none":
-      gp.game.SetLosMode(side, LosModeNone, nil)
-    case "all":
-      gp.game.SetLosMode(side, LosModeAll, nil)
-    case "entities":
-      gp.game.SetLosMode(side, LosModeEntities, nil)
-    case "rooms":
-      if !L.IsTable(-1) {
-        base.Error().Printf("The last parameter to setLosMode should be an array of rooms if mode == 'rooms'")
-        return 0
-      }
-      L.PushNil()
-      all_rooms := gp.game.House.Floors[0].Rooms
-      var rooms []*house.Room
-      for L.Next(-2) != 0 {
-        index := L.ToInteger(-1)
-        if index < 0 || index > len(all_rooms) {
-          base.Error().Printf("Tried to reference room #%d which doesn't exist.", index)
-          continue
-        }
-        rooms = append(rooms, all_rooms[index])
-        L.Pop(1)
-      }
-      gp.game.SetLosMode(side, LosModeRooms, rooms)
-
-    default:
-      base.Error().Printf("Unknown los mode '%s'", mode_str)
-      return 0
-    }
-    return 0
-  }
-}
-
-func selectMap(gp *GamePanel) lua.GoFunction {
-  return func(L *lua.State) int {
-    gp.script.syncStart()
-    defer gp.script.syncEnd()
-    selector, output, err := MakeUiSelectMap(gp)
-    if err != nil {
-      base.Error().Printf("Error selecting map: %v", err)
-      return 0
-    }
-    gp.AnchorBox.AddChild(selector, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    gp.script.syncEnd()
-
-    name := <-output
-
-    gp.script.syncStart()
-    gp.AnchorBox.RemoveChild(selector)
-    L.PushString(name)
-    return 1
-  }
-}
-
 func dialogBox(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "DialogBox", LuaString) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     path := L.ToString(-1)
@@ -571,9 +485,11 @@ func dialogBox(gp *GamePanel) lua.GoFunction {
   }
 }
 
-// pickFromN(min, max, opt1, opt2, ...)
 func pickFromN(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PickFromN", LuaInteger, LuaInteger, LuaTable) {
+      return 0
+    }
     min := L.ToInteger(-3)
     max := L.ToInteger(-2)
     var options []hui.Option
@@ -626,6 +542,9 @@ func pickFromN(gp *GamePanel) lua.GoFunction {
 
 func setGear(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetGear", LuaEntity, LuaString) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     gear_name := L.ToString(-1)
@@ -637,8 +556,8 @@ func setGear(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", id)
       return 0
     }
-    ent.SetGear(gear_name)
-    return 0
+    L.PushBoolean(ent.SetGear(gear_name))
+    return 1
   }
 }
 
@@ -651,6 +570,9 @@ func setGear(gp *GamePanel) lua.GoFunction {
 // special targets: "denizen", "intruder", "minions", or an entity table
 func bindAi(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "BindAi", LuaAnything, LuaString) {
+      return 0
+    }
     gp.script.syncStart()
     defer gp.script.syncEnd()
     source := L.ToString(-1)
@@ -709,6 +631,122 @@ func bindAi(gp *GamePanel) lua.GoFunction {
       return 0
     }
 
+    return 0
+  }
+}
+
+func setVisibility(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetVisibility", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    side_str := L.ToString(-1)
+    var side Side
+    switch side_str {
+    case "denizens":
+      side = SideHaunt
+    case "intruders":
+      side = SideExplorers
+    default:
+      base.Error().Printf("Cannot pass '%s' as first parameter of setVisibility()", side_str)
+      return 0
+    }
+    gp.game.SetVisibility(side)
+    return 0
+  }
+}
+
+func endPlayerInteraction(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "EndPlayerInteraction") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gp.game.player_active = false
+    return 0
+  }
+}
+
+func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SaveStore") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    path := filepath.Join(base.GetDataDir(), "players", fmt.Sprintf("%s.gob", player.Name))
+    f, err := os.Open(path)
+    if err != nil {
+      base.Warn().Printf("Unable to save player to file %s.", path)
+      return 0
+    }
+    defer f.Close()
+    err = EncodePlayer(f, player)
+    if err != nil {
+      base.Warn().Printf("Unable to encode player to file %s.", path)
+      return 0
+    }
+    return 0
+  }
+}
+
+func setLosMode(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetLosMode", LuaString, LuaAnything) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    side_str := L.ToString(-2)
+    var mode_str string
+    if L.IsString(-1) {
+      mode_str = L.ToString(-1)
+    } else {
+      mode_str = "rooms"
+    }
+    var side Side
+    switch side_str {
+    case "denizens":
+      side = SideHaunt
+    case "intruders":
+      side = SideExplorers
+    default:
+      base.Error().Printf("Cannot pass '%s' as first parameters of setLosMode()", side_str)
+      return 0
+    }
+    switch mode_str {
+    case "none":
+      gp.game.SetLosMode(side, LosModeNone, nil)
+    case "all":
+      gp.game.SetLosMode(side, LosModeAll, nil)
+    case "entities":
+      gp.game.SetLosMode(side, LosModeEntities, nil)
+    case "rooms":
+      if !L.IsTable(-1) {
+        base.Error().Printf("The last parameter to setLosMode should be an array of rooms if mode == 'rooms'")
+        return 0
+      }
+      L.PushNil()
+      all_rooms := gp.game.House.Floors[0].Rooms
+      var rooms []*house.Room
+      for L.Next(-2) != 0 {
+        index := L.ToInteger(-1)
+        if index < 0 || index > len(all_rooms) {
+          base.Error().Printf("Tried to reference room #%d which doesn't exist.", index)
+          continue
+        }
+        rooms = append(rooms, all_rooms[index])
+        L.Pop(1)
+      }
+      gp.game.SetLosMode(side, LosModeRooms, rooms)
+
+    default:
+      base.Error().Printf("Unknown los mode '%s'", mode_str)
+      return 0
+    }
     return 0
   }
 }
