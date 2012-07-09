@@ -357,7 +357,7 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
   }
   a.ent.TurnToFace(a.tx, a.ty)
   for _, target := range a.targets {
-    target.TurnToFace(a.tx, a.ty)
+    target.TurnToFace(a.ent.Pos())
   }
   a.ent.Sprite().Command(a.Animation)
   for _, target := range a.targets {
