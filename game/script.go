@@ -51,9 +51,9 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   gp.script.L = lua.NewState()
   gp.script.L.OpenLibs()
   gp.script.L.SetExecutionLimit(25000)
-
   gp.script.L.NewTable()
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
+    "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
@@ -182,6 +182,19 @@ func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
   }()
 
   return done_chan
+}
+
+func startScript(gp *GamePanel, player *Player) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "StartScript", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    script := L.ToString(-1)
+    startGameScript(gp, script, player)
+    return 0
+  }
 }
 
 func selectHouse(gp *GamePanel) lua.GoFunction {
