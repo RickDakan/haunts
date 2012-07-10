@@ -274,7 +274,13 @@ func main() {
     game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
   }
 
-  ui.AddChild(editor)
+  edit_mode := false
+  if edit_mode {
+    ui.AddChild(editor)
+  } else {
+    ui.AddChild(game_panel)
+  }
+
   ui.AddChild(base.MakeConsole())
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
@@ -283,8 +289,6 @@ func main() {
     ui.Draw()
   })
   render.Purge()
-
-  edit_mode := true
 
   var profile_output *os.File
   heap_prof_count := 0
