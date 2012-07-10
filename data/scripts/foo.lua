@@ -87,20 +87,20 @@ function doIntrudersSetup()
   -- Let the intruders choose from among one of the three game modes.
   -- Currently the data isn't stored or used anywhere, but this gives you an
   -- idea of how a menu can be created.
-  modes = {}
-  modes["Cleanse"] = "ui/explorer_setup/cleanse.png"
-  modes["Relic"] = "ui/explorer_setup/relic.png"
-  modes["Mystery"] = "ui/explorer_setup/mystery.png"
-  print("Last time picked: ",   store.mode)
-  r = Script.PickFromN(1, 1, modes)
-  for i,name in pairs(r) do
-    print("This time picked: ", i, name)
-  end
-  store.mode = r[1]
-  Script.SaveStore()
-  -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
-  -- and Ghost Hunter there.  Additionally we will mind the
-  -- sample_aoe_occultist.lua ai to the occultist.
+  -- modes = {}
+  -- modes["Cleanse"] = "ui/explorer_setup/cleanse.png"
+  -- modes["Relic"] = "ui/explorer_setup/relic.png"
+  -- modes["Mystery"] = "ui/explorer_setup/mystery.png"
+  -- print("Last time picked: ",   store.mode)
+  -- r = Script.PickFromN(1, 1, modes)
+  -- for i,name in pairs(r) do
+  --   print("This time picked: ", i, name)
+  -- end
+  -- store.mode = r[1]
+  -- Script.SaveStore()
+  -- -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
+  -- -- and Ghost Hunter there.  Additionally we will mind the
+  -- -- sample_aoe_occultist.lua ai to the occultist.
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
   print("intruder spawn:", intruder_spawn)
   for k,v in pairs(intruder_spawn) do
@@ -114,23 +114,23 @@ function doIntrudersSetup()
 
   -- This lets you pick gear for each entity, you can uncomment this block
   -- if you want to turn it on.
-  for en, ent in pairs(ents) do
-    print("Checking ent: ", ent.Name)
-    for i, gear in pairs(ent.GearOptions) do
-      print("gear", en, i, gear)
-    end
-    count = 0
-    for _, _ in pairs(ent.GearOptions) do
-      count = count + 1
-    end
-    if count > 0 then
-      r = Script.PickFromN(1, 1, ent.GearOptions)
-      for i,name in pairs(r) do
-        print("picked", i, name)
-      end
-      Script.SetGear(ent, r[1])
-    end
-  end
+  -- for en, ent in pairs(ents) do
+  --   print("Checking ent: ", ent.Name)
+  --   for i, gear in pairs(ent.GearOptions) do
+  --     print("gear", en, i, gear)
+  --   end
+  --   count = 0
+  --   for _, _ in pairs(ent.GearOptions) do
+  --     count = count + 1
+  --   end
+  --   if count > 0 then
+  --     r = Script.PickFromN(1, 1, ent.GearOptions)
+  --     for i,name in pairs(r) do
+  --       print("picked", i, name)
+  --     end
+  --     Script.SetGear(ent, r[1])
+  --   end
+  -- end
 end
 
 function RoundStart(intruders, round)

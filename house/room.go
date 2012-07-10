@@ -298,7 +298,6 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     gl.Enable(gl.TEXTURE_2D)
     gl.EnableClientState(gl.TEXTURE_COORD_ARRAY)
     los_tex.Bind()
-    //      texture.LoadFromPath("/Users/runningwild/code/src/github.com/runningwild/haunts/haunts.app/Contents/textures/orient.png").Bind()
     gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
     gl.ClientActiveTexture(gl.TEXTURE0)
