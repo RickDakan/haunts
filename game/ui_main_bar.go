@@ -470,7 +470,7 @@ func (m *MainBar) Draw(region gui.Region) {
     button.RenderAt(region.X, region.Y)
   }
 
-  if m.ent != nil {
+  if m.ent != nil && m.ent.Stats != nil {
     gl.Color4d(1, 1, 1, 1)
     m.ent.Still.Data().Bind()
     tdx := m.ent.Still.Data().Dx()
