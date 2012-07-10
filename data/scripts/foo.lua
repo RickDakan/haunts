@@ -6,15 +6,7 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   end
   Script.SetLosMode(side, rooms)
 end
--- Need the following functions
--- setLos("entities") -> sets los to all entities on the current side
--- setLos("rooms")
--- setLos("all")
--- endTurn()
--- spawnObjects -> maybe tag them with a string, like "relic"
--- 
--- need an OnAction() function that is called after every action is
--- completed.
+
 play_as_denizens = false
 function Init()
   while false do
@@ -122,23 +114,23 @@ function doIntrudersSetup()
 
   -- This lets you pick gear for each entity, you can uncomment this block
   -- if you want to turn it on.
-  -- for en, ent in pairs(ents) do
-  --   print("Checking ent: ", ent.Name)
-  --   for i, gear in pairs(ent.gear) do
-  --     print("gear", en, i, gear)
-  --   end
-  --   count = 0
-  --   for _, _ in pairs(ent.gear) do
-  --     count = count + 1
-  --   end
-  --   if count > 0 then
-  --     r = pickFromN(1, 1, ent.gear)
-  --     for i,name in pairs(r) do
-  --       print("picked", i, name)
-  --     end
-  --     setGear(ent, r[1])
-  --   end
-  -- end
+  for en, ent in pairs(ents) do
+    print("Checking ent: ", ent.Name)
+    for i, gear in pairs(ent.GearOptions) do
+      print("gear", en, i, gear)
+    end
+    count = 0
+    for _, _ in pairs(ent.GearOptions) do
+      count = count + 1
+    end
+    if count > 0 then
+      r = Script.PickFromN(1, 1, ent.GearOptions)
+      for i,name in pairs(r) do
+        print("picked", i, name)
+      end
+      Script.SetGear(ent, r[1])
+    end
+  end
 end
 
 function RoundStart(intruders, round)
