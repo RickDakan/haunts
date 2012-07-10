@@ -175,26 +175,25 @@ func (d *Door) setupGlStuff(room *Room) {
   switch d.Facing {
   case FarLeft:
     x1 = float32(d.Pos)
-    y1 = float32(room.roomDef.Size.Dy) - 0.5
+    y1 = float32(room.roomDef.Size.Dy)
     x2 = float32(d.Pos + d.Width)
-    y2 = float32(room.roomDef.Size.Dy) + 0.5
+    y2 = float32(room.roomDef.Size.Dy) - 0.25
   case FarRight:
-    x1 = float32(room.roomDef.Size.Dx) - 0.5
+    x1 = float32(room.roomDef.Size.Dx) - 0.25
     y1 = float32(d.Pos + d.Width)
-    x2 = float32(room.roomDef.Size.Dx) + 0.5
+    x2 = float32(room.roomDef.Size.Dx)
     y2 = float32(d.Pos)
   case NearLeft:
-    x1 = 0.5
+    x1 = 0.25
     y1 = float32(d.Pos)
-    x2 = -0.5
+    x2 = 0
     y2 = float32(d.Pos + d.Width)
   case NearRight:
     x1 = float32(d.Pos)
-    y1 = -0.5
+    y1 = 0
     x2 = float32(d.Pos + d.Width)
-    y2 = 0.5
+    y2 = 0.25
   }
-  base.Log().Printf("door: %v %f %f %f %f", d.state, x1, y1, x2, y2)
   vs := []roomVertex{
     {
       u: 0,
@@ -1161,7 +1160,6 @@ func MakeHouseFromName(name string) *HouseDef {
   var idiot iamanidiotcontainer
   idiot.Defname = name
   base.GetObject("houses", &idiot)
-  idiot.HouseDef.openDoors()
   return idiot.HouseDef
 }
 

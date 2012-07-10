@@ -326,10 +326,10 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       gl.StencilFunc(gl.ALWAYS, 1, 1)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       for _, door := range room.Doors {
-        door.TextureData().Bind()
         if door.Facing != FarLeft {
           continue
         }
+        door.TextureData().Bind()
 
         run.Assign(&floor)
         mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
@@ -353,10 +353,10 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
       gl.Color4ub(255, 255, 255, right_alpha)
       for _, door := range room.Doors {
-        door.TextureData().Bind()
         if door.Facing != FarRight {
           continue
         }
+        door.TextureData().Bind()
 
         run.Assign(&floor)
         mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
@@ -473,13 +473,15 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       }
     }
   }
+  base.EnableShader("marble")
+  base.SetUniformI("marble", "tex2", 1)
+  base.SetUniformF("marble", "room_x", float32(room.X))
+  base.SetUniformF("marble", "room_y", float32(room.Y))
   for _, door := range room.Doors {
     door.setupGlStuff(room)
     if door.gl_ids.vbuffer == 0 {
       continue
     }
-    tex := texture.LoadFromPath(filepath.Join(base.GetDataDir(), "textures/pinkbrick.jpg"))
-    tex.Bind()
     if door.highlight_threshold {
       do_color(255, 255, 255, 255)
     } else {
@@ -494,6 +496,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.gl_ids.floor_buffer)
     gl.DrawElements(gl.TRIANGLES, door.gl_ids.floor_count, gl.UNSIGNED_SHORT, nil)
   }
+  base.EnableShader("")
   if los_tex != nil {
     base.EnableShader("")
     gl.ActiveTexture(gl.TEXTURE1)
