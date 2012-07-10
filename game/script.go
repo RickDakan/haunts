@@ -90,10 +90,12 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   } else {
     go func() {
       gp.script.L.SetExecutionLimit(250000)
-      // gp.script.L.DoString("Init")
-      gp.script.L.GetField(lua.LUA_GLOBALSINDEX, "Init")
-      gp.script.L.Call(0, 0)
-      gp.game.comm.script_to_game <- nil
+      gp.script.L.DoString("Init()")
+      if gp.game == nil {
+        base.Error().Printf("Script failed to load a house during Init().")
+      } else {
+        gp.game.comm.script_to_game <- nil
+      }
     }()
   }
 }
@@ -111,10 +113,7 @@ func (gs *gameScript) OnRound(g *Game) {
     // <- round end
     // <- round end done
     gs.L.SetExecutionLimit(250000)
-    gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundStart")
-    gs.L.PushBoolean(g.Side == SideExplorers)
-    gs.L.PushInteger((g.Turn + 1) / 2)
-    gs.L.Call(2, 0)
+    gs.L.DoString(fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
 
     // signals to the game that we're done with the startup stuff
     g.comm.script_to_game <- nil
@@ -139,10 +138,7 @@ func (gs *gameScript) OnRound(g *Game) {
     }
 
     gs.L.SetExecutionLimit(250000)
-    gs.L.GetField(lua.LUA_GLOBALSINDEX, "RoundEnd")
-    gs.L.PushBoolean(g.Side == SideExplorers)
-    gs.L.PushInteger((g.Turn + 1) / 2)
-    gs.L.Call(2, 0)
+    gs.L.DoString(fmt.Sprintf("RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
 
     // Signal that we're done with the round end
     g.comm.script_to_game <- nil

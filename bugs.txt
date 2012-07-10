@@ -1,1 +1,0 @@
-ScriptComm has a race condition - might not be set by the time it needs to be read by the scripting system in ThinkONce
