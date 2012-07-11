@@ -128,7 +128,7 @@ func (a *Ai) setupLuaState() {
     var res string
     n := L.GetTop()
     for i := -n; i < 0; i++ {
-      res += luaStringifyParam(L, i) + " "
+      res += game.LuaStringifyParam(L, i) + " "
     }
     base.Log().Printf("Ai(%p): %s", a, res)
     return 0
@@ -148,19 +148,6 @@ func (a *Ai) setupLuaState() {
     return 1
   })
   a.L.DoString(a.Prog)
-}
-
-func luaStringifyParam(L *lua.State, index int) string {
-  if L.IsTable(index) {
-    return "table"
-  }
-  if L.IsBoolean(index) {
-    if L.ToBoolean(index) {
-      return "true"
-    }
-    return "false"
-  }
-  return L.ToString(index)
 }
 
 func (a *Ai) loadUtils(dir string) {

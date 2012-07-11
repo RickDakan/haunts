@@ -642,3 +642,28 @@ func LuaNumParamsOk(L *lua.State, num_params int, name string) bool {
   }
   return true
 }
+
+func LuaStringifyParam(L *lua.State, index int) string {
+  if L.IsTable(index) {
+    str := "table <not implemented> {"
+    return str
+    first := true
+    L.PushNil()
+    for L.Next(index-1) != 0 {
+      if !first {
+        str += ", "
+      }
+      first = false
+      str += fmt.Sprintf("(%s) -> (%s)", LuaStringifyParam(L, -2), LuaStringifyParam(L, -1))
+      L.Pop(1)
+    }
+    return str + "}"
+  }
+  if L.IsBoolean(index) {
+    if L.ToBoolean(index) {
+      return "true"
+    }
+    return "false"
+  }
+  return L.ToString(index)
+}

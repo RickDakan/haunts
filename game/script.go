@@ -113,7 +113,9 @@ func (gs *gameScript) OnRound(g *Game) {
     // <- round end
     // <- round end done
     gs.L.SetExecutionLimit(250000)
-    gs.L.DoString(fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
+    cmd := fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
+    base.Log().Printf("cmd: '%s'", cmd)
+    gs.L.DoString(cmd)
 
     // signals to the game that we're done with the startup stuff
     g.comm.script_to_game <- nil
@@ -124,18 +126,23 @@ func (gs *gameScript) OnRound(g *Game) {
       // being executed, we want to wait until then so that the game is in a
       // stable state before we do anything.
       base.Log().Printf("ScriptComm: Waiting for action")
-      action := <-g.comm.game_to_script
-      base.Log().Printf("ScriptComm: Got action: %v", action)
-      if action == nil {
-        base.Log().Printf("ScriptComm: No more action: bailing")
+      _exec := <-g.comm.game_to_script
+      base.Log().Printf("ScriptComm: Got exec: %v", _exec)
+      if _exec == nil {
+        base.Log().Printf("ScriptComm: No more exec: bailing")
         break
       }
+      exec := _exec.(ActionExec)
       <-g.comm.game_to_script
       base.Log().Printf("ScriptComm: Got action secondary")
       // Run OnAction here
       gs.L.SetExecutionLimit(250000)
-
-      gs.L.DoString(fmt.Sprintf("OnAction(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
+      exec.Push(gs.L, g)
+      //      base.Log().Printf("exec: ", LuaStringifyParam(gs.L, -1))
+      gs.L.SetGlobal("__exec")
+      cmd = fmt.Sprintf("OnAction(%t, %d, %s)", g.Side == SideExplorers, (g.Turn+1)/2, "__exec")
+      base.Log().Printf("cmd: '%s'", cmd)
+      gs.L.DoString(cmd)
       g.comm.script_to_game <- nil
       base.Log().Printf("ScriptComm: Done with OnAction")
     }
@@ -769,22 +776,9 @@ func registerUtilityFunctions(L *lua.State) {
     var res string
     n := L.GetTop()
     for i := -n; i < 0; i++ {
-      res += luaStringifyParam(L, i) + " "
+      res += LuaStringifyParam(L, i) + " "
     }
     base.Log().Printf("GameScript(%p): %s", L, res)
     return 0
   })
-}
-
-func luaStringifyParam(L *lua.State, index int) string {
-  if L.IsTable(index) {
-    return "table"
-  }
-  if L.IsBoolean(index) {
-    if L.ToBoolean(index) {
-      return "true"
-    }
-    return "false"
-  }
-  return L.ToString(index)
 }

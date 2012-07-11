@@ -80,9 +80,12 @@ func (exec interactExec) Push(L *lua.State, g *game.Game) {
   }
   L.PushString("Toggle Door")
   L.PushBoolean(exec.Toggle_door)
+  L.SetTable(-3)
   if exec.Toggle_door {
+    L.PushString("Door")
     game.LuaPushDoor(L, g, exec.getDoor(g))
   } else {
+    L.PushString("Target")
     game.LuaPushEntity(L, g.EntityById(exec.Target))
   }
   L.SetTable(-3)
