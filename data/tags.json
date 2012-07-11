@@ -15,15 +15,25 @@
       "Dx": 10,
       "Dy": 10
     },
-  {
-      "Name" : "Small_Rect",
+    {
+      "Name" : "Small_Rect_A",
       "Dx": 10,
       "Dy": 15
     },
     {
-      "Name" : "Medium",
+      "Name" : "Small_Rect_B",
+      "Dx": 15,
+      "Dy": 10
+    },
+    {
+      "Name" : "Medium_A",
       "Dx": 20,
       "Dy": 15
+    },
+    {
+      "Name" : "Medium_B",
+      "Dx": 15,
+      "Dy": 20
     },
     {
       "Name" : "Large",
@@ -31,9 +41,14 @@
       "Dy": 20
     },
     {
-      "Name" : "Hall",
+      "Name" : "Hall_A",
+      "Dx": 20,
+      "Dy": 5
+    },
+    {
+      "Name" : "Hall_B",
       "Dx": 5,
-      "Dy": 19
+      "Dy": 20
     }
   ],
   "HouseSizes" : [
