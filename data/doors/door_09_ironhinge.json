@@ -1,0 +1,10 @@
+{
+  "Name": "Door 09 - Ironhinge",
+  "Width": 1,
+  "Opened_texture": {
+    "Path": "doors/door_09_ironhinge_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_09_ironhinge_closed.png"
+  }
+}
