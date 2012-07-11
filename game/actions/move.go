@@ -68,18 +68,42 @@ type MoveDef struct {
 
 type moveExec struct {
   game.BasicActionExec
-  Dst int
+  Path []int
 }
 
+func (exec moveExec) measureCost(ent *game.Entity, g *game.Game) int {
+  graph := g.Graph(ent.Side(), nil)
+  v := g.ToVertex(ent.Pos())
+  cost := 0
+  for _, step := range exec.Path[1:] {
+    dsts, costs := graph.Adjacent(v)
+    ok := false
+    for j := range dsts {
+      if dsts[j] == step {
+        cost += int(costs[j])
+        v = dsts[j]
+        ok = true
+        break
+      }
+    }
+    if !ok {
+      return -1
+    }
+  }
+  return cost
+}
 func (exec moveExec) Push(L *lua.State, g *game.Game) {
   exec.BasicActionExec.Push(L, g)
   if L.IsNil(-1) {
     return
   }
-  _, x, y := g.FromVertex(exec.Dst)
-  L.PushString("Dst")
-  game.LuaPushPoint(L, x, y)
-  L.SetTable(-3)
+  L.NewTable()
+  for i := range exec.Path {
+    L.PushInteger(i + 1)
+    _, x, y := g.FromVertex(exec.Path[i])
+    game.LuaPushPoint(L, x, y)
+    L.SetTable(-3)
+  }
 }
 
 func init() {
@@ -147,7 +171,7 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
   }
   var exec moveExec
   exec.SetBasicData(ent, a)
-  exec.Dst = path[len(path)-1]
+  exec.Path = path
   return exec
 }
 
@@ -179,7 +203,7 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
   }
   var exec moveExec
   exec.SetBasicData(ent, a)
-  exec.Dst = path[len(path)-1]
+  exec.Path = path
   return exec
 }
 
@@ -266,7 +290,9 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.Actio
       if a.cost <= a.ent.Stats.ApCur() {
         var exec moveExec
         exec.SetBasicData(a.ent, a)
-        exec.Dst = a.dst
+        algorithm.Map2(a.path, &exec.Path, func(v [2]int) int {
+          return g.ToVertex(v[0], v[1])
+        })
         return true, exec
       }
       return true, nil
@@ -300,18 +326,26 @@ func (a *Move) Cancel() {
 func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(moveExec)
-    _, x, y := g.FromVertex(exec.Dst)
     a.ent = g.EntityById(ae.EntityId())
-    a.findPath(a.ent, x, y)
-    if len(a.path) == 0 {
+    if len(exec.Path) == 0 {
       base.Error().Printf("Got a move exec with a path length of 0: %v", exec)
       return game.Complete
     }
+    a.cost = exec.measureCost(a.ent, g)
     if a.cost > a.ent.Stats.ApCur() {
       base.Error().Printf("Got a move that required more ap than available: %v", exec)
-      base.Error().Printf("Path: %v", a.path)
+      base.Error().Printf("Path: %v", exec.Path)
       return game.Complete
     }
+    if a.cost == -1 {
+      base.Error().Printf("Got a move that followed an invalid path: %v", exec)
+      base.Error().Printf("Path: %v", exec.Path)
+      return game.Complete
+    }
+    algorithm.Map2(exec.Path, &a.path, func(v int) [2]int {
+      _, x, y := g.FromVertex(v)
+      return [2]int{x, y}
+    })
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
   }
   // Do stuff
