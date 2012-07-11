@@ -67,10 +67,39 @@ type interactExec struct {
   game.BasicActionExec
   Target game.EntityId
 
-  // If this interaction was to open or close a door then toggle_door will be
+  // If this interaction was to open or close a door then Toggle_door will be
   // true, otherwise it will be false.  If it is true then Target will be 0.
-  toggle_door       bool
-  floor, room, door int
+  Toggle_door       bool
+  Floor, Room, Door int
+}
+
+func (exec interactExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  L.PushString("Toggle Door")
+  L.PushBoolean(exec.Toggle_door)
+  if exec.Toggle_door {
+    game.LuaPushDoor(L, g, exec.getDoor(g))
+  } else {
+    game.LuaPushEntity(L, g.EntityById(exec.Target))
+  }
+  L.SetTable(-3)
+}
+func (exec interactExec) getDoor(g *game.Game) *house.Door {
+  if exec.Floor < 0 || exec.Floor >= len(g.House.Floors) {
+    return nil
+  }
+  floor := g.House.Floors[exec.Floor]
+  if exec.Room < 0 || exec.Room >= len(floor.Rooms) {
+    return nil
+  }
+  room := floor.Rooms[exec.Room]
+  if exec.Door < 0 || exec.Door >= len(room.Doors) {
+    return nil
+  }
+  return room.Doors[exec.Door]
 }
 
 func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interactExec {
@@ -78,10 +107,10 @@ func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interac
   exec.id = exec_id
   exec_id++
   exec.SetBasicData(ent, a)
-  exec.floor = floor
-  exec.room = room
-  exec.door = door
-  exec.toggle_door = true
+  exec.Floor = floor
+  exec.Room = room
+  exec.Door = door
+  exec.Toggle_door = true
   return exec
 }
 func init() {
@@ -210,20 +239,17 @@ func makeRectForDoor(room *house.Room, door *house.Door) frect {
   return dr
 }
 
-func (a *Interact) AiToggleDoor(ent *game.Entity, floor, room, door int) game.ActionExec {
-  floors := ent.Game().House.Floors
-  if floor < 0 || floor >= len(floors) {
-    return nil
+func (a *Interact) AiToggleDoor(ent *game.Entity, door *house.Door) game.ActionExec {
+  for fi, f := range ent.Game().House.Floors {
+    for ri, r := range f.Rooms {
+      for di, d := range r.Doors {
+        if d == door {
+          return a.makeDoorExec(ent, fi, ri, di)
+        }
+      }
+    }
   }
-  rooms := floors[floor].Rooms
-  if room < 0 || room >= len(rooms) {
-    return nil
-  }
-  doors := rooms[room].Doors
-  if door < 0 || door >= len(doors) {
-    return nil
-  }
-  return a.makeDoorExec(ent, floor, room, door)
+  return nil
 }
 
 func (a *Interact) findDoors(ent *game.Entity, g *game.Game) []*house.Door {
@@ -317,10 +343,10 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
       rect := makeRectForDoor(room, door)
       if rect.Contains(float64(bx), float64(by)) {
         var exec interactExec
-        exec.toggle_door = true
+        exec.Toggle_door = true
         exec.SetBasicData(a.ent, a)
-        exec.room = room_num
-        exec.door = door_num
+        exec.Room = room_num
+        exec.Door = door_num
         return true, exec
       }
     }
@@ -364,7 +390,7 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
     exec := ae.(interactExec)
     a.ent = g.EntityById(ae.EntityId())
     g := a.ent.Game()
-    if (exec.Target != 0) == (exec.toggle_door) {
+    if (exec.Target != 0) == (exec.Toggle_door) {
       base.Error().Printf("Got an interact that tried to target a door and an entity: %v", exec)
       return game.Complete
     }
@@ -403,21 +429,21 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
       target.Sprite().Command("inspect")
     } else {
       // We're interacting with a door here
-      if exec.floor < 0 || exec.floor >= len(g.House.Floors) {
+      if exec.Floor < 0 || exec.Floor >= len(g.House.Floors) {
         base.Error().Printf("Specified an unknown floor %v", exec)
         return game.Complete
       }
-      floor := g.House.Floors[exec.floor]
-      if exec.room < 0 || exec.room >= len(floor.Rooms) {
+      floor := g.House.Floors[exec.Floor]
+      if exec.Room < 0 || exec.Room >= len(floor.Rooms) {
         base.Error().Printf("Specified an unknown room %v", exec)
         return game.Complete
       }
-      room := floor.Rooms[exec.room]
-      if exec.door < 0 || exec.door >= len(room.Doors) {
+      room := floor.Rooms[exec.Room]
+      if exec.Door < 0 || exec.Door >= len(room.Doors) {
         base.Error().Printf("Specified an unknown door %v", exec)
         return game.Complete
       }
-      door := room.Doors[exec.door]
+      door := room.Doors[exec.Door]
 
       x, y := a.ent.Pos()
       dx, dy := a.ent.Dims()

@@ -68,6 +68,21 @@ func (bae BasicActionExec) EntityId() EntityId {
 func (bae BasicActionExec) ActionIndex() int {
   return bae.Index
 }
+func (bae BasicActionExec) Push(L *lua.State, g *Game) {
+  ent := g.EntityById(bae.Ent)
+  if bae.Index < 0 || bae.Index >= len(ent.Actions) {
+    base.Error().Printf("Tried to push an exec for an invalid action index: '%s' %d.", ent.Name)
+    L.PushNil()
+    return
+  }
+  L.NewTable()
+  L.PushString("Action")
+  ent.Actions[bae.Index].Push(L)
+  L.SetTable(-3)
+  L.PushString("Ent")
+  LuaPushEntity(L, ent)
+  L.SetTable(-3)
+}
 func (bae *BasicActionExec) SetBasicData(ent *Entity, action Action) {
   bae.Ent = ent.Id
   bae.Index = -1
@@ -89,6 +104,8 @@ type ActionExec interface {
 
   // Index into Entity.Actions
   ActionIndex() int
+
+  Push(L *lua.State, g *Game)
 }
 
 func encodeActionExec(ae ActionExec) []byte {

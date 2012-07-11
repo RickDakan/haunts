@@ -70,6 +70,17 @@ type summonExec struct {
   Pos int
 }
 
+func (exec summonExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  _, x, y := g.FromVertex(exec.Pos)
+  L.PushString("Pos")
+  game.LuaPushPoint(L, x, y)
+  L.SetTable(-3)
+}
+
 func (a *SummonAction) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")

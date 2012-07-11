@@ -557,45 +557,6 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
   }
 }
 
-func pushRoom(L *lua.State, floor, room int) {
-  L.NewTable()
-  L.PushString("floor")
-  L.PushInteger(floor)
-  L.SetTable(-3)
-  L.PushString("room")
-  L.PushInteger(room)
-  L.SetTable(-3)
-}
-
-func pushDoor(L *lua.State, floor, room, door int) {
-  L.NewTable()
-  L.PushString("floor")
-  L.PushInteger(floor)
-  L.SetTable(-3)
-  L.PushString("room")
-  L.PushInteger(room)
-  L.SetTable(-3)
-  L.PushString("door")
-  L.PushInteger(door)
-  L.SetTable(-3)
-}
-
-func getFloorRoomDoor(L *lua.State, index int) (floor, room, door int) {
-  L.PushString("floor")
-  L.GetTable(index - 1)
-  floor = L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("room")
-  L.GetTable(index - 1)
-  room = L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("door")
-  L.GetTable(index - 1)
-  door = L.ToInteger(-1)
-  L.Pop(1)
-  return
-}
-
 func checkFloorRoom(h *house.HouseDef, floor, room int) bool {
   if floor < 0 || room < 0 {
     return false
@@ -658,7 +619,7 @@ func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
       return 1
     }
 
-    pushRoom(L, 0, path[len(path)-1])
+    game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[path[len(path)-1]])
     return 1
   }
 }
@@ -688,18 +649,24 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     me := a.ent
     g := me.Game()
     graph := g.RoomGraph()
-    f1, r1, _ := getFloorRoomDoor(L, -2)
-    if !checkFloorRoom(g.House, f1, r1) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f1, r1))
-      return 0
-    }
-    f2, r2, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(g.House, f2, r2) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f2, r2))
+    r1 := game.LuaToRoom(L, g, -2)
+    r2 := game.LuaToRoom(L, g, -1)
+    if r1 == nil || r2 == nil {
+      game.LuaDoError(L, fmt.Sprintf("Referenced one or more invalid rooms."))
       return 0
     }
 
-    cost, path := algorithm.Dijkstra(graph, []int{r1}, []int{r2})
+    L.PushString("room")
+    L.GetTable(-3)
+    r1_index := L.ToInteger(-1)
+    L.Pop(1)
+
+    L.PushString("room")
+    L.GetTable(-2)
+    r2_index := L.ToInteger(-1)
+    L.Pop(1)
+
+    cost, path := algorithm.Dijkstra(graph, []int{r1_index}, []int{r2_index})
     if cost == -1 {
       L.PushNil()
       return 1
@@ -720,7 +687,7 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
         continue
       } // Skip this one because we're in it already
       L.PushInteger(i)
-      pushRoom(L, 0, v)
+      game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[v])
       L.SetTable(-3)
     }
     return 1
@@ -748,7 +715,7 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
     if ent == nil || (ent.Side() != a.ent.Side() && !a.ent.Game().TeamLos(ent.Pos())) {
       L.PushNil()
     } else {
-      pushRoom(L, 0, ent.CurrentRoom())
+      game.LuaPushRoom(L, ent.Game(), ent.Game().House.Floors[0].Rooms[ent.CurrentRoom()])
     }
     return 1
   }
@@ -769,36 +736,30 @@ func AllDoorsBetween(a *Ai) lua.GoFunction {
     if !game.LuaCheckParamsOk(L, "allDoorsBetween", game.LuaRoom, game.LuaRoom) {
       return 0
     }
-    f1, r1, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f1, r1) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f1, r1))
+    room1 := game.LuaToRoom(L, a.ent.Game(), -2)
+    room2 := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room1 == nil || room2 == nil {
+      game.LuaDoError(L, "AllDoorsBetween: Specified an invalid door.")
       return 0
     }
-    f2, r2, _ := getFloorRoomDoor(L, -2)
-    if !checkFloorRoom(a.ent.Game().House, f2, r2) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f2, r2))
-      return 0
-    }
-    if f1 != f2 {
-      // Rooms on different floors can theoretically be connected in the
-      // future by a stairway, but right now that doesn't happen.
-      L.NewTable()
-      return 1
-    }
+
+    // TODO: Check for floors!
+    // if f1 != f2 {
+    //   // Rooms on different floors can theoretically be connected in the
+    //   // future by a stairway, but right now that doesn't happen.
+    //   L.NewTable()
+    //   return 1
+    // }
 
     L.NewTable()
     count := 1
-    room1 := a.ent.Game().House.Floors[f1].Rooms[r1]
-    room2 := a.ent.Game().House.Floors[f2].Rooms[r2]
-    base.Log().Printf("Room1: (%d, %d) dims (%d, %d)", room1.X, room1.Y, room1.Size.Dx, room1.Size.Dy)
-    base.Log().Printf("Room2: (%d, %d) dims (%d, %d)", room2.X, room2.Y, room2.Size.Dx, room2.Size.Dy)
-    for d_index, door1 := range room1.Doors {
+    for _, door1 := range room1.Doors {
       for _, door2 := range room2.Doors {
-        _, d := a.ent.Game().House.Floors[f1].FindMatchingDoor(room1, door1)
+        _, d := a.ent.Game().House.Floors[0].FindMatchingDoor(room1, door1)
         if d == door2 {
           L.PushInteger(count)
           count++
-          pushDoor(L, f1, r1, d_index)
+          game.LuaPushDoor(L, a.ent.Game(), door1)
           L.SetTable(-3)
         }
       }
@@ -821,16 +782,16 @@ func AllDoorsOn(a *Ai) lua.GoFunction {
     if !game.LuaCheckParamsOk(L, "allDoorsOn", game.LuaRoom) {
       return 0
     }
-    f, r, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f, r) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f, r))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room == nil {
+      game.LuaDoError(L, "Specified an invalid room.")
       return 0
     }
 
     L.NewTable()
-    for i := range a.ent.Game().House.Floors[f].Rooms[r].Doors {
+    for i := range room.Doors {
       L.PushInteger(i + 1)
-      pushDoor(L, f, r, i)
+      game.LuaPushDoor(L, a.ent.Game(), room.Doors[i])
       L.SetTable(-3)
     }
     return 1
@@ -850,16 +811,15 @@ func AllDoorsOn(a *Ai) lua.GoFunction {
 //    and closed from.
 func DoorPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !game.LuaCheckParamsOk(L, "doorPositions", game.LuaDoor) {
+    if !game.LuaCheckParamsOk(L, "DoorPositions", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil || room == nil {
+      game.LuaDoError(L, "DoorPositions: Specified an invalid door.")
       return 0
     }
-    room := a.ent.Game().House.Floors[f].Rooms[r]
-    door := room.Doors[d]
 
     var x, y, dx, dy int
     switch door.Facing {
@@ -908,12 +868,12 @@ func DoorIsOpenFunc(a *Ai) lua.GoFunction {
     if !game.LuaCheckParamsOk(L, "doorIsOpen", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil {
+      game.LuaDoError(L, "DoorIsOpen: Specified an invalid door.")
       return 0
     }
-    L.PushBoolean(a.ent.Game().House.Floors[f].Rooms[r].Doors[d].Opened)
+    L.PushBoolean(door.Opened)
     return 1
   }
 }
@@ -933,9 +893,9 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
     if !game.LuaCheckParamsOk(L, "doDoorToggle", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil {
+      game.LuaDoError(L, "DoDoorToggle: Specified an invalid door.")
       return 0
     }
 
@@ -952,11 +912,11 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
       L.PushNil()
       return 1
     }
-    exec := interact.AiToggleDoor(a.ent, f, r, d)
+    exec := interact.AiToggleDoor(a.ent, door)
     if exec != nil {
       a.execs <- exec
       <-a.pause
-      L.PushBoolean(a.ent.Game().House.Floors[f].Rooms[r].Doors[d].Opened)
+      L.PushBoolean(door.Opened)
     } else {
       L.PushNil()
     }
@@ -978,12 +938,11 @@ func RoomPositionsFunc(a *Ai) lua.GoFunction {
     if !game.LuaCheckParamsOk(L, "roomPositions", game.LuaRoom) {
       return 0
     }
-    f, r, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f, r) {
-      game.LuaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f, r))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room == nil {
+      game.LuaDoError(L, "RoomPositions: Specified an invalid room.")
       return 0
     }
-    room := a.ent.Game().House.Floors[f].Rooms[r]
 
     L.NewTable()
     count := 1

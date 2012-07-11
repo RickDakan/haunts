@@ -304,6 +304,100 @@ func LuaToPoint(L *lua.State, pos int) (x, y int) {
   return
 }
 
+func LuaPushRoom(L *lua.State, game *Game, room *house.Room) {
+  for fi, f := range game.House.Floors {
+    for ri, r := range f.Rooms {
+      if r == room {
+        L.NewTable()
+        L.PushString("type")
+        L.PushString("room")
+        L.SetTable(-3)
+        L.PushString("floor")
+        L.PushInteger(fi)
+        L.SetTable(-3)
+        L.PushString("room")
+        L.PushInteger(ri)
+        L.SetTable(-3)
+        return
+      }
+    }
+  }
+  L.PushNil()
+}
+
+func LuaToRoom(L *lua.State, game *Game, index int) *house.Room {
+  L.PushString("floor")
+  L.GetTable(index - 1)
+  floor := L.ToInteger(-1)
+  L.Pop(1)
+  L.PushString("room")
+  L.GetTable(index - 1)
+  room := L.ToInteger(-1)
+  L.Pop(1)
+
+  if floor < 0 || floor >= len(game.House.Floors) {
+    return nil
+  }
+  if room < 0 || room >= len(game.House.Floors[floor].Rooms) {
+    return nil
+  }
+
+  return game.House.Floors[floor].Rooms[room]
+}
+
+func LuaPushDoor(L *lua.State, game *Game, door *house.Door) {
+  for fi, f := range game.House.Floors {
+    for ri, r := range f.Rooms {
+      for di, d := range r.Doors {
+        if d == door {
+          L.NewTable()
+          L.PushString("type")
+          L.PushString("door")
+          L.SetTable(-3)
+          L.PushString("floor")
+          L.PushInteger(fi)
+          L.SetTable(-3)
+          L.PushString("room")
+          L.PushInteger(ri)
+          L.SetTable(-3)
+          L.PushString("door")
+          L.PushInteger(di)
+          L.SetTable(-3)
+          return
+        }
+      }
+    }
+  }
+  L.PushNil()
+}
+
+func LuaToDoor(L *lua.State, game *Game, index int) *house.Door {
+  L.PushString("floor")
+  L.GetTable(index - 1)
+  floor := L.ToInteger(-1)
+  L.Pop(1)
+  L.PushString("room")
+  L.GetTable(index - 1)
+  room := L.ToInteger(-1)
+  L.Pop(1)
+  L.PushString("door")
+  L.GetTable(index - 1)
+  door := L.ToInteger(-1)
+  L.Pop(1)
+
+  if floor < 0 || floor >= len(game.House.Floors) {
+    return nil
+  }
+  if room < 0 || room >= len(game.House.Floors[floor].Rooms) {
+    return nil
+  }
+  if door < 0 || door >= len(game.House.Floors[floor].Rooms[room].Doors) {
+    return nil
+  }
+
+  return game.House.Floors[floor].Rooms[room].Doors[door]
+}
+
 func LuaPushSpawnPoint(L *lua.State, game *Game, sp *house.SpawnPoint) {
   index := -1
   for i, spawn := range game.House.Floors[0].Spawns {

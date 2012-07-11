@@ -133,6 +133,9 @@ func (gs *gameScript) OnRound(g *Game) {
       <-g.comm.game_to_script
       base.Log().Printf("ScriptComm: Got action secondary")
       // Run OnAction here
+      gs.L.SetExecutionLimit(250000)
+
+      gs.L.DoString(fmt.Sprintf("OnAction(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
       g.comm.script_to_game <- nil
       base.Log().Printf("ScriptComm: Done with OnAction")
     }

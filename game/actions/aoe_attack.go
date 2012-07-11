@@ -77,7 +77,17 @@ type aoeAttackTempData struct {
 }
 type aoeExec struct {
   game.BasicActionExec
-  Pos int
+  X, Y int
+}
+
+func (exec aoeExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  L.PushString("Pos")
+  game.LuaPushPoint(L, exec.X, exec.Y)
+  L.SetTable(-3)
 }
 
 func init() {
@@ -156,7 +166,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.
     if dist(ex, ey, a.tx, a.ty) <= a.Range && a.ent.HasLos(a.tx, a.ty, 1, 1) {
       var exec aoeExec
       exec.SetBasicData(a.ent, a)
-      exec.Pos = a.ent.Game().ToVertex(a.tx, a.ty)
+      exec.X, exec.Y = a.tx, a.ty
       return true, exec
     } else {
       return true, nil
@@ -259,7 +269,7 @@ func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec
   }
   var exec aoeExec
   exec.SetBasicData(ent, a)
-  exec.Pos = ent.Game().ToVertex(x, y)
+  exec.X, exec.Y = x, y
   return exec
 }
 
@@ -322,14 +332,13 @@ func (a *AoeAttack) getTargetsAt(g *game.Game, tx, ty int) []*game.Entity {
 func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     a.exec = ae.(aoeExec)
-    _, tx, ty := g.FromVertex(a.exec.Pos)
-    a.targets = a.getTargetsAt(g, tx, ty)
+    a.targets = a.getTargetsAt(g, a.exec.X, a.exec.Y)
     if a.Current_ammo > 0 {
       a.Current_ammo--
     }
     a.ent = g.EntityById(ae.EntityId())
-    if !a.ent.HasLos(tx, ty, 1, 1) {
-      base.Error().Printf("Entity %d tried to target position (%d, %d) with an aoe but doesn't have los to it: %v", a.ent.Id, tx, ty, a.exec)
+    if !a.ent.HasLos(a.exec.X, a.exec.Y, 1, 1) {
+      base.Error().Printf("Entity %d tried to target position (%d, %d) with an aoe but doesn't have los to it: %v", a.ent.Id, a.exec.X, a.exec.Y, a.exec)
       return game.Complete
     }
     if a.Ap > a.ent.Stats.ApCur() {
@@ -355,7 +364,7 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
       return game.InProgress
     }
   }
-  a.ent.TurnToFace(a.tx, a.ty)
+  a.ent.TurnToFace(a.exec.X, a.exec.Y)
   for _, target := range a.targets {
     target.TurnToFace(a.ent.Pos())
   }

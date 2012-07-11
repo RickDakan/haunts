@@ -71,6 +71,17 @@ type moveExec struct {
   Dst int
 }
 
+func (exec moveExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  _, x, y := g.FromVertex(exec.Dst)
+  L.PushString("Dst")
+  game.LuaPushPoint(L, x, y)
+  L.SetTable(-3)
+}
+
 func init() {
   gob.Register(moveExec{})
 }

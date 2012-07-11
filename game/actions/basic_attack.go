@@ -87,6 +87,17 @@ type basicAttackExec struct {
   Target game.EntityId
 }
 
+func (exec basicAttackExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  target := g.EntityById(exec.Target)
+  L.PushString("Target")
+  game.LuaPushEntity(L, target)
+  L.SetTable(-3)
+}
+
 func init() {
   gob.Register(basicAttackExec{})
 }
