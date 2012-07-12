@@ -97,6 +97,7 @@ func (exec *moveExec) Push(L *lua.State, g *game.Game) {
   if L.IsNil(-1) {
     return
   }
+  L.PushString("Path")
   L.NewTable()
   for i := range exec.Path {
     L.PushInteger(i + 1)
@@ -104,6 +105,7 @@ func (exec *moveExec) Push(L *lua.State, g *game.Game) {
     game.LuaPushPoint(L, x, y)
     L.SetTable(-3)
   }
+  L.SetTable(-3)
 }
 func (exec *moveExec) GetPath() []int {
   return exec.Path[1:]
