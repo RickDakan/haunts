@@ -1141,11 +1141,11 @@ func LoadAllHousesInDir(dir string) {
   base.RegisterAllObjectsInDir("houses", dir, ".house", "json")
 }
 
-func (h *HouseDef) openDoors() {
+func (h *HouseDef) setDoorsOpened(opened bool) {
   for _, floor := range h.Floors {
     for _, room := range floor.Rooms {
       for _, door := range room.Doors {
-        door.Opened = true
+        door.Opened = opened
       }
     }
   }
@@ -1160,6 +1160,7 @@ func MakeHouseFromName(name string) *HouseDef {
   var idiot iamanidiotcontainer
   idiot.Defname = name
   base.GetObject("houses", &idiot)
+  idiot.HouseDef.setDoorsOpened(false)
   return idiot.HouseDef
 }
 
@@ -1169,7 +1170,7 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
-  house.openDoors()
+  house.setDoorsOpened(false)
   return &house, nil
 }
 
