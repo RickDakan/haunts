@@ -1,0 +1,10 @@
+{
+  "Name": "Door 11 - DoubleArch",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_11_doublearch_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_11_doublearch_closed.png"
+  }
+}

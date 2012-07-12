@@ -1,6 +1,6 @@
 {
   "Name": "Door 07 - Belfast Double",
-  "Width": 2,
+  "Width": 3,
   "Opened_texture": {
     "Path": "doors/door_07_belfast_open.png"
   },
