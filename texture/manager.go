@@ -193,9 +193,36 @@ var load_mutex sync.Mutex
 const load_threshold = 1000 * 1000
 
 func init() {
-  load_requests = make(chan loadRequest, 100)
+  load_requests = make(chan loadRequest, 10)
+  pipe := make(chan loadRequest, 10)
+  // We want to be able to handle any number of incoming load requests, so
+  // we have one go-routine collect them all and send them along pipe any
+  // time someone is ready to receive one.
+  go func() {
+    var rs []loadRequest
+    var send chan loadRequest
+    var hold loadRequest
+    for {
+      select {
+      case r := <-load_requests:
+        rs = append(rs, r)
+      case send <- hold:
+        rs = rs[1:]
+      }
+      if len(rs) > 0 {
+        send = pipe
+        hold = rs[0]
+      } else {
+        // If send is nil then it will effectively be excluded from the select
+        // statement above.  This is good since we won't have anything to send
+        // until we get more requests.
+        rs = nil
+        send = nil
+      }
+    }
+  }()
   for i := 0; i < 4; i++ {
-    go loadTextureRoutine()
+    go loadTextureRoutine(pipe)
   }
 }
 
@@ -203,8 +230,8 @@ func init() {
 // in that file into that object.  This is so that only one texture is being
 // loaded at a time, it prevents us from hammering the filesystem and also
 // makes sure we aren't using up a ton of memory all at once.
-func loadTextureRoutine() {
-  for req := range load_requests {
+func loadTextureRoutine(pipe chan loadRequest) {
+  for req := range pipe {
     handleLoadRequest(req)
   }
 }
@@ -256,14 +283,16 @@ func handleLoadRequest(req loadRequest) {
     manual_unlock = true
   }
   render.Queue(func() {
-    gl.Enable(gl.TEXTURE_2D)
-    req.data.texture = gl.GenTexture()
-    req.data.texture.Bind(gl.TEXTURE_2D)
-    gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    {
+      gl.Enable(gl.TEXTURE_2D)
+      req.data.texture = gl.GenTexture()
+      req.data.texture.Bind(gl.TEXTURE_2D)
+      gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    }
     if gray {
       glu.Build2DMipmaps(gl.TEXTURE_2D, gl.LUMINANCE_ALPHA, req.data.dx, req.data.dy, gl.LUMINANCE_ALPHA, pix)
     } else {
