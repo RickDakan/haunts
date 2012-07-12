@@ -173,6 +173,21 @@ function RoundStart(intruders, round)
   -- end
 end
 
+function OnMove(ent, path)
+  print("OnMove(", ent.Name, ")")
+  for k, v in pairs(path) do
+    print(k, v)
+  end
+  return 2
+end
+
+function OnAction(intruders, round, exec)
+  print("OnAction: ", intruders, round, exec)
+  for k, v in pairs(exec) do
+    print("exec: ", k, v)
+  end
+end
+
 function RoundEnd(intruders, round)
   print("end", intruders, round)
 end

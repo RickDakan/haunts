@@ -83,6 +83,10 @@ func (bae BasicActionExec) Push(L *lua.State, g *Game) {
   LuaPushEntity(L, ent)
   L.SetTable(-3)
 }
+func (bae BasicActionExec) GetPath() []int {
+  return nil
+}
+func (bae BasicActionExec) TruncatePath(int) {}
 func (bae *BasicActionExec) SetBasicData(ent *Entity, action Action) {
   bae.Ent = ent.Id
   bae.Index = -1
@@ -106,6 +110,9 @@ type ActionExec interface {
   ActionIndex() int
 
   Push(L *lua.State, g *Game)
+
+  GetPath() []int
+  TruncatePath(length int)
 }
 
 func encodeActionExec(ae ActionExec) []byte {

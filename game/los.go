@@ -325,6 +325,9 @@ const (
   // use it, and how.
   preppingAction
 
+  // Check the scripts to see if the action should be modified or cancelled.
+  verifyingAction
+
   // An action is currently running, everything should pause while this runs.
   doingAction
 )
@@ -760,10 +763,20 @@ func (g *Game) Think(dt int64) {
     }
   }
 
-  if g.current_exec != nil {
+  if g.current_exec != nil && g.action_state != verifyingAction {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
-    g.action_state = doingAction
+    g.action_state = verifyingAction
+    base.Log().Printf("ScriptComm: request exec verification")
+    g.comm.game_to_script <- g.current_exec
+  }
+
+  if g.action_state == verifyingAction {
+    select {
+    case <-g.comm.script_to_game:
+      g.action_state = doingAction
+    default:
+    }
   }
 
   // If there is an action that is currently executing we need to advance that
@@ -772,7 +785,6 @@ func (g *Game) Think(dt int64) {
     res := g.current_action.Maintain(dt, g, g.current_exec)
     if g.current_exec != nil {
       base.Log().Printf("ScriptComm: sent action")
-      g.comm.game_to_script <- g.current_exec
       g.current_exec = nil
     }
     switch res {
@@ -781,6 +793,7 @@ func (g *Game) Think(dt int64) {
       g.current_action = nil
       g.action_state = noAction
       g.turn_state = turnStateScriptOnAction
+      base.Log().Printf("ScriptComm: Action complete")
       g.comm.game_to_script <- nil
       g.checkWinConditions()
 

@@ -71,7 +71,7 @@ type moveExec struct {
   Path []int
 }
 
-func (exec moveExec) measureCost(ent *game.Entity, g *game.Game) int {
+func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
   graph := g.Graph(ent.Side(), nil)
   v := g.ToVertex(ent.Pos())
   cost := 0
@@ -92,7 +92,7 @@ func (exec moveExec) measureCost(ent *game.Entity, g *game.Game) int {
   }
   return cost
 }
-func (exec moveExec) Push(L *lua.State, g *game.Game) {
+func (exec *moveExec) Push(L *lua.State, g *game.Game) {
   exec.BasicActionExec.Push(L, g)
   if L.IsNil(-1) {
     return
@@ -104,6 +104,12 @@ func (exec moveExec) Push(L *lua.State, g *game.Game) {
     game.LuaPushPoint(L, x, y)
     L.SetTable(-3)
   }
+}
+func (exec *moveExec) GetPath() []int {
+  return exec.Path[1:]
+}
+func (exec *moveExec) TruncatePath(length int) {
+  exec.Path = exec.Path[0 : length+1]
 }
 
 func init() {
@@ -172,7 +178,7 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
   var exec moveExec
   exec.SetBasicData(ent, a)
   exec.Path = path
-  return exec
+  return &exec
 }
 
 // Attempts to move such that the shortest path from any location
@@ -204,7 +210,7 @@ func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist,
   var exec moveExec
   exec.SetBasicData(ent, a)
   exec.Path = path
-  return exec
+  return &exec
 }
 
 func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist int) int {
@@ -293,7 +299,7 @@ func (a *Move) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.Actio
         algorithm.Map2(a.path, &exec.Path, func(v [2]int) int {
           return g.ToVertex(v[0], v[1])
         })
-        return true, exec
+        return true, &exec
       }
       return true, nil
     } else {
@@ -325,7 +331,7 @@ func (a *Move) Cancel() {
 }
 func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(moveExec)
+    exec := ae.(*moveExec)
     a.ent = g.EntityById(ae.EntityId())
     if len(exec.Path) == 0 {
       base.Error().Printf("Got a move exec with a path length of 0: %v", exec)

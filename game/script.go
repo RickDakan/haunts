@@ -122,17 +122,52 @@ func (gs *gameScript) OnRound(g *Game) {
     base.Log().Printf("ScriptComm: Done with RoundStart")
 
     for {
-      // The action is sent when it happens, and a nil is sent when it is done
-      // being executed, we want to wait until then so that the game is in a
-      // stable state before we do anything.
-      base.Log().Printf("ScriptComm: Waiting for action")
+      base.Log().Printf("ScriptComm: Waiting to verify action")
       _exec := <-g.comm.game_to_script
       base.Log().Printf("ScriptComm: Got exec: %v", _exec)
       if _exec == nil {
         base.Log().Printf("ScriptComm: No more exec: bailing")
         break
       }
+      base.Log().Printf("ScriptComm: Verifying action")
+
       exec := _exec.(ActionExec)
+      if vpath := exec.GetPath(); vpath != nil {
+        gs.L.SetExecutionLimit(250000)
+        exec.Push(gs.L, g)
+        gs.L.NewTable()
+        for i := range vpath {
+          gs.L.PushInteger(i + 1)
+          _, x, y := g.FromVertex(vpath[i])
+          LuaPushPoint(gs.L, x, y)
+          gs.L.SetTable(-3)
+        }
+        base.Log().Printf("Pathlength: %d", len(vpath))
+        gs.L.SetGlobal("__path")
+        LuaPushEntity(gs.L, g.EntityById(exec.EntityId()))
+        gs.L.SetGlobal("__ent")
+        cmd = fmt.Sprintf("__truncate = OnMove(__ent, __path)")
+        base.Log().Printf("cmd: '%s'", cmd)
+        func() {
+          defer func() {
+            if r := recover(); r != nil {
+              base.Log().Printf("Error in OnMove(): ", r)
+            }
+          }()
+          gs.L.DoString(cmd)
+          gs.L.GetGlobal("__truncate")
+          truncate := gs.L.ToInteger(-1)
+          gs.L.Pop(1)
+          base.Log().Printf("Truncating to length %d", truncate)
+          exec.TruncatePath(truncate)
+        }()
+      }
+
+      g.comm.script_to_game <- nil
+
+      // The action is sent when it happens, and a nil is sent when it is done
+      // being executed, we want to wait until then so that the game is in a
+      // stable state before we do anything.
       <-g.comm.game_to_script
       base.Log().Printf("ScriptComm: Got action secondary")
       // Run OnAction here
