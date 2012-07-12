@@ -819,7 +819,7 @@ func (g *Game) Think(dt int64) {
 
   for _, tex := range []*house.LosTexture{g.los.denizens.tex, g.los.intruders.tex} {
     pix := tex.Pix()
-    amt := dt / 5
+    amt := dt/6 + 1
     mod := false
     for i := range pix {
       for j := range pix[i] {
