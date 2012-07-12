@@ -237,12 +237,12 @@ func main() {
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
-    gl.Enable(gl.BLEND)
-    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     err := gl.Init()
     if err != nil {
       panic(err)
     }
+    gl.Enable(gl.BLEND)
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   })
   base.InitShaders()
   runtime.GOMAXPROCS(8)
