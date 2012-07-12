@@ -167,6 +167,7 @@ func (rc *RosterChooser) Think(ui *gui.Gui, t int64) {
 }
 
 func (rc *RosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
+  base.Log().Printf("RosterChooser.Respond")
   if found, event := group.FindEvent('l'); found && event.Type == gin.Press {
     rc.focus += rc.layout.Num_options
     return true
@@ -193,6 +194,7 @@ func (rc *RosterChooser) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       }
     } else if gp.Inside(rc.render.done) {
       if rc.selector(-1, rc.selected, false) {
+        base.Log().Printf("calling on-complete")
         rc.on_complete(rc.selected)
       }
       return true

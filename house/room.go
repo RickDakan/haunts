@@ -310,14 +310,11 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   }
 
   current_alpha := base_alpha
-  left_alpha := byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
-  right_alpha := byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
+  // room.far_left.wall_alpha := byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
+  // room.far_right.wall_alpha := byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
 
   var mul, run mathgl.Mat4
   for _, plane := range planes {
-    gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
-    gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
-    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
     gl.LoadMatrixf(&floor[0])
     run.Assign(&floor)
 
@@ -332,52 +329,49 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
           continue
         }
         door.TextureData().Bind()
-
-        run.Assign(&floor)
-        mul.Translation(float32(door.Pos), float32(room.Size.Dy), 0)
-        run.Multiply(&mul)
-        mul.RotationX(-3.1415926535 / 2)
-        run.Multiply(&mul)
-        gl.LoadMatrixf(&run[0])
-
-        dx := float64(door.Width)
-        dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         R, G, B, A := door.Color()
-        do_color(R, G, B, alphaMult(A, current_alpha))
-        door.TextureData().Render(0, 0, dx, dy)
+        do_color(R, G, B, alphaMult(A, room.far_left.wall_alpha))
+        gl.ClientActiveTexture(gl.TEXTURE0)
+        door.TextureData().Bind()
+        if door.door_glids.floor_buffer != 0 {
+          gl.BindBuffer(gl.ARRAY_BUFFER, door.threshold_glids.vbuffer)
+          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.door_glids.floor_buffer)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+          gl.ClientActiveTexture(gl.TEXTURE1)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+          gl.DrawElements(gl.TRIANGLES, door.door_glids.floor_count, gl.UNSIGNED_SHORT, nil)
+        }
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-      do_color(255, 255, 255, left_alpha)
+      do_color(255, 255, 255, room.far_left.wall_alpha)
 
     case &right:
       gl.StencilFunc(gl.ALWAYS, 1, 1)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-      gl.Color4ub(255, 255, 255, right_alpha)
       for _, door := range room.Doors {
         if door.Facing != FarRight {
           continue
         }
         door.TextureData().Bind()
-
-        run.Assign(&floor)
-        mul.Translation(float32(room.Size.Dx), float32(door.Pos), 0)
-        run.Multiply(&mul)
-        mul.RotationX(-3.1415926535 / 2)
-        run.Multiply(&mul)
-        mul.RotationY(-3.1415926535 / 2)
-        run.Multiply(&mul)
-        gl.LoadMatrixf(&run[0])
-
-        dx := float64(door.Width)
-        dy := dx * float64(door.TextureData().Dy()) / float64(door.TextureData().Dx())
         R, G, B, A := door.Color()
-        do_color(R, G, B, alphaMult(A, current_alpha))
-        door.TextureData().Render(0, 0, dx, dy)
+        do_color(R, G, B, alphaMult(A, room.far_right.wall_alpha))
+        gl.ClientActiveTexture(gl.TEXTURE0)
+        door.TextureData().Bind()
+        if door.door_glids.floor_buffer != 0 {
+          gl.BindBuffer(gl.ARRAY_BUFFER, door.threshold_glids.vbuffer)
+          gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+          gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.door_glids.floor_buffer)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+          gl.ClientActiveTexture(gl.TEXTURE1)
+          gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
+          gl.DrawElements(gl.TRIANGLES, door.door_glids.floor_count, gl.UNSIGNED_SHORT, nil)
+        }
       }
       gl.StencilFunc(gl.NOTEQUAL, 1, 1)
       gl.StencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-      do_color(255, 255, 255, right_alpha)
+      do_color(255, 255, 255, room.far_right.wall_alpha)
 
     case &floor:
       gl.StencilFunc(gl.ALWAYS, 2, 2)
@@ -385,6 +379,16 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       do_color(255, 255, 255, current_alpha)
     }
 
+    gl.ClientActiveTexture(gl.TEXTURE0)
+    gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+    gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
+    gl.ClientActiveTexture(gl.TEXTURE1)
+    if los_tex != nil {
+      los_tex.Bind()
+    }
+    gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
+    gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
     // Now draw the walls
     gl.LoadMatrixf(&floor[0])
     plane.texture.Data().Bind()
@@ -464,13 +468,13 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       if ids.left_buffer != 0 {
         gl.StencilFunc(gl.ALWAYS, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.left_buffer)
-        do_color(R, G, B, alphaMult(A, left_alpha))
+        do_color(R, G, B, alphaMult(A, room.far_left.wall_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.left_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.right_buffer != 0 {
         gl.StencilFunc(gl.ALWAYS, 1, 1)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.right_buffer)
-        do_color(R, G, B, alphaMult(A, right_alpha))
+        do_color(R, G, B, alphaMult(A, room.far_right.wall_alpha))
         gl.DrawElements(gl.TRIANGLES, ids.right_count, gl.UNSIGNED_SHORT, nil)
       }
     }
@@ -481,7 +485,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   base.SetUniformF("marble", "room_y", float32(room.Y))
   for _, door := range room.Doors {
     door.setupGlStuff(room)
-    if door.gl_ids.vbuffer == 0 {
+    if door.threshold_glids.vbuffer == 0 {
       continue
     }
     if door.highlight_threshold {
@@ -489,14 +493,14 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     } else {
       do_color(128, 128, 128, 255)
     }
-    gl.BindBuffer(gl.ARRAY_BUFFER, door.gl_ids.vbuffer)
+    gl.BindBuffer(gl.ARRAY_BUFFER, door.threshold_glids.vbuffer)
     gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
     gl.ClientActiveTexture(gl.TEXTURE1)
     gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.los_u)))
     gl.ClientActiveTexture(gl.TEXTURE0)
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.gl_ids.floor_buffer)
-    gl.DrawElements(gl.TRIANGLES, door.gl_ids.floor_count, gl.UNSIGNED_SHORT, nil)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, door.threshold_glids.floor_buffer)
+    gl.DrawElements(gl.TRIANGLES, door.threshold_glids.floor_count, gl.UNSIGNED_SHORT, nil)
   }
   base.EnableShader("")
   if los_tex != nil {
@@ -567,25 +571,43 @@ func (room *Room) setupGlStuff() {
   // c is the u-texcoord of the corner of the room
   c := frdx / (frdx + frdy)
 
-  lt_llx := frx / LosTextureSize
-  lt_lly := fry / LosTextureSize
-  lt_urx := (frx + frdx) / LosTextureSize
-  lt_ury := (fry + frdy) / LosTextureSize
+  // lt_llx := frx / LosTextureSize
+  // lt_lly := fry / LosTextureSize
+  // lt_urx := (frx + frdx) / LosTextureSize
+  // lt_ury := (fry + frdy) / LosTextureSize
+
+  lt_llx_ep := (frx + 0.5) / LosTextureSize
+  lt_lly_ep := (fry + 0.5) / LosTextureSize
+  lt_urx_ep := (frx + frdx - 0.5) / LosTextureSize
+  lt_ury_ep := (fry + frdy - 0.5) / LosTextureSize
 
   vs := []roomVertex{
     // Walls
-    {0, dy, 0, 0, 1, lt_ury, lt_llx},
-    {dx, dy, 0, c, 1, lt_ury, lt_urx},
-    {dx, 0, 0, 1, 1, lt_lly, lt_urx},
-    {0, dy, dz, 0, 0, lt_ury, lt_llx},
-    {dx, dy, dz, c, 0, lt_ury, lt_urx},
-    {dx, 0, dz, 1, 0, lt_lly, lt_urx},
+    {0, dy, 0, 0, 1, lt_ury_ep, lt_llx_ep},
+    {dx, dy, 0, c, 1, lt_ury_ep, lt_urx_ep},
+    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
+    {0, dy, dz, 0, 0, lt_ury_ep, lt_llx_ep},
+    {dx, dy, dz, c, 0, lt_ury_ep, lt_urx_ep},
+    {dx, 0, dz, 1, 0, lt_lly_ep, lt_urx_ep},
 
     // Floor
-    {0, 0, 0, 0, 1, lt_lly, lt_llx},
-    {0, dy, 0, 0, 0, lt_ury, lt_llx},
-    {dx, dy, 0, 1, 0, lt_ury, lt_urx},
-    {dx, 0, 0, 1, 1, lt_lly, lt_urx},
+    // This is the bulk of the floor, containing all but the outer edges of 
+    // the room.  los_tex can map directly onto this so we don't need to do
+    // anything weird here.
+    {0.5, 0, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+    {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
+    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+
+    // { 0, 0.5, 0, 0, 1-0.5/dy, lt_lly_ep, lt_llx},
+    // { 0,  dy, 0, 0, 0, lt_ury, lt_llx},
+    // {dx,  dy, 0, 1, 0, lt_ury, lt_urx},
+    // {dx,   0, 0, 1, 1, lt_lly, lt_urx},
+
+    // {0, 0, 0, 0, 1, lt_lly, lt_llx},
+    // {0, dy, 0, 0, 0, lt_ury, lt_llx},
+    // {dx, dy, 0, 1, 0, lt_ury, lt_urx},
+    // {dx, 0, 0, 1, 1, lt_lly, lt_urx},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)

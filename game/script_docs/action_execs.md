@@ -28,7 +28,7 @@ _Pos_: The center of the aoe.
 ------
 
 ####Move Actions
-_Dst_: The destination of the move action.  
+_Path_: An array of points indicating what positions the entity moved through.  
 
 ------
 

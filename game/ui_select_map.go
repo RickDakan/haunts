@@ -76,10 +76,13 @@ func MakeUiSelectMap(gp *GamePanel) (gui.Widget, <-chan string, error) {
   out := make(chan string, 2)
   chooser := hui.MakeRosterChooser(options, hui.SelectExactlyOne, func(m map[int]bool) {
     var index int
+    base.Log().Printf("On complete: %v", m)
     for index = range m {
       out <- options[index].(*MapOption).house_def.Name
+      base.Log().Printf("Sent '%s'", options[index].(*MapOption).house_def.Name)
       break
     }
+    base.Log().Printf("Closing")
     close(out)
   },
     nil)

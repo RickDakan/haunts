@@ -74,7 +74,7 @@ func init() {
   base.SetDefaultKeyMap(key_map)
 
   wdx = 1024
-  wdy = 768
+  wdy = 750
 }
 
 type draggerZoomer interface {
@@ -380,5 +380,19 @@ func main() {
     } else {
       gameMode()
     }
+
+    // Draw a cursor at the cursor - for testing an osx bug in glop.
+    // zx, zy := gin.In().GetCursor("Mouse").Point()
+    // render.Queue(func() {
+    //   gl.Color4ub(255, 0, 0, 255)
+    //   gl.Begin(gl.LINES)
+    //   {
+    //     gl.Vertex2i(int32(zx-25), int32(zy))
+    //     gl.Vertex2i(int32(zx+25), int32(zy))
+    //     gl.Vertex2i(int32(zx), int32(zy-25))
+    //     gl.Vertex2i(int32(zx), int32(zy+25))
+    //   }
+    //   gl.End()
+    // })
   }
 }

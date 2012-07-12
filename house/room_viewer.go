@@ -912,7 +912,6 @@ func (rv *RoomViewer) Draw(region gui.Region) {
   // rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat)
   rv.room.setupGlStuff()
   rv.room.far_left.wall_alpha = 255
-  rv.room.far_left.door_alpha = 255
   rv.room.far_right.wall_alpha = 255
   rv.room.render(rv.mat, rv.left_wall_mat, rv.right_wall_mat, rv.zoom, 255, nil, nil, nil)
   return

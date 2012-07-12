@@ -258,9 +258,10 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
     gp.script.syncEnd()
 
     name := <-output
-
+    base.Log().Printf("Received '%s'", name)
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(selector)
+    base.Log().Printf("Removed seletor")
     L.PushString(name)
     return 1
   }

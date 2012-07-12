@@ -806,6 +806,9 @@ func (g *Game) Think(dt int64) {
   for i := range g.Ents {
     g.Ents[i].Think(dt)
   }
+  if g.new_ent != nil {
+    g.new_ent.Think(dt)
+  }
 
   for i := range g.Ents {
     g.UpdateEntLos(g.Ents[i], false)

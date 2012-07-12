@@ -219,6 +219,20 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
         L.SetTable(-3)
       }
     },
+    "Side": func() {
+      L.NewTable()
+      sides := map[string]Side{
+        "Denizen":  SideHaunt,
+        "Intruder": SideExplorers,
+        "Npc":      SideNpc,
+        "Objects":  SideObject,
+      }
+      for str, side := range sides {
+        L.PushString(str)
+        L.PushBoolean(ent.Side() == side)
+        L.SetTable(-3)
+      }
+    },
     "GearOptions": func() {
       L.NewTable()
       if ent.ExplorerEnt != nil {

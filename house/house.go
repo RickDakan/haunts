@@ -27,10 +27,10 @@ type Room struct {
 
   // whether or not to draw the walls transparent
   far_left struct {
-    wall_alpha, door_alpha byte
+    wall_alpha byte
   }
   far_right struct {
-    wall_alpha, door_alpha byte
+    wall_alpha byte
   }
 
   // opengl stuff
@@ -128,8 +128,9 @@ type Door struct {
   highlight_threshold bool
 
   // gl stuff for drawing the threshold on the ground
-  gl_ids doorGlIds
-  state  doorState
+  threshold_glids doorGlIds
+  door_glids      doorGlIds
+  state           doorState
 }
 
 func (d *Door) HighlightThreshold(v bool) {
@@ -163,80 +164,150 @@ func (d *Door) setupGlStuff(room *Room) {
   if state == d.state {
     return
   }
+  if d.TextureData().Dy() == 0 {
+    // Can't build this data until the texture is loaded, so we'll have to try
+    // again later.
+    return
+  }
   d.state = state
-  if d.gl_ids.vbuffer != 0 {
-    gl.DeleteBuffers(1, &d.gl_ids.vbuffer)
-    gl.DeleteBuffers(1, &d.gl_ids.floor_buffer)
-    d.gl_ids.vbuffer = 0
-    d.gl_ids.floor_buffer = 0
+  if d.threshold_glids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &d.threshold_glids.vbuffer)
+    gl.DeleteBuffers(1, &d.threshold_glids.floor_buffer)
+    d.threshold_glids.vbuffer = 0
+    d.threshold_glids.floor_buffer = 0
+  }
+  if d.door_glids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &d.door_glids.vbuffer)
+    gl.DeleteBuffers(1, &d.door_glids.floor_buffer)
+    d.door_glids.vbuffer = 0
+    d.door_glids.floor_buffer = 0
   }
 
-  var x1, y1, x2, y2 float32
-  switch d.Facing {
-  case FarLeft:
-    x1 = float32(d.Pos)
-    y1 = float32(room.roomDef.Size.Dy)
-    x2 = float32(d.Pos + d.Width)
-    y2 = float32(room.roomDef.Size.Dy) - 0.25
-  case FarRight:
-    x1 = float32(room.roomDef.Size.Dx) - 0.25
-    y1 = float32(d.Pos + d.Width)
-    x2 = float32(room.roomDef.Size.Dx)
-    y2 = float32(d.Pos)
-  case NearLeft:
-    x1 = 0.25
-    y1 = float32(d.Pos)
-    x2 = 0
-    y2 = float32(d.Pos + d.Width)
-  case NearRight:
-    x1 = float32(d.Pos)
-    y1 = 0
-    x2 = float32(d.Pos + d.Width)
-    y2 = 0.25
+  // far left, near right, do threshold
+  // near left, far right, do threshold
+  // far left, far right, do door
+  var vs []roomVertex
+  if d.Facing == FarLeft || d.Facing == NearRight {
+    x1 := float32(d.Pos)
+    x2 := float32(d.Pos + d.Width)
+    var y1 float32 = 0
+    var y2 float32 = 0.25
+    if d.Facing == FarLeft {
+      y1 = float32(room.roomDef.Size.Dy)
+      y2 = float32(room.roomDef.Size.Dy) - 0.25
+    }
+    // los_x1 := (x1 + float32(room.X)) / LosTextureSize
+    vs = append(vs, roomVertex{x: x1, y: y1})
+    vs = append(vs, roomVertex{x: x1, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y1})
+    for i := 0; i < 4; i++ {
+      vs[i].los_u = (y2 + float32(room.Y)) / LosTextureSize
+      vs[i].los_v = (vs[i].x + float32(room.X)) / LosTextureSize
+    }
   }
-  vs := []roomVertex{
-    {
-      u: 0,
-      v: 0,
-      x: x1,
-      y: y1,
-    },
-    {
-      u: 0,
-      v: -1,
-      x: x1,
-      y: y2,
-    },
-    {
-      u: 1,
-      v: -1,
-      x: x2,
-      y: y2,
-    },
-    {
-      u: 1,
-      v: 0,
-      x: x2,
-      y: y1,
-    },
+  if d.Facing == FarRight || d.Facing == NearLeft {
+    y1 := float32(d.Pos)
+    y2 := float32(d.Pos + d.Width)
+    var x1 float32 = 0
+    var x2 float32 = 0.25
+    if d.Facing == FarRight {
+      x1 = float32(room.roomDef.Size.Dx)
+      x2 = float32(room.roomDef.Size.Dx) - 0.25
+    }
+    // los_y1 := (y1 + float32(room.Y)) / LosTextureSize
+    vs = append(vs, roomVertex{x: x1, y: y1})
+    vs = append(vs, roomVertex{x: x1, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y1})
+    for i := 0; i < 4; i++ {
+      vs[i].los_u = (vs[i].y + float32(room.Y)) / LosTextureSize
+      vs[i].los_v = (x2 + float32(room.X)) / LosTextureSize
+    }
   }
-  for i := range vs {
-    vs[i].los_u = (vs[i].y + float32(room.Y)) / LosTextureSize
-    vs[i].los_v = (vs[i].x + float32(room.X)) / LosTextureSize
+  dz := -float32(d.Width*d.TextureData().Dy()) / float32(d.TextureData().Dx())
+  if d.Facing == FarRight {
+    x := float32(room.roomDef.Size.Dx)
+    y1 := float32(d.Pos + d.Width)
+    y2 := float32(d.Pos)
+    los_v := (float32(room.X) + x - 0.5) / LosTextureSize
+    los_u1 := (float32(room.Y) + y1) / LosTextureSize
+    los_u2 := (float32(room.Y) + y2) / LosTextureSize
+    vs = append(vs, roomVertex{
+      x: x, y: y1, z: 0,
+      u: 0, v: 1,
+      los_u: los_u1,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y1, z: dz,
+      u: 0, v: 0,
+      los_u: los_u1,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y2, z: dz,
+      u: 1, v: 0,
+      los_u: los_u2,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y2, z: 0,
+      u: 1, v: 1,
+      los_u: los_u2,
+      los_v: los_v,
+    })
   }
-
-  gl.GenBuffers(1, &d.gl_ids.vbuffer)
-  gl.BindBuffer(gl.ARRAY_BUFFER, d.gl_ids.vbuffer)
+  if d.Facing == FarLeft {
+    x1 := float32(d.Pos)
+    x2 := float32(d.Pos + d.Width)
+    y := float32(room.roomDef.Size.Dy)
+    los_v1 := (float32(room.X) + x1) / LosTextureSize
+    los_v2 := (float32(room.X) + x2) / LosTextureSize
+    los_u := (float32(room.Y) + y - 0.5) / LosTextureSize
+    vs = append(vs, roomVertex{
+      x: x1, y: y, z: 0,
+      u: 0, v: 1,
+      los_u: los_u,
+      los_v: los_v1,
+    })
+    vs = append(vs, roomVertex{
+      x: x1, y: y, z: dz,
+      u: 0, v: 0,
+      los_u: los_u,
+      los_v: los_v1,
+    })
+    vs = append(vs, roomVertex{
+      x: x2, y: y, z: dz,
+      u: 1, v: 0,
+      los_u: los_u,
+      los_v: los_v2,
+    })
+    vs = append(vs, roomVertex{
+      x: x2, y: y, z: 0,
+      u: 1, v: 1,
+      los_u: los_u,
+      los_v: los_v2,
+    })
+  }
+  gl.GenBuffers(1, &d.threshold_glids.vbuffer)
+  gl.BindBuffer(gl.ARRAY_BUFFER, d.threshold_glids.vbuffer)
   size := int(unsafe.Sizeof(roomVertex{}))
   gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
-  base.Log().Printf("vs: %v", vs)
-  base.Log().Printf("glids: %v", d.gl_ids)
 
   is := []uint16{0, 1, 2, 0, 2, 3}
-  gl.GenBuffers(1, &d.gl_ids.floor_buffer)
-  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.gl_ids.floor_buffer)
+  gl.GenBuffers(1, &d.threshold_glids.floor_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.threshold_glids.floor_buffer)
   gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-  d.gl_ids.floor_count = 6
+  d.threshold_glids.floor_count = 6
+
+  if d.Facing == FarLeft || d.Facing == FarRight {
+    is2 := []uint16{4, 5, 6, 4, 6, 7}
+    gl.GenBuffers(1, &d.door_glids.floor_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.door_glids.floor_buffer)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is2)), gl.Pointer(&is2[0]), gl.STATIC_DRAW)
+    d.door_glids.floor_count = 6
+  }
 }
 
 func (d *Door) TextureData() *texture.Data {
@@ -489,34 +560,6 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
   // Second pass - this time we fill in the alpha that we should use for the
   // doors, using the values we've already calculated in the first pass.
   for _, r1 := range f.Rooms {
-    // It is possible that we get two doors to different rooms on one wall,
-    // and we might display them with the same alpha even though the rooms
-    // they are attached to have different alpha.  This is probably not a
-    // big deal so we'll just ignore it.
-    for _, door := range r1.Doors {
-      r2, _ := f.FindMatchingDoor(r1, door)
-      if r2 == nil {
-        continue
-      }
-      // alpha := alpha_map[r2]
-      // base.Log().Printf("%p %p %d %d", r1, r2, alpha, door.Facing)
-      left, right := r2.getNearWallAlpha(los_tex)
-      switch door.Facing {
-      case FarLeft:
-        // if left > alpha {
-        r1.far_left.door_alpha = left
-        // } else {
-        //   r1.far_left.door_alpha = alpha
-        // }
-      case FarRight:
-        // if right > alpha {
-        r1.far_right.door_alpha = right
-        // } else {
-        //   r1.far_right.door_alpha = alpha
-        // }
-      }
-    }
-
     r1.far_right.wall_alpha = 255
     r1.far_left.wall_alpha = 255
     for _, r2 := range f.Rooms {
@@ -527,11 +570,25 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
       r1_rect := image.Rect(r1.X, r1.Y+r1.Size.Dy, r1.X+r1.Size.Dx, r1.Y+r1.Size.Dy+1)
       r2_rect := image.Rect(r2.X, r2.Y, r2.X+r2.Size.Dx, r2.Y+r2.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
+        // If there is an open door between the two then we'll tone down the
+        // alpha, otherwise we won't treat it any differently
+        for _, d1 := range r1.Doors {
+          for _, d2 := range r2.Doors {
+            if d1 == d2 {
+              r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
+            }
+          }
+        }
       }
       r1_rect = image.Rect(r1.X+r1.Size.Dx, r1.Y, r1.X+r1.Size.Dx+1, r1.Y+r1.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
+        for _, d1 := range r1.Doors {
+          for _, d2 := range r2.Doors {
+            if d1 == d2 {
+              r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
+            }
+          }
+        }
       }
     }
   }
@@ -830,7 +887,7 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   for _, name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      if len(hdt.house.Floors[0].Rooms) < 2 {
+      if len(hdt.house.Floors[0].Rooms) < 2 || hdt.temp_door != nil {
         return
       }
       hdt.temp_door = MakeDoor(n)

@@ -9,6 +9,23 @@ end
 
 play_as_denizens = false
 function Init()
+  store.Ch1 = {}
+
+  -- DIALOG
+  -- We're setting up a few tables to keep track of dialog here.  Since the
+  -- Dialog is going to be completely linear it makes things easier, but we
+  -- could do something more complicated if we wanted.
+  -- Dialog_complete stores values to tell us to either launch the dialog, or
+  -- that we've already launched the dialog before.
+  store.Ch1.Dialog_complete = {}
+  -- Dialogs is just an array of the dialog boxes to show, in the order that
+  -- they should show.  I've set it up so that the name of the dialog file and
+  -- the spawn point that triggers it have the exact same name.
+  store.Ch1.Dialogs = {
+    "Dialog-1",
+    "Dialog-2",
+  }
+
   while false do
     choices = Script.DialogBox("ui/dialog/sample.json")
     print("Choices made:")
@@ -16,8 +33,10 @@ function Init()
       print("Chose: ", choice)
     end
   end
-  house = Script.SelectHouse()
-  Script.LoadHouse(house)
+  -- house = Script.SelectHouse()
+  Script.LoadHouse("ScriptedHouse")
+
+  sp = Script.GetSpawnPointsMatching("Foo-.*")
 
 
   if play_as_denizens then
@@ -102,10 +121,10 @@ function doIntrudersSetup()
   -- -- and Ghost Hunter there.  Additionally we will mind the
   -- -- sample_aoe_occultist.lua ai to the occultist.
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
-  print("intruder spawn:", intruder_spawn)
-  for k,v in pairs(intruder_spawn) do
-    print("kv: ", k, v)
-  end
+  -- print("intruder spawn:", intruder_spawn)
+  -- for k,v in pairs(intruder_spawn) do
+  --   print("kv: ", k, v)
+  -- end
   Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
   ent = Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
   Script.BindAi(ent, "sample_aoe_occultist.lua")
@@ -138,9 +157,13 @@ function RoundStart(intruders, round)
     if intruders then
       Script.SetVisibility("intruders")
       doIntrudersSetup()
+
+      relic_spawn = Script.GetSpawnPointsMatching("Relic-.*")
+      Script.SpawnEntitySomewhereInSpawnPoints("Scepter", relic_spawn)
+      Script.SpawnEntitySomewhereInSpawnPoints("Tome", relic_spawn)
     else
-      Script.SetVisibility("denizens")
-      doDenizenSetup()
+      -- Script.SetVisibility("denizens")
+      -- doDenizenSetup()
     end
     -- Make it clear that the players don't get to activate their units on the
     -- setup turn.
@@ -173,18 +196,72 @@ function RoundStart(intruders, round)
   -- end
 end
 
-function OnMove(ent, path)
-  print("OnMove(", ent.Name, ")")
-  for k, v in pairs(path) do
-    print(k, v)
+function pointIsInSpawn(pos, sp)
+  return pos.X >= sp.Pos.X and pos.X < sp.Pos.X + sp.Dims.Dx and pos.Y >= sp.Pos.Y and pos.Y < sp.Pos.Y + sp.Dims.Dy
+end
+
+function pointIsInSpawns(pos, regexp)
+  print("Regexp: '",regexp,"'")
+  sps = Script.GetSpawnPointsMatching(regexp)
+  print("Got ", "spawns for ", regexp)
+  for _, sp in pairs(sps) do
+    if pointIsInSpawn(pos, sp) then
+      return true
+    end
   end
-  return 2
+  return false
+end
+
+function OnMove(ent, path)
+  -- DIALOG
+  -- We want to check if an intruder is about to walk through one of the
+  -- waypoints we've set up.  Ideally we'd check first that ent.Side.Intruder
+  -- is true, but that isn't working in this build (I've fixed it already though).
+  -- path is an array of the points that the entity is about to walk through, so
+  -- we check them in order to see if any overlap the next waypoint that should
+  -- trigger.  If it does then we set the corresponding value in Dialog_complete
+  -- to "DOIT", which is our signal to pop up the dialog box when the action
+  -- completes.
+  for _, dialog in pairs(store.Ch1.Dialogs) do
+    -- We don't want to truncate movement for dialog that has already happened,
+    -- so we check Dialog_complete before anything else.
+    if not store.Ch1.Dialog_complete[dialog] then
+      for i, pos in pairs(path) do
+        if pointIsInSpawns(pos, dialog) then
+          -- If we need to trigger the dialog then we set the appropriate value
+          -- to "DOIT" and return the distance along this path that the ent
+          -- should move.
+          store.Ch1.Dialog_complete[dialog] = "DOIT"
+          return i
+        end
+      end
+    end
+  end
+
+  -- If we made it here then there was no dialog that needed to be shown, so
+  -- we don't want to truncate the movement action, so we return the length
+  -- of the path.
+  return table.getn(path)
 end
 
 function OnAction(intruders, round, exec)
-  print("OnAction: ", intruders, round, exec)
-  for k, v in pairs(exec) do
-    print("exec: ", k, v)
+  -- DIALOG
+  -- Check for that value "DOIT", if we find it then we pop up the dialog box.
+  for _, dialog in pairs(store.Ch1.Dialogs) do
+    if not store.Ch1.Dialog_complete[dialog] then
+      -- Since we pop up the dialog boxes in order, if we find one that hasn't
+      -- been shown we can just stop looking, since we won't be popping up
+      -- a later one, since then they'd be out of order.
+      return
+    end
+    if store.Ch1.Dialog_complete[dialog] == "DOIT" then
+      -- Note that the .. operator is string concatenation in lua.
+      dialog_path = "ui/dialog/ch1/" .. dialog .. ".json"
+      Script.DialogBox(dialog_path)  -- pop up the dialog box
+      store.Ch1.Dialog_complete[dialog] = true
+      -- keep track so we don't do it again later
+      return
+    end
   end
 end
 
