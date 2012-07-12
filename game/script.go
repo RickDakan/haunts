@@ -738,6 +738,7 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
       return 0
     }
     defer f.Close()
+    UpdatePlayer(player, L)
     err = EncodePlayer(f, player)
     if err != nil {
       base.Warn().Printf("Unable to encode player to file %s.", path)

@@ -6,9 +6,11 @@ package game
 import (
   "io"
   "os"
+  "bytes"
   "path/filepath"
   "github.com/runningwild/haunts/base"
   "encoding/gob"
+  lua "github.com/xenith-studios/golua"
 )
 
 type Player struct {
@@ -57,6 +59,14 @@ func GetAllPlayers() map[string]string {
     return nil
   })
   return players
+}
+
+func UpdatePlayer(p *Player, L *lua.State) {
+  buffer := bytes.NewBuffer(nil)
+  L.GetGlobal("store")
+  LuaEncodeTable(buffer, L, -1)
+  L.Pop(1)
+  p.Lua_store = buffer.Bytes()
 }
 
 // Encode a player's name, then the entire player.  This way we can just read
