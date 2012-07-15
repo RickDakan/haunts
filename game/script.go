@@ -6,7 +6,6 @@ import (
   "math/rand"
   "path/filepath"
   "io/ioutil"
-  "os"
   "regexp"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
@@ -732,18 +731,10 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    path := filepath.Join(base.GetDataDir(), "players", fmt.Sprintf("%s.gob", player.Name))
-    f, err := os.Open(path)
+    UpdatePlayer(player, gp.script.L)
+    err := SavePlayer(player)
     if err != nil {
-      base.Warn().Printf("Unable to save player to file %s.", path)
-      return 0
-    }
-    defer f.Close()
-    UpdatePlayer(player, L)
-    err = EncodePlayer(f, player)
-    if err != nil {
-      base.Warn().Printf("Unable to encode player to file %s.", path)
-      return 0
+      base.Warn().Printf("Unable to save player: %v", err)
     }
     return 0
   }

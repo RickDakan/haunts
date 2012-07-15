@@ -4,9 +4,11 @@
 package game
 
 import (
+  "fmt"
   "io"
   "os"
   "bytes"
+  "hash/fnv"
   "path/filepath"
   "github.com/runningwild/haunts/base"
   "encoding/gob"
@@ -89,4 +91,26 @@ func DecodePlayer(r io.Reader) (*Player, error) {
   }
   err = dec.Decode(&p)
   return &p, err
+}
+
+func LoadPlayer(path string) (*Player, error) {
+  f, err := os.Open(path)
+  if err != nil {
+    return nil, err
+  }
+  defer f.Close()
+  return DecodePlayer(f)
+}
+
+func SavePlayer(p *Player) error {
+  hash := fnv.New64()
+  hash.Write([]byte(p.Name))
+  name := fmt.Sprintf("%x.player", hash.Sum64())
+  f, err := os.Create(filepath.Join(base.GetDataDir(), "players", name))
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+  base.SetStoreVal("last player", name)
+  return EncodePlayer(f, p)
 }

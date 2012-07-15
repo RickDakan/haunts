@@ -598,16 +598,6 @@ func (room *Room) setupGlStuff() {
     {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
     {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
     {dx - 0.5, 0, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
-
-    // { 0, 0.5, 0, 0, 1-0.5/dy, lt_lly_ep, lt_llx},
-    // { 0,  dy, 0, 0, 0, lt_ury, lt_llx},
-    // {dx,  dy, 0, 1, 0, lt_ury, lt_urx},
-    // {dx,   0, 0, 1, 1, lt_lly, lt_urx},
-
-    // {0, 0, 0, 0, 1, lt_lly, lt_llx},
-    // {0, dy, 0, 0, 0, lt_ury, lt_llx},
-    // {dx, dy, 0, 1, 0, lt_ury, lt_urx},
-    // {dx, 0, 0, 1, 1, lt_lly, lt_urx},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
