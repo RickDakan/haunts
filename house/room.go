@@ -420,7 +420,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
         base.SetUniformI("gorey", "range", 3)
       }
     }
-    gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, nil)
+    gl.DrawElements(gl.TRIANGLES, gl.Sizei(room.floor_count), gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {
       base.EnableShader("los")
     } else {
@@ -594,10 +594,30 @@ func (room *Room) setupGlStuff() {
     // This is the bulk of the floor, containing all but the outer edges of 
     // the room.  los_tex can map directly onto this so we don't need to do
     // anything weird here.
-    {0.5, 0, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {0.5, 0.5, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
     {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
     {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
-    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx - 0.5, 0.5, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+
+    {0, 0, 0, 0, 1, lt_lly_ep, lt_llx_ep},
+    {0, dy, 0, 0, 0, lt_ury_ep, lt_llx_ep},
+    {0.5, dy, 0, 0.5 / dx, 0, lt_ury_ep, lt_llx_ep},
+    {0.5, 0, 0, 0.5 / dx, 1, lt_lly_ep, lt_llx_ep},
+
+    {0, 0, 0, 0, 1, lt_lly_ep, lt_llx_ep},
+    {0, 0.5, 0, 0, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {dx, 0.5, 0, 1, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
+
+    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1, lt_lly_ep, lt_urx_ep},
+    {dx - 0.5, dy, 0, 1 - 0.5/dx, 0, lt_ury_ep, lt_urx_ep},
+    {dx, dy, 0, 1, 0, lt_ury_ep, lt_urx_ep},
+    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
+
+    {0, dy - 0.5, 0, 0, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+    {0, dy, 0, 0, 0, lt_ury_ep, lt_llx_ep},
+    {dx, dy, 0, 1, 0, lt_ury_ep, lt_urx_ep},
+    {dx, dy - 0.5, 0, 1, 0.5 / dy, lt_ury_ep, lt_urx_ep},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
@@ -617,10 +637,17 @@ func (room *Room) setupGlStuff() {
   gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
 
   // floor indices
-  is = []uint16{6, 7, 8, 6, 8, 9}
+  is = []uint16{
+    6, 7, 8, 6, 8, 9, // middle
+    10, 11, 12, 10, 12, 13, // left side
+    14, 15, 16, 14, 16, 17, // bottom side
+    18, 19, 20, 18, 20, 21, // right side
+    22, 23, 24, 22, 24, 25, // top side
+  }
   gl.GenBuffers(1, &room.floor_buffer)
   gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.floor_buffer)
   gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
+  room.floor_count = len(is)
 }
 
 func (room *roomDef) Dims() (dx, dy int) {

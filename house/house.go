@@ -42,6 +42,7 @@ type Room struct {
   left_buffer  uint32
   right_buffer uint32
   floor_buffer uint32
+  floor_count  int
 
   // we don't want to redo all of the vertex and index buffers unless we
   // need to, so we keep track of the position and size of the room when they
