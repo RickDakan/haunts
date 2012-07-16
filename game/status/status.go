@@ -5,6 +5,7 @@ import (
   "encoding/gob"
   "encoding/json"
   "fmt"
+  "github.com/runningwild/glop/util/algorithm"
 )
 
 type Kind string
@@ -187,6 +188,12 @@ func (s *Inst) ApplyCondition(c Condition) {
   // If we didn't find an existing condition of this kind then we can safely
   // add it.
   s.inst.Conditions = append(s.inst.Conditions, c)
+}
+
+func (s *Inst) RemoveCondition(name string) {
+  algorithm.Choose2(&s.inst.Conditions, func(c Condition) bool {
+    return c.Name() != name
+  })
 }
 
 func (s *Inst) ApplyDamage(dap, dhp int, kind Kind) {

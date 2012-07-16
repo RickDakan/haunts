@@ -113,6 +113,14 @@ _successful_: True iff _ent_'s gear was set to _gear_.
 
 ------
 
+###Script.__SetCondition__(_ent_, _name_, _set_)
+Sets whether or not _ent_ has the condition named _name_.  
+_ent_: The entity to apply/remote this condition from.  
+_name_: The name of the condition.  
+_set_: A boolean, true if this condition should be applied, false if it should be removed.  If you re-apply a condition it will reset its duration, if you remove a condition that _ent_ doesn't have nothing will happen.  
+
+------
+
 ###Script.__BindAi__(_target_, _source_)
 Binds an ai to something.  
 _target_: The thing to bind the ai to.  This can be an entity, or it can be one of the following strings: "denizen" "intruder" "minions".  

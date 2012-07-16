@@ -11,6 +11,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game/hui"
   lua "github.com/xenith-studios/golua"
 )
@@ -70,6 +71,7 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
+    "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -735,6 +737,24 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
     err := SavePlayer(player)
     if err != nil {
       base.Warn().Printf("Unable to save player: %v", err)
+    }
+    return 0
+  }
+}
+
+func setCondition(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetCondition", LuaEntity, LuaString, LuaBoolean) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -3)
+    name := L.ToString(-2)
+    if L.ToBoolean(-1) {
+      ent.Stats.ApplyCondition(status.MakeCondition(name))
+    } else {
+      ent.Stats.RemoveCondition(name)
     }
     return 0
   }
