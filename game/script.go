@@ -72,6 +72,7 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
+    "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -750,12 +751,35 @@ func setCondition(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     ent := LuaToEntity(L, gp.game, -3)
+    if ent == nil {
+      base.Warn().Printf("Tried to SetCondition on an entity that doesn't exist.")
+      return 0
+    }
     name := L.ToString(-2)
     if L.ToBoolean(-1) {
       ent.Stats.ApplyCondition(status.MakeCondition(name))
     } else {
       ent.Stats.RemoveCondition(name)
     }
+    return 0
+  }
+}
+
+func setPosition(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetPosition", LuaEntity, LuaPoint) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -2)
+    if ent == nil {
+      base.Warn().Printf("Tried to SetPosition on an entity that doesn't exist.")
+      return 0
+    }
+    x, y := LuaToPoint(L, -1)
+    ent.X = float64(x)
+    ent.Y = float64(y)
     return 0
   }
 }

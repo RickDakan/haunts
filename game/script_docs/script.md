@@ -121,6 +121,13 @@ _set_: A boolean, true if this condition should be applied, false if it should b
 
 ------
 
+###Script.__SetPosition__(_ent_, _pos_)
+Moves _ent_ to _pos_.  
+_ent_: The entity to move.  
+_pos_: The position to move _ent_ to.  
+
+------
+
 ###Script.__BindAi__(_target_, _source_)
 Binds an ai to something.  
 _target_: The thing to bind the ai to.  This can be an entity, or it can be one of the following strings: "denizen" "intruder" "minions".  
