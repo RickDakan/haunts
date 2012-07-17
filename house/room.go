@@ -601,25 +601,45 @@ func (room *Room) setupGlStuff() {
     {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
     {dx - 0.5, 0.5, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
 
-    {0, 0, 0, 0, 1, lt_lly_ep, lt_llx_ep},
-    {0, dy, 0, 0, 0, lt_ury_ep, lt_llx_ep},
-    {0.5, dy, 0, 0.5 / dx, 0, lt_ury_ep, lt_llx_ep},
+    {0, 0.5, 0, 0, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {0, dy - 0.5, 0, 0, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+    {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+    {0.5, 0.5, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+
     {0.5, 0, 0, 0.5 / dx, 1, lt_lly_ep, lt_llx_ep},
+    {0.5, 0.5, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {dx - 0.5, 0.5, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1, lt_lly_ep, lt_urx_ep},
+
+    {dx - 0.5, 0.5, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
+    {dx, dy - 0.5, 0, 1, 0.5 / dy, lt_ury_ep, lt_urx_ep},
+    {dx, 0.5, 0, 1, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+
+    {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+    {0.5, dy, 0, 0.5 / dx, 0, lt_ury_ep, lt_llx_ep},
+    {dx - 0.5, dy, 0, 1 - 0.5/dx, 0, lt_ury_ep, lt_urx_ep},
+    {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
 
     {0, 0, 0, 0, 1, lt_lly_ep, lt_llx_ep},
     {0, 0.5, 0, 0, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
-    {dx, 0.5, 0, 1, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
-    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
-
-    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1, lt_lly_ep, lt_urx_ep},
-    {dx - 0.5, dy, 0, 1 - 0.5/dx, 0, lt_ury_ep, lt_urx_ep},
-    {dx, dy, 0, 1, 0, lt_ury_ep, lt_urx_ep},
-    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
+    {0.5, 0.5, 0, 0.5 / dx, 1 - 0.5/dy, lt_lly_ep, lt_llx_ep},
+    {0.5, 0, 0, 0.5 / dx, 1, lt_lly_ep, lt_llx_ep},
 
     {0, dy - 0.5, 0, 0, 0.5 / dy, lt_ury_ep, lt_llx_ep},
     {0, dy, 0, 0, 0, lt_ury_ep, lt_llx_ep},
+    {0.5, dy, 0, 0.5 / dx, 0, lt_ury_ep, lt_llx_ep},
+    {0.5, dy - 0.5, 0, 0.5 / dx, 0.5 / dy, lt_ury_ep, lt_llx_ep},
+
+    {dx - 0.5, dy - 0.5, 0, 1 - 0.5/dx, 0.5 / dy, lt_ury_ep, lt_urx_ep},
+    {dx - 0.5, dy, 0, 1 - 0.5/dx, 0, lt_ury_ep, lt_urx_ep},
     {dx, dy, 0, 1, 0, lt_ury_ep, lt_urx_ep},
     {dx, dy - 0.5, 0, 1, 0.5 / dy, lt_ury_ep, lt_urx_ep},
+
+    {dx - 0.5, 0, 0, 1 - 0.5/dx, 1, lt_lly_ep, lt_urx_ep},
+    {dx - 0.5, 0.5, 0, 1 - 0.5/dx, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx, 0.5, 0, 1, 1 - 0.5/dy, lt_lly_ep, lt_urx_ep},
+    {dx, 0, 0, 1, 1, lt_lly_ep, lt_urx_ep},
   }
   gl.GenBuffers(1, &room.vbuffer)
   gl.BindBuffer(gl.ARRAY_BUFFER, room.vbuffer)
@@ -645,6 +665,10 @@ func (room *Room) setupGlStuff() {
     14, 15, 16, 14, 16, 17, // bottom side
     18, 19, 20, 18, 20, 21, // right side
     22, 23, 24, 22, 24, 25, // top side
+    26, 27, 28, 26, 28, 29, // bottom left corner
+    30, 31, 32, 30, 32, 33, // upper left corner
+    34, 35, 36, 34, 36, 37, // upper right corner
+    38, 39, 40, 38, 40, 41, // lower right corner
   }
   gl.GenBuffers(1, &room.floor_buffer)
   gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, room.floor_buffer)
