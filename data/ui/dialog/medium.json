@@ -1,0 +1,119 @@
+{
+  "Background":{
+    "Path": "ui/dialog/medium.png"
+  },
+  "Prev":{
+    "X": 70,
+    "Y": 20,
+    "Texture":{
+      "Path": "ui/arrow_lf.png"
+    }
+  },
+  "Next":{
+    "X": 721,
+    "Y": 20,
+    "Texture":{
+      "Path": "ui/arrow_rf.png"
+    }
+  },
+  "Formats": {
+    "NoOptionsNoImage": {
+      "Sections":[
+        {
+          "Paragraph":{
+            "X": 50,
+            "Y": 290,
+            "Dx": 754,
+            "Size": 15,
+            "Justification": "left"
+          }
+        }
+      ]
+    },
+    "NoOptionsLeftImage":{
+      "Sections":[
+        {
+          "X": 150,
+          "Y": 192,
+          "Paragraph":{
+            "X": 280,
+            "Y": 290,
+            "Dx": 525,
+            "Size": 15,
+            "Justification": "left"
+          }
+        }
+      ]
+    },
+    "NoOptionsRightImage":{
+      "Sections":[
+        {
+          "X": 704,
+          "Y": 192,
+          "Paragraph":{
+            "X": 49,
+            "Y": 290,
+            "Dx": 525,
+            "Size": 15,
+            "Justification": "left"
+          }
+        }
+      ]
+    },
+    "NoOptionsCenterImage": {
+      "Sections":[
+        {
+          "X": 427,
+          "Y": 230,
+          "Paragraph":{
+            "X": 427,
+            "Y": 135,
+            "Dx": 854,
+            "Size": 15,
+            "Justification": "center"
+          }
+        }
+      ]
+    },
+    "TwoOptions": {
+      "Sections":[
+        {
+          "X": 150,
+          "Y": 192,
+          "Paragraph":{
+            "X": 280,
+            "Y": 290,
+            "Dx": 150,
+            "Size": 12,
+            "Justification": "left"
+          },
+          "Region":{
+            "X": 25,
+            "Y": 70,
+            "Dx": 392,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 547,
+          "Y": 192,
+          "Paragraph":{
+            "X": 667,
+            "Y": 290,
+            "Dx": 150,
+            "Size": 12,
+            "Justification": "left"
+          },
+          "Region":{
+            "X": 437,
+            "Y": 70,
+            "Dx": 395,
+            "Dy": 248
+          }
+        }
+      ]
+    },
+    "ThreeOptions": {},
+    "FourOptions": {}
+  }
+}

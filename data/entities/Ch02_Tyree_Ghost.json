@@ -1,0 +1,26 @@
+{
+  "Name": "Tyree's Ghost",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/wraith",
+  "Still": {
+    "Path": "entities/wraith_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Vengeful Curse",
+    "Grave Grasp",
+    "Ghastly Howl"
+  ],
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 15,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 15
+  },
+}

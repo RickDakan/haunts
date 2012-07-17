@@ -1,0 +1,28 @@
+{
+"Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The House of Bosch, 9:42 PM, April 30, 1909.",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/house_temp.png"
+          }
+        }
+      ]
+    },
+        "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Elias, Cordelia, and Sabina Tyree Arrive",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Elias.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

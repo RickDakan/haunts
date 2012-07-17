@@ -1,0 +1,101 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The House of Bosch, 7:00 PM, April 30, 1909",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/house_temp.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "The stars foretell disaster for you, Bosch.",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Caleb.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "You and I read the stars differently, little man. I see a red-eyed constellation of despair for you.",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Bosch.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "I'm...not...",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Caleb.png"
+          }
+        }
+      ]
+    },
+	"Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "Not alone? I know, little man. I know. More of you will come tonight. You must, or at least you think you must. And it will avail you nothing.",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Bosch.png"
+          }
+        }
+      ]
+    },
+	"Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start7",
+          "Text": "The Great Work will be finished this night!",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Bosch.png"
+          }
+        }
+      ]
+    },
+		"Start7": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Your Tyree cousins fool enough to share your familial obsession with my secrets will share your despair if they dare cross my threshold.",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/Bosch.png"
+          }
+        }
+      ]
+    }
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
