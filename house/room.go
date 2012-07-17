@@ -453,6 +453,8 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     if ids.vbuffer != 0 {
       wt.Texture.Data().Bind()
       R, G, B, A := wt.Color()
+
+      gl.ClientActiveTexture(gl.TEXTURE0)
       gl.BindBuffer(gl.ARRAY_BUFFER, ids.vbuffer)
       gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
       gl.TexCoordPointer(2, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.u)))
