@@ -73,6 +73,7 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
+    "PlayAnimations":                    func() { gp.script.L.PushGoFunctionAsCFunction(playAnimations(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -780,6 +781,31 @@ func setPosition(gp *GamePanel) lua.GoFunction {
     x, y := LuaToPoint(L, -1)
     ent.X = float64(x)
     ent.Y = float64(y)
+    return 0
+  }
+}
+
+func playAnimations(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlayAnimations", LuaEntity, LuaArray) {
+      return 0
+    }
+    gp.script.syncStart()
+    ent := LuaToEntity(L, gp.game, -2)
+    if ent == nil {
+      base.Warn().Printf("Tried to PlayAnimation on an entity that doesn't exist.")
+      return 0
+    }
+    gp.script.syncEnd()
+    ent.Sprite().Wait([]string{"ready", "killed"})
+    if ent.Sprite().AnimState() == "ready" {
+      L.PushNil()
+      for L.Next(-2) != 0 {
+        ent.Sprite().Command(L.ToString(-1))
+        L.Pop(1)
+      }
+      ent.Sprite().Wait([]string{"ready", "killed"})
+    }
     return 0
   }
 }

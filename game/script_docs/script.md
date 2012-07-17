@@ -128,6 +128,14 @@ _pos_: The position to move _ent_ to.
 
 ------
 
+###Script.__PlayAnimations__(_ent_, _anims_)
+Plays through one or more of _ent_'s animations.  
+_ent_: The entity to animate.  
+_anims_: An array of animations to issue.  
+Waits until _ent_ is in a ready state and then issues the animations one at a time.  If the _ent_ has been killed it will never be in a ready state and so this function does nothing.  
+
+------
+
 ###Script.__BindAi__(_target_, _source_)
 Binds an ai to something.  
 _target_: The thing to bind the ai to.  This can be an entity, or it can be one of the following strings: "denizen" "intruder" "minions".  
