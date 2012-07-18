@@ -277,7 +277,13 @@ func main() {
   }
 
   edit_mode := false
-  if edit_mode {
+  sm, err := game.MakeStartMenu()
+  if err != nil {
+    panic(err)
+  }
+  if true {
+    ui.AddChild(sm)
+  } else if edit_mode {
     ui.AddChild(editor)
   } else {
     ui.AddChild(game_panel)

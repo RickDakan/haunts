@@ -1,0 +1,48 @@
+{
+  "Menu": {
+    "X": 585,
+    "Y": 105,
+    "Text": {
+      "X": 220,
+      "Y": 219,
+      "Size": 18,
+      "Spacing": 25
+    },
+    "Continue": {
+      "X": 805,
+      "Y": 250,
+      "Text": {
+        "String": "Continue",
+        "Size": 18,
+        "Justification": "center"
+      }
+    },
+    "Versus": {
+      "X": 805,
+      "Y": 300,
+      "Text": {
+        "String": "Versus Mode",
+        "Size": 18,
+        "Justification": "center"
+      }
+    },
+    "Story": {
+      "X": 805,
+      "Y": 350,
+      "Text": {
+        "String": "Story Mode",
+        "Size": 18,
+        "Justification": "right"
+      }
+    },
+    "Settings": {
+      "X": 805,
+      "Y": 350,
+      "Text": {
+        "String": "Settings",
+        "Size": 18,
+        "Justification": "right"
+      }
+    }
+  }
+}

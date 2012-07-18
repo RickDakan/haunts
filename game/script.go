@@ -327,7 +327,6 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
       }
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
     }
-    base.Log().Printf("Num kids: %d", len(gp.AnchorBox.GetChildren()))
     return 0
   }
 }

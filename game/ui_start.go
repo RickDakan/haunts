@@ -1,118 +1,111 @@
 package game
 
-// import (
-//   "github.com/runningwild/glop/gin"
-//   "github.com/runningwild/glop/gui"
-//   "github.com/runningwild/haunts/base"
-//   "path/filepath"
-// )
+import (
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/opengl/gl"
+  "path/filepath"
+)
 
-// type UiStart struct {
-//   layout UiStartLayout
+type startLayout struct {
+  Menu struct {
+    X, Y     int
+    Continue Button
+    Versus   Button
+    Story    Button
+    Settings Button
+    Text     struct {
+      X, Y    int
+      Size    int
+      Spacing int
+    }
+  }
+}
 
-//   region gui.Region
+type StartMenu struct {
+  layout  startLayout
+  region  gui.Region
+  back    *texture.Data
+  menu    *texture.Data
+  buttons []*Button
+  mx, my  int
+}
 
-//   buttons []*Button
+func MakeStartMenu() (*StartMenu, error) {
+  var sm StartMenu
+  datadir := base.GetDataDir()
+  err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start", "layout.json"), "json", &sm.layout)
+  if err != nil {
+    return nil, err
+  }
+  sm.back = texture.LoadFromPath(filepath.Join(datadir, "ui", "start", "start.png"))
+  sm.menu = texture.LoadFromPath(filepath.Join(datadir, "ui", "start", "menu.png"))
+  sm.buttons = []*Button{
+    &sm.layout.Menu.Continue,
+    &sm.layout.Menu.Versus,
+    &sm.layout.Menu.Story,
+    &sm.layout.Menu.Settings,
+  }
+  return &sm, nil
+}
 
-//   // Position of the mouse
-//   mx,my int
+func (sm *StartMenu) Requested() gui.Dims {
+  return gui.Dims{1024, 768}
+}
 
-//   game_panel *GamePanel
-// }
+func (sm *StartMenu) Expandable() (bool, bool) {
+  return false, false
+}
 
-// type UiStartLayout struct {
-//   History, Random, Challenge, Replay Button
-// }
+func (sm *StartMenu) Rendered() gui.Region {
+  return sm.region
+}
 
-// func makeChallegeSelection(_gp interface{}) {
-//   gp := _gp.(*GamePanel)
-//   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024,700})
-//   select_map, _, err := MakeUiSelectMap(gp)
-//   if err != nil {
-//     base.Error().Printf("Unable to make Map Selector: %v", err)
-//     return
-//   }
-//   gp.AnchorBox.AddChild(select_map, gui.Anchor{0, 0, 0, 0})
-// }
+func (sm *StartMenu) Think(g *gui.Gui, t int64) {
+  if sm.mx == 0 && sm.my == 0 {
+    sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
+  }
+  for _, button := range sm.buttons {
+    button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, t)
+  }
+}
 
-// func MakeUiStart(gp *GamePanel) (gui.Widget, error) {
-//   var ui UiStart
+func (sm *StartMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  cursor := group.Events[0].Key.Cursor()
+  if cursor != nil {
+    sm.mx, sm.my = cursor.Point()
+  }
+  return false
+}
 
-//   datadir := base.GetDataDir()
-//   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start.json"), "json", &ui.layout)
-//   if err != nil {
-//     return nil, err
-//   }
+func (sm *StartMenu) Draw(region gui.Region) {
+  sm.region = region
+  gl.Color4ub(255, 255, 255, 255)
+  sm.back.RenderNatural(sm.region.X, sm.region.Y)
+  sm.menu.RenderNatural(sm.region.X+sm.layout.Menu.X, sm.region.Y+sm.layout.Menu.Y)
+  // d := base.GetDictionary(sm.layout.Menu.Text.Size)
+  // opts := []string{
+  //   "Continue",
+  //   "Versus Mode",
+  //   "Story Mode",
+  //   "Settings",
+  // }
+  // x := float64(region.X + sm.layout.Menu.X + sm.layout.Menu.Text.X)
+  // y := float64(region.Y + sm.layout.Menu.Y + sm.layout.Menu.Text.Y + (len(opts)*int(d.MaxHeight()))/2 + ((len(opts)-1)*sm.layout.Menu.Text.Spacing)/2)
+  // for i := range opts {
+  //   d.RenderString(opts[i], x, y, 0, d.MaxHeight(), gui.Center)
+  //   y -= d.MaxHeight() + float64(sm.layout.Menu.Text.Spacing)
+  // }
+  for _, button := range sm.buttons {
+    button.RenderAt(sm.region.X, sm.region.Y)
+  }
+}
 
-//   ui.game_panel = gp
+func (sm *StartMenu) DrawFocused(region gui.Region) {
+}
 
-//   ui.buttons = []*Button{
-//     &ui.layout.Challenge,
-//     &ui.layout.History,
-//     &ui.layout.Replay,
-//     &ui.layout.Random,
-//   }
-
-//   ui.layout.Challenge.f = makeChallegeSelection
-
-//   ui.layout.History.f = func(interface {}) {
-//     base.Log().Printf("History!")
-//   }
-//   ui.layout.Replay.f = func(interface {}) {
-//     base.Log().Printf("Replay!")
-//   }
-//   ui.layout.Random.f = func(interface {}) {
-//     base.Log().Printf("Random!")
-//   }
-
-//   ui.region.Dx = 1024
-//   ui.region.Dy = 768
-
-//   return &ui, nil
-// }
-
-// func (ui *UiStart) String() string {
-//   return "ui start"
-// }
-
-// func (ui *UiStart) Requested() gui.Dims {
-//   return gui.Dims{1024, 768}
-// }
-
-// func (ui *UiStart) Expandable() (bool, bool) {
-//   return false, false
-// }
-
-// func (ui *UiStart) Rendered() gui.Region {
-//   return ui.region
-// }
-
-// func (ui *UiStart) Think(g *gui.Gui, dt int64) {
-// }
-
-// func (ui *UiStart) Respond(g *gui.Gui, group gui.EventGroup) bool {
-//   ui.mx, ui.my = gin.In().GetCursor("Mouse").Point()
-//   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-//     for _, button := range ui.buttons {
-//       if button.handleClick(ui.mx, ui.my, ui.game_panel) {
-//         return true
-//       }
-//     }
-//   }
-//   for _, button := range ui.buttons {
-//     if button.Respond(group, ui) {
-//       return true
-//     }
-//   }
-//   return false
-// }
-
-// func (ui *UiStart) Draw(region gui.Region) {
-//   for _, button := range ui.buttons {
-//     button.RenderAt(region.X, region.Y, ui.mx, ui.my)
-//   }
-// }
-
-// func (ui *UiStart) DrawFocused(region gui.Region) {
-
-// }
+func (sm *StartMenu) String() string {
+  return "start menu"
+}
