@@ -10,7 +10,7 @@ end
 if not store.Ch01b then
   store.Ch01b = {}
   end
-
+--
 play_as_denizens = false
 function Init()
    store.Ch01b = {}

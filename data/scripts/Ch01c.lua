@@ -6,7 +6,7 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   end
   Script.SetLosMode(side, rooms)
 end
-
+--
 play_as_denizens = false
 function Init()
    store.Ch01c = {}
