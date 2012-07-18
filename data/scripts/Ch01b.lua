@@ -13,11 +13,9 @@ if not store.Ch01b then
 
 play_as_denizens = false
 function Init()
-  if not store.Ch01 then
-  store.Ch01 = {}
-  end
-   Ch01.Spawnpoints_complete{}
-   store.Ch01.Spawnpoints = {
+   store.Ch01b = {}
+   store.Ch01b.Spawnpoints_complete={}
+   store.Ch01b.Spawnpoints = {
       "Ch01_Dialog01",
       "Ch01_Dialog02",
       "Ch01_Dialog03",
@@ -109,62 +107,61 @@ function OnAction(intruders, round, exec)
       Script.LoadScript("Chapter_01_b")
     end
 
-    --INSERT other names and functions here
-
     if name == "Shade Trigger01" then
       shade_spawn = Script.GetSpawnPointsMatching("Shade Spawn01")
-      SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+      for i = 1 do
+        ent = SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+        store.temporary_shades[i] = ent
     end
-
-    --NEED TO UNSPAWN IT???
 
     if name == "Dining Trigger01" then
       shade_spawn = Script.GetSpawnPointsMatching("Shade Spawn02")
-      SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+
+      store.temporary_shades = {}
+      for i = 1,4 do
+        ent = SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+        store.temporary_shades[i] = ent
+      end
     end
-
-    -- NEED TO UNSPAWN THEM???
-
 
     if name == "Harry Trigger01" then
       Script.DialogBox(ui/dialog/Ch01/"Ch01_Dialog04")
-      angry_shade_spawn = Script.GetSpawnPointsMatching("Angry Shade Spawn01")
       harry_spawn = Script.GetSpawnPointsMatching("Harry Spawn")
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
+
+      store.angry_shades = {}
+      for i = 1,5 do
+        ent = SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
+        SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
      end  
   end
--- Kill Entity???? Make Shade Disappear
 
-
---ENTER DINING ROOM
---SPAWN 4 shades
---Kill 4 shades later
-
---- SHADES ALL DEAD???
-
-Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
-Script.LoadScript("Chapter_01_c")
-
+  all_dead = true
+  for _, ent in pairs(store.angry_shades) do
+    if ent.Stats.HpCur > 0 then
+      all_dead = false
+    end
+  end
+  if all_dead then
+    Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
+    Script.LoadScript("Chapter_01_c")
+  end
 end
- 
 
-
-
+--ANY WAY TO CHANGE THE TIMING ON THIS?
+--if ent.HpCur > 1 then 
+--  Script.SetHp(ent, 1)
+--if ent.HpCur == 1 then
+--  Script.SetHp(ent, 0)
+--end
 
 function RoundEnd(intruders, round)
+  for _, ent in pairs(store.temporary_shades) do
+    if ent.HpCur > 1 then 
+      Script.SetHp(ent, 1)
+    if ent.HpCur == 1 then
+      Script.SetHp(ent, 0)
+    end
+  end
+  store.temporary_shades = nil
   print("end", intruders, round)
-
--- Kill Dudes on Round end
-
--- 
-
-
 end
