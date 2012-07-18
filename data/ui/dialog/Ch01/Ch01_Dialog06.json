@@ -1,0 +1,76 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Oh, thank God!",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/harry_temp.png"
+          }
+	      }
+      ]
+    },
+	"Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+		  "Next": "Start3",
+          "Text": "What were those things?",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/husband_temp.png"
+          }
+	      }
+      ]
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+		  "Next": "Start4",
+          "Text": "I don't know! I was caught in the storm. I don't belong here.",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/husband_temp.png"
+          }
+        }
+	    ]
+    },
+	"Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "Calm down. You’re safe now. Or slightly safer in any case.",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/wife_temp.png"
+          }
+        }
+	    ]
+    },
+	"Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+		  "Next": "Start6",
+          "Text": "Not safe enough. I rather think we’re better off out in that storm.",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/husband_temp.png"
+          }
+        }
+	    ]
+    },
+	"Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "By all means. I'm quite ready to quit this place.",
+		  "Image":{
+            "Path": "ui/dialog/Ch01/wife_temp.png"
+          }
+        }
+	    ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+"Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Bosch! Every soul you've thrown at us, I’ve trapped in this Amulet.",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Elias.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": " I know! I know what you're doing in there -- what you've conjured up.",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Elias.png"
+          }
+        }
+      ]
+    },
+    "Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "You won't hide it from me. You won't!",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Elias.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}

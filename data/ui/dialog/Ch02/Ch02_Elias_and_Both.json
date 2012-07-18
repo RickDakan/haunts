@@ -1,0 +1,40 @@
+{
+"Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Bosch! We know what you’re doing in there -- what you've conjured up.",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Elias.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Every soul you've set to slay us, we've trapped in this Amulet. ",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Cordelia.png"
+          }
+        }
+      ]
+    },
+    "Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "The dreamers whisper to us too, Bosch. There's no denying them to us.",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Sabina.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}
