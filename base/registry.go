@@ -246,7 +246,7 @@ func RegisterAllObjectsInDir(registry_name, dir, suffix, format string) {
         if err == nil {
           RegisterObject(registry_name, target.Interface())
         } else {
-          Error().Printf("Error loading files in '%s': %v", dir, err)
+          Error().Printf("Error loading file '%s': %v", path, err)
         }
       }
     }

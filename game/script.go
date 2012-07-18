@@ -203,13 +203,14 @@ func (gp *GamePanel) scriptThinkOnce() {
     return
   }
   done := false
+  s := gp.script.sync
   for !done {
     select {
     // If a script has tried to run a function that requires running during
     // Think then it can run now and we'll wait for it to finish before
     // continuing.
-    case gp.script.sync <- struct{}{}:
-      <-gp.script.sync
+    case s <- struct{}{}:
+      <-s
     default:
       done = true
     }
