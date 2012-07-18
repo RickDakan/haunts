@@ -196,6 +196,14 @@ func (s *Inst) RemoveCondition(name string) {
   })
 }
 
+func (s *Inst) SetHp(hp int) {
+  s.inst.Dynamic.Hp = hp
+}
+
+func (s *Inst) SetAp(ap int) {
+  s.inst.Dynamic.Ap = ap
+}
+
 func (s *Inst) ApplyDamage(dap, dhp int, kind Kind) {
   dmg := Damage{Dynamic: Dynamic{Ap: dap, Hp: dhp}, Kind: kind}
   for _, c := range s.inst.Conditions {

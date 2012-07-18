@@ -73,6 +73,8 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
+    "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
+    "SetAp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setAp(gp)) },
     "PlayAnimations":                    func() { gp.script.L.PushGoFunctionAsCFunction(playAnimations(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
@@ -781,6 +783,40 @@ func setPosition(gp *GamePanel) lua.GoFunction {
     x, y := LuaToPoint(L, -1)
     ent.X = float64(x)
     ent.Y = float64(y)
+    return 0
+  }
+}
+
+func setHp(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetHp", LuaEntity, LuaInteger) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -2)
+    if ent == nil {
+      base.Warn().Printf("Tried to SetHp on an entity that doesn't exist.")
+      return 0
+    }
+    ent.Stats.SetHp(L.ToInteger(-1))
+    return 0
+  }
+}
+
+func setAp(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetAp", LuaEntity, LuaInteger) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -2)
+    if ent == nil {
+      base.Warn().Printf("Tried to SetAp on an entity that doesn't exist.")
+      return 0
+    }
+    ent.Stats.SetAp(L.ToInteger(-1))
     return 0
   }
 }
