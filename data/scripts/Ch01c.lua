@@ -132,34 +132,28 @@ function OnAction(intruders, round, exec)
       intruder_spawn02 = Script.GetSpawnPointsMatching ("Intruders Spawn02")
       finale_shade_spawn = Script.GetSpawnPointsMatching ("Shade Finale")
 
+    if store.Ch01c.choice_a == "Greedy" then
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
 
- --   if Get something something something??? ("Id":   "Greedy") then
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
-      --ACTIVATE Spawn Point for Sad Ending
+    if store.Ch01c.choica_a == "Discretion" then
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
 
-
- --   if Get something something something??? "Id":   "Discretion",
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
-      -- ACTIVATE Spawn Point for Happy Ending
-
-
-  -- THIS ISN'T RIGHT, I'M SURE
     if name == "Exit" and store.Ch01c.choice_a == "Greedy" then
      
       if ent.Name == "Caitlin" then

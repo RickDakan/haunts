@@ -15,18 +15,9 @@ function Init()
   if not store.Ch02 then
   store.Ch02 = {}
   end
-   Ch01.Spawnpoints_complete{}
-   store.Ch01.Spawnpoints = {
-      "Ch01_Dialog01",
-      "Ch01_Dialog02",
-      "Ch01_Dialog03",
-      "Ch01_Dialog04",
-      "Ch01_Dialog05",
-      "Ch01_Dialog06",
-      "Ch01_Dialog07",
-      "Ch01_Dialog08",
-      "Ch01_Dialog09",
-      "Ch01_Dialog10",
+   store.Ch02.Spawnpoints_complete{}
+   store.Ch02.Spawnpoints = {
+      "Tyrees_at_door",
    } 
 
   Script.LoadHouse("Chapter_02")
@@ -36,6 +27,9 @@ function Init()
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "intruders.lua")
     --always bind one to human!
+
+  store.cordelia_dead = false
+  store.sabina_dead = false
 end
 
 
@@ -67,14 +61,24 @@ function doDenizenSetup()
   end
 end
 
-Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog02.json")
+if store.Ch01c.choice_a == "Discretion" then
+  Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog02.json")
+end
 
--- Spawn Intruders
--- "Elias Spawn"
--- "Cordelia Spawn"
--- "Sabina Spawn"
+if store.Ch01c.choice_a == "Greedy" then
+--  Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog02.json")
 
 
+
+
+elias_spawn = Script.GetSpawnPointsMatching("Elias-Start")
+Script.SpawnEntitySomewhereInSpawnPoints ("Elias Tyree", elias_spawn)
+
+cordelia_spawn = Script.GetSpawnPointsMatching("Cordelia-Start")
+Script.SpawnEntitySomewhereInSpawnPoints ("Cordelia Tyree", cordelia_spawn)
+
+sabina_spawn = Script.GetSpawnPointsMatching("Sabina-Start")
+Script.SpawnEntitySomewhereInSpawnPoints ("Sabina Tyree", sabina_spawn)
 
 function RoundStart(denizens, round)
     Script.SetVisibility("denizens")
@@ -122,26 +126,48 @@ function OnMove(ent, path)
 end
 
 
+function OnAction(denizens, round, exec)
 
--- TRIGGER ON DEATH of
---CORDELIA
-Script.DialogBox()
+ if ent.Name("Cordelia Tyree") and ent.HpCur == 0 then
+  store.cordelia_dead = true
+  Script.DialogBox("Ch02_Cordelia_Dies")
+ end
 
+ if ent.Name("Sabina Tyree") and ent.HpCur == 0 then
+  store.cordelia_dead = true
+  Script.DialogBox("Ch02_Sabina_Dies")
+ end
 
--- SABINA
--- TYREE
--- Elia - CHEAT DEATH sequence
-	-- SPAWN Replacement?
-
--- Record Deaths of Units
--- Decisions
-
-
+--saving Elias
 
 
 
+function OnAction(intruders, round, exec)
+  if name == "Tyrees_at_door" then
+    if store.cordelia_dead == true and store.sabina_dead == true then
+      Script.DialogBox("Ch02_Elias_Alone")
+    end
+    if store.cordelia_dead == true and store.sabina_dead == false then
+      Script.DialogBox("Ch02_Elias_and_Sabina")
+    end
+    if store.cordelia_dead == false and store.sabina_dead == true then
+      Script.DialogBox("Ch02_Elias_and_Cordelia")
+    end
+    if store.cordelia_dead == false and store.sabina_dead == false then
+      Script.DialogBox("Ch02_Elias_and_Both")
+    end
+  if store.Ch01c.choice_a == "Discretion" then
+    Script.DialogBox("Ch02_Bosch_Choice_Without_Ghost")
+      store.Ch02.choice_a = choice[1]
+  end
+  if store.Ch01c.choice_a == "Greedy" then
+    Script.DialogBox("Ch02_Bosch_Choice_With_Ghost")
+      store.Ch02.choice_a = choice[1]
+  end
+  --choices determine spawn
+  -- maybe  kill Bosch
 
-
+end
 
 
 

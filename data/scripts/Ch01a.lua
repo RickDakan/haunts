@@ -7,13 +7,15 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   Script.SetLosMode(side, rooms)
 end
 
-
+if not store.Ch01a then
+  store.Ch01a = {}
+  end
 
 play_as_denizens = false
 function Init()
    store.Ch01a = {}
-   Ch01.Spawnpoints_complete{}
-   store.Ch01.Spawnpoints = {
+   store.Ch01a.Spawnpoints_complete={}
+   store.Ch01a.Spawnpoints = {
       "Ch01_Dialog01",
       "Ch01_Dialog02",
       "Ch01_Dialog03",
@@ -91,11 +93,11 @@ function OnAction(intruders, round, exec)
   if not exec.ent.Side.Intruder then
     return
   end
-  name = IsPosInUnusedSpawnpoint(pos, store.Spawnpoints, store.Spawnpoints_complete)
+  name = IsPosInUnusedSpawnpoint(pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
   if name then
     dialog_path = "ui/dialog/Ch01/" .. name .. ".json"
     Script.DialogBox(dialog_path)
-    store.Ch01.Spawnpoints_complete[name] = true 
+    store.Ch01a.Spawnpoints_complete[name] = true 
     if name == "Ch01_Dialog02" then
       Script.LoadScript("Chapter_01_b")
     --INSERT other names and functions here
