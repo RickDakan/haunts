@@ -10,61 +10,6 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
-type Button struct {
-  X, Y    int
-  Texture texture.Object
-
-  // Color - brighter when the mouse is over it
-  shade float64
-
-  // Function to run whenever the button is clicked
-  f func(interface{})
-
-  // Key that can be bound to have the same effect as clicking this button
-  key gin.KeyId
-}
-
-// If x,y is inside the button's region then it will run its function and
-// return true, otherwise it does nothing and returns false.
-func (b *Button) handleClick(x, y int, data interface{}) bool {
-  d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X+d.Dx() || y >= b.Y+d.Dy() {
-    return false
-  }
-  b.f(data)
-  return true
-}
-
-func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
-  if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
-    b.f(data)
-    return true
-  }
-  return false
-}
-
-func doShading(current float64, in bool, dt int64) float64 {
-  if in {
-    return current*0.9 + 0.1
-  }
-  if current < 0.40 {
-    return 0.40
-  }
-  return current*0.9 + 0.04
-}
-
-func (b *Button) Think(x, y, mx, my int, dt int64) {
-  tdx := b.Texture.Data().Dx()
-  tdy := b.Texture.Data().Dy()
-  in := mx >= x+b.X && mx < x+b.X+tdx && my >= y+b.Y && my < y+b.Y+tdy
-  b.shade = doShading(b.shade, in, dt)
-}
-
-func (b *Button) RenderAt(x, y int) {
-  gl.Color4ub(255, 255, 255, byte(b.shade*255))
-  b.Texture.Data().RenderNatural(b.X+x, b.Y+y)
-}
-
 type Center struct {
   X, Y int
 }
@@ -191,7 +136,7 @@ func buttonFuncActionRight(mbi interface{}) {
 }
 func buttonFuncUnitLeft(mbi interface{}) {
   mb := mbi.(*MainBar)
-  if !mb.game.SetCurrentAction(nil) {
+  if !mb.game.SetCurrentAction(nil) || len(mb.game.Ents) == 0 {
     return
   }
   start_index := len(mb.game.Ents) - 1
@@ -216,7 +161,7 @@ func buttonFuncUnitLeft(mbi interface{}) {
 }
 func buttonFuncUnitRight(mbi interface{}) {
   mb := mbi.(*MainBar)
-  if !mb.game.SetCurrentAction(nil) {
+  if !mb.game.SetCurrentAction(nil) || len(mb.game.Ents) == 0 {
     return
   }
   start_index := 0
