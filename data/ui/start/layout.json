@@ -10,7 +10,7 @@
     },
     "Continue": {
       "X": 805,
-      "Y": 250,
+      "Y": 425,
       "Text": {
         "String": "Continue",
         "Size": 18,
@@ -19,7 +19,7 @@
     },
     "Versus": {
       "X": 805,
-      "Y": 300,
+      "Y": 365,
       "Text": {
         "String": "Versus Mode",
         "Size": 18,
@@ -28,20 +28,20 @@
     },
     "Story": {
       "X": 805,
-      "Y": 350,
+      "Y": 305,
       "Text": {
         "String": "Story Mode",
         "Size": 18,
-        "Justification": "right"
+        "Justification": "center"
       }
     },
     "Settings": {
       "X": 805,
-      "Y": 350,
+      "Y": 245,
       "Text": {
         "String": "Settings",
         "Size": 18,
-        "Justification": "right"
+        "Justification": "center"
       }
     }
   }
