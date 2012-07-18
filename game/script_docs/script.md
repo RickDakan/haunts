@@ -113,6 +113,16 @@ _successful_: True iff _ent_'s gear was set to _gear_.
 
 ------
 
+###Script.__SetHp__(_ent_, _val_)
+Sets _ent_'s current hp to _val_.  
+
+------
+
+###Script.__SetAp__(_ent_, _val_)
+Sets _ent_'s current ap to _val_.  
+
+------
+
 ###Script.__SetCondition__(_ent_, _name_, _set_)
 Sets whether or not _ent_ has the condition named _name_.  
 _ent_: The entity to apply/remote this condition from.  
