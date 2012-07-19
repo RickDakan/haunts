@@ -1,7 +1,15 @@
 {
+  "Background": {
+    "Texture": {
+      "Path": "ui/start/start.png"
+    }
+  },
   "Menu": {
     "X": 585,
     "Y": 105,
+    "Texture": {
+      "Path": "ui/start/menu.png"
+    },
     "Text": {
       "X": 220,
       "Y": 219,

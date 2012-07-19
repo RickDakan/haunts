@@ -1,0 +1,19 @@
+{
+  "Title": {
+    "X": 212,
+    "Y": 500,
+    "Texture": {
+      "Path": "ui/start/story/title.png"
+    }
+  },
+  "Background": {
+    "Path": "ui/dialog/large.png"
+  },
+  "Back": {
+    "X": 100,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    }
+  }
+}

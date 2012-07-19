@@ -34,12 +34,11 @@ type Button struct {
 // If x,y is inside the button's region then it will run its function and
 // return true, otherwise it does nothing and returns false.
 func (b *Button) handleClick(x, y int, data interface{}) bool {
-  d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X+d.Dx() || y >= b.Y+d.Dy() {
-    return false
+  in := pointInsideRect(x, y, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
+  if in {
+    b.f(data)
   }
-  b.f(data)
-  return true
+  return in
 }
 
 func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
@@ -67,10 +66,7 @@ func (b *Button) Think(x, y, mx, my int, dt int64) {
   //   tdy = b.Texture.Data().Dy()
   // } else {
   // }
-  base.Log().Printf("Mouse(%d %d)", mx, my)
-  base.Log().Printf("Bounds: (%d %d), (%d %d)", b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
   in := pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
-  base.Log().Printf("IN: %t", in)
   b.shade = doShading(b.shade, in, dt)
 }
 
