@@ -541,7 +541,7 @@ func (e *Entity) TurnToFace(x, y int) {
   seg.Assign(&target)
   seg.Subtract(&source)
   target_facing := facing(seg)
-  f_diff := target_facing - e.sprite.sp.Facing()
+  f_diff := target_facing - e.sprite.sp.StateFacing()
   if f_diff != 0 {
     f_diff = (f_diff + 6) % 6
     if f_diff > 3 {
