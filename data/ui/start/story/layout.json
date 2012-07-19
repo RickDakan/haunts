@@ -9,6 +9,24 @@
   "Background": {
     "Path": "ui/dialog/large.png"
   },
+  "New": {
+    "X": 100,
+    "Y": 400,
+    "Text": {
+      "String": "Start New Game",
+      "Size": 18,
+      "Justification": "left"
+    }
+  },
+  "Continue": {
+    "X": 100,
+    "Y": 300,
+    "Text": {
+      "String": "Continue Game",
+      "Size": 18,
+      "Justification": "left"
+    }
+  },
   "Back": {
     "X": 100,
     "Y": 100,

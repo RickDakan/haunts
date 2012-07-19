@@ -17,11 +17,6 @@ type startLayout struct {
     Versus   Button
     Story    Button
     Settings Button
-    Text     struct {
-      X, Y    int
-      Size    int
-      Spacing int
-    }
   }
   Background texture.Object
 }

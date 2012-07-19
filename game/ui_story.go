@@ -16,6 +16,8 @@ type storyLayout struct {
   }
   Background texture.Object
   Back       Button
+  New        Button
+  Continue   Button
 }
 
 type StoryMenu struct {
@@ -35,10 +37,14 @@ func MakeStoryMenu(parent *StartMenu) (*StoryMenu, error) {
   }
   sm.buttons = []*Button{
     &sm.layout.Back,
+    &sm.layout.New,
+    &sm.layout.Continue,
   }
   sm.layout.Back.f = func(interface{}) {
     parent.sub_menu = nil
   }
+  sm.layout.New.f = func(interface{}) {}
+  sm.layout.Continue.f = func(interface{}) {}
   return &sm, nil
 }
 
