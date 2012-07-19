@@ -1,0 +1,17 @@
+{
+  "Format": "TwoOptions",
+  "Sections":[
+    {
+      "Text": "The monkeys are quite funky, although not mandible chair fridge coolant ignite.",
+      "Image":{
+        "Path": "ui/cute5.png"
+      }
+    },
+    {
+      "Text": "Kittens kitnz ktnz cittems mittems.",
+      "Image":{
+        "Path": "ui/cute6.png"
+      }
+    }
+  ]
+}

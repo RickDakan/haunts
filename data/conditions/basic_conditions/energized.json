@@ -1,0 +1,9 @@
+{
+  "Name": "Energized",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Dynamic": {
+    "Ap": 1
+  }
+}

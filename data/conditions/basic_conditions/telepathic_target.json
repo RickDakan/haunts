@@ -1,0 +1,9 @@
+{
+  "Name": "Telepathic Target",
+  "Strength": 7,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Base": {
+    "Corpus": -2
+  }
+}

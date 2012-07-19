@@ -6,7 +6,8 @@
   "Strength" : 7,
   "Damage"   : 0,
   "Range"    : 10,
+  "Target_enemies": true,
   "Conditions": [
-     "Grave Grasp"
+     "Agony"
    ]
 }

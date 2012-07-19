@@ -11,57 +11,61 @@ type endpoint struct {
   RectObject
   first bool
 }
-func firstPoint(r RectObject) (int,int) {
-  x,y := r.Pos()
-  _,dy := r.Dims()
+
+func firstPoint(r RectObject) (int, int) {
+  x, y := r.Pos()
+  _, dy := r.Dims()
   return x, y + dy
 }
-func lastPoint(r RectObject) (int,int) {
-  x,y := r.Pos()
-  dx,_ := r.Dims()
+func lastPoint(r RectObject) (int, int) {
+  x, y := r.Pos()
+  dx, _ := r.Dims()
   return x + dx, y
 }
-func firstAndLastPoints(r RectObject) (x1,y1,x2,y2 int) {
-  x,y := r.Pos()
-  dx,dy := r.Dims()
-  return x, y+dy, x + dx, y
+func firstAndLastPoints(r RectObject) (x1, y1, x2, y2 int) {
+  x, y := r.Pos()
+  dx, dy := r.Dims()
+  return x, y + dy, x + dx, y
 }
+
 type endpointArray []endpoint
+
 func (e endpointArray) Len() int {
   return len(e)
 }
-func (e endpointArray) Less(i,j int) bool {
-  var ix,iy,jx,jy int
+func (e endpointArray) Less(i, j int) bool {
+  var ix, iy, jx, jy int
   if e[i].first {
-    ix,iy = firstPoint(e[i])
+    ix, iy = firstPoint(e[i])
   } else {
-    ix,iy = lastPoint(e[i])
+    ix, iy = lastPoint(e[i])
   }
   if e[j].first {
-    jx,jy = firstPoint(e[j])
+    jx, jy = firstPoint(e[j])
   } else {
-    jx,jy = lastPoint(e[j])
+    jx, jy = lastPoint(e[j])
   }
-  if ix - iy == jx - jy {
+  if ix-iy == jx-jy {
     return e[j].first
   }
-  return ix - iy < jx - jy
+  return ix-iy < jx-jy
 }
-func (e endpointArray) Swap(i,j int) {
-  e[i],e[j] = e[j],e[i]
+func (e endpointArray) Swap(i, j int) {
+  e[i], e[j] = e[j], e[i]
 }
 
-func dist(x,y int) int {
+func dist(x, y int) int {
   return x*x + y*y
 }
-func width(dx,dy int) int {
+func width(dx, dy int) int {
   return dx + dy
 }
-func pos(x,y int) int {
+func pos(x, y int) int {
   return x - y
 }
 
 type adag [][]int
+
 func (a adag) NumVertex() int {
   return len(a)
 }
@@ -86,19 +90,23 @@ func order(input []RectObject) []int {
     if err := recover(); err != nil {
       base.Error().Printf("Failure in sorting: %v", err)
     }
-  } ()
-  var minx,miny int
-  for _,r := range input {
-    x,y := r.Pos()
-    if x < minx { minx = x }
-    if y < miny { miny = y }
+  }()
+  var minx, miny int
+  for _, r := range input {
+    x, y := r.Pos()
+    if x < minx {
+      minx = x
+    }
+    if y < miny {
+      miny = y
+    }
   }
 
   ra := make([]RectObject, len(input))
-  for i,r := range input {
-    x,y := r.Pos()
-    dx,dy := r.Dims()
-    ra[i] = arog{ x - minx + 1, y - miny + 1, dx, dy }
+  for i, r := range input {
+    x, y := r.Pos()
+    dx, dy := r.Dims()
+    ra[i] = arog{x - minx + 1, y - miny + 1, dx, dy}
   }
 
   mapping := make(map[RectObject]int, len(ra))
@@ -107,31 +115,31 @@ func order(input []RectObject) []int {
   }
   var e endpointArray
   for i := range ra {
-    e = append(e, endpoint{ RectObject: ra[i], first: false })
-    e = append(e, endpoint{ RectObject: ra[i], first: true })
+    e = append(e, endpoint{RectObject: ra[i], first: false})
+    e = append(e, endpoint{RectObject: ra[i], first: true})
   }
   sort.Sort(e)
   var sweep_pos int
-  less_func := func(_a,_b interface{}) bool {
+  less_func := func(_a, _b interface{}) bool {
     a := _a.(RectObject)
     b := _b.(RectObject)
-    ax,ay,ax2,ay2 := firstAndLastPoints(a)
+    ax, ay, ax2, ay2 := firstAndLastPoints(a)
     da := ax*ax + ay*ay
     da2 := ax2*ax2 + ay2*ay2
     w_a := width(a.Dims())
-    bx,by,bx2,by2 := firstAndLastPoints(b)
+    bx, by, bx2, by2 := firstAndLastPoints(b)
     db := bx*bx + by*by
     db2 := bx2*bx2 + by2*by2
     w_b := width(b.Dims())
-    va := w_b * (w_a * da + (da2 - da) * (sweep_pos - pos(ax,ay)) )
-    vb := w_a * (w_b * db + (db2 - db) * (sweep_pos - pos(bx,by)) )
+    va := w_b * (w_a*da + (da2-da)*(sweep_pos-pos(ax, ay)))
+    vb := w_a * (w_b*db + (db2-db)*(sweep_pos-pos(bx, by)))
     return va < vb
   }
   l := llrb.New(less_func)
 
   dag := make(adag, len(ra))
 
-  for _,p := range e {
+  for _, p := range e {
     if p.first {
       sweep_pos = pos(firstPoint(p.RectObject))
       l.ReplaceOrInsert(p.RectObject)
@@ -153,7 +161,8 @@ func order(input []RectObject) []int {
 }
 
 type arog struct {
-  x,y,dx,dy int
+  x, y, dx, dy int
 }
-func (a arog) Pos() (int,int) { return a.x, a.y }
-func (a arog) Dims() (int,int) { return a.dx, a.dy }
+
+func (a arog) Pos() (int, int)  { return a.x, a.y }
+func (a arog) Dims() (int, int) { return a.dx, a.dy }

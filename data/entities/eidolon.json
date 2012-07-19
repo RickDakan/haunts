@@ -7,17 +7,20 @@
     "Path": "entities/corpse_still.png"
   },
   "Action_names": [
-    "Move Test"
+    "Move Test",
+    "Feast",
+	"Cosmic Infection"
   ],
   "HauntEnt": {
     "Cost":  1,
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 600,
-    "Hp_max": 6,
-    "Corpus": 9,
+    "Ap_max": 10,
+    "Hp_max": 8,
+    "Corpus": 10,
     "Ego": 9,
     "Sight": 10
-  }
+  },
+  "ai_path": "ais/eidolon.lua"
 }

@@ -13,14 +13,14 @@ import (
 var datadir string
 
 func init() {
-  datadir,_ = filepath.Abs("../../data_test")
+  datadir, _ = filepath.Abs("../../data_test")
   base.SetDatadir(datadir)
 }
 
 func ConditionsSpec(c gospec.Context) {
   c.Specify("Conditions are loaded properly.", func() {
     basic := status.MakeCondition("Basic Test")
-    _,ok := basic.(*status.BasicCondition)
+    _, ok := basic.(*status.BasicCondition)
     c.Expect(ok, Equals, true)
     c.Expect(basic.Strength(), Equals, 5)
     c.Expect(basic.Kind(), Equals, status.Fire)
@@ -44,7 +44,7 @@ func ConditionsSpec(c gospec.Context) {
     err = dec.Decode(&cs2)
     c.Assume(err, Equals, nil)
 
-    _,ok := cs2[0].(*status.BasicCondition)
+    _, ok := cs2[0].(*status.BasicCondition)
     c.Expect(ok, Equals, true)
   })
 
@@ -64,6 +64,21 @@ func ConditionsSpec(c gospec.Context) {
     c.Expect(s.AttackBonusWith(status.Unspecified), Equals, -2)
     s.ApplyCondition(pd2)
     c.Expect(s.AttackBonusWith(status.Unspecified), Equals, -3)
+  })
+
+  c.Specify("Resistances work", func() {
+    var s status.Inst
+    fr1 := status.MakeCondition("Fire Resistance")
+    fr2 := status.MakeCondition("Greater Fire Resistance")
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified"))
+    s.ApplyCondition(fr1)
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified")+1)
+    c.Expect(s.CorpusVs("Panic"), Equals, s.CorpusVs("Unspecified"))
+    c.Expect(s.CorpusVs("Brutal"), Equals, s.CorpusVs("Unspecified"))
+    s.ApplyCondition(fr2)
+    c.Expect(s.CorpusVs("Fire"), Equals, s.CorpusVs("Unspecified")+3)
+    c.Expect(s.CorpusVs("Panic"), Equals, s.CorpusVs("Unspecified"))
+    c.Expect(s.CorpusVs("Brutal"), Equals, s.CorpusVs("Unspecified"))
   })
 
   c.Specify("Basic conditions last the appropriate amount of time", func() {
@@ -94,7 +109,6 @@ func ConditionsSpec(c gospec.Context) {
     s.OnRound()
     c.Expect(s.HpCur(), Equals, 97)
 
-  
     s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
     s.OnRound()
     c.Expect(s.HpCur(), Equals, 96)
@@ -111,7 +125,6 @@ func ConditionsSpec(c gospec.Context) {
     s.OnRound()
     c.Expect(s.HpCur(), Equals, 92)
 
-
     s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
     s.ApplyCondition(status.MakeCondition("Poison Debuff Attack"))
     s.OnRound()
@@ -125,7 +138,6 @@ func ConditionsSpec(c gospec.Context) {
     c.Expect(s.HpCur(), Equals, 85)
     s.OnRound()
     c.Expect(s.HpCur(), Equals, 85)
-
 
     s.ApplyCondition(status.MakeCondition("Fire Debuff Attack"))
     s.ApplyCondition(status.MakeCondition("Poison Debuff Attack"))

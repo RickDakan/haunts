@@ -1,5 +1,5 @@
 {
-  "Name": "Angry Shade",
+  "Name": "Shade",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/shade",
@@ -8,18 +8,19 @@
   },
   "Action_names": [
     "Move Test",
+    "Interact",
     "Chill Touch"
   ],
   "HauntEnt": {
     "Cost":  1,
-    "Level": "Minion"
+    "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 5,
-    "Hp_max": 3,
+    "Ap_max": 8,
+    "Hp_max": 5,
     "Corpus": 7,
     "Ego": 7,
     "Sight": 15
   },
-  "Ai_path": "ais/basic.xgml"
+  "Ai_path": "ais/shade.lua"
 }

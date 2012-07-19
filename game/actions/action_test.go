@@ -14,7 +14,7 @@ import (
 var datadir string
 
 func init() {
-  datadir,_ = filepath.Abs("../../data_test")
+  datadir, _ = filepath.Abs("../../data_test")
   base.SetDatadir(datadir)
 }
 
@@ -22,11 +22,7 @@ func ActionSpec(c gospec.Context) {
   game.RegisterActions()
   c.Specify("Actions are loaded properly.", func() {
     basic := game.MakeAction("Basic Test")
-    _,ok := basic.(*actions.BasicAttack)
-    c.Expect(ok, Equals, true)
-
-    charge := game.MakeAction("Charge Test")
-    _,ok = charge.(*actions.ChargeAttack)
+    _, ok := basic.(*actions.BasicAttack)
     c.Expect(ok, Equals, true)
   })
 
@@ -37,7 +33,6 @@ func ActionSpec(c gospec.Context) {
     var as []game.Action
     as = append(as, game.MakeAction("Move Test"))
     as = append(as, game.MakeAction("Basic Test"))
-    as = append(as, game.MakeAction("Charge Test"))
 
     err := enc.Encode(as)
     c.Assume(err, Equals, nil)
@@ -47,13 +42,10 @@ func ActionSpec(c gospec.Context) {
     err = dec.Decode(&as2)
     c.Assume(err, Equals, nil)
 
-    _,ok := as2[0].(*actions.Move)
+    _, ok := as2[0].(*actions.Move)
     c.Expect(ok, Equals, true)
 
-    _,ok = as2[1].(*actions.BasicAttack)
-    c.Expect(ok, Equals, true)
-
-    _,ok = as2[2].(*actions.ChargeAttack)
+    _, ok = as2[1].(*actions.BasicAttack)
     c.Expect(ok, Equals, true)
 
   })

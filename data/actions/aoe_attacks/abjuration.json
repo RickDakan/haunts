@@ -5,7 +5,7 @@
   "Strength"  : 5,
   "Damage"    : 2,
   "Range"     : 10,
-  "Diameter"  : 3,
+  "Diameter"  : 10,
   "Animation" : "pulse",
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"

@@ -66,10 +66,10 @@ func RegisterRegistry(name string, registry interface{}) {
   if mr.Type().Elem().Kind() != reflect.Ptr {
     Error().Printf("Registry must be a map that uses pointers as values, not %v", mr.Type().Elem())
   }
-  if field,ok := mr.Type().Elem().Elem().FieldByName("Name"); !ok || field.Type.Kind() != reflect.String {
+  if field, ok := mr.Type().Elem().Elem().FieldByName("Name"); !ok || field.Type.Kind() != reflect.String {
     Error().Printf("Registry must store values that have a Name field of type string")
   }
-  if _,ok := registry_registry[name]; ok {
+  if _, ok := registry_registry[name]; ok {
     Error().Printf("Cannot register two registries with the same name '%s'", name)
   }
   registry_registry[name] = mr
@@ -79,7 +79,7 @@ func RegisterRegistry(name string, registry interface{}) {
 // registered through RegisterRegistry().  object must be a pointer of the type
 // appropriate for the named registry.
 func RegisterObject(registry_name string, object interface{}) {
-  reg,ok := registry_registry[registry_name]
+  reg, ok := registry_registry[registry_name]
   if !ok {
     Error().Printf("Tried to register an object into an unknown registry '%s'", registry_name)
   }
@@ -107,8 +107,8 @@ func RegisterObject(registry_name string, object interface{}) {
 // called Defname of type string.  This name will be used to find the def in the
 // registry.  The object should also embed a field of this type which the value
 // in the registry will be assigned to.
-func GetObject(registry_name string, object interface{})  {
-  reg,ok := registry_registry[registry_name]
+func GetObject(registry_name string, object interface{}) {
+  reg, ok := registry_registry[registry_name]
   if !ok {
     Error().Printf("Tried to load an object from an unknown registry '%s'", registry_name)
   }
@@ -136,23 +136,22 @@ func GetObject(registry_name string, object interface{})  {
 
 // Returns a sorted list of all names in the specified registry
 func GetAllNamesInRegistry(registry_name string) []string {
-  reg,ok := registry_registry[registry_name]
+  reg, ok := registry_registry[registry_name]
   if !ok {
     Error().Printf("Requested names from an unknown registry '%s'", registry_name)
   }
   keys := reg.MapKeys()
   var names []string
-  for _,key := range keys {
+  for _, key := range keys {
     names = append(names, key.String())
   }
   sort.Strings(names)
   return names
 }
 
-
 // Processes an object as it is normally processed when registered through
 // RegisterAllObjectsInDir().  Does NOT register the object in any registry.
-func LoadAndProcessObject(path,format string, target interface{}) error {
+func LoadAndProcessObject(path, format string, target interface{}) error {
   Log().Printf("Registering %s", path)
   var err error
   switch format {
@@ -169,7 +168,7 @@ func LoadAndProcessObject(path,format string, target interface{}) error {
     return err
   }
   ProcessObject(reflect.ValueOf(target), "")
-  return  nil
+  return nil
 }
 
 // Recursively decends through a value's type hierarchy and applies processing
@@ -185,7 +184,7 @@ func ProcessObject(val reflect.Value, tag string) {
       // the registry.
       loadfrom_tag := "loadfrom-"
       if strings.HasPrefix(tag, loadfrom_tag) {
-        source := tag[len(loadfrom_tag) : ]
+        source := tag[len(loadfrom_tag):]
         GetObject(source, val.Interface())
       }
       ProcessObject(val.Elem(), tag)
@@ -221,14 +220,19 @@ func ProcessObject(val reflect.Value, tag string) {
 // the specified suffix and loads them into the specified registry using
 // RegisterObject().  format should either be "json" or "gob"
 // Files begining with '.' are ignored in this process
-func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
+func RegisterAllObjectsInDir(registry_name, dir, suffix, format string) {
   Log().Printf("Registering directory: '%s'", dir)
-  reg,ok := registry_registry[registry_name]
+  reg, ok := registry_registry[registry_name]
   if !ok {
     Error().Printf("Tried to load objects into an unknown registry '%s'", registry_name)
   }
   filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-    _,filename := filepath.Split(path)
+    _, filename := filepath.Split(path)
+    if err != nil {
+      Error().Printf("Error walking directory: %v", err)
+      panic(err)
+      return nil
+    }
     if strings.HasPrefix(filename, ".") {
       if info.IsDir() {
         return filepath.SkipDir
@@ -242,7 +246,7 @@ func RegisterAllObjectsInDir(registry_name,dir,suffix,format string) {
         if err == nil {
           RegisterObject(registry_name, target.Interface())
         } else {
-          Error().Printf("Error loading files in '%s': %v", dir, err)
+          Error().Printf("Error loading file '%s': %v", path, err)
         }
       }
     }

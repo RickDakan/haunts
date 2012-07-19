@@ -1,0 +1,10 @@
+{
+  "Name": "Interact",
+  "Display_name": "Interact",
+  "Ap": 1,
+  "Range": 1,
+  "Animation": "Ranged",
+  "Texture": {
+    "Path": "actions/icons/interact.png"
+  }
+}

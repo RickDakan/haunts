@@ -1,0 +1,16 @@
+{
+  "Name"     : "Parasitic Gift",
+  "Kind"     : "Poison",
+  "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/kiss.png"
+  },
+  "Ap"       : 5,
+  "Strength" : 5,
+  "Damage"   : 1,
+  "Range"    : 7,
+  "Target_enemies": true,
+  "Conditions": [
+     "Blindness"
+   ]
+}

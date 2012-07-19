@@ -1,0 +1,1 @@
+{"Name":"Chapter_04_a","Icon":{"Path":"houses/icons"},"Floors":[{"Rooms":[{"Defname":"Ch02_antechamber","Doors":[],"X":-48,"Y":5},{"Defname":"Ch02_hallway_d","Doors":[],"X":-40,"Y":-15}],"Spawns":[{"Name":"Ch01_Dialog04","Dx":2,"Dy":2,"X":67,"Y":-4},{"Name":"Ch01_Dialog04","Dx":2,"Dy":2,"X":62,"Y":-6}]}]}

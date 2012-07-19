@@ -1,5 +1,5 @@
 {
-  "Name": "Female Cultist",
+  "Name": "Devotee",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/female_cultist",
@@ -7,7 +7,9 @@
     "Path": "entities/corpse_still.png"
   },
   "Action_names": [
-    "Move Test"
+    "Move Test",
+	"Parasitic Gift",
+	"Envenomed Blade"
   ],
   "HauntEnt": {
     "Cost":  1,
@@ -19,5 +21,6 @@
     "Corpus": 9,
     "Ego": 9,
     "Sight": 10
-  }
+  },
+  "ai_path": "ais/female_cultist.lua"
 }

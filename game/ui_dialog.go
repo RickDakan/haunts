@@ -1,0 +1,275 @@
+package game
+
+import (
+  "fmt"
+  "path/filepath"
+  "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/opengl/gl"
+  "errors"
+)
+
+type Paragraph struct {
+  X, Y, Dx, Size int
+  Justification  string
+}
+
+type dialogSection struct {
+  // Center of the image
+  X, Y      int
+  Paragraph Paragraph
+
+  // The clickable region
+  Region struct {
+    X, Y, Dx, Dy int
+  }
+}
+
+type dialogLayoutSpec struct {
+  Sections []dialogSection
+}
+
+type dialogLayout struct {
+  Background texture.Object
+  Next, Prev Button
+
+  Formats map[string]dialogLayoutSpec
+}
+
+type dialogData struct {
+  Size  string
+  Pages map[string]struct {
+    Format   string
+    Next     string // Just to error check - this should always be empty
+    Sections []struct {
+      Id      string
+      Next    string
+      Image   texture.Object
+      Text    string
+      shading float64
+    }
+  }
+
+  prev     []string
+  cur_page string
+}
+
+type MediumDialogBox struct {
+  layout dialogLayout
+  format dialogLayoutSpec
+  // state  mediumDialogState
+  data dialogData
+
+  region gui.Region
+
+  buttons []*Button
+
+  // Position of the mouse
+  mx, my int
+
+  done   bool
+  result chan string
+}
+
+func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
+  var mdb MediumDialogBox
+  datadir := base.GetDataDir()
+  err := base.LoadAndProcessObject(filepath.Join(datadir, source), "json", &mdb.data)
+  if err != nil {
+    return nil, nil, err
+  }
+  err = base.LoadAndProcessObject(filepath.Join(datadir, "ui", "dialog", fmt.Sprintf("%s.json", mdb.data.Size)), "json", &mdb.layout)
+  if err != nil {
+    return nil, nil, err
+  }
+
+  if _, ok := mdb.data.Pages["Start"]; !ok {
+    return nil, nil, errors.New("Section 'Start' was not specified.")
+  }
+
+  // Make sure that all of the pages specified by "Next"s are available
+  // in the map
+  for _, page := range mdb.data.Pages {
+    if page.Next != "" {
+      return nil, nil, errors.New(fmt.Sprintf("Specified 'Next': '%s' on a page, but must be in a section on the page.", page.Next))
+    }
+    for _, section := range page.Sections {
+      if section.Next == "" {
+        continue
+      }
+      if _, ok := mdb.data.Pages[section.Next]; !ok {
+        return nil, nil, errors.New(fmt.Sprintf("Section '%s' specified but doesn't exist.", section.Next))
+      }
+    }
+    if _, ok := mdb.layout.Formats[page.Format]; !ok {
+      return nil, nil, errors.New(fmt.Sprintf("Unknown dialog box format '%s'.", page.Format))
+    }
+    if len(page.Sections) != len(mdb.layout.Formats[page.Format].Sections) {
+      return nil, nil, errors.New(fmt.Sprintf("Format '%s' requires exactly %d sections.", page.Format, len(mdb.layout.Formats[page.Format].Sections)))
+    }
+  }
+
+  mdb.data.cur_page = "Start"
+  mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+
+  // return nil, nil, errors.New(fmt.Sprintf("Unknown format string: '%s'.", format))
+
+  mdb.buttons = []*Button{
+    &mdb.layout.Next,
+    &mdb.layout.Prev,
+  }
+
+  mdb.result = make(chan string, 1)
+  mdb.layout.Next.f = func(_data interface{}) {
+    sections := mdb.data.Pages[mdb.data.cur_page].Sections
+    if len(sections) == 1 {
+      if sections[0].Next == "" {
+        if !mdb.done {
+          close(mdb.result)
+          mdb.done = true
+        }
+      } else {
+        mdb.data.prev = append(mdb.data.prev, mdb.data.cur_page)
+        mdb.data.cur_page = sections[0].Next
+        mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+      }
+    }
+  }
+  mdb.layout.Prev.f = func(_data interface{}) {
+    if len(mdb.data.prev) > 0 {
+      mdb.data.cur_page = mdb.data.prev[len(mdb.data.prev)-1]
+      mdb.data.prev = mdb.data.prev[0 : len(mdb.data.prev)-1]
+      mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+    }
+  }
+
+  return &mdb, mdb.result, nil
+}
+
+func (mdb *MediumDialogBox) Requested() gui.Dims {
+  return gui.Dims{
+    Dx: mdb.layout.Background.Data().Dx(),
+    Dy: mdb.layout.Background.Data().Dy(),
+  }
+}
+
+func (mdb *MediumDialogBox) Expandable() (bool, bool) {
+  return false, false
+}
+
+func (mdb *MediumDialogBox) Rendered() gui.Region {
+  return mdb.region
+}
+
+func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
+  if mdb.done {
+    return
+  }
+  for _, button := range mdb.buttons {
+    button.Think(mdb.region.X, mdb.region.Y, mdb.mx, mdb.my, t)
+  }
+  for i := range mdb.format.Sections {
+    section := mdb.format.Sections[i]
+    data := &mdb.data.Pages[mdb.data.cur_page].Sections[i]
+    if section.Region.Dx*section.Region.Dy <= 0 {
+      data.shading = 1.0
+    }
+    in := pointInsideRect(mdb.mx, mdb.my, mdb.region.X+section.Region.X, mdb.region.Y+section.Region.Y, section.Region.Dx, section.Region.Dy)
+    data.shading = doShading(data.shading, in, t)
+  }
+}
+
+func (mdb *MediumDialogBox) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  cursor := group.Events[0].Key.Cursor()
+  if cursor != nil {
+    mdb.mx, mdb.my = cursor.Point()
+    if !pointInsideRect(mdb.mx, mdb.my, mdb.region.X, mdb.region.Y, mdb.layout.Background.Data().Dx(), mdb.layout.Background.Data().Dy()) {
+      return false
+    }
+  }
+
+  for _, button := range mdb.buttons {
+    if button.Respond(group, mdb) {
+      return true
+    }
+  }
+
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    for _, button := range mdb.buttons {
+      if button.handleClick(mdb.mx-mdb.region.X, mdb.my-mdb.region.Y, mdb) {
+        return true
+      }
+    }
+    for i, section := range mdb.format.Sections {
+      if pointInsideRect(
+        mdb.mx,
+        mdb.my,
+        mdb.region.X+section.Region.X,
+        mdb.region.Y+section.Region.Y,
+        section.Region.Dx,
+        section.Region.Dy) {
+        if !mdb.done {
+          mdb.data.prev = mdb.data.prev[0:0]
+          mdb.result <- mdb.data.Pages[mdb.data.cur_page].Sections[i].Id
+          mdb.data.cur_page = mdb.data.Pages[mdb.data.cur_page].Sections[i].Next
+          if mdb.data.cur_page == "" {
+            close(mdb.result)
+            mdb.done = true
+          } else {
+            mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
+          }
+          break
+        }
+      }
+    }
+  }
+
+  return cursor != nil
+}
+
+func (mdb *MediumDialogBox) Draw(region gui.Region) {
+  mdb.region = region
+  gl.Enable(gl.TEXTURE_2D)
+  gl.Color4ub(255, 255, 255, 255)
+  mdb.layout.Background.Data().RenderNatural(region.X, region.Y)
+  for _, button := range mdb.buttons {
+    button.RenderAt(region.X, region.Y)
+  }
+
+  if mdb.done {
+    return
+  }
+
+  for i := range mdb.format.Sections {
+    section := mdb.format.Sections[i]
+    data := mdb.data.Pages[mdb.data.cur_page].Sections[i]
+    p := section.Paragraph
+    d := base.GetDictionary(p.Size)
+    var just gui.Justification
+    switch p.Justification {
+    case "left":
+      just = gui.Left
+    case "right":
+      just = gui.Right
+    case "center":
+      just = gui.Center
+    default:
+      base.Error().Printf("Unknown justification '%s'", p.Justification)
+      p.Justification = "left"
+    }
+    gl.Color4ub(255, 255, 255, 255)
+    d.RenderParagraph(data.Text, float64(p.X+region.X), float64(p.Y+region.Y)-d.MaxHeight(), 0, float64(p.Dx), d.MaxHeight(), just)
+
+    gl.Color4ub(255, 255, 255, byte(data.shading*255))
+    tex := data.Image.Data()
+    tex.RenderNatural(region.X+section.X-tex.Dx()/2, region.Y+section.Y-tex.Dy()/2)
+  }
+}
+
+func (mdb *MediumDialogBox) DrawFocused(region gui.Region) {}
+
+func (mdb *MediumDialogBox) String() string {
+  return "medium dialog box"
+}

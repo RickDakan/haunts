@@ -1,3 +1,4 @@
+// +build !nosound
 package sound
 
 import (
@@ -7,10 +8,10 @@ import (
   "github.com/runningwild/fmod"
 )
 
-var(
+var (
   system *fmod.System
-  music *fmod.Channel
-  names map[string]string  // 'load' -> 'load_gun.ogg', stuff like that
+  music  *fmod.Channel
+  names  map[string]string // 'load' -> 'load_gun.ogg', stuff like that
 )
 
 func Init() {
@@ -36,7 +37,7 @@ func Init() {
 }
 
 func MapSounds(m map[string]string) {
-  for k,v := range m {
+  for k, v := range m {
     names[k] = v
   }
 }
@@ -63,6 +64,20 @@ func trigger(s *sprite.Sprite, name string) {
   base.Log().Printf("Played sound: %s\n", file)
 }
 
+func PlaySound(p base.Path) {
+  sound, err := system.CreateSound_FromFilename(p.String(), fmod.MODE_LOOP_OFF)
+  if err != nil {
+    base.Error().Printf("Unable to load %v: %v", p, err)
+    return
+  }
+  _, err = system.PlaySound(fmod.CHANNEL_FREE, sound, false)
+  if err != nil {
+    base.Error().Printf("Unable to play %v: %v", p, err)
+    return
+  }
+  base.Log().Printf("Played sound: %v\n", p)
+}
+
 func SetBackgroundMusic(file string) {
   if file == "" {
     if music != nil {
@@ -83,14 +98,9 @@ func SetBackgroundMusic(file string) {
     base.Error().Printf("Unable to play %s: %v", file, err)
     return
   }
-  cg, err := system.GetMasterChannelGroup()
-  if err != nil {
-    base.Error().Printf("Unable to set volume: %v", err)
-    return
-  }
-  cg.SetVolume(0.1)
+  // _, err := system.GetMasterChannelGroup()
+  // if err != nil {
+  //   base.Error().Printf("Unable to set volume: %v", err)
+  //   return
+  // }
 }
-
-
-
-

@@ -11,6 +11,7 @@ import (
 )
 
 var outputTemplate = template.Must(template.New("output").Parse(outputTemplateStr))
+
 const outputTemplateStr = `
 package main
 func Version() string {
@@ -39,7 +40,7 @@ func main() {
   head = strings.TrimSpace(head)
 
   target := filepath.Join("..", "GEN_version.go")
-  os.Remove(target)  // Don't care about errors on this one
+  os.Remove(target) // Don't care about errors on this one
   f, err := os.Create(target)
   if err != nil {
     fmt.Printf("Error: %v\n", err)

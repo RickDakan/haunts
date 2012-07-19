@@ -1,0 +1,28 @@
+{
+"Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": " Elias! It’s no good, I can’t make it!",
+		  "Image":{
+            "Path": "ui/dialog/Ch02/Cordelia.png"
+          }
+        }
+      ]
+    },
+        "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Remember, Elias! Remember The Amulet!",
+      "Image":{
+            "Path": "ui/dialog/Ch02/Cordelia.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

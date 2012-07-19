@@ -2,9 +2,12 @@
   "Name": "Door 2",
   "Width": 3,
   "Opened_texture": {
-    "Path": "doors/door_01.png"
+    "Path": "doors/test_door_opened.png"
   },
   "Closed_texture": {
-    "Path": "doors/door_01.png"
-  }
+    "Path": "doors/test_door_closed.png"
+  },
+  "Open_sound": "sound/door_open.ogg",
+  "Shut_sound": "sound/door_shut.ogg",
+  "Attribution": "Sound effects obtained from http://www.freesfx.co.uk"
 }

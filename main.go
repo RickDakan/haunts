@@ -7,11 +7,12 @@ import (
   "runtime"
   "runtime/debug"
   "runtime/pprof"
+  "math/rand"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gos"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/memory"
+  "github.com/runningwild/memory"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/glop/system"
   "github.com/runningwild/haunts/base"
@@ -28,18 +29,18 @@ import (
 )
 
 var (
-  sys system.System
-  datadir string
-  key_map base.KeyMap
-  editors map[string]house.Editor
-  editor house.Editor
-  editor_name string
-  ui *gui.Gui
-  anchor *gui.AnchorBox
-  chooser *gui.FileChooser
-  wdx,wdy int
-  game_panel *game.GamePanel
-  zooming,dragging,hiding bool
+  sys                       system.System
+  datadir                   string
+  key_map                   base.KeyMap
+  editors                   map[string]house.Editor
+  editor                    house.Editor
+  editor_name               string
+  ui                        *gui.Gui
+  anchor                    *gui.AnchorBox
+  chooser                   *gui.FileChooser
+  wdx, wdy                  int
+  game_panel                *game.GamePanel
+  zooming, dragging, hiding bool
 )
 
 func loadAllRegistries() {
@@ -47,7 +48,6 @@ func loadAllRegistries() {
   house.LoadAllWallTexturesInDir(filepath.Join(datadir, "textures"))
   house.LoadAllRoomsInDir(filepath.Join(datadir, "rooms"))
   house.LoadAllDoorsInDir(filepath.Join(datadir, "doors"))
-  house.LoadAllSpawnPointsInDir(filepath.Join(datadir, "spawns"))
   house.LoadAllHousesInDir(filepath.Join(datadir, "houses"))
   game.LoadAllGearInDir(filepath.Join(datadir, "gear"))
   game.RegisterActions()
@@ -58,6 +58,7 @@ func init() {
   runtime.LockOSThread()
   sys = system.Make(gos.GetSystemInterface())
 
+  rand.Seed(100)
   // TODO: This should not be OS-specific
   datadir = filepath.Join(os.Args[0], "..", "..")
   base.SetDatadir(datadir)
@@ -73,7 +74,7 @@ func init() {
   base.SetDefaultKeyMap(key_map)
 
   wdx = 1024
-  wdy = 700
+  wdy = 750
 }
 
 type draggerZoomer interface {
@@ -119,22 +120,6 @@ func gameMode() {
   if game_panel.Active() {
     draggingAndZooming(game_panel.GetViewer())
   }
-  if key_map["load"].FramePressCount() > 0 && chooser == nil {
-    callback := func(path string, err error) {
-      ui.DropFocus()
-      ui.RemoveChild(anchor)
-      chooser = nil
-      anchor = nil
-      game_panel.LoadHouseFromPath(path)
-      base.SetStoreVal("last game path", base.TryRelative(datadir, path))
-    }
-    chooser = gui.MakeFileChooser(filepath.Join(datadir, "houses"), callback, gui.MakeFileFilter(fmt.Sprintf(".house")))
-    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
-    ui.AddChild(anchor)
-    ui.TakeFocus(chooser)
-  }
-
   if key_map["load game"].FramePressCount() > 0 && chooser == nil {
     callback := func(path string, err error) {
       ui.DropFocus()
@@ -145,8 +130,8 @@ func gameMode() {
       // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
     }
     chooser = gui.MakeFileChooser(filepath.Join(datadir, "games"), callback, gui.MakeFileFilter(fmt.Sprintf(".game")))
-    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-    anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
+    anchor.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     ui.AddChild(anchor)
     ui.TakeFocus(chooser)
   }
@@ -160,8 +145,8 @@ func gameMode() {
       // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
     }
     save_widget := MakeSaveWidget(callback)
-    anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-    anchor.AddChild(save_widget, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+    anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
+    anchor.AddChild(save_widget, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     ui.AddChild(anchor)
     ui.TakeFocus(save_widget)
   }
@@ -182,7 +167,7 @@ func editMode() {
     }
 
     if key_map["save"].FramePressCount() > 0 && chooser == nil {
-      path,err := editor.Save()
+      path, err := editor.Save()
       if err != nil {
         base.Warn().Printf("Failed to save: %v", err.Error())
       }
@@ -205,16 +190,15 @@ func editMode() {
         }
       }
       chooser = gui.MakeFileChooser(filepath.Join(datadir, fmt.Sprintf("%ss", editor_name)), callback, gui.MakeFileFilter(fmt.Sprintf(".%s", editor_name)))
-      anchor = gui.MakeAnchorBox(gui.Dims{ wdx, wdy })
-      anchor.AddChild(chooser, gui.Anchor{ 0.5, 0.5, 0.5, 0.5 })
+      anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
+      anchor.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
       ui.AddChild(anchor)
       ui.TakeFocus(chooser)
     }
 
-
     // Don't select tabs in an editor if we're doing some other sort of command
     ok_to_select := true
-    for _,v := range key_map {
+    for _, v := range key_map {
       if v.FramePressCount() > 0 {
         ok_to_select = false
         break
@@ -222,7 +206,7 @@ func editMode() {
     }
     if ok_to_select {
       for i := 1; i <= 9; i++ {
-        if gin.In().GetKey(gin.KeyId('0' + i)).FramePressCount() > 0 {
+        if gin.In().GetKey(gin.KeyId('0'+i)).FramePressCount() > 0 {
           editor.SelectTab(i - 1)
         }
       }
@@ -234,11 +218,12 @@ func main() {
   defer func() {
     if r := recover(); r != nil {
       data := debug.Stack()
+      base.Error().Printf("PANIC: %v\n", r)
       base.Error().Printf("PANIC: %s\n", string(data))
       base.CloseLog()
       fmt.Printf("PANIC: %s\n", string(data))
     }
-  } ()
+  }()
   base.Log().Printf("Version %s", Version())
   sys.Startup()
   err := gl.Init()
@@ -246,14 +231,8 @@ func main() {
     panic(err)
   }
 
-  // Startup audio
-  err = base.InitAudio()
-  if err != nil {
-    panic(err)
-  }
-
   sound.Init()
-  sound.SetBackgroundMusic("macabre.ogg")
+  // sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
@@ -262,10 +241,12 @@ func main() {
     if err != nil {
       panic(err)
     }
+    gl.Enable(gl.BLEND)
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   })
   base.InitShaders()
   runtime.GOMAXPROCS(8)
-  ui,err = gui.Make(gin.In(), gui.Dims{ wdx, wdy }, filepath.Join(datadir, "fonts", "skia.ttf"))
+  ui, err = gui.Make(gin.In(), gui.Dims{wdx, wdy}, filepath.Join(datadir, "fonts", "skia.ttf"))
   if err != nil {
     panic(err.Error())
   }
@@ -277,11 +258,11 @@ func main() {
   game.LoadAllEntities()
 
   // Set up editors
-  editors = map[string]house.Editor {
-    "room" : house.MakeRoomEditorPanel(),
-    "house" : house.MakeHouseEditorPanel(),
+  editors = map[string]house.Editor{
+    "room":  house.MakeRoomEditorPanel(),
+    "house": house.MakeHouseEditorPanel(),
   }
-  for name,editor := range editors {
+  for name, editor := range editors {
     path := base.GetStoreVal(fmt.Sprintf("last %s path", name))
     path = filepath.Join(datadir, path)
     if path != "" {
@@ -291,9 +272,17 @@ func main() {
   editor_name = "room"
   editor = editors[editor_name]
   game_panel = game.MakeGamePanel()
-  game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
+  if base.GetStoreVal("last game path") != "" {
+    game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
+  }
 
-  ui.AddChild(editor)
+  edit_mode := false
+  if edit_mode {
+    ui.AddChild(editor)
+  } else {
+    ui.AddChild(game_panel)
+  }
+
   ui.AddChild(base.MakeConsole())
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
@@ -302,8 +291,6 @@ func main() {
     ui.Draw()
   })
   render.Purge()
-
-  edit_mode := true
 
   var profile_output *os.File
   heap_prof_count := 0
@@ -355,7 +342,7 @@ func main() {
       base.Log().Printf(memory.TotalAllocations())
     }
 
-    if key_map["game mode"].FramePressCount() % 2 == 1 {
+    if key_map["game mode"].FramePressCount()%2 == 1 {
       if edit_mode {
         ui.RemoveChild(editor)
         ui.AddChild(game_panel)
@@ -366,29 +353,46 @@ func main() {
       edit_mode = !edit_mode
     }
 
-  if key_map["row up"].FramePressCount() > 0 {
-    house.Num_rows += 25;
-  }
-  if key_map["row down"].FramePressCount() > 0 {
-    house.Num_rows -= 25;
-  }
-  if key_map["steps up"].FramePressCount() > 0 {
-    house.Num_steps++
-  }
-  if key_map["steps down"].FramePressCount() > 0 {
-    house.Num_steps--
-  }
-  if key_map["noise up"].FramePressCount() > 0 {
-    house.Noise_rate += 10
-  }
-  if key_map["noise down"].FramePressCount() > 0 {
-    house.Noise_rate -= 10
-  }
+    if key_map["row up"].FramePressCount() > 0 {
+      house.Num_rows += 25
+    }
+    if key_map["row down"].FramePressCount() > 0 {
+      house.Num_rows -= 25
+    }
+    if key_map["steps up"].FramePressCount() > 0 {
+      house.Num_steps++
+    }
+    if key_map["steps down"].FramePressCount() > 0 {
+      house.Num_steps--
+    }
+    if key_map["noise up"].FramePressCount() > 0 {
+      house.Noise_rate += 10
+    }
+    if key_map["noise down"].FramePressCount() > 0 {
+      house.Noise_rate -= 10
+    }
+    if key_map["foo"].FramePressCount() > 0 {
+      house.Foo = (house.Foo + 1) % 2
+    }
 
     if edit_mode {
       editMode()
     } else {
       gameMode()
     }
+
+    // Draw a cursor at the cursor - for testing an osx bug in glop.
+    // zx, zy := gin.In().GetCursor("Mouse").Point()
+    // render.Queue(func() {
+    //   gl.Color4ub(255, 0, 0, 255)
+    //   gl.Begin(gl.LINES)
+    //   {
+    //     gl.Vertex2i(int32(zx-25), int32(zy))
+    //     gl.Vertex2i(int32(zx+25), int32(zy))
+    //     gl.Vertex2i(int32(zx), int32(zy-25))
+    //     gl.Vertex2i(int32(zx), int32(zy+25))
+    //   }
+    //   gl.End()
+    // })
   }
 }

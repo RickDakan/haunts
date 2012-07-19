@@ -7,9 +7,10 @@
   },
   "Ap"       : 4,
   "Strength" : 5,
-  "Damage"   : 5,
-  "Range"    : 7,
+  "Damage"   : 0,
+  "Range"    : 5,
+  "Target_enemies": true,
   "Conditions": [
-     "Vengeful Curse"
+     "Dread"
    ]
 }

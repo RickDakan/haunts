@@ -16,9 +16,9 @@ const maxLineLength = 150
 // a log file (TODO: and also allow you to enter some basic commands).
 type Console struct {
   gui.BasicZone
-  lines [maxLines]string
-  start,end int
-  xscroll float64
+  lines      [maxLines]string
+  start, end int
+  xscroll    float64
 
   input *bufio.Reader
   cmd   []byte
@@ -32,7 +32,7 @@ func MakeConsole() *Console {
   var c Console
   c.BasicZone.Ex = true
   c.BasicZone.Ey = true
-  c.BasicZone.Request_dims = gui.Dims{ 1000, 1000 }
+  c.BasicZone.Request_dims = gui.Dims{1000, 1000}
   c.input = bufio.NewReader(log_console)
   c.dict = GetDictionary(12)
   return &c
@@ -94,13 +94,13 @@ func (c *Console) DrawFocused(region gui.Region) {
   gl.Color4d(0.2, 0, 0.3, 0.8)
   gl.Disable(gl.TEXTURE_2D)
   gl.Begin(gl.QUADS)
-    gl.Vertex2i(region.X, region.Y)
-    gl.Vertex2i(region.X, region.Y + region.Dy)
-    gl.Vertex2i(region.X + region.Dx, region.Y + region.Dy)
-    gl.Vertex2i(region.X + region.Dx, region.Y)
+  gl.Vertex2i(region.X, region.Y)
+  gl.Vertex2i(region.X, region.Y+region.Dy)
+  gl.Vertex2i(region.X+region.Dx, region.Y+region.Dy)
+  gl.Vertex2i(region.X+region.Dx, region.Y)
   gl.End()
   gl.Color4d(1, 1, 1, 1)
-  y := float64(region.Y) + float64(len(c.lines)) * c.dict.MaxHeight()
+  y := float64(region.Y) + float64(len(c.lines))*c.dict.MaxHeight()
   do_color := func(line string) {
     if strings.HasPrefix(line, "LOG") {
       gl.Color4d(1, 1, 1, 1)

@@ -33,9 +33,10 @@ type Condition interface {
 
 var condition_registerers []func()
 var condition_makers map[string]func() Condition
+
 func RegisterAllConditions() {
   condition_makers = make(map[string]func() Condition)
-  for _,f := range condition_registerers {
+  for _, f := range condition_registerers {
     f()
   }
 }
@@ -55,10 +56,10 @@ func registerBasicConditions() {
   base.RegisterRegistry(registry_name, make(map[string]*BasicConditionDef))
   base.RegisterAllObjectsInDir(registry_name, filepath.Join(base.GetDataDir(), "conditions", "basic_conditions"), ".json", "json")
   names := base.GetAllNamesInRegistry(registry_name)
-  for _,name := range names {
+  for _, name := range names {
     cname := name
     f := func() Condition {
-      c := BasicCondition{ Defname: cname }
+      c := BasicCondition{Defname: cname}
       base.GetObject(registry_name, &c)
       return &c
     }
@@ -99,6 +100,12 @@ type BasicConditionDef struct {
   // This Condition will OnRound() exactly Duration + 1 times.
   // If Duration < 0 then it will OnRound() forever.
   Duration int
+
+  // Resistances["Foo"] = -4 would mean that when attacked with an attack of
+  // kind "Foo" that -4 is added to the this entity's defensive value, either
+  // corpus or ego, as appropriate.  In this case it would be a penalty, but
+  // if it were a positive value it would be a resistance.
+  Resistances map[string]int
 }
 
 func (bc *BasicCondition) Name() string {
@@ -124,13 +131,17 @@ func (bc *BasicConditionDef) ModifyBase(base Base, kind Kind) Base {
   base.Attack += bc.Base.Attack
   base.Corpus += bc.Base.Corpus
   base.Ego += bc.Base.Ego
+  if val, ok := bc.Resistances[string(kind)]; ok {
+    base.Corpus += val
+    base.Ego += val
+  }
   return base
 }
 
 func (bc *BasicCondition) OnRound() (dmg *Damage, complete bool) {
   var d Dynamic
   if bc.Dynamic != d {
-    dmg = &Damage{ Dynamic: bc.Dynamic, Kind: bc.Kind() }
+    dmg = &Damage{Dynamic: bc.Dynamic, Kind: bc.Kind()}
   }
   bc.Time++
   complete = (bc.Time == bc.Duration)

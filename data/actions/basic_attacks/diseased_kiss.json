@@ -9,7 +9,8 @@
   "Strength" : 5,
   "Damage"   : 3,
   "Range"    : 1,
+  "Target_enemies": true,
   "Conditions": [
-     "Diseased Kiss"
+     "Poison"
    ]
 }

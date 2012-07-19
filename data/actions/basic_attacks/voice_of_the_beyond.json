@@ -1,0 +1,18 @@
+{
+  "Name"      : "Voice of the Beyond",
+  "Kind"      : "Terror",
+  "Ap"        : 4,
+  "Strength"  : 7,
+  "Damage"    : 0,
+  "Range"     : 10,
+  "Animation" : "visions",
+  "Texture"   : {
+    "Path": "actions/icons/coordination.png"
+  },
+  "Target_allies": true,
+  "Conditions": [
+    "Invigorated",
+	"Inspired",
+	"Focused"
+  ]
+}

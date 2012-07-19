@@ -11,7 +11,6 @@ import (
   "path/filepath"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/fmod"
   "code.google.com/p/freetype-go/freetype/truetype"
   "log"
   "fmt"
@@ -19,29 +18,12 @@ import (
   "sync"
 )
 
-var audio *fmod.System
-func InitAudio() error {
-  var err error
-  audio, err = fmod.CreateSystem()
-  if err != nil {
-    return err
-  }
-  err = audio.Init(32, fmod.INIT_NORMAL, nil)
-  if err != nil {
-    audio.Release()
-    audio = nil
-  }
-  return err
-}
-func GetAudio() *fmod.System {
-  return audio
-}
-
 var datadir string
 var logger *log.Logger
 var log_reader io.Reader
 var log_out *os.File
 var log_console *bytes.Buffer
+
 func SetDatadir(_datadir string) {
   datadir = _datadir
   setupLogger()
@@ -64,7 +46,7 @@ func setupLogger() {
   }
   log_console = bytes.NewBuffer(nil)
   log_writer := io.MultiWriter(log_console, log_out)
-  logger = log.New(log_writer, "> ", log.Ltime | log.Lshortfile)
+  logger = log.New(log_writer, "> ", log.Ltime|log.Lshortfile)
 }
 
 // TODO: This probably isn't the best way to do things - different go-routines
@@ -191,6 +173,7 @@ func GetDictionary(size int) *gui.Dictionary {
 // datadir.  When it is decoded from gob or json it will convert itself to an
 // absolute path based on datadir.
 type Path string
+
 func (p Path) String() string {
   return string(p)
 }
@@ -206,7 +189,7 @@ func (p Path) MarshalJSON() ([]byte, error) {
   return []byte("\"" + val + "\""), nil
 }
 func (p *Path) UnmarshalJSON(data []byte) error {
-  rel := filepath.FromSlash(string(data[1 : len(data) - 1]))
+  rel := filepath.FromSlash(string(data[1 : len(data)-1]))
   *p = Path(filepath.Join(datadir, rel))
   return nil
 }
@@ -237,7 +220,7 @@ func SaveJson(path string, source interface{}) error {
     return err
   }
   defer f.Close()
-  _,err = f.Write(data)
+  _, err = f.Write(data)
   return err
 }
 
@@ -268,8 +251,8 @@ func SaveGob(path string, source interface{}) error {
 // Returns a path rel such that filepath.Join(a, rel) and b refer to the same
 // file.  a and b must both be relative paths or both be absolute paths.  If
 // they are not then b will be returned in either case.
-func TryRelative(base,target string) string {
-  rel,err := filepath.Rel(base, target)
+func TryRelative(base, target string) string {
+  rel, err := filepath.Rel(base, target)
   if err == nil {
     return rel
   }
@@ -286,7 +269,7 @@ func GetStoreVal(key string) string {
   return val
 }
 
-func SetStoreVal(key,val string) {
+func SetStoreVal(key, val string) {
   var store map[string]string
   path := filepath.Join(datadir, "store")
   LoadJson(path, &store)
@@ -300,30 +283,30 @@ func SetStoreVal(key,val string) {
 type ColorStack struct {
   colors []color.NRGBA
 }
-func (cs *ColorStack) Push(r,g,b,a float64) {
-  c := color.NRGBA{ byte(255 * r), byte(255 * g), byte(255 * b), byte(255 * a) }
+
+func (cs *ColorStack) Push(r, g, b, a float64) {
+  c := color.NRGBA{byte(255 * r), byte(255 * g), byte(255 * b), byte(255 * a)}
   cs.colors = append(cs.colors, c)
 }
 func (cs *ColorStack) Pop() {
-  cs.colors = cs.colors[0 : len(cs.colors) - 1]
+  cs.colors = cs.colors[0 : len(cs.colors)-1]
 }
-func (cs *ColorStack) subApply(n int) (r,g,b,a float64) {
+func (cs *ColorStack) subApply(n int) (r, g, b, a float64) {
   if n < 0 {
     return 1, 1, 1, 0
   }
   dr, dg, db, da := cs.subApply(n - 1)
   a = float64(cs.colors[n].A) / 255
-  r = float64(cs.colors[n].R) / 255 * a + dr * (1 - a)
-  g = float64(cs.colors[n].G) / 255 * a + dg * (1 - a)
-  b = float64(cs.colors[n].B) / 255 * a + db * (1 - a)
-  a = a + (1 - a) * da
+  r = float64(cs.colors[n].R)/255*a + dr*(1-a)
+  g = float64(cs.colors[n].G)/255*a + dg*(1-a)
+  b = float64(cs.colors[n].B)/255*a + db*(1-a)
+  a = a + (1-a)*da
   return
 }
 func (cs *ColorStack) Apply() {
   gl.Color4d(cs.subApply(len(cs.colors) - 1))
 }
 func (cs *ColorStack) ApplyWithAlpha(alpha float64) {
-  r,g,b,a := cs.subApply(len(cs.colors) - 1)
-  gl.Color4d(r, g, b, a * alpha)
+  r, g, b, a := cs.subApply(len(cs.colors) - 1)
+  gl.Color4d(r, g, b, a*alpha)
 }
-

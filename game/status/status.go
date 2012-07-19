@@ -5,9 +5,11 @@ import (
   "encoding/gob"
   "encoding/json"
   "fmt"
+  "github.com/runningwild/glop/util/algorithm"
 )
 
 type Kind string
+
 const (
   Panic       Kind = "Panic"
   Terror      Kind = "Terror"
@@ -16,19 +18,25 @@ const (
   Brutal      Kind = "Brutal"
   Unspecified Kind = "Unspecified"
 )
+
 type Primary int
+
 const (
-  Ego    Primary = iota
+  Ego Primary = iota
   Corpus
 )
+
 func (k Kind) Primary() Primary {
   switch k {
-  case Panic: fallthrough
+  case Panic:
+    fallthrough
   case Terror:
     return Ego
 
-  case Fire: fallthrough
-  case Brutal: fallthrough
+  case Fire:
+    fallthrough
+  case Brutal:
+    fallthrough
   case Poison:
     return Corpus
   }
@@ -44,7 +52,7 @@ type Damage struct {
 }
 
 type Dynamic struct {
-  Hp,Ap int
+  Hp, Ap int
 }
 
 type Base struct {
@@ -77,7 +85,7 @@ type Inst struct {
 
 func (s Inst) modifiedBase(kind Kind) Base {
   b := s.inst.Base
-  for _,e := range s.inst.Conditions {
+  for _, e := range s.inst.Conditions {
     b = e.ModifyBase(b, kind)
   }
   return b
@@ -93,13 +101,17 @@ func (s Inst) ApCur() int {
 
 func (s Inst) HpMax() int {
   hp_max := s.modifiedBase(Unspecified).Hp_max
-  if hp_max < 0 { return 0 }
+  if hp_max < 0 {
+    return 0
+  }
   return hp_max
 }
 
 func (s Inst) ApMax() int {
   ap_max := s.modifiedBase(Unspecified).Ap_max
-  if ap_max < 0 { return 0 }
+  if ap_max < 0 {
+    return 0
+  }
   return ap_max
 }
 
@@ -127,10 +139,10 @@ func (s Inst) EgoVs(kind Kind) int {
 // This function panics if neither corpus nor ego is specified.
 func (s Inst) DefenseVs(kind Kind) int {
   switch kind.Primary() {
-    case Corpus:
-      return s.CorpusVs(kind)
-    case Ego:
-      return s.EgoVs(kind)
+  case Corpus:
+    return s.CorpusVs(kind)
+  case Ego:
+    return s.EgoVs(kind)
   }
   panic(fmt.Sprintf("Cannot call DefenseVs on kind '%v'", kind))
 }
@@ -142,7 +154,9 @@ func (s Inst) AttackBonusWith(kind Kind) int {
 
 func (s Inst) Sight() int {
   sight := s.modifiedBase(Unspecified).Sight
-  if sight < 0 { return 0 }
+  if sight < 0 {
+    return 0
+  }
   return sight
 }
 
@@ -176,9 +190,23 @@ func (s *Inst) ApplyCondition(c Condition) {
   s.inst.Conditions = append(s.inst.Conditions, c)
 }
 
-func (s *Inst) ApplyDamage(dap,dhp int, kind Kind) {
-  dmg := Damage{ Dynamic: Dynamic{ Ap: dap, Hp: dhp }, Kind: kind }
-  for _,c := range s.inst.Conditions {
+func (s *Inst) RemoveCondition(name string) {
+  algorithm.Choose2(&s.inst.Conditions, func(c Condition) bool {
+    return c.Name() != name
+  })
+}
+
+func (s *Inst) SetHp(hp int) {
+  s.inst.Dynamic.Hp = hp
+}
+
+func (s *Inst) SetAp(ap int) {
+  s.inst.Dynamic.Ap = ap
+}
+
+func (s *Inst) ApplyDamage(dap, dhp int, kind Kind) {
+  dmg := Damage{Dynamic: Dynamic{Ap: dap, Hp: dhp}, Kind: kind}
+  for _, c := range s.inst.Conditions {
     dmg = c.ModifyDamage(dmg)
   }
   s.inst.Dynamic.Ap += dmg.Dynamic.Ap
@@ -194,7 +222,7 @@ func (s *Inst) OnRound() {
   completed := make(map[Condition]bool)
   var dmgs []Damage
   for i := 0; i < len(s.inst.Conditions); i++ {
-    dmg,done := s.inst.Conditions[i].OnRound()
+    dmg, done := s.inst.Conditions[i].OnRound()
     if dmg != nil {
       dmgs = append(dmgs, *dmg)
     }
@@ -204,7 +232,7 @@ func (s *Inst) OnRound() {
   }
 
   s.inst.Dynamic.Ap = s.ApMax()
-  for _,dmg := range dmgs {
+  for _, dmg := range dmgs {
     s.ApplyDamage(dmg.Dynamic.Ap, dmg.Dynamic.Hp, dmg.Kind)
   }
 
@@ -227,10 +255,10 @@ func (s *Inst) OnRound() {
     if completed[s.inst.Conditions[i]] {
       num_complete++
     } else {
-      s.inst.Conditions[i - num_complete] = s.inst.Conditions[i]
+      s.inst.Conditions[i-num_complete] = s.inst.Conditions[i]
     }
   }
-  s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions) - num_complete]
+  s.inst.Conditions = s.inst.Conditions[0 : len(s.inst.Conditions)-num_complete]
 }
 
 // Encoding routines - only support json and gob right now

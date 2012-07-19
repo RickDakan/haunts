@@ -1,272 +1,291 @@
 package ai
 
 import (
-  "strings"
   "math/rand"
-  "reflect"
   "encoding/gob"
-  "github.com/runningwild/glop/ai"
+  "io/ioutil"
+  "os"
+  "strings"
+  "path/filepath"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
-  "github.com/runningwild/haunts/game/actions"
-  "github.com/runningwild/polish"
-  "github.com/runningwild/yedparse"
+  "github.com/howeyc/fsnotify"
+  lua "github.com/xenith-studios/golua"
 )
 
 // The Ai struct contains a glop.AiGraph object as well as a few channels for
 // communicating with the game itself.
-// If there is no action executing and an ent is ready, call Ai.Eval(), it will
-// 
 type Ai struct {
-  graph   *ai.AiGraph
+  L *lua.State
 
-  // Used during evaluation to get the action that the ai wants to execute
-  res chan game.Action
+  game *game.Game
+
+  ent *game.Entity
+
+  // Path to the script to run
+  path string
+
+  // The actual lua program to run when executing this ai
+  Prog string
+
+  // Need to store this so that we know what files to reload if anything
+  // changes on disk
+  kind game.AiKind
+
+  // Watch all of the files that this Ai depends on so that we can reload it
+  // if any of them change
+  watcher *fsnotify.Watcher
+
+  // Set to true at the beginning of the turn, turned off as soon as the ai is
+  // done for the turn.
+  active       bool
+  evaluating   bool
+  active_set   chan bool
+  active_query chan bool
+  exec_query   chan struct{}
+  terminate    chan struct{}
 
   // Once we send an Action for execution we have to wait until it is done
   // before we make the next one.  This channel is used to handle that.
-  pause chan bool
+  pause chan struct{}
+  execs chan game.ActionExec
 
-  // Keep track of the ent since we'll want to reference it regularly
-  ent *game.Entity
-
-  State AiState
-}
-
-type AiState struct {
-  Last_offensive_target game.EntityId
+  // This exists so that we can gob this without error.  Gob doesn't like
+  // gobbing things that don't have any exported fields, and since we might
+  // want exported fields later we'll just have this here for now so we can
+  // leave the Ai as an exported field in the entities.
+  Dummy int
 }
 
 func init() {
   gob.Register(&Ai{})
-}
-
-func makeAi(path string, ent *game.Entity, dst_iface *game.Ai) {
-  var ai_struct *Ai
-  if *dst_iface == nil {
-    ai_struct = new(Ai)
-  } else {
-    ai_struct = (*dst_iface).(*Ai)
-  }
-  ai_graph := ai.NewGraph()
-  graph,err := yed.ParseFromFile(path)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err.Error())
-  }
-  ai_graph.Graph = &graph.Graph
-  ai_graph.Context = polish.MakeContext()
-  ai_struct.graph = ai_graph
-  ai_struct.res = make(chan game.Action)
-  ai_struct.pause = make(chan bool)
-  ai_struct.ent = ent
-  ai_struct.addEntityContext(ai_struct.ent, ai_struct.graph.Context)
-  *dst_iface = ai_struct
-}
-
-func init() {
   game.SetAiMaker(makeAi)
 }
 
-// Eval() evaluates the ai graph and returns an Action that the entity wants
-// to execute, or nil if the entity is done for the turn.
-func (a *Ai) Eval() {
-  go func() {
-    err := a.graph.Eval()
-    a.res <- nil
-    if err != nil {
-      base.Warn().Printf("%v", err)
-    }
-  } ()
-}
-
-func (a *Ai) Actions() <-chan game.Action {
-  select {
-    case a.pause <- true:
-    default:
+func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kind game.AiKind) {
+  ai_struct := new(Ai)
+  ai_struct.path = path
+  var err error
+  ai_struct.watcher, err = fsnotify.NewWatcher()
+  if err != nil {
+    base.Warn().Printf("Unable to create a filewatcher - '%s' will not reload ai files dynamically.", path)
+    ai_struct.watcher = nil
   }
-  return a.res
+  ai_struct.ent = ent
+  ai_struct.game = g
+
+  ai_struct.active_set = make(chan bool)
+  ai_struct.active_query = make(chan bool)
+  ai_struct.exec_query = make(chan struct{})
+  ai_struct.pause = make(chan struct{})
+  ai_struct.terminate = make(chan struct{})
+  ai_struct.execs = make(chan game.ActionExec)
+  ai_struct.kind = kind
+
+  ai_struct.setupLuaState()
+  go ai_struct.masterRoutine()
+
+  *dst_iface = ai_struct
 }
 
-// Does the roll dice-d-sides, like 3d6, and returns the result
-func roll(dice, sides float64) float64 {
-  result := 0
-  for i := 0; i < int(dice); i++ {
-    result += rand.Intn(int(sides)) + 1
+func (a *Ai) setupLuaState() {
+  prog, err := ioutil.ReadFile(a.path)
+  if err != nil {
+    base.Error().Printf("Unable to load ai file %s: %v", a.path, err)
+    return
   }
-  return float64(result)
+  a.Prog = string(prog)
+  a.watcher.Watch(a.path)
+  a.L = lua.NewState()
+  a.L.OpenLibs()
+  switch a.kind {
+  case game.EntityAi:
+    a.addEntityContext()
+    if a.ent.Side() == game.SideHaunt {
+      a.loadUtils("denizen_entity")
+    }
+    if a.ent.Side() == game.SideExplorers {
+      a.loadUtils("intruder_entity")
+    }
+
+  case game.MinionsAi:
+    a.addMinionsContext()
+    a.loadUtils("minions")
+
+  case game.DenizensAi:
+    a.addDenizensContext()
+    a.loadUtils("denizens")
+
+  case game.IntrudersAi:
+    a.addIntrudersContext()
+    a.loadUtils("intruders")
+
+  default:
+    panic("Unknown ai kind")
+  }
+  // Add this to all contexts
+  a.L.Register("print", func(L *lua.State) int {
+    var res string
+    n := L.GetTop()
+    for i := -n; i < 0; i++ {
+      res += game.LuaStringifyParam(L, i) + " "
+    }
+    base.Log().Printf("Ai(%p): %s", a, res)
+    return 0
+  })
+  a.L.Register("randN", func(L *lua.State) int {
+    n := L.GetTop()
+    if n == 0 || !L.IsNumber(-1) {
+      L.PushInteger(0)
+      return 1
+    }
+    val := L.ToInteger(-1)
+    if val <= 0 {
+      base.Error().Printf("Can't call randN with a value <= 0.")
+      return 0
+    }
+    L.PushInteger(rand.Intn(val) + 1)
+    return 1
+  })
+  a.L.DoString(a.Prog)
 }
 
-func (a *Ai) addEntityContext(ent *game.Entity, context *polish.Context) {
-  polish.AddFloat64MathContext(context)
-  polish.AddBooleanContext(context)
-  context.SetParseOrder(polish.Float, polish.String)
-
-  // This entity, the one currently taking its turn
-  context.SetValue("me", ent)
-
-  // All actions that the entity has are available using their names,
-  // converted to lower case, and replacing spaces with underscores.
-  // For example, "Kiss of Death" -> "kiss_of_death"
-
-  // rolls dice, for example "roll 3 6" is a roll of 3d6
-  context.AddFunc("roll", roll)
-
-  // These functions are self-explanitory, they are all relative to the
-  // current entity
-  context.AddFunc("numVisibleEnemies",
-      func() float64 {
-        return float64(numVisibleEntities(ent, false))
-      })
-  context.AddFunc("nearestEnemy",
-      func() *game.Entity {
-        return nearestEntity(ent, false)
-      })
-  context.AddFunc("distBetween", distBetween)
-
-  // Ends an entity's turn
-  context.AddFunc("done",
-      func() {
-        <-a.pause
-      })
-
-  // Checks whether an entity is nil, this is important to check when using
-  // function that returns an entity (like lastOffensiveTarget)
-  context.AddFunc("stillExists", func(target *game.Entity) bool {
-    return target != nil
-  })
-
-  // Returns the last entity that this ai attacked.  If the entity has died
-  // this can return nil, so be sure to check that before using it.
-  context.AddFunc("lastOffensiveTarget", func() *game.Entity {
-    return ent.Game().EntityById(a.State.Last_offensive_target)
-  })
-
-  // Advances as far as possible towards the target entity.
-  context.AddFunc("advanceTowards", func(target *game.Entity) {
-    move := getAction(ent, reflect.TypeOf(&actions.Move{})).(*actions.Move)
-    x,y := target.Pos()
-    if move.AiMoveToWithin(ent, x, y, 1) {
-      a.res <- move
-    } else {
-      a.graph.Term() <- ai.TermError
+func (a *Ai) loadUtils(dir string) {
+  root := filepath.Join(base.GetDataDir(), "ais", "utils", dir)
+  a.watcher.Watch(root)
+  filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+    if err != nil || info.IsDir() {
+      return nil
     }
-    <-a.pause
-    x,y = ent.Pos()
-  })
-
-  context.AddFunc("getBasicAttack", func() game.Action {
-    return getAction(ent, reflect.TypeOf(&actions.BasicAttack{})).(*actions.BasicAttack)
-  })
-
-  context.AddFunc("doBasicAttack", func(target *game.Entity, attack_name string) {
-    _attack := getActionByName(ent, attack_name)
-    attack := _attack.(*actions.BasicAttack)
-    if attack.AiAttackTarget(ent, target) {
-      base.Log().Printf("Ent(%p) attacking (%p) with %v", ent, target, attack)
-      a.res <- attack
-      a.State.Last_offensive_target = target.Id
-    } else {
-      a.graph.Term() <- ai.TermError
+    if strings.HasSuffix(info.Name(), ".lua") {
+      f, err := os.Open(path)
+      if err != nil {
+        return nil
+      }
+      data, err := ioutil.ReadAll(f)
+      f.Close()
+      if err != nil {
+        return nil
+      }
+      base.Log().Printf("Loaded lua utils file '%s': \n%s", path, data)
+      a.L.DoString(string(data))
     }
-    <-a.pause
+    return nil
   })
+}
 
-  context.AddFunc("corpus", func(target *game.Entity) float64 {
-    return float64(target.Stats.Corpus())
-  })
-  context.AddFunc("ego", func(target *game.Entity) float64 {
-    return float64(target.Stats.Ego())
-  })
-  context.AddFunc("hpMax", func(target *game.Entity) float64 {
-    return float64(target.Stats.HpMax())
-  })
-  context.AddFunc("apMax", func(target *game.Entity) float64 {
-    return float64(target.Stats.ApMax())
-  })
-  context.AddFunc("hpCur", func(target *game.Entity) float64 {
-    return float64(target.Stats.HpCur())
-  })
-  context.AddFunc("apCur", func(target *game.Entity) float64 {
-    return float64(target.Stats.ApCur())
-  })
-  context.AddFunc("hasCondition", func(target *game.Entity, name string) bool {
-    for _, con := range target.Stats.ConditionNames() {
-      if lowerAndUnderscore(con) == name {
-        return true
+// Need a goroutine for each ai - all things will go through is so that things
+// stay synchronized
+func (a *Ai) masterRoutine() {
+  for {
+    select {
+    case <-a.terminate:
+      base.Log().Printf("Terminated Ai(p=%p)", a)
+      return
+
+    case a.active = <-a.active_set:
+      if a.active {
+        <-a.active_set
+      }
+      if a.active == false {
+        if a.ent == nil {
+          base.Log().Printf("Evaluating = false")
+        } else {
+          base.Log().Printf("Ent %p inactivated", a.ent)
+        }
+        a.evaluating = false
+      }
+
+    case a.active_query <- a.active:
+
+    case <-a.exec_query:
+      if a.active {
+        select {
+        case a.pause <- struct{}{}:
+        default:
+        }
+      }
+      if a.active && !a.evaluating {
+        a.evaluating = true
+        go func() {
+          if a.ent == nil {
+            base.Log().Printf("Eval master")
+          } else {
+            base.Log().Printf("Eval ent: %p", a.ent)
+          }
+          base.Log().Printf("Evaluating lua script: %s", a.Prog)
+          // Reset the execution limit in case it was set to 0 due to a
+          // previous error
+          a.L.SetExecutionLimit(2500)
+
+          // DoString will panic, and we can catch that, calling it manually
+          // will exit() if it fails, which we cannot catch
+          a.L.DoString("Think()")
+
+          if a.ent == nil {
+            base.Log().Printf("Completed master")
+          } else {
+            base.Log().Printf("Completed ent: %p", a.ent)
+          }
+          a.active_set <- false
+          a.active_set <- false
+          a.execs <- nil
+          base.Log().Printf("Sent nil value")
+        }()
       }
     }
-    return false
-  })
+  }
 }
 
-func numVisibleEntities(e *game.Entity, ally bool) float64 {
-  count := 0
-  for _,ent := range e.Game().Ents {
-    if ent == e { continue }
-    if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side() == ent.Side()) { continue }
-    x,y := ent.Pos()
-    if e.HasLos(x, y, 1, 1) {
-      count++
+func (a *Ai) Terminate() {
+  a.terminate <- struct{}{}
+}
+
+func (a *Ai) Activate() {
+  reload := false
+  for {
+    select {
+    case <-a.watcher.Event:
+      reload = true
+    default:
+      goto no_more_events
     }
   }
-  return float64(count)
+no_more_events:
+  if reload {
+    a.setupLuaState()
+    base.Log().Printf("Reloaded lua state for '%p'", a)
+  }
+  a.active_set <- true
+  a.active_set <- true
 }
 
-func distBetween(e1,e2 *game.Entity) float64 {
-  e1x,e1y := e1.Pos()
-  e2x,e2y := e2.Pos()
+func (a *Ai) Active() bool {
+  return <-a.active_query
+}
+
+func (a *Ai) ActionExecs() <-chan game.ActionExec {
+  select {
+  case a.pause <- struct{}{}:
+  default:
+  }
+  a.exec_query <- struct{}{}
+  return a.execs
+}
+
+func rangedDistBetween(e1, e2 *game.Entity) int {
+  e1x, e1y := e1.Pos()
+  e2x, e2y := e2.Pos()
   dx := e1x - e2x
   dy := e1y - e2y
-  if dx < 0 { dx = -dx }
-  if dy < 0 { dy = -dy }
+  if dx < 0 {
+    dx = -dx
+  }
+  if dy < 0 {
+    dy = -dy
+  }
   if dx > dy {
-    return float64(dx)
+    return dx
   }
-  return float64(dy)
-}
-
-func nearestEntity(e *game.Entity, ally bool) *game.Entity {
-  var nearest *game.Entity
-  cur_dist := 1.0e9
-  for _,ent := range e.Game().Ents {
-    if ent == e { continue }
-    if ent.Stats == nil || ent.Stats.HpCur() <= 0 { continue }
-    if ally != (e.Side() == ent.Side()) { continue }
-    dist := distBetween(e, ent)
-    if cur_dist > dist {
-      cur_dist = dist
-      nearest = ent
-    }
-  }
-  return nearest
-}
-
-func lowerAndUnderscore(s string) string {
-  b := []byte(strings.ToLower(s))
-  for i := range b {
-    if b[i] == ' ' {
-      b[i] = '_'
-    }
-  }
-  return string(b)
-}
-
-func getActionByName(e *game.Entity, name string) game.Action {
-  for _,action := range e.Actions {
-    if lowerAndUnderscore(action.String()) == name {
-      return action
-    }
-  }
-  return nil
-}
-
-func getAction(e *game.Entity, typ reflect.Type) game.Action {
-  for _,action := range e.Actions {
-    if reflect.TypeOf(action) == typ {
-      return action
-    }
-  }
-  return nil
+  return dy
 }

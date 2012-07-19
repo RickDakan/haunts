@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
+  lua "github.com/xenith-studios/golua"
 )
 
 func registerSummonActions() map[string]func() game.Action {
@@ -21,7 +22,7 @@ func registerSummonActions() map[string]func() game.Action {
   for name := range summons_actions {
     cname := name
     makers[cname] = func() game.Action {
-      a := SummonAction{ Defname: cname }
+      a := SummonAction{Defname: cname}
       base.GetObject("actions-summons_actions", &a)
       if a.Ammo > 0 {
         a.Current_ammo = a.Ammo
@@ -52,7 +53,7 @@ type SummonActionDef struct {
   Kind         status.Kind
   Personal_los bool
   Ap           int
-  Ammo         int  // 0 = infinity
+  Ammo         int // 0 = infinity
   Range        int
   Ent_name     string
   Animation    string
@@ -60,18 +61,61 @@ type SummonActionDef struct {
   Texture      texture.Object
 }
 type summonActionTempData struct {
-  ent *game.Entity
-  cx,cy int
-  spawn *game.Entity
+  ent    *game.Entity
+  cx, cy int
+  spawn  *game.Entity
 }
+type summonExec struct {
+  game.BasicActionExec
+  Pos int
+}
+
+func (exec summonExec) Push(L *lua.State, g *game.Game) {
+  exec.BasicActionExec.Push(L, g)
+  if L.IsNil(-1) {
+    return
+  }
+  _, x, y := g.FromVertex(exec.Pos)
+  L.PushString("Pos")
+  game.LuaPushPoint(L, x, y)
+  L.SetTable(-3)
+}
+
+func (a *SummonAction) Push(L *lua.State) {
+  L.NewTable()
+  L.PushString("Type")
+  L.PushString("Summon")
+  L.SetTable(-3)
+  L.PushString("Ap")
+  L.PushInteger(a.Ap)
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(a.Ent_name)
+  L.SetTable(-3)
+  L.PushString("Los")
+  L.PushBoolean(a.Personal_los)
+  L.SetTable(-3)
+  L.PushString("Range")
+  L.PushInteger(a.Range)
+  L.SetTable(-3)
+  L.PushString("Ammo")
+  if a.Current_ammo == -1 {
+    L.PushInteger(1000)
+  } else {
+    L.PushInteger(a.Current_ammo)
+  }
+  L.SetTable(-3)
+
+}
+
 func (a *SummonAction) AP() int {
   return a.Ap
 }
 func (a *SummonAction) Pos() (int, int) {
-  return 0, 0
+  return a.cx, a.cy
 }
 func (a *SummonAction) Dims() (int, int) {
-  return 0, 0
+  return 1, 1
 }
 func (a *SummonAction) String() string {
   return a.Name
@@ -92,55 +136,69 @@ func (a *SummonAction) Prep(ent *game.Entity, g *game.Game) bool {
   a.ent = ent
   return true
 }
-func (a *SummonAction) attack(g *game.Game) {
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-  a.spawn = game.MakeEntity(a.Ent_name, g)
-  if a.Current_ammo > 0 {
-    a.Current_ammo--
-  }
-  a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
-}
-func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) game.InputStatus {
+func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
-    bx,by := g.GetViewer().WindowToBoard(cursor.Point())
+    bx, by := g.GetViewer().WindowToBoard(cursor.Point())
     bx += 0.5
     by += 0.5
-    if bx < 0 { bx-- }
-    if by < 0 { by-- }
+    if bx < 0 {
+      bx--
+    }
+    if by < 0 {
+      by--
+    }
     a.cx = int(bx)
     a.cy = int(by)
   }
 
-  if found,event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+  if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
     if g.IsCellOccupied(a.cx, a.cy) {
-      return game.Consumed
+      return true, nil
     }
     if a.Personal_los && !a.ent.HasLos(a.cx, a.cy, 1, 1) {
-      return game.Consumed
+      return true, nil
     }
     if a.ent.Stats.ApCur() >= a.Ap {
-      a.attack(g)
-      return game.ConsumedAndBegin
+      var exec summonExec
+      exec.SetBasicData(a.ent, a)
+      exec.Pos = a.ent.Game().ToVertex(a.cx, a.cy)
+      return true, exec
     }
-    return game.Consumed
+    return true, nil
   }
-  return game.NotConsumed
+  return false, nil
 }
 func (a *SummonAction) RenderOnFloor() {
-  gl.Disable(gl.TEXTURE_2D)
-  gl.Begin(gl.QUADS)
-  gl.Color4d(1.0, 0.2, 0.2, 0.8)
-    gl.Vertex2i(a.cx + 0, a.cy + 0)
-    gl.Vertex2i(a.cx + 0, a.cy + 1)
-    gl.Vertex2i(a.cx + 1, a.cy + 1)
-    gl.Vertex2i(a.cx + 1, a.cy + 0)
-  gl.End()
+  if a.ent == nil {
+    return
+  }
+  ex, ey := a.ent.Pos()
+  if dist(ex, ey, a.cx, a.cy) <= a.Range && a.ent.HasLos(a.cx, a.cy, 1, 1) {
+    gl.Color4ub(255, 255, 255, 200)
+  } else {
+    gl.Color4ub(255, 64, 64, 200)
+  }
+  base.EnableShader("box")
+  base.SetUniformF("box", "dx", 1)
+  base.SetUniformF("box", "dy", 1)
+  base.SetUniformI("box", "temp_invalid", 0)
+  (&texture.Object{}).Data().Render(float64(a.cx), float64(a.cy), 1, 1)
+  base.EnableShader("")
 }
 func (a *SummonAction) Cancel() {
   a.summonActionTempData = summonActionTempData{}
 }
-func (a *SummonAction) Maintain(dt int64) game.MaintenanceStatus {
+func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
+  if ae != nil {
+    exec := ae.(summonExec)
+    _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)
+    a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
+    a.spawn = game.MakeEntity(a.Ent_name, a.ent.Game())
+    if a.Current_ammo > 0 {
+      a.Current_ammo--
+    }
+  }
   if a.ent.Sprite().State() == "ready" {
     a.ent.TurnToFace(a.cx, a.cy)
     a.ent.Sprite().Command(a.Animation)
@@ -153,4 +211,3 @@ func (a *SummonAction) Maintain(dt int64) game.MaintenanceStatus {
 func (a *SummonAction) Interrupt() bool {
   return true
 }
-

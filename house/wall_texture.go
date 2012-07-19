@@ -9,7 +9,7 @@ import (
 )
 
 func MakeWallTexture(name string) *WallTexture {
-  wt := WallTexture{ Defname: name }
+  wt := WallTexture{Defname: name}
   wt.Load()
   return &wt
 }
@@ -31,23 +31,22 @@ func (wt *WallTexture) Load() {
 type wallTextureGlIds struct {
   vbuffer uint32
 
-  left_buffer uint32
-  left_count gl.Sizei
+  left_buffer  uint32
+  left_count   gl.Sizei
   right_buffer uint32
-  right_count gl.Sizei
+  right_count  gl.Sizei
   floor_buffer uint32
-  floor_count gl.Sizei
+  floor_count  gl.Sizei
 }
 
 type wallTextureState struct {
   // for tracking whether the buffers are dirty
   x, y, rot float32
-  flip bool
-  room struct {
+  flip      bool
+  room      struct {
     x, y, dx, dy int
   }
 }
-
 
 type WallTexture struct {
   Defname string
@@ -57,8 +56,8 @@ type WallTexture struct {
   // either the dx or dy of the room, then this texture will be drawn, at least
   // partially, on the wall.  The coordinates should not both exceed the
   // dimensions of the room.
-  X,Y float32
-  Rot float32
+  X, Y float32
+  Rot  float32
 
   // Whether or not to flip the texture about one of its axes
   Flip bool
@@ -76,7 +75,7 @@ type wallTextureDef struct {
   Texture texture.Object
 }
 
-func (wt *WallTexture) Color() (r,g,b,a byte) {
+func (wt *WallTexture) Color() (r, g, b, a byte) {
   if wt.temporary {
     return 127, 127, 255, 200
   }
@@ -89,10 +88,7 @@ func (wt *WallTexture) Render() {
   wt.Texture.Data().RenderAdvanced(float64(wt.X-dx2), float64(wt.Y-dy2), float64(2*dx2), float64(2*dy2), float64(wt.Rot), wt.Flip)
 }
 
-
-
 func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) {
-  base.Log().Printf("Wall texture setup gl")
   if gl_ids.vbuffer != 0 {
     gl.DeleteBuffers(1, &gl_ids.vbuffer)
     gl.DeleteBuffers(1, &gl_ids.left_buffer)
@@ -127,9 +123,9 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
   // Floor
   verts := []mathgl.Vec2{
     {-tdx / 2, -tdy / 2},
-    {-tdx / 2,  tdy / 2},
-    { tdx / 2,  tdy / 2},
-    { tdx / 2, -tdy / 2},
+    {-tdx / 2, tdy / 2},
+    {tdx / 2, tdy / 2},
+    {tdx / 2, -tdy / 2},
   }
   var m, run mathgl.Mat3
   run.Identity()
@@ -152,10 +148,10 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
   if len(p) >= 3 {
     // floor indices
     var is []uint16
-    for i := 1; i < len(p) - 1; i++ {
-      is = append(is, uint16(len(vs) + 0))
-      is = append(is, uint16(len(vs) + i))
-      is = append(is, uint16(len(vs) + i + 1))
+    for i := 1; i < len(p)-1; i++ {
+      is = append(is, uint16(len(vs)+0))
+      is = append(is, uint16(len(vs)+i))
+      is = append(is, uint16(len(vs)+i+1))
     }
     gl.GenBuffers(1, &gl_ids.floor_buffer)
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.floor_buffer)
@@ -167,10 +163,10 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
       v := mathgl.Vec2{p[i].X, p[i].Y}
       v.Transform(&run)
       vs = append(vs, roomVertex{
-        x: p[i].X,
-        y: p[i].Y,
-        u: v.X / tdx + 0.5,
-        v: -(v.Y / tdy + 0.5),
+        x:     p[i].X,
+        y:     p[i].Y,
+        u:     v.X/tdx + 0.5,
+        v:     -(v.Y/tdy + 0.5),
         los_u: (fry + p[i].Y) / LosTextureSize,
         los_v: (frx + p[i].X) / LosTextureSize,
       })
@@ -180,9 +176,9 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
   // Left Wall
   verts = []mathgl.Vec2{
     {-tdx / 2, -tdy / 2},
-    {-tdx / 2,  tdy / 2},
-    { tdx / 2,  tdy / 2},
-    { tdx / 2, -tdy / 2},
+    {-tdx / 2, tdy / 2},
+    {tdx / 2, tdy / 2},
+    {tdx / 2, -tdy / 2},
   }
   run.Identity()
   m.Translation(wtx, wty)
@@ -203,10 +199,10 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
   if len(p) >= 3 {
     // floor indices
     var is []uint16
-    for i := 1; i < len(p) - 1; i++ {
-      is = append(is, uint16(len(vs) + 0))
-      is = append(is, uint16(len(vs) + i))
-      is = append(is, uint16(len(vs) + i + 1))
+    for i := 1; i < len(p)-1; i++ {
+      is = append(is, uint16(len(vs)+0))
+      is = append(is, uint16(len(vs)+i))
+      is = append(is, uint16(len(vs)+i+1))
     }
     gl.GenBuffers(1, &gl_ids.left_buffer)
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.left_buffer)
@@ -218,24 +214,23 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
       v := mathgl.Vec2{p[i].X, p[i].Y}
       v.Transform(&run)
       vs = append(vs, roomVertex{
-        x: p[i].X,
-        y: frdy,
-        z: frdy - p[i].Y,
-        u: v.X / tdx + 0.5,
-        v: -(v.Y / tdy + 0.5),
+        x:     p[i].X,
+        y:     frdy,
+        z:     frdy - p[i].Y,
+        u:     v.X/tdx + 0.5,
+        v:     -(v.Y/tdy + 0.5),
         los_u: (fry + frdy - 0.5) / LosTextureSize,
         los_v: (frx + p[i].X) / LosTextureSize,
       })
     }
   }
 
-
   // Right Wall
   verts = []mathgl.Vec2{
     {-tdx / 2, -tdy / 2},
-    {-tdx / 2,  tdy / 2},
-    { tdx / 2,  tdy / 2},
-    { tdx / 2, -tdy / 2},
+    {-tdx / 2, tdy / 2},
+    {tdx / 2, tdy / 2},
+    {tdx / 2, -tdy / 2},
   }
   run.Identity()
   m.Translation(wtx, wty)
@@ -256,10 +251,10 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
   if len(p) >= 3 {
     // floor indices
     var is []uint16
-    for i := 1; i < len(p) - 1; i++ {
-      is = append(is, uint16(len(vs) + 0))
-      is = append(is, uint16(len(vs) + i))
-      is = append(is, uint16(len(vs) + i + 1))
+    for i := 1; i < len(p)-1; i++ {
+      is = append(is, uint16(len(vs)+0))
+      is = append(is, uint16(len(vs)+i))
+      is = append(is, uint16(len(vs)+i+1))
     }
     gl.GenBuffers(1, &gl_ids.right_buffer)
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_ids.right_buffer)
@@ -271,11 +266,11 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
       v := mathgl.Vec2{p[i].X, p[i].Y}
       v.Transform(&run)
       vs = append(vs, roomVertex{
-        x: frdx,
-        y: p[i].Y,
-        z: frdx - p[i].X,
-        u: v.X / tdx + 0.5,
-        v: -(v.Y / tdy + 0.5),
+        x:     frdx,
+        y:     p[i].Y,
+        z:     frdx - p[i].X,
+        u:     v.X/tdx + 0.5,
+        v:     -(v.Y/tdy + 0.5),
         los_u: (fry + p[i].Y) / LosTextureSize,
         los_v: (frx + frdx - 0.5) / LosTextureSize,
       })
@@ -289,6 +284,3 @@ func (wt *WallTexture) setupGlStuff(x, y, dx, dy int, gl_ids *wallTextureGlIds) 
     gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
   }
 }
-
-
-

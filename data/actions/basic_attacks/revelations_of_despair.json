@@ -1,0 +1,18 @@
+{
+  "Name"     : "Revelations of Despair",
+  "Kind"     : "Terror",
+  "Animation": "chant",
+  "Texture"   : {
+    "Path": "actions/icons/kiss.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 5,
+  "Damage"   : 0,
+  "Range"    : 10,
+  "Target_enemies": true,
+  "Conditions": [
+     "Dread",
+	 "Panic",
+	 "Horrified"
+   ]
+}

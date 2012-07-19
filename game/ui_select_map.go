@@ -15,8 +15,6 @@ type UiSelectMap struct {
 
   region gui.Region
 
-  game_panel *GamePanel
-
   chooser *hui.RosterChooser
 }
 
@@ -25,6 +23,7 @@ type MapOption struct {
 
   house_def *house.HouseDef
 }
+
 func (mo *MapOption) Draw(hovered, selected, selectable bool, region gui.Region) {
   var s byte
   switch {
@@ -54,37 +53,42 @@ type UiSelectMapLayout struct {
   Default_icon texture.Object
 }
 
-func MakeUiSelectMap(gp *GamePanel) (gui.Widget, error) {
+func MakeUiSelectMap(gp *GamePanel) (gui.Widget, <-chan string, error) {
   var ui UiSelectMap
 
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "select_map", "config.json"), "json", &ui.layout)
   if err != nil {
-    return nil, err
+    return nil, nil, err
   }
-
-  ui.game_panel = gp
 
   ui.region.Dx = 1024
   ui.region.Dy = 768
   var options []hui.Option
+  // TODO: may want to reload the registry on this one?  If we want to pik up
+  // new changes to files that is.
   for _, name := range base.GetAllNamesInRegistry("houses") {
     var mo MapOption
-    base.Log().Printf("Making house: %s", name)
     mo.house_def = house.MakeHouseFromName(name)
     mo.layout = &ui.layout
     options = append(options, &mo)
   }
+  out := make(chan string, 2)
   chooser := hui.MakeRosterChooser(options, hui.SelectExactlyOne, func(m map[int]bool) {
     var index int
+    base.Log().Printf("On complete: %v", m)
     for index = range m {
+      out <- options[index].(*MapOption).house_def.Name
+      base.Log().Printf("Sent '%s'", options[index].(*MapOption).house_def.Name)
       break
     }
-    gp.LoadHouse(options[index].(*MapOption).house_def)
-    })
+    base.Log().Printf("Closing")
+    close(out)
+  },
+    nil)
   ui.chooser = chooser
 
-  return &ui, nil
+  return &ui, out, nil
 }
 
 func (ui *UiSelectMap) String() string {
@@ -105,25 +109,10 @@ func (ui *UiSelectMap) Rendered() gui.Region {
 
 func (ui *UiSelectMap) Think(g *gui.Gui, dt int64) {
   ui.chooser.Think(g, dt)
-  // ui.mx, ui.my = gin.In().GetCursor("Mouse").Point()
 }
 
 func (ui *UiSelectMap) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return ui.chooser.Respond(g, group)
-
-  // if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-  //   for _, button := range ui.buttons {
-  //     if button.handleClick(ui.mx, ui.my, ui.game_panel) {
-  //       return true
-  //     }
-  //   }
-  // }
-  // for _, button := range ui.buttons {
-  //   if button.Respond(group, ui) {
-  //     return true
-  //   }
-  // }
-  return false
 }
 
 func (ui *UiSelectMap) Draw(region gui.Region) {
