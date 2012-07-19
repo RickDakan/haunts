@@ -283,7 +283,9 @@ func main() {
     ui.AddChild(game_panel)
   }
 
-  ui.AddChild(base.MakeConsole())
+  if base.IsDevel() {
+    ui.AddChild(base.MakeConsole())
+  }
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
@@ -303,76 +305,78 @@ func main() {
     })
     render.Purge()
 
-    if key_map["cpu profile"].FramePressCount() > 0 {
-      if profile_output == nil {
-        profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
-        if err == nil {
-          err = pprof.StartCPUProfile(profile_output)
-          if err != nil {
+    if base.IsDevel() {
+      if key_map["cpu profile"].FramePressCount() > 0 {
+        if profile_output == nil {
+          profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
+          if err == nil {
+            err = pprof.StartCPUProfile(profile_output)
+            if err != nil {
+              base.Log().Printf("Unable to start CPU profile: %v\n", err)
+              profile_output.Close()
+              profile_output = nil
+            }
+            base.Log().Printf("profout: %v\n", profile_output)
+          } else {
             base.Log().Printf("Unable to start CPU profile: %v\n", err)
-            profile_output.Close()
-            profile_output = nil
           }
-          base.Log().Printf("profout: %v\n", profile_output)
         } else {
-          base.Log().Printf("Unable to start CPU profile: %v\n", err)
+          pprof.StopCPUProfile()
+          profile_output.Close()
+          profile_output = nil
         }
-      } else {
-        pprof.StopCPUProfile()
-        profile_output.Close()
-        profile_output = nil
       }
-    }
 
-    if key_map["heap profile"].FramePressCount() > 0 {
-      out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
-      heap_prof_count++
-      if err == nil {
-        err = pprof.WriteHeapProfile(out)
-        out.Close()
-        if err != nil {
-          base.Warn().Printf("Unable to write heap profile: %v", err)
+      if key_map["heap profile"].FramePressCount() > 0 {
+        out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
+        heap_prof_count++
+        if err == nil {
+          err = pprof.WriteHeapProfile(out)
+          out.Close()
+          if err != nil {
+            base.Warn().Printf("Unable to write heap profile: %v", err)
+          }
+        } else {
+          base.Warn().Printf("Unable to create heap profile: %v", err)
         }
-      } else {
-        base.Warn().Printf("Unable to create heap profile: %v", err)
       }
-    }
 
-    if key_map["manual mem"].FramePressCount() > 0 {
-      base.Log().Printf(memory.TotalAllocations())
-    }
-
-    if key_map["game mode"].FramePressCount()%2 == 1 {
-      if edit_mode {
-        ui.RemoveChild(editor)
-        ui.AddChild(game_panel)
-      } else {
-        ui.RemoveChild(game_panel)
-        ui.AddChild(editor)
+      if key_map["manual mem"].FramePressCount() > 0 {
+        base.Log().Printf(memory.TotalAllocations())
       }
-      edit_mode = !edit_mode
-    }
 
-    if key_map["row up"].FramePressCount() > 0 {
-      house.Num_rows += 25
-    }
-    if key_map["row down"].FramePressCount() > 0 {
-      house.Num_rows -= 25
-    }
-    if key_map["steps up"].FramePressCount() > 0 {
-      house.Num_steps++
-    }
-    if key_map["steps down"].FramePressCount() > 0 {
-      house.Num_steps--
-    }
-    if key_map["noise up"].FramePressCount() > 0 {
-      house.Noise_rate += 10
-    }
-    if key_map["noise down"].FramePressCount() > 0 {
-      house.Noise_rate -= 10
-    }
-    if key_map["foo"].FramePressCount() > 0 {
-      house.Foo = (house.Foo + 1) % 2
+      if key_map["game mode"].FramePressCount()%2 == 1 {
+        if edit_mode {
+          ui.RemoveChild(editor)
+          ui.AddChild(game_panel)
+        } else {
+          ui.RemoveChild(game_panel)
+          ui.AddChild(editor)
+        }
+        edit_mode = !edit_mode
+      }
+
+      if key_map["row up"].FramePressCount() > 0 {
+        house.Num_rows += 25
+      }
+      if key_map["row down"].FramePressCount() > 0 {
+        house.Num_rows -= 25
+      }
+      if key_map["steps up"].FramePressCount() > 0 {
+        house.Num_steps++
+      }
+      if key_map["steps down"].FramePressCount() > 0 {
+        house.Num_steps--
+      }
+      if key_map["noise up"].FramePressCount() > 0 {
+        house.Noise_rate += 10
+      }
+      if key_map["noise down"].FramePressCount() > 0 {
+        house.Noise_rate -= 10
+      }
+      if key_map["foo"].FramePressCount() > 0 {
+        house.Foo = (house.Foo + 1) % 2
+      }
     }
 
     if edit_mode {
