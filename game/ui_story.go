@@ -21,19 +21,18 @@ type storyLayout struct {
 }
 
 type StoryMenu struct {
-  parent  *StartMenu
   layout  storyLayout
   region  gui.Region
   buttons []*Button
   mx, my  int
 }
 
-func MakeStoryMenu(parent *StartMenu) (*StoryMenu, error) {
+func InsertStoryMenu(ui gui.WidgetParent) error {
   var sm StoryMenu
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start", "story", "layout.json"), "json", &sm.layout)
   if err != nil {
-    return nil, err
+    return err
   }
   sm.buttons = []*Button{
     &sm.layout.Back,
@@ -41,11 +40,16 @@ func MakeStoryMenu(parent *StartMenu) (*StoryMenu, error) {
     &sm.layout.Continue,
   }
   sm.layout.Back.f = func(interface{}) {
-    parent.sub_menu = nil
+    ui.RemoveChild(&sm)
+    InsertStartMenu(ui)
   }
-  sm.layout.New.f = func(interface{}) {}
+  sm.layout.New.f = func(interface{}) {
+    ui.RemoveChild(&sm)
+    ui.AddChild(MakeGamePanel())
+  }
   sm.layout.Continue.f = func(interface{}) {}
-  return &sm, nil
+  ui.AddChild(&sm)
+  return nil
 }
 
 func (sm *StoryMenu) Requested() gui.Dims {

@@ -39,6 +39,7 @@ var (
   anchor                    *gui.AnchorBox
   chooser                   *gui.FileChooser
   wdx, wdy                  int
+  game_box                  *gui.VerticalTable
   game_panel                *game.GamePanel
   zooming, dragging, hiding bool
 )
@@ -117,6 +118,9 @@ func draggingAndZooming(dz draggerZoomer) {
 }
 
 func gameMode() {
+  if game_panel == nil {
+    return
+  }
   if game_panel.Active() {
     draggingAndZooming(game_panel.GetViewer())
   }
@@ -271,22 +275,17 @@ func main() {
   }
   editor_name = "room"
   editor = editors[editor_name]
-  game_panel = game.MakeGamePanel()
-  if base.GetStoreVal("last game path") != "" {
-    game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
-  }
 
+  game_box = gui.MakeVerticalTable()
   edit_mode := false
-  sm, err := game.MakeStartMenu()
+  err = game.InsertStartMenu(game_box)
   if err != nil {
     panic(err)
   }
-  if true {
-    ui.AddChild(sm)
-  } else if edit_mode {
+  if edit_mode {
     ui.AddChild(editor)
   } else {
-    ui.AddChild(game_panel)
+    ui.AddChild(game_box)
   }
 
   if base.IsDevel() {
@@ -310,6 +309,12 @@ func main() {
       ui.Draw()
     })
     render.Purge()
+
+    for _, child := range game_box.GetChildren() {
+      if gp, ok := child.(*game.GamePanel); ok {
+        game_panel = gp
+      }
+    }
 
     if base.IsDevel() {
       if key_map["cpu profile"].FramePressCount() > 0 {
@@ -354,43 +359,41 @@ func main() {
       if key_map["game mode"].FramePressCount()%2 == 1 {
         if edit_mode {
           ui.RemoveChild(editor)
-          ui.AddChild(game_panel)
+          ui.AddChild(game_box)
         } else {
-          ui.RemoveChild(game_panel)
+          ui.RemoveChild(game_box)
           ui.AddChild(editor)
         }
-        edit_mode = !edit_mode
+
+        if key_map["row up"].FramePressCount() > 0 {
+          house.Num_rows += 25
+        }
+        if key_map["row down"].FramePressCount() > 0 {
+          house.Num_rows -= 25
+        }
+        if key_map["steps up"].FramePressCount() > 0 {
+          house.Num_steps++
+        }
+        if key_map["steps down"].FramePressCount() > 0 {
+          house.Num_steps--
+        }
+        if key_map["noise up"].FramePressCount() > 0 {
+          house.Noise_rate += 10
+        }
+        if key_map["noise down"].FramePressCount() > 0 {
+          house.Noise_rate -= 10
+        }
+        if key_map["foo"].FramePressCount() > 0 {
+          house.Foo = (house.Foo + 1) % 2
+        }
       }
 
-      if key_map["row up"].FramePressCount() > 0 {
-        house.Num_rows += 25
-      }
-      if key_map["row down"].FramePressCount() > 0 {
-        house.Num_rows -= 25
-      }
-      if key_map["steps up"].FramePressCount() > 0 {
-        house.Num_steps++
-      }
-      if key_map["steps down"].FramePressCount() > 0 {
-        house.Num_steps--
-      }
-      if key_map["noise up"].FramePressCount() > 0 {
-        house.Noise_rate += 10
-      }
-      if key_map["noise down"].FramePressCount() > 0 {
-        house.Noise_rate -= 10
-      }
-      if key_map["foo"].FramePressCount() > 0 {
-        house.Foo = (house.Foo + 1) % 2
+      if edit_mode {
+        editMode()
+      } else {
+        gameMode()
       }
     }
-
-    if edit_mode {
-      editMode()
-    } else {
-      gameMode()
-    }
-
     // Draw a cursor at the cursor - for testing an osx bug in glop.
     // zx, zy := gin.In().GetCursor("Mouse").Point()
     // render.Queue(func() {

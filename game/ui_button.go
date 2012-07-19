@@ -38,6 +38,8 @@ func (b *Button) handleClick(x, y int, data interface{}) bool {
   if in {
     b.f(data)
   }
+  base.Log().Printf("Dims: %d %d %d %d %d %d", x, y, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
+  base.Log().Printf("Point inside: %t", in)
   return in
 }
 
