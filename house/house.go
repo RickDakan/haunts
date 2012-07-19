@@ -528,6 +528,7 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     ros = append(ros, placed[i])
   }
   alpha_map := make(map[*Room]byte)
+  los_map := make(map[*Room]byte)
 
   // First pass over the rooms - this will determine at what alpha the rooms
   // should be draw.  We will use this data later to determine the alpha for
@@ -555,6 +556,7 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     }
     bv := 255 - byte(v)
     alpha_map[room] = byte((int(bv) * int(los_alpha)) >> 8)
+    los_map[room] = los_alpha
     // room.render(floor, left, right, , 255)
   }
 
@@ -603,7 +605,9 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     fy := focusy - float32(room.Y)
     floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
     v := alpha_map[room]
-    room.render(floor, left, right, zoom, v, drawables, los_tex, floor_drawers)
+    if los_map[room] > 5 {
+      room.render(floor, left, right, zoom, v, drawables, los_tex, floor_drawers)
+    }
   }
 }
 

@@ -263,9 +263,6 @@ var Foo int = 0
 
 // Need floor, right wall, and left wall matrices to draw the details
 func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alpha byte, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
-  if base_alpha <= 5 {
-    return
-  }
   do_color := func(r, g, b, a byte) {
     R, G, B, A := room.Color()
     A = alphaMult(A, base_alpha)
@@ -308,10 +305,6 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     base.EnableShader("los")
     base.SetUniformI("los", "tex2", 1)
   }
-
-  current_alpha := base_alpha
-  // room.far_left.wall_alpha := byte((int(room.far_left.wall_alpha) * int(base_alpha)) >> 8)
-  // room.far_right.wall_alpha := byte((int(room.far_right.wall_alpha) * int(base_alpha)) >> 8)
 
   var mul, run mathgl.Mat4
   for _, plane := range planes {
@@ -376,7 +369,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     case &floor:
       gl.StencilFunc(gl.ALWAYS, 2, 2)
       gl.StencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE)
-      do_color(255, 255, 255, current_alpha)
+      do_color(255, 255, 255, 255)
     }
 
     gl.ClientActiveTexture(gl.TEXTURE0)
@@ -419,6 +412,9 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       default:
         base.SetUniformI("gorey", "range", 3)
       }
+    }
+    if plane.mat == &floor {
+      gl.Color4ub(255, 255, 255, 255)
     }
     gl.DrawElements(gl.TRIANGLES, gl.Sizei(room.floor_count), gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {
@@ -464,7 +460,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       if ids.floor_buffer != 0 {
         gl.StencilFunc(gl.ALWAYS, 2, 2)
         gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ids.floor_buffer)
-        do_color(R, G, B, alphaMult(A, current_alpha))
+        gl.Color4ub(R, G, B, A)
         gl.DrawElements(gl.TRIANGLES, ids.floor_count, gl.UNSIGNED_SHORT, nil)
       }
       if ids.left_buffer != 0 {
@@ -533,7 +529,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   do_color(255, 255, 255, 255)
   gl.LoadIdentity()
   gl.Disable(gl.STENCIL_TEST)
-  room.renderFurniture(floor, base_alpha, drawables, los_tex)
+  room.renderFurniture(floor, 255, drawables, los_tex)
 }
 
 func (room *Room) setupGlStuff() {
