@@ -14,6 +14,13 @@
       "Texture": {
         "Path": "furniture/chair_03/chair_03_covered.png"
       }
+    },
+    {
+      "Dx": 2,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chair_03/chair_03_back.png"
+      }
     }
   ],
   "Blocks_los" : false

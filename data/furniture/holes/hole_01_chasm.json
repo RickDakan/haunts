@@ -1,0 +1,13 @@
+{
+  "Name": "Hole 01 - Chasm",
+  "Orientations" : [
+    {
+      "Dx": 7,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/holes/hole_01_chasm.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

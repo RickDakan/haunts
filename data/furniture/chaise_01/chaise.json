@@ -7,6 +7,13 @@
       "Texture": {
         "Path": "furniture/chaise_01/chaise_01.png"
       }
+    },
+ {
+      "Dx": 4,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/chaise_01/chaise_01_back.png"
+      }
     }
   ],
   "Blocks_los" : false
