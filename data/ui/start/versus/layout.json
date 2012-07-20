@@ -1,0 +1,39 @@
+{
+  "Background": {
+    "Path": "ui/dialog/large.png"
+  },
+  "Scroller": {
+    "X": 170,
+    "Y": 50,
+    "Texture": {
+      "Path": "ui/chooser/scroller.png"
+    }
+  },
+  "Options": {
+    "X": 180,
+    "Y": 60,
+    "Dx": 250,
+    "Dy": 600
+  },
+  "Up": {
+    "X": 130,
+    "Y": 450,
+    "Texture": {
+      "Path": "ui/up_arrow.png"
+    }
+  },
+  "Down": {
+    "X": 130,
+    "Y": 50,
+    "Texture": {
+      "Path": "ui/down_arrow.png"
+    }
+  },
+  "Back": {
+    "X": 100,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "Id": "Cleanse",
+    "Small": {
+      "Path": "ui/explorer_setup/cleanse.png"
+    },
+    "Large": {
+      "Path": "ui/explorer_setup/cleanse.png"
+    },
+    "Text": "You are entering the house to clean it.  Specifically this means that you'll need to wash the windows, vaccum the carpet, and probably clean all of the dishes.",
+    "Size": 18
+  },
+  {
+    "Id": "Mystery",
+    "Small": {
+      "Path": "ui/explorer_setup/mystery.png"
+    },
+    "Large": {
+      "Path": "ui/explorer_setup/mystery.png"
+    },
+    "Text": "You are entering the house to Mystify it.",
+    "Size": 18
+  },
+  {
+    "Id": "Relic",
+    "Small": {
+      "Path": "ui/explorer_setup/relic.png"
+    },
+    "Large": {
+      "Path": "ui/explorer_setup/relic.png"
+    },
+    "Text": "You are entering the house to serve a catered lunch.",
+    "Size": 18
+  }
+]

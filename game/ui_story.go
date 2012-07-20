@@ -94,19 +94,6 @@ func (sm *StoryMenu) Draw(region gui.Region) {
   sm.layout.Background.Data().RenderNatural(region.X, region.Y)
   title := sm.layout.Title
   title.Texture.Data().RenderNatural(region.X+title.X, region.Y+title.Y)
-  // d := base.GetDictionary(sm.layout.Menu.Text.Size)
-  // opts := []string{
-  //   "Continue",
-  //   "Versus Mode",
-  //   "Story Mode",
-  //   "Settings",
-  // }
-  // x := float64(region.X + sm.layout.Menu.X + sm.layout.Menu.Text.X)
-  // y := float64(region.Y + sm.layout.Menu.Y + sm.layout.Menu.Text.Y + (len(opts)*int(d.MaxHeight()))/2 + ((len(opts)-1)*sm.layout.Menu.Text.Spacing)/2)
-  // for i := range opts {
-  //   d.RenderString(opts[i], x, y, 0, d.MaxHeight(), gui.Center)
-  //   y -= d.MaxHeight() + float64(sm.layout.Menu.Text.Spacing)
-  // }
   for _, button := range sm.buttons {
     button.RenderAt(sm.region.X, sm.region.Y)
   }

@@ -26,6 +26,7 @@ type StartMenu struct {
   region  gui.Region
   buttons []*Button
   mx, my  int
+  last_t  int64
 }
 
 func InsertStartMenu(ui gui.WidgetParent) error {
@@ -42,7 +43,14 @@ func InsertStartMenu(ui gui.WidgetParent) error {
     &sm.layout.Menu.Settings,
   }
   sm.layout.Menu.Continue.f = func(interface{}) {}
-  sm.layout.Menu.Versus.f = func(interface{}) {}
+  sm.layout.Menu.Versus.f = func(interface{}) {
+    ui.RemoveChild(&sm)
+    err := InsertVersusMenu(ui, InsertStartMenu)
+    if err != nil {
+      base.Error().Printf("Unable to make Versus Menu: %v", err)
+      return
+    }
+  }
   sm.layout.Menu.Settings.f = func(interface{}) {}
   sm.layout.Menu.Story.f = func(interface{}) {
     ui.RemoveChild(&sm)
@@ -69,11 +77,18 @@ func (sm *StartMenu) Rendered() gui.Region {
 }
 
 func (sm *StartMenu) Think(g *gui.Gui, t int64) {
+  if sm.last_t == 0 {
+    sm.last_t = t
+    return
+  }
+  dt := t - sm.last_t
+  sm.last_t = t
+
   if sm.mx == 0 && sm.my == 0 {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
   for _, button := range sm.buttons {
-    button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, t)
+    button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
   }
 }
 

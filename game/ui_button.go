@@ -50,13 +50,13 @@ func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
 }
 
 func doShading(current float64, in bool, dt int64) float64 {
+  var target float64
   if in {
-    return current*0.9 + 0.1
+    target = 1.0
+  } else {
+    target = 0.4
   }
-  if current < 0.40 {
-    return 0.40
-  }
-  return current*0.9 + 0.04
+  return doApproach(current, target, dt)
 }
 
 func (b *Button) Think(x, y, mx, my int, dt int64) {
