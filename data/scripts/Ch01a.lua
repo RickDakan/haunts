@@ -64,11 +64,11 @@ function pointIsInSpawns(pos, regexp)
   return false
 end
 
-function IsPosInUnusedSpawnpoint(pos, name, list)
+function IsPosInUnusedSpawnpoint(pos, list, used)
   --name identifies spawnpoint
   for _, spawn in pairs(list) do
-    if not used[name] and pointIsInSpawns(pos, name) then
-      return name
+    if not used[spawn] and pointIsInSpawns(pos, spawn) then
+      return spawn
     end
   end
   return nil
@@ -81,7 +81,7 @@ function OnMove(ent, path)
     return table.getn(path)
   end
   for i, pos in pairs(path) do
-    name = IsPosInUnusedSpawnpoint(pos, store.Spawnpoints, store.Spawnpoints_complete)
+    name = IsPosInUnusedSpawnpoint(pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
     if name then
       return i
     end
@@ -90,16 +90,16 @@ function OnMove(ent, path)
 end
 
 function OnAction(intruders, round, exec)
-  if not exec.ent.Side.Intruder then
+  if not exec.Ent.Side.Intruder then
     return
   end
-  name = IsPosInUnusedSpawnpoint(pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
+  name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
   if name then
     dialog_path = "ui/dialog/Ch01/" .. name .. ".json"
     Script.DialogBox(dialog_path)
     store.Ch01a.Spawnpoints_complete[name] = true 
     if name == "Ch01_Dialog02" then
-      Script.LoadScript("Chapter_01_b")
+      Script.StartScript("Ch01b.lua")
     --INSERT other names and functions here
     end  
   end
