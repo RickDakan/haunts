@@ -9,6 +9,13 @@
       "Texture": {
         "Path": "furniture/table/dining_table.png"
       }
+    },
+    {
+      "Dx": 5,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/table/table_plain.png"
+      }
     }
   ],
   "Blocks_los" : false

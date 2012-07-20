@@ -1,0 +1,13 @@
+{
+  "Name": "Hole 02 - Large Fault",
+  "Orientations" : [
+    {
+      "Dx": 9,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/holes/hole_02_large_fault.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

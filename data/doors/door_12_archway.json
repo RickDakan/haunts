@@ -1,0 +1,10 @@
+{
+  "Name": "Door 12 - Open Archway",
+  "Width": 5,
+  "Opened_texture": {
+    "Path": "doors/door_12_archway_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_12_archway_open.png"
+  }
+}

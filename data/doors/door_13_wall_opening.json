@@ -1,0 +1,10 @@
+{
+  "Name": "Door 13 - Wall Opening",
+  "Width": 7,
+  "Opened_texture": {
+    "Path": "doors/door_13_wall_opening_small.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_13_wall_opening_small.png"
+  }
+}
