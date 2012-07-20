@@ -12,6 +12,7 @@ type KeyMap map[string]gin.Key
 var (
   default_map KeyMap
 )
+
 func SetDefaultKeyMap(km KeyMap) {
   default_map = km
 }
@@ -22,11 +23,11 @@ func GetDefaultKeyMap() KeyMap {
 func getKeysFromString(str string) []gin.KeyId {
   parts := strings.Split(str, "+")
   var kids []gin.KeyId
-  for _,part := range parts {
+  for _, part := range parts {
     part = osSpecifyKey(part)
     var kid gin.KeyId
     switch {
-    case len(part) == 1:  // Single character - should be ascii
+    case len(part) == 1: // Single character - should be ascii
       kid = gin.KeyId(part[0])
 
     case part == "ctrl":
@@ -61,15 +62,15 @@ func getKeysFromString(str string) []gin.KeyId {
 
 func (kb KeyBinds) MakeKeyMap() KeyMap {
   key_map := make(KeyMap)
-  for key,val := range kb {
+  for key, val := range kb {
     kids := getKeysFromString(val)
 
     if len(kids) == 1 {
       key_map[key] = gin.In().GetKey(kids[0])
     } else {
       // The last kid is the main kid and the rest are modifiers
-      main := kids[len(kids) - 1]
-      kids = kids[0 : len(kids) - 1]
+      main := kids[len(kids)-1]
+      kids = kids[0 : len(kids)-1]
       var down []bool
       for _ = range kids {
         down = append(down, true)

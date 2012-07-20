@@ -1,34 +1,27 @@
 
-function think()
-  intruders = nearestNEntities(3, "intruder")
+function Think()
+  intruders = Utils.NearestNEntities(3, "intruder")
 
-  stats = getAoeAttackStats(me(), "Abjuration")
-  mystats = getEntityStats(me())
+  range = Me.Actions["Abjuration"].Ap
   if intruders[1] then
-    movement = mystats.apCur - stats.ap
+    movement = Me.ApCur - Me.Actions["Abjuration"].Ap
     if movement < 0 then
       movement = 0
     end
-    print("ooking for bst target")
-    target = bestAoeAttackPos("Abjuration", movement, "enemies only")
-    print("range", stats.range)
-    print("target", target.x, target.y)
-    if not (target.x == 0 and target.y == 0) then
-      ps = allPathablePoints(pos(me()), target, 1, stats.range)
-      res = doMove(ps, 1000)
-      print("taget", target.x, target.y)
-      res = doAoeAttack("Abjuration", target)
+    target = Utils.BestAoeAttackPos("Abjuration", movement, "enemies only")
+    if not (target.X == 0 and target.Y == 0) then
+      ps = Utils.AllPathablePoints(Me.Pos, target, 1, range)
+      res = Do.Move(ps, 1000)
+      res = Do.AoeAttack("Abjuration", target)
       if res == nil then
         return nil
       end
     else
-      ps = allPathablePoints(pos(me()), pos(intruders[1]), stats.range, stats.range)
-      doMove(ps, 1000)
+      ps = Utils.AllPathablePoints(Me.Pos, intruders[1].Pos, range, range)
+      Do.Move(ps, 1000)
       return
     end
   else
     return
   end
 end
-
-think()

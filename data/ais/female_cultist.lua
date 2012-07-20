@@ -1,5 +1,5 @@
 --female cultist
-function think()
+function Think()
 	target = pursue()
 	if target == nil then
 		target = retaliate()
@@ -11,7 +11,7 @@ function think()
 		target = targetAllyTarget()
 	end
 	if target == nil then
-		target = targetLowestStat("hpCur")
+		target = targetLowestStat("HpCur")
 	end
 	if target == nil then
 		target = nearest()
@@ -19,13 +19,9 @@ function think()
 	if target == nil then
 		return
 	end
-	if getConditions(target)["Blindness"] then
+	if target.Conditions["Blindness"] then
 		moveWithinRangeAndAttack (1, "Envenomed Blade", target)
 	else
 		moveWithinRangeAndAttack (1, "Parasitic Gift", target)
 	end
 end
-think()
-		
-		
-		

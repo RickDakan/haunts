@@ -8,6 +8,7 @@
   },
   "Action_names": [
     "Move Test",
+    "Interact",
     "Pistol",
     "Kick",
     "Telepathic Coordination",
@@ -21,7 +22,7 @@
     ]
   },
   "Base": {
-    "Ap_max": 8,
+    "Ap_max": 800,
     "Hp_max": 20,
     "Corpus": 10,
     "Ego": 10,

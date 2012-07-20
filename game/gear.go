@@ -29,7 +29,7 @@ func LoadAllGearInDir(dir string) {
 }
 
 func MakeGear(name string) *Gear {
-  g := Gear{ Defname: name }
+  g := Gear{Defname: name}
   base.GetObject("gear", &g)
   return &g
 }
@@ -37,5 +37,3 @@ func MakeGear(name string) *Gear {
 func GetAllGearNames() []string {
   return base.GetAllNamesInRegistry("gear")
 }
-
-

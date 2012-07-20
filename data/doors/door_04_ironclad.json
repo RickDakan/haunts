@@ -1,0 +1,10 @@
+{
+  "Name": "Door 04 - Ironclad Double",
+  "Width": 3,
+  "Opened_texture": {
+    "Path": "doors/door_04_ironclad_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_04_ironclad_closed.png"
+  }
+}

@@ -9,8 +9,8 @@ import (
   "github.com/runningwild/haunts/base"
 )
 
-func Init() {}
-func MapSounds(m map[string]string) {}
+func Init()                                 {}
+func MapSounds(m map[string]string)         {}
 func trigger(s *sprite.Sprite, name string) {}
-func PlaySound(p base.Path) {}
-func SetBackgroundMusic(file string) {}
+func PlaySound(p base.Path)                 {}
+func SetBackgroundMusic(file string)        {}

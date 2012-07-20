@@ -1,21 +1,20 @@
 function mantra(buff, condition)
-	conditions = getConditions (me())
-	if not conditions [condition] then 
-		doBasicAttack (buff, me())
+	if not Me.Conditions[condition] then 
+		Do.BasicAttack (buff, Me)
 	end
 end
 				
 function retaliate(melee)
-	intruders = nearestNEntities (10, "intruder")
+	intruders = Utils.NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityThatAttackedMe
-		if exists (target) then
-			if rangedDistBetweenEntities (me(), target) == 1 then
-				return doBasicAttack (melee, target)
+		target = Me.Info.LastEntityThatAttackedMe
+		if Utils.Exists (target) then
+			if Utils.RangedDistBetweenEntities (Me, target) == 1 then
+				return Do.BasicAttack (melee, target)
 			else
-				ps = allPathablePoints (pos(me()), pos (target), 1, 1)
+				ps = Utils.AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
-					return doMove (ps, 1000)
+					return Do.Move (ps, 1000)
 				end
 			end
 		end
@@ -23,16 +22,16 @@ function retaliate(melee)
 end
 
 function pursue(melee)
-	intruders = nearestNEntities (10, "intruder")
+	intruders = Utils.NearestNEntities (10, "intruder")
 	for _, intruder in pairs (intruders) do
-		target = entityInfo(me()).lastEntityIAttacked
-		if exists (target) then
-			if rangedDistBetweenEntities (me(), target) == 1 then
-				return doBasicAttack (melee, target)
+		target = Me.Info.LastEntityThatIAttacked
+		if Utils.Exists (target) then
+			if Utils.RangedDistBetweenEntities (Me, target) == 1 then
+				return Do.BasicAttack (melee, target)
 			else
-				ps = allPathablePoints (pos(me()), pos (target), 1, 1)
+				ps = Utils.AllPathablePoints (Me.Pos, pos (target), 1, 1)
 				if table.getn (ps) > 0 then
-				  return doMove (ps, 1000)
+				  return Do.Move (ps, 1000)
 				end
 			end
 		end

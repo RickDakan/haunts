@@ -1,0 +1,13 @@
+{
+  "Name": "Statue 03 - Pitcher Girl",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/statue_03/statue_03.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

@@ -1,6 +1,6 @@
-function think()
+function Think()
 	target = retaliate()
-	if target ~= nil and rangedDistBetweenEntities (me(), target) <2 then
+	if target ~= nil and Utils.RangedDistBetweenEntities (Me, target) <2 then
 		moveWithinRangeAndAttack(1, "Chill Touch", target)
 	else
 		target = pursue()
@@ -11,7 +11,7 @@ function think()
 			target = targetAllyTarget()
 		end
 		if target == nil then
-			target = targetLowestStat("hpCur")
+			target = targetLowestStat("HpCur")
 		end
 		if target == nil then
 			target = nearest()
@@ -22,4 +22,3 @@ function think()
 		moveWithinRangeAndAttack (1, "Chill Touch", target)
 	end
 end
-think()

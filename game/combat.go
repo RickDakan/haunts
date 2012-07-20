@@ -5,7 +5,7 @@ import (
   "github.com/runningwild/haunts/game/status"
 )
 
-func DoAttack(attacker,defender *Entity, strength int, kind status.Kind) bool {
+func DoAttack(attacker, defender *Entity, strength int, kind status.Kind) bool {
   // get attacker's bonus for using the specified kind of attack
   // get defender's bonus for defending against the specified kind of attack
   // get the defender's current ego/corpus
@@ -13,5 +13,5 @@ func DoAttack(attacker,defender *Entity, strength int, kind status.Kind) bool {
   attack := attacker.Stats.AttackBonusWith(kind)
   defense := defender.Stats.DefenseVs(kind)
   roll := rand.Intn(10) + 1
-  return strength + attack + roll >= defense
+  return strength+attack+roll >= defense
 }

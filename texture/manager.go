@@ -9,7 +9,7 @@ import (
   "runtime"
   "sync"
   "github.com/runningwild/glop/render"
-  "github.com/runningwild/glop/memory"
+  "github.com/runningwild/memory"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/opengl/gl"
   "github.com/runningwild/opengl/glu"
@@ -24,6 +24,7 @@ type Object struct {
   path base.Path
   data *Data
 }
+
 func (o *Object) Data() *Data {
   if o.data == nil || o.path != o.Path {
     o.data = LoadFromPath(string(o.Path))
@@ -33,9 +34,10 @@ func (o *Object) Data() *Data {
 }
 
 type Data struct {
-  dx,dy int
+  dx, dy  int
   texture gl.Texture
 }
+
 func (d *Data) Dx() int {
   return d.dx
 }
@@ -45,28 +47,30 @@ func (d *Data) Dy() int {
 
 var textureList uint
 var textureListSync sync.Once
+
 func setupTextureList() {
   textureListSync.Do(func() {
     render.Queue(func() {
       textureList = gl.GenLists(1)
       gl.NewList(textureList, gl.COMPILE)
       gl.Begin(gl.QUADS)
-        gl.TexCoord2d(0, 0)
-        gl.Vertex2i(0, 0)
+      gl.TexCoord2d(0, 0)
+      gl.Vertex2i(0, 0)
 
-        gl.TexCoord2d(0, -1)
-        gl.Vertex2i(0, 1)
+      gl.TexCoord2d(0, -1)
+      gl.Vertex2i(0, 1)
 
-        gl.TexCoord2d(1, -1)
-        gl.Vertex2i(1, 1)
+      gl.TexCoord2d(1, -1)
+      gl.Vertex2i(1, 1)
 
-        gl.TexCoord2d(1, 0)
-        gl.Vertex2i(1, 0)
+      gl.TexCoord2d(1, 0)
+      gl.Vertex2i(1, 0)
       gl.End()
       gl.EndList()
     })
   })
 }
+
 // Renders the texture on a quad at the texture's natural size.
 func (d *Data) RenderNatural(x, y int) {
   d.Render(float64(x), float64(y), float64(d.dx), float64(d.dy))
@@ -139,7 +143,7 @@ func (d *Data) Bind() {
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
       gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-      pink := []byte{ 255, 0, 255, 255 }
+      pink := []byte{255, 0, 255, 255}
       glu.Build2DMipmaps(gl.TEXTURE_2D, 4, 1, 1, gl.RGBA, pink)
     }
     error_texture.Bind(gl.TEXTURE_2D)
@@ -149,7 +153,7 @@ func (d *Data) Bind() {
 }
 
 var (
-  manager Manager
+  manager       Manager
   error_texture gl.Texture
 )
 
@@ -181,14 +185,44 @@ type loadRequest struct {
   path string
   data *Data
 }
+
 var load_requests chan loadRequest
 var load_count int
 var load_mutex sync.Mutex
-const load_threshold = 1000*1000
+
+const load_threshold = 1000 * 1000
+
 func init() {
-  load_requests = make(chan loadRequest, 100)
+  load_requests = make(chan loadRequest, 10)
+  pipe := make(chan loadRequest, 10)
+  // We want to be able to handle any number of incoming load requests, so
+  // we have one go-routine collect them all and send them along pipe any
+  // time someone is ready to receive one.
+  go func() {
+    var rs []loadRequest
+    var send chan loadRequest
+    var hold loadRequest
+    for {
+      select {
+      case r := <-load_requests:
+        rs = append(rs, r)
+      case send <- hold:
+        rs = rs[1:]
+      }
+      if len(rs) > 0 {
+        send = pipe
+        hold = rs[0]
+      } else {
+        // If send is nil then it will effectively be excluded from the select
+        // statement above.  This is good since we won't have anything to send
+        // until we get more requests.
+        rs = nil
+        send = nil
+      }
+    }
+  }()
   for i := 0; i < 4; i++ {
-    go loadTextureRoutine()
+    go loadTextureRoutine(pipe)
   }
 }
 
@@ -196,15 +230,15 @@ func init() {
 // in that file into that object.  This is so that only one texture is being
 // loaded at a time, it prevents us from hammering the filesystem and also
 // makes sure we aren't using up a ton of memory all at once.
-func loadTextureRoutine() {
-  for req := range load_requests {
+func loadTextureRoutine(pipe chan loadRequest) {
+  for req := range pipe {
     handleLoadRequest(req)
   }
 }
 
 func handleLoadRequest(req loadRequest) {
-  f,_ := os.Open(req.path)
-  im,_,err := image.Decode(f)
+  f, _ := os.Open(req.path)
+  im, _, err := image.Decode(f)
   f.Close()
   if err != nil {
     base.Warn().Printf("Unable to decode texture '%s': %v", req.path, err)
@@ -232,8 +266,8 @@ func handleLoadRequest(req loadRequest) {
     pix = ga.Pix
     canvas = ga
   } else {
-    pix = memory.GetBlock(4*req.data.dx*req.data.dy)
-    canvas = &image.RGBA{pix, 4*req.data.dx, im.Bounds()}
+    pix = memory.GetBlock(4 * req.data.dx * req.data.dy)
+    canvas = &image.RGBA{pix, 4 * req.data.dx, im.Bounds()}
   }
   draw.Draw(canvas, im.Bounds(), im, image.Point{}, draw.Src)
   load_mutex.Lock()
@@ -249,14 +283,16 @@ func handleLoadRequest(req loadRequest) {
     manual_unlock = true
   }
   render.Queue(func() {
-    gl.Enable(gl.TEXTURE_2D)
-    req.data.texture = gl.GenTexture()
-    req.data.texture.Bind(gl.TEXTURE_2D)
-    gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    {
+      gl.Enable(gl.TEXTURE_2D)
+      req.data.texture = gl.GenTexture()
+      req.data.texture.Bind(gl.TEXTURE_2D)
+      gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    }
     if gray {
       glu.Build2DMipmaps(gl.TEXTURE_2D, gl.LUMINANCE_ALPHA, req.data.dx, req.data.dy, gl.LUMINANCE_ALPHA, pix)
     } else {
@@ -273,19 +309,18 @@ func handleLoadRequest(req loadRequest) {
 
 func (m *Manager) LoadFromPath(path string) *Data {
   setupTextureList()
-  if data,ok := m.registry[path]; ok {
+  if data, ok := m.registry[path]; ok {
     return data
   }
-  base.Log().Printf("Loading %s\n", path)
   var data Data
   m.registry[path] = &data
 
-  f,err := os.Open(path)
+  f, err := os.Open(path)
   if err != nil {
     base.Warn().Printf("Unable to load texture '%s': %v", path, err)
     return &data
   }
-  config,_,err := image.DecodeConfig(f)
+  config, _, err := image.DecodeConfig(f)
   f.Close()
   data.dx = config.Width
   data.dy = config.Height

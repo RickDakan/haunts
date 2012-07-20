@@ -11,10 +11,10 @@
       }
     },
     {
-      "Dx": 1,
-      "Dy": 3,
+      "Dx": 3,
+      "Dy": 1,
       "Texture": {
-        "Path": "furniture/writing_desk/writing_desk_lf.png"
+        "Path": "furniture/writing_desk/writing_desk_back.png"
       }
     }
   ],

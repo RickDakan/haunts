@@ -8,51 +8,18 @@
 
 --needs a target?
 function aoePlaceAndAttack(attack, spec)
-	me_stats = getEntityStats(me())
-	attack_stats = getAoeAttackStats(me(), attack)
-	gz = bestAoeAttackPos (attack, me_stats.apCur - attack_stats.ap, spec)
-	dsts = allPathablePoints(pos(me()), gz, 1, attack_stats.range)
-	doMove(dsts, 1000)
-	if rangedDistBetweenPositions (pos(me()), gz) > attack_stats.range then
+	gz = Utils.BestAoeAttackPos (attack, Me.ApCur - Me.Actions[attack].Ap, spec)
+	dsts = Utils.AllPathablePoints(Me.Pos, gz, 1, Me.Actions[attack].Range)
+	Do.Move(dsts, 1000)
+	if Utils.RangedDistBetweenPositions (Me.Pos, gz) > Me.Actions[attack].Range then
 		return
 	else
-		doAoeAttack(attack, gz)
+		Do.AoeAttack(attack, gz)
 	end
 end
 
-function think()
+function Think()
 	aoePlaceAndAttack("Poltergeist Blast", "enemies only")
-	think()
+	Think()
 end
-think()
 
---	intruders = nearestNEntities (10, "intruder")
-	
---	for _, intruder in pairs (intruders) do
---		if rangedDistBetweenEntities (me(), intruder) >1 then
---			aoeTargetAndAttack ("Visions of Despair", "allies ok")
---		else
---			if rangedDistBetweenEntities (me(), intruder) >2 and <6 then
---				aoeTargetAndAttack ("Poltergeist Blast", "minions ok")
---			else
---				aoeTargetAndAttack ("Arc of Decay", "minions ok")
---			end
---		end
---	end
---end
---think()
-
-
--- >6 and rangedDistBetweenEntities (me(), intruder) <13 then
-		
---if rangedDistBetweenEntities (me(), intruder) >6 and <13 then
---	aoeTargetAndAttack ("Visions of Despair", "allies ok")
---else
---	if rangedDistBetweenEntities (me(), intruder) >2 and <6 then
---		aoeTargetAndAttack ("Poltergeist Blast", "minions ok")
---	else
---		aoeTargetAndAttack ("Arc of Decay", "minions ok")
---	end
---end
-	
-	

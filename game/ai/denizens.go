@@ -22,19 +22,21 @@ func (a *Ai) addDenizensContext() {
 func activeNonMinionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Acing non minions")
-    if !luaNumParamsOk(L, 0, "activeNonMinions") {
+    if !game.LuaNumParamsOk(L, 0, "activeNonMinions") {
       return 0
     }
     L.NewTable()
     count := 0
     for _, ent := range a.game.Ents {
-      if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
-      base.Log().Printf("Servitor: %s", ent.Name)
-      if !ent.Ai.Active() { continue }
-      base.Log().Printf("Is active")
+      if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
+        continue
+      }
+      if !ent.Ai.Active() {
+        continue
+      }
       count++
       L.PushInteger(count)
-      L.PushInteger(int(ent.Id))
+      game.LuaPushEntity(L, ent)
       L.SetTable(-3)
     }
     return 1
@@ -44,21 +46,20 @@ func activeNonMinionsFunc(a *Ai) lua.GoFunction {
 func execNonMinionFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     base.Log().Printf("Exec non-minion")
-    if !luaNumParamsOk(L, 1, "execNonMinion") {
+    if !game.LuaNumParamsOk(L, 1, "execNonMinion") {
       return 0
     }
-    id := game.EntityId(L.ToInteger(0))
-    ent := a.game.EntityById(id)
+    ent := game.LuaToEntity(L, a.game, -1)
     if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which doesn't exist.", id))
+      game.LuaDoError(L, "Tried to execNonMinion an invalid entity.")
       return 0
     }
     if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is a minion.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is a minion.", ent.Id))
       return 0
     }
     if !ent.Ai.Active() {
-      luaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is not active.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to execNonMinion entity with Id=%d, which is not active.", ent.Id))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

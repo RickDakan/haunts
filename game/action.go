@@ -8,12 +8,13 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/house"
+  lua "github.com/xenith-studios/golua"
 )
 
 var action_map map[string]func() Action
 
 func MakeAction(name string) Action {
-  f,ok := action_map[name]
+  f, ok := action_map[name]
   if !ok {
     base.Error().Printf("Unable to find an Action named '%s'", name)
   }
@@ -21,6 +22,7 @@ func MakeAction(name string) Action {
 }
 
 var action_makers []func() map[string]func() Action
+
 // Ahahahahahaha
 func RegisterActionMakers(f func() map[string]func() Action) {
   action_makers = append(action_makers, f)
@@ -28,10 +30,10 @@ func RegisterActionMakers(f func() map[string]func() Action) {
 
 func RegisterActions() {
   action_map = make(map[string]func() Action)
-  for _,maker := range action_makers {
+  for _, maker := range action_makers {
     m := maker()
-    for name,f := range m {
-      if _,ok := action_map[name]; ok {
+    for name, f := range m {
+      if _, ok := action_map[name]; ok {
         panic(fmt.Sprintf("Tried to register more than one action by the same name: '%s'", name))
       }
       action_map[name] = f
@@ -41,9 +43,10 @@ func RegisterActions() {
 
 // Acceptable values to be returned from Action.Maintain()
 type MaintenanceStatus int
+
 const (
   // The Action is in progress and should not be interrupted.
-  InProgress         MaintenanceStatus = iota
+  InProgress MaintenanceStatus = iota
 
   // The Action is interrupted and can be interrupted immediately.
   CheckForInterrupts
@@ -58,12 +61,32 @@ type BasicActionExec struct {
   Ent   EntityId
   Index int
 }
+
 func (bae BasicActionExec) EntityId() EntityId {
   return bae.Ent
 }
 func (bae BasicActionExec) ActionIndex() int {
   return bae.Index
 }
+func (bae BasicActionExec) Push(L *lua.State, g *Game) {
+  ent := g.EntityById(bae.Ent)
+  if bae.Index < 0 || bae.Index >= len(ent.Actions) {
+    base.Error().Printf("Tried to push an exec for an invalid action index: '%s' %d.", ent.Name)
+    L.PushNil()
+    return
+  }
+  L.NewTable()
+  L.PushString("Action")
+  ent.Actions[bae.Index].Push(L)
+  L.SetTable(-3)
+  L.PushString("Ent")
+  LuaPushEntity(L, ent)
+  L.SetTable(-3)
+}
+func (bae BasicActionExec) GetPath() []int {
+  return nil
+}
+func (bae BasicActionExec) TruncatePath(int) {}
 func (bae *BasicActionExec) SetBasicData(ent *Entity, action Action) {
   bae.Ent = ent.Id
   bae.Index = -1
@@ -85,6 +108,11 @@ type ActionExec interface {
 
   // Index into Entity.Actions
   ActionIndex() int
+
+  Push(L *lua.State, g *Game)
+
+  GetPath() []int
+  TruncatePath(length int)
 }
 
 func encodeActionExec(ae ActionExec) []byte {
@@ -158,4 +186,7 @@ type Action interface {
   // point for an interrupt to happen.  Should return true if the action
   // should take place.
   Interrupt() bool
+
+  // Pushes a table containing information about the action onto the stack.
+  Push(L *lua.State)
 }

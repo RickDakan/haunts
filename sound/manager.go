@@ -1,4 +1,3 @@
-
 // +build !nosound
 package sound
 
@@ -9,10 +8,10 @@ import (
   "github.com/runningwild/fmod"
 )
 
-var(
+var (
   system *fmod.System
-  music *fmod.Channel
-  names map[string]string  // 'load' -> 'load_gun.ogg', stuff like that
+  music  *fmod.Channel
+  names  map[string]string // 'load' -> 'load_gun.ogg', stuff like that
 )
 
 func Init() {
@@ -38,7 +37,7 @@ func Init() {
 }
 
 func MapSounds(m map[string]string) {
-  for k,v := range m {
+  for k, v := range m {
     names[k] = v
   }
 }
@@ -105,7 +104,3 @@ func SetBackgroundMusic(file string) {
   //   return
   // }
 }
-
-
-
-

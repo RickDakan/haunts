@@ -1,7 +1,6 @@
 package house
 
 import (
-  "fmt"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -28,10 +27,10 @@ type Room struct {
 
   // whether or not to draw the walls transparent
   far_left struct {
-    wall_alpha, door_alpha byte
+    wall_alpha byte
   }
   far_right struct {
-    wall_alpha, door_alpha byte
+    wall_alpha byte
   }
 
   // opengl stuff
@@ -43,6 +42,7 @@ type Room struct {
   left_buffer  uint32
   right_buffer uint32
   floor_buffer uint32
+  floor_count  int
 
   // we don't want to redo all of the vertex and index buffers unless we
   // need to, so we keep track of the position and size of the room when they
@@ -129,8 +129,9 @@ type Door struct {
   highlight_threshold bool
 
   // gl stuff for drawing the threshold on the ground
-  gl_ids doorGlIds
-  state  doorState
+  threshold_glids doorGlIds
+  door_glids      doorGlIds
+  state           doorState
 }
 
 func (d *Door) HighlightThreshold(v bool) {
@@ -141,7 +142,7 @@ type doorState struct {
   // for tracking whether the buffers are dirty
   facing WallFacing
   pos    int
-  room struct {
+  room   struct {
     x, y, dx, dy int
   }
 }
@@ -164,81 +165,150 @@ func (d *Door) setupGlStuff(room *Room) {
   if state == d.state {
     return
   }
+  if d.TextureData().Dy() == 0 {
+    // Can't build this data until the texture is loaded, so we'll have to try
+    // again later.
+    return
+  }
   d.state = state
-  if d.gl_ids.vbuffer != 0 {
-    gl.DeleteBuffers(1, &d.gl_ids.vbuffer)
-    gl.DeleteBuffers(1, &d.gl_ids.floor_buffer)
-    d.gl_ids.vbuffer = 0
-    d.gl_ids.floor_buffer = 0
+  if d.threshold_glids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &d.threshold_glids.vbuffer)
+    gl.DeleteBuffers(1, &d.threshold_glids.floor_buffer)
+    d.threshold_glids.vbuffer = 0
+    d.threshold_glids.floor_buffer = 0
+  }
+  if d.door_glids.vbuffer != 0 {
+    gl.DeleteBuffers(1, &d.door_glids.vbuffer)
+    gl.DeleteBuffers(1, &d.door_glids.floor_buffer)
+    d.door_glids.vbuffer = 0
+    d.door_glids.floor_buffer = 0
   }
 
-  var x1, y1, x2, y2 float32
-  switch d.Facing {
-  case FarLeft:
-    x1 = float32(d.Pos)
-    y1 = float32(room.roomDef.Size.Dy) - 0.5
-    x2 = float32(d.Pos + d.Width)
-    y2 = float32(room.roomDef.Size.Dy) + 0.5
-  case FarRight:
-    x1 = float32(room.roomDef.Size.Dx) - 0.5
-    y1 = float32(d.Pos + d.Width)
-    x2 = float32(room.roomDef.Size.Dx) + 0.5
-    y2 = float32(d.Pos)
-  case NearLeft:
-    x1 = 0.5
-    y1 = float32(d.Pos)
-    x2 = -0.5
-    y2 = float32(d.Pos + d.Width)
-  case NearRight:
-    x1 = float32(d.Pos)
-    y1 = -0.5
-    x2 = float32(d.Pos + d.Width)
-    y2 = 0.5
+  // far left, near right, do threshold
+  // near left, far right, do threshold
+  // far left, far right, do door
+  var vs []roomVertex
+  if d.Facing == FarLeft || d.Facing == NearRight {
+    x1 := float32(d.Pos)
+    x2 := float32(d.Pos + d.Width)
+    var y1 float32 = 0
+    var y2 float32 = 0.25
+    if d.Facing == FarLeft {
+      y1 = float32(room.roomDef.Size.Dy)
+      y2 = float32(room.roomDef.Size.Dy) - 0.25
+    }
+    // los_x1 := (x1 + float32(room.X)) / LosTextureSize
+    vs = append(vs, roomVertex{x: x1, y: y1})
+    vs = append(vs, roomVertex{x: x1, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y1})
+    for i := 0; i < 4; i++ {
+      vs[i].los_u = (y2 + float32(room.Y)) / LosTextureSize
+      vs[i].los_v = (vs[i].x + float32(room.X)) / LosTextureSize
+    }
   }
-  base.Log().Printf("door: %v %f %f %f %f", d.state, x1, y1, x2, y2)
-  vs := []roomVertex{
-    {
-      u: 0,
-      v: 0,
-      x: x1,
-      y: y1,
-    },
-    {
-      u: 0,
-      v: -1,
-      x: x1,
-      y: y2,
-    },
-    {
-      u: 1,
-      v: -1,
-      x: x2,
-      y: y2,
-    },
-    {
-      u: 1,
-      v: 0,
-      x: x2,
-      y: y1,
-    },
+  if d.Facing == FarRight || d.Facing == NearLeft {
+    y1 := float32(d.Pos)
+    y2 := float32(d.Pos + d.Width)
+    var x1 float32 = 0
+    var x2 float32 = 0.25
+    if d.Facing == FarRight {
+      x1 = float32(room.roomDef.Size.Dx)
+      x2 = float32(room.roomDef.Size.Dx) - 0.25
+    }
+    // los_y1 := (y1 + float32(room.Y)) / LosTextureSize
+    vs = append(vs, roomVertex{x: x1, y: y1})
+    vs = append(vs, roomVertex{x: x1, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y2})
+    vs = append(vs, roomVertex{x: x2, y: y1})
+    for i := 0; i < 4; i++ {
+      vs[i].los_u = (vs[i].y + float32(room.Y)) / LosTextureSize
+      vs[i].los_v = (x2 + float32(room.X)) / LosTextureSize
+    }
   }
-  for i := range vs {
-    vs[i].los_u = (vs[i].y + float32(room.Y)) / LosTextureSize
-    vs[i].los_v = (vs[i].x + float32(room.X)) / LosTextureSize
+  dz := -float32(d.Width*d.TextureData().Dy()) / float32(d.TextureData().Dx())
+  if d.Facing == FarRight {
+    x := float32(room.roomDef.Size.Dx)
+    y1 := float32(d.Pos + d.Width)
+    y2 := float32(d.Pos)
+    los_v := (float32(room.X) + x - 0.5) / LosTextureSize
+    los_u1 := (float32(room.Y) + y1) / LosTextureSize
+    los_u2 := (float32(room.Y) + y2) / LosTextureSize
+    vs = append(vs, roomVertex{
+      x: x, y: y1, z: 0,
+      u: 0, v: 1,
+      los_u: los_u1,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y1, z: dz,
+      u: 0, v: 0,
+      los_u: los_u1,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y2, z: dz,
+      u: 1, v: 0,
+      los_u: los_u2,
+      los_v: los_v,
+    })
+    vs = append(vs, roomVertex{
+      x: x, y: y2, z: 0,
+      u: 1, v: 1,
+      los_u: los_u2,
+      los_v: los_v,
+    })
   }
-
-  gl.GenBuffers(1, &d.gl_ids.vbuffer)
-  gl.BindBuffer(gl.ARRAY_BUFFER, d.gl_ids.vbuffer)
+  if d.Facing == FarLeft {
+    x1 := float32(d.Pos)
+    x2 := float32(d.Pos + d.Width)
+    y := float32(room.roomDef.Size.Dy)
+    los_v1 := (float32(room.X) + x1) / LosTextureSize
+    los_v2 := (float32(room.X) + x2) / LosTextureSize
+    los_u := (float32(room.Y) + y - 0.5) / LosTextureSize
+    vs = append(vs, roomVertex{
+      x: x1, y: y, z: 0,
+      u: 0, v: 1,
+      los_u: los_u,
+      los_v: los_v1,
+    })
+    vs = append(vs, roomVertex{
+      x: x1, y: y, z: dz,
+      u: 0, v: 0,
+      los_u: los_u,
+      los_v: los_v1,
+    })
+    vs = append(vs, roomVertex{
+      x: x2, y: y, z: dz,
+      u: 1, v: 0,
+      los_u: los_u,
+      los_v: los_v2,
+    })
+    vs = append(vs, roomVertex{
+      x: x2, y: y, z: 0,
+      u: 1, v: 1,
+      los_u: los_u,
+      los_v: los_v2,
+    })
+  }
+  gl.GenBuffers(1, &d.threshold_glids.vbuffer)
+  gl.BindBuffer(gl.ARRAY_BUFFER, d.threshold_glids.vbuffer)
   size := int(unsafe.Sizeof(roomVertex{}))
   gl.BufferData(gl.ARRAY_BUFFER, gl.Sizeiptr(size*len(vs)), gl.Pointer(&vs[0].x), gl.STATIC_DRAW)
-  base.Log().Printf("vs: %v", vs)
-  base.Log().Printf("glids: %v", d.gl_ids)
 
   is := []uint16{0, 1, 2, 0, 2, 3}
-  gl.GenBuffers(1, &d.gl_ids.floor_buffer)
-  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.gl_ids.floor_buffer)
+  gl.GenBuffers(1, &d.threshold_glids.floor_buffer)
+  gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.threshold_glids.floor_buffer)
   gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is)), gl.Pointer(&is[0]), gl.STATIC_DRAW)
-  d.gl_ids.floor_count = 6
+  d.threshold_glids.floor_count = 6
+
+  if d.Facing == FarLeft || d.Facing == FarRight {
+    is2 := []uint16{4, 5, 6, 4, 6, 7}
+    gl.GenBuffers(1, &d.door_glids.floor_buffer)
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, d.door_glids.floor_buffer)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, gl.Sizeiptr(int(unsafe.Sizeof(is[0]))*len(is2)), gl.Pointer(&is2[0]), gl.STATIC_DRAW)
+    d.door_glids.floor_count = 6
+  }
 }
 
 func (d *Door) TextureData() *texture.Data {
@@ -263,19 +333,9 @@ func (r *Room) Pos() (x, y int) {
   return r.X, r.Y
 }
 
-func getSpawnPointDefName(sp SpawnPoint) string {
-  return "Unknown Spawn Type"
-}
-
 type Floor struct {
-  Rooms  []*Room       `registry:"loadfrom-rooms"`
-  Spawns []*SpawnPoint `registry:"loadfrom-spawns"`
-}
-
-func (f *Floor) removeSpawn(sp *SpawnPoint) {
-  f.Spawns = algorithm.Choose(f.Spawns, func(a interface{}) bool {
-    return a.(*SpawnPoint) != sp
-  }).([]*SpawnPoint)
+  Rooms  []*Room `registry:"loadfrom-rooms"`
+  Spawns []*SpawnPoint
 }
 
 func (f *Floor) canAddRoom(add *Room) bool {
@@ -416,7 +476,7 @@ func (f *Floor) removeInvalidDoors() {
   }
 }
 
-func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn, spawn bool) {
+func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn *Furniture, spawn *SpawnPoint) {
   for _, croom := range f.Rooms {
     rx, ry := croom.Pos()
     rdx, rdy := croom.Dims()
@@ -432,17 +492,15 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn, spawn bool) {
       if tx < fx || ty < fy || tx >= fx+fdx || ty >= fy+fdy {
         continue
       }
-      furn = true
+      furn = furniture
       break
     }
     for _, sp := range f.Spawns {
       if sp.temporary {
         continue
       }
-      sx, sy := sp.Pos()
-      sdx, sdy := sp.Dims()
-      if x >= sx && x < sx+sdx && y >= sy && y < sy+sdy {
-        spawn = true
+      if x >= sp.X && x < sp.X+sp.Dx && y >= sp.Y && y < sp.Y+sp.Dy {
+        spawn = sp
         break
       }
     }
@@ -454,7 +512,21 @@ func (f *Floor) RoomFurnSpawnAtPos(x, y int) (room *Room, furn, spawn bool) {
 func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, drawables []Drawable, los_tex *LosTexture, floor_drawers []FloorDrawer) {
   var ros []RectObject
   algorithm.Map2(f.Rooms, &ros, func(r *Room) RectObject { return r })
-  ros = OrderRectObjects(ros)
+  // Do not include temporary objects in the ordering, since they will likely
+  // overlap with other objects and make it difficult to determine the proper
+  // ordering.  Just draw the temporary ones last.
+  num_temp := 0
+  for i := range ros {
+    if ros[i].(*Room).temporary {
+      ros[num_temp], ros[i] = ros[i], ros[num_temp]
+      num_temp++
+    }
+  }
+  placed := OrderRectObjects(ros[num_temp:])
+  ros = ros[0:num_temp]
+  for i := range placed {
+    ros = append(ros, placed[i])
+  }
   alpha_map := make(map[*Room]byte)
 
   // First pass over the rooms - this will determine at what alpha the rooms
@@ -489,34 +561,6 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
   // Second pass - this time we fill in the alpha that we should use for the
   // doors, using the values we've already calculated in the first pass.
   for _, r1 := range f.Rooms {
-    // It is possible that we get two doors to different rooms on one wall,
-    // and we might display them with the same alpha even though the rooms
-    // they are attached to have different alpha.  This is probably not a
-    // big deal so we'll just ignore it.
-    for _, door := range r1.Doors {
-      r2, _ := f.FindMatchingDoor(r1, door)
-      if r2 == nil {
-        continue
-      }
-      // alpha := alpha_map[r2]
-      // base.Log().Printf("%p %p %d %d", r1, r2, alpha, door.Facing)
-      left, right := r2.getNearWallAlpha(los_tex)
-      switch door.Facing {
-      case FarLeft:
-        // if left > alpha {
-        r1.far_left.door_alpha = left
-        // } else {
-        //   r1.far_left.door_alpha = alpha
-        // }
-      case FarRight:
-        // if right > alpha {
-        r1.far_right.door_alpha = right
-        // } else {
-        //   r1.far_right.door_alpha = alpha
-        // }
-      }
-    }
-
     r1.far_right.wall_alpha = 255
     r1.far_left.wall_alpha = 255
     for _, r2 := range f.Rooms {
@@ -527,11 +571,25 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
       r1_rect := image.Rect(r1.X, r1.Y+r1.Size.Dy, r1.X+r1.Size.Dx, r1.Y+r1.Size.Dy+1)
       r2_rect := image.Rect(r2.X, r2.Y, r2.X+r2.Size.Dx, r2.Y+r2.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
+        // If there is an open door between the two then we'll tone down the
+        // alpha, otherwise we won't treat it any differently
+        for _, d1 := range r1.Doors {
+          for _, d2 := range r2.Doors {
+            if d1 == d2 {
+              r1.far_left.wall_alpha = byte((int(left) * 200) >> 8)
+            }
+          }
+        }
       }
       r1_rect = image.Rect(r1.X+r1.Size.Dx, r1.Y, r1.X+r1.Size.Dx+1, r1.Y+r1.Size.Dy)
       if r1_rect.Overlaps(r2_rect) {
-        r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
+        for _, d1 := range r1.Doors {
+          for _, d2 := range r2.Doors {
+            if d1 == d2 {
+              r1.far_right.wall_alpha = byte((int(right) * 200) >> 8)
+            }
+          }
+        }
       }
     }
   }
@@ -635,7 +693,8 @@ type houseDataTab struct {
   current_floor int
 
   temp_room, prev_room *Room
-  temp_spawns          []*SpawnPoint
+
+  temp_spawns []*SpawnPoint
 }
 
 func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
@@ -652,7 +711,6 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   }
   hdt.icon = gui.MakeFileWidget(string(hdt.house.Icon.Path), imagePathFilter)
 
-
   hdt.VerticalTable.AddChild(hdt.name)
   hdt.VerticalTable.AddChild(hdt.num_floors)
   hdt.VerticalTable.AddChild(hdt.icon)
@@ -662,7 +720,9 @@ func makeHouseDataTab(house *HouseDef, viewer *HouseViewer) *houseDataTab {
   for _, name := range names {
     n := name
     room_buttons.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      if hdt.temp_room != nil { return }
+      if hdt.temp_room != nil {
+        return
+      }
       hdt.temp_room = &Room{Defname: n}
       base.GetObject("rooms", hdt.temp_room)
       hdt.temp_room.temporary = true
@@ -828,7 +888,7 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   for _, name := range names {
     n := name
     hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      if len(hdt.house.Floors[0].Rooms) < 2 {
+      if len(hdt.house.Floors[0].Rooms) < 2 || hdt.temp_door != nil {
         return
       }
       hdt.temp_door = MakeDoor(n)
@@ -851,7 +911,7 @@ func (hdt *houseDoorTab) onEscape() {
     }
     if hdt.prev_door != nil {
       hdt.prev_room.Doors = append(hdt.prev_room.Doors, hdt.prev_door)
-      hdt.prev_door.state.pos = -1  // forces it to redo its gl data
+      hdt.prev_door.state.pos = -1 // forces it to redo its gl data
       hdt.prev_door = nil
       hdt.prev_room = nil
     }
@@ -936,7 +996,8 @@ func (hdt *houseDoorTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 func (hdt *houseDoorTab) Collapse() {
   hdt.onEscape()
 }
-func (hdt *houseDoorTab) Expand() {}
+func (hdt *houseDoorTab) Expand() {
+}
 func (hdt *houseDoorTab) Reload() {
   hdt.onEscape()
 }
@@ -944,10 +1005,9 @@ func (hdt *houseDoorTab) Reload() {
 type houseRelicsTab struct {
   *gui.VerticalTable
 
-  num_floors *gui.ComboBox
-  spawn_name *gui.TextLine
-  spawn_type *gui.ComboBox
-  spawn_dims *gui.ComboBox
+  spawn_name *gui.TextEditLine
+  make_spawn *gui.Button
+  typed_name string
 
   house  *HouseDef
   viewer *HouseViewer
@@ -960,6 +1020,17 @@ type houseRelicsTab struct {
   drag_anchor struct{ x, y float32 }
 }
 
+func (hdt *houseRelicsTab) newSpawn() {
+  hdt.temp_relic = new(SpawnPoint)
+  hdt.temp_relic.Name = hdt.spawn_name.GetText()
+  hdt.temp_relic.X = 10000
+  hdt.temp_relic.Dx = 2
+  hdt.temp_relic.Dy = 2
+  hdt.temp_relic.temporary = true
+  hdt.temp_relic.invalid = true
+  hdt.house.Floors[0].Spawns = append(hdt.house.Floors[0].Spawns, hdt.temp_relic)
+}
+
 func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   var hdt houseRelicsTab
   hdt.VerticalTable = gui.MakeVerticalTable()
@@ -967,34 +1038,13 @@ func makeHouseRelicsTab(house *HouseDef, viewer *HouseViewer) *houseRelicsTab {
   hdt.viewer = viewer
 
   hdt.VerticalTable.AddChild(gui.MakeTextLine("standard", "Spawns", 300, 1, 1, 1, 1))
-  hdt.spawn_name = gui.MakeTextLine("standard", "", 300, 1, 1, 1, 1)
+  hdt.spawn_name = gui.MakeTextEditLine("standard", "", 300, 1, 1, 1, 1)
   hdt.VerticalTable.AddChild(hdt.spawn_name)
 
-  var dims_options []string
-  for i := 1; i <= 4; i++ {
-    for j := 1; j <= 4; j++ {
-      dims_options = append(dims_options, fmt.Sprintf("%dx%d", i, j))
-    }
-  }
-  hdt.spawn_dims = gui.MakeComboTextBox(dims_options, 300)
-
-  hdt.VerticalTable.AddChild(hdt.spawn_dims)
-  spawn_names := GetAllSpawnPointNames()
-  for _, spawn_name := range spawn_names {
-    name := spawn_name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
-      var dx, dy int
-      dims_str := dims_options[hdt.spawn_dims.GetComboedIndex()]
-      fmt.Sscanf(dims_str, "%dx%d", &dx, &dy)
-      hdt.temp_relic = MakeSpawnPoint(name)
-      hdt.temp_relic.X = 10000
-      hdt.temp_relic.Dx = dx
-      hdt.temp_relic.Dy = dy
-      hdt.temp_relic.temporary = true
-      hdt.temp_relic.invalid = true
-      hdt.house.Floors[0].Spawns = append(hdt.house.Floors[0].Spawns, hdt.temp_relic)
-    }))
-  }
+  hdt.make_spawn = gui.MakeButton("standard", "New Spawn Point", 300, 1, 1, 1, 1, func(int64) {
+    hdt.newSpawn()
+  })
+  hdt.VerticalTable.AddChild(hdt.make_spawn)
 
   return &hdt
 }
@@ -1013,6 +1063,25 @@ func (hdt *houseRelicsTab) onEscape() {
   }
 }
 
+func (hdt *houseRelicsTab) markTempSpawnValidity() {
+  hdt.temp_relic.invalid = false
+  floor := hdt.house.Floors[0]
+  var room *Room
+  x, y := hdt.temp_relic.Pos()
+  for ix := 0; ix < hdt.temp_relic.Dx; ix++ {
+    for iy := 0; iy < hdt.temp_relic.Dy; iy++ {
+      room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(x+ix, y+iy)
+      if room == nil {
+        room = room_at
+      }
+      if room_at == nil || room_at != room || furn_at != nil || spawn_at != nil {
+        hdt.temp_relic.invalid = true
+        return
+      }
+    }
+  }
+}
+
 func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   defer hdt.VerticalTable.Think(ui, t)
   rbx, rby := hdt.viewer.WindowToBoard(gin.In().GetCursor("Mouse").Point())
@@ -1021,35 +1090,36 @@ func (hdt *houseRelicsTab) Think(ui *gui.Gui, t int64) {
   if hdt.temp_relic != nil {
     hdt.temp_relic.X = bx
     hdt.temp_relic.Y = by
-    hdt.temp_relic.invalid = false
-    floor := hdt.house.Floors[0]
-    var room *Room
-    for ix := 0; ix < hdt.temp_relic.Dx; ix++ {
-      for iy := 0; iy < hdt.temp_relic.Dy; iy++ {
-        room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(bx+ix, by+iy)
-        if room == nil {
-          room = room_at
-        }
-        if room_at == nil || room_at != room || furn_at || spawn_at {
-          hdt.temp_relic.invalid = true
-          break
-        }
-      }
+    hdt.temp_relic.Dx += gin.In().GetKey(gin.Right).FramePressCount()
+    hdt.temp_relic.Dx -= gin.In().GetKey(gin.Left).FramePressCount()
+    if hdt.temp_relic.Dx < 1 {
+      hdt.temp_relic.Dx = 1
     }
+    if hdt.temp_relic.Dx > 10 {
+      hdt.temp_relic.Dx = 10
+    }
+    hdt.temp_relic.Dy += gin.In().GetKey(gin.Up).FramePressCount()
+    hdt.temp_relic.Dy -= gin.In().GetKey(gin.Down).FramePressCount()
+    if hdt.temp_relic.Dy < 1 {
+      hdt.temp_relic.Dy = 1
+    }
+    if hdt.temp_relic.Dy > 10 {
+      hdt.temp_relic.Dy = 10
+    }
+    hdt.markTempSpawnValidity()
   } else {
-    set := false
-    for _, sp := range hdt.house.Floors[0].Spawns {
-      x, y := sp.Pos()
-      dx, dy := sp.Dims()
-      if bx >= x && bx < x+dx && by >= y && by < y+dy {
-        hdt.spawn_name.SetText("Hoogabooo")
-        set = true
-        break
-      }
+    _, _, spawn_at := hdt.house.Floors[0].RoomFurnSpawnAtPos(roundDown(rbx), roundDown(rby))
+    if spawn_at != nil {
+      hdt.spawn_name.SetText(spawn_at.Name)
+    } else if hdt.spawn_name.IsBeingEdited() {
+      hdt.typed_name = hdt.spawn_name.GetText()
+    } else {
+      hdt.spawn_name.SetText(hdt.typed_name)
     }
-    if !set {
-      hdt.spawn_name.SetText("")
-    }
+  }
+
+  if hdt.temp_relic == nil && gin.In().GetKey('n').FramePressCount() > 0 && ui.FocusWidget() == nil {
+    hdt.newSpawn()
   }
 }
 
@@ -1109,9 +1179,12 @@ func (hdt *houseRelicsTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (hdt *houseRelicsTab) Collapse() {
+  PopSpawnRegexp()
   hdt.onEscape()
 }
-func (hdt *houseRelicsTab) Expand() {}
+func (hdt *houseRelicsTab) Expand() {
+  PushSpawnRegexp(".*")
+}
 func (hdt *houseRelicsTab) Reload() {
   hdt.onEscape()
 }
@@ -1126,11 +1199,11 @@ func LoadAllHousesInDir(dir string) {
   base.RegisterAllObjectsInDir("houses", dir, ".house", "json")
 }
 
-func (h *HouseDef) openDoors() {
+func (h *HouseDef) setDoorsOpened(opened bool) {
   for _, floor := range h.Floors {
     for _, room := range floor.Rooms {
       for _, door := range room.Doors {
-        door.Opened = true
+        door.Opened = opened
       }
     }
   }
@@ -1145,7 +1218,7 @@ func MakeHouseFromName(name string) *HouseDef {
   var idiot iamanidiotcontainer
   idiot.Defname = name
   base.GetObject("houses", &idiot)
-  idiot.HouseDef.openDoors()
+  idiot.HouseDef.setDoorsOpened(false)
   return idiot.HouseDef
 }
 
@@ -1155,7 +1228,7 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
-  house.openDoors()
+  house.setDoorsOpened(false)
   return &house, nil
 }
 

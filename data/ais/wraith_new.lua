@@ -1,6 +1,6 @@
 --wraith
 
-function think()
+function Think()
 	target = targetHasCondition(false, "Horrified")
 	if target ~= nil then	
 		moveWithinRangeAndAttack (3, "Grave Grasp", target)
@@ -15,8 +15,4 @@ function think()
 			end
 		end
 	end
-	think()
 end
-think()
-
-		

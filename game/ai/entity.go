@@ -12,33 +12,40 @@ import (
 )
 
 func (a *Ai) addEntityContext() {
-  a.L.Register("pos", PosFunc(a))
-  a.L.Register("me", MeFunc(a))
-  a.L.Register("allPathablePoints", AllPathablePointsFunc(a))
-  a.L.Register("rangedDistBetweenPositions", RangedDistBetweenPositionsFunc(a))
-  a.L.Register("rangedDistBetweenEntities", RangedDistBetweenEntitiesFunc(a))
-  a.L.Register("nearestNEntities", NearestNEntitiesFunc(a.ent))
-  a.L.Register("getBasicAttackStats", GetBasicAttackStatsFunc(a))
-  a.L.Register("getAoeAttackStats", GetAoeAttackStatsFunc(a))
-  a.L.Register("getEntityStats", GetEntityStatsFunc(a))
-  a.L.Register("getConditions", GetConditionsFunc(a))
-  a.L.Register("getActions", GetActionsFunc(a))
-  a.L.Register("entityInfo", EntityInfoFunc(a))
-  a.L.Register("doBasicAttack", DoBasicAttackFunc(a))
-  a.L.Register("doAoeAttack", DoAoeAttackFunc(a))
-  a.L.Register("bestAoeAttackPos", BestAoeAttackPosFunc(a))
-  a.L.Register("doMove", DoMoveFunc(a))
-  a.L.Register("exists", ExistsFunc(a))
+  a.loadUtils("entity")
 
-  a.L.Register("nearbyUnexploredRoom", NearbyUnexploredRoomFunc(a))
-  a.L.Register("roomPath", RoomPathFunc(a))
-  a.L.Register("roomContaining", RoomContainingFunc(a))
-  a.L.Register("allDoorsBetween", AllDoorsBetween(a))
-  a.L.Register("allDoorsOn", AllDoorsOn(a))
-  a.L.Register("doorPositions", DoorPositionsFunc(a))
-  a.L.Register("doorIsOpen", DoorIsOpenFunc(a))
-  a.L.Register("doDoorToggle", DoDoorToggleFunc(a))
-  a.L.Register("roomPositions", RoomPositionsFunc(a))
+  game.LuaPushEntity(a.L, a.ent)
+  a.L.SetGlobal("Me")
+
+  a.L.NewTable()
+  game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
+    "BasicAttack": func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
+    "AoeAttack":   func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
+    "Move":        func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
+    "DoorToggle":  func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
+  })
+  a.L.SetMetaTable(-2)
+  a.L.SetGlobal("Do")
+
+  a.L.NewTable()
+  game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
+    "AllPathablePoints":          func() { a.L.PushGoFunctionAsCFunction(AllPathablePointsFunc(a)) },
+    "RangedDistBetweenPositions": func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenPositionsFunc(a)) },
+    "RangedDistBetweenEntities":  func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenEntitiesFunc(a)) },
+    "NearestNEntities":           func() { a.L.PushGoFunctionAsCFunction(NearestNEntitiesFunc(a.ent)) },
+    "Exists":                     func() { a.L.PushGoFunctionAsCFunction(ExistsFunc(a)) },
+    "BestAoeAttackPos":           func() { a.L.PushGoFunctionAsCFunction(BestAoeAttackPosFunc(a)) },
+    "NearbyUnexploredRoom":       func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomFunc(a)) },
+    "RoomPath":                   func() { a.L.PushGoFunctionAsCFunction(RoomPathFunc(a)) },
+    "RoomContaining":             func() { a.L.PushGoFunctionAsCFunction(RoomContainingFunc(a)) },
+    "AllDoorsBetween":            func() { a.L.PushGoFunctionAsCFunction(AllDoorsBetween(a)) },
+    "AllDoorsOn":                 func() { a.L.PushGoFunctionAsCFunction(AllDoorsOn(a)) },
+    "DoorPositions":              func() { a.L.PushGoFunctionAsCFunction(DoorPositionsFunc(a)) },
+    "DoorIsOpen":                 func() { a.L.PushGoFunctionAsCFunction(DoorIsOpenFunc(a)) },
+    "RoomPositions":              func() { a.L.PushGoFunctionAsCFunction(RoomPositionsFunc(a)) },
+  })
+  a.L.SetMetaTable(-2)
+  a.L.SetGlobal("Utils")
 }
 
 type entityDist struct {
@@ -46,6 +53,7 @@ type entityDist struct {
   ent  *game.Entity
 }
 type entityDistSlice []entityDist
+
 func (e entityDistSlice) Len() int {
   return len(e)
 }
@@ -57,7 +65,7 @@ func (e entityDistSlice) Swap(i, j int) {
 }
 
 func getActionByName(e *game.Entity, name string) game.Action {
-  for _,action := range e.Actions {
+  for _, action := range e.Actions {
     if action.String() == name {
       return action
     }
@@ -65,82 +73,16 @@ func getActionByName(e *game.Entity, name string) game.Action {
   return nil
 }
 
-// Assuming a table, t, on the top of the stack, returns t[x], t[y]
-func getPointFromTable(L *lua.State) (int, int) {
-  L.PushString("x")
-  L.GetTable(-2)
-  x := L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("y")
-  L.GetTable(-2)
-  y := L.ToInteger(-1)
-  L.Pop(1)
-  return x, y
-}
-
-// Makes a table with the keys x and y and leaves it on the top of the stack.
-func putPointToTable(L *lua.State, x, y int) {
-  L.NewTable()
-  L.PushString("x")
-  L.PushInteger(x)
-  L.SetTable(-3)
-  L.PushString("y")
-  L.PushInteger(y)
-  L.SetTable(-3)
-}
-
 // Used for doing los computation in the ai, so we don't have to allocate
 // and deallocate lots of these.  Only one ai is ever running at a time so
 // this should be ok.
 var grid [][]bool
+
 func init() {
   raw := make([]bool, house.LosTextureSizeSquared)
   grid = make([][]bool, house.LosTextureSize)
   for i := range grid {
-    grid[i] = raw[i*house.LosTextureSize:(i+1)*house.LosTextureSize]
-  }
-}
-
-// Returns the position of the specified entity.
-//    Format:
-//    p = pos(id)
-//
-//    Inputs:
-//    id - integer - Entity id of the entity whose position this should return.
-//
-//    Outputs:
-//    p - table[x,y] - The position of the specified entity.
-func PosFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "pos", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      L.PushNil()
-      return 1
-    }
-    x, y := ent.Pos()
-    putPointToTable(L, x, y)
-    return 1
-  }
-}
-
-
-// Returns the entity id of the entity that is being controlled by this ai.
-//    Format:
-//    myid = me()
-//
-//    Outputs:
-//    myid - integer
-func MeFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "me") {
-      return 0
-    }
-    L.PushInteger(int(a.ent.Id))
-    return 1
+    grid[i] = raw[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
   }
 }
 
@@ -148,7 +90,7 @@ func MeFunc(a *Ai) lua.GoFunction {
 // specific location that end in a certain general area.  Assumes that a 1x1
 // unit is doing the walking.
 //    Format:
-//    points = allPathablePoints(src, dst, min, max)
+//    points = AllPathablePoints(src, dst, min, max)
 //
 //    Inputs:
 //    src - table[x,y] - Where the path starts.
@@ -160,77 +102,42 @@ func MeFunc(a *Ai) lua.GoFunction {
 //    points - array[table[x,y]]
 func AllPathablePointsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allPathablePoints", luaTable, luaTable, luaInteger, luaInteger) {
+    if !game.LuaCheckParamsOk(L, "AllPathablePoints", game.LuaPoint, game.LuaPoint, game.LuaInteger, game.LuaInteger) {
       return 0
     }
     min := L.ToInteger(-2)
     max := L.ToInteger(-1)
-    L.Pop(2)
-    x2, y2 := getPointFromTable(L)
-    L.Pop(1)
-    x1, y1 := getPointFromTable(L)
-    L.Pop(1)
+    x1, y1 := game.LuaToPoint(L, -4)
+    x2, y2 := game.LuaToPoint(L, -3)
 
     a.ent.Game().DetermineLos(x2, y2, max, grid)
     var dst []int
-    for x := x2 - max; x <= x2 + max; x++ {
-      for y := y2 - max; y <= y2 + max; y++ {
-        if x > x2 - min && x < x2 + min && y > y2 - min && y < y2 + min {
+    for x := x2 - max; x <= x2+max; x++ {
+      for y := y2 - max; y <= y2+max; y++ {
+        if x > x2-min && x < x2+min && y > y2-min && y < y2+min {
           continue
         }
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
-    graph := a.ent.Game().Graph(nil)
+    graph := a.ent.Game().Graph(a.ent.Side(), nil)
     src := []int{a.ent.Game().ToVertex(x1, y1)}
     reachable := algorithm.ReachableDestinations(graph, src, dst)
     L.NewTable()
+    base.Log().Printf("%d reachable from (%d, %d) -> (%d, %d)", len(reachable), x1, y1, x2, y2)
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
-      L.PushInteger(i+1)
-      putPointToTable(L, x, y)
+      L.PushInteger(i + 1)
+      game.LuaPushPoint(L, x, y)
       L.SetTable(-3)
     }
     return 1
   }
 }
 
-// Gets some basic persistent data about an entity.
-//    Format:
-//    info = entityInfo(id)
-//
-//    Inputs:
-//    id - integer - Entity id of some entity
-//
-//    Outputs:
-//    info - table - Table containing the following values:
-//                   lastEntityIAttacked      (integer)
-//                   lastEntityThatAttackedMe (integer)
-func EntityInfoFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "entityInfo", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    L.PushString("lastEntityIAttacked")
-    L.PushInteger(int(ent.Info.LastEntThatIAttacked))
-    L.SetTable(-3)
-    L.PushString("lastEntityThatAttackedMe")
-    L.PushInteger(int(ent.Info.LastEntThatAttackedMe))
-    L.SetTable(-3)
-    return 1
-  }
-}
-
 // Performs a basic attack against the specifed target.
 //    Format:
-//    res = doBasicAttack(attack, target)
+//    res = DoBasicAttack(attack, target)
 //
 //    Inputs:
 //    attack - string  - Name of the attack to use.
@@ -242,25 +149,24 @@ func EntityInfoFunc(a *Ai) lua.GoFunction {
 //                  If the attack was invalid for some reason res will be nil.
 func DoBasicAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doBasicAttack", luaString, luaInteger) {
+    if !game.LuaCheckParamsOk(L, "DoBasicAttack", game.LuaString, game.LuaEntity) {
       return 0
     }
     me := a.ent
     name := L.ToString(-2)
     action := getActionByName(me, name)
     if action == nil {
-      luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
+      game.LuaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
       return 0
     }
-    id := game.EntityId(L.ToInteger(-1))
-    target := me.Game().EntityById(id)
+    target := game.LuaToEntity(L, a.ent.Game(), -1)
     if action == nil {
-      luaDoError(L, fmt.Sprintf("Tried to target entity with id=%d who doesn't exist.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to target an entity who doesn't exist."))
       return 0
     }
     attack, ok := action.(*actions.BasicAttack)
     if !ok {
-      luaDoError(L, fmt.Sprintf("Action '%s' is not a basic attack.", name))
+      game.LuaDoError(L, fmt.Sprintf("Action '%s' is not a basic attack.", name))
       return 0
     }
     exec := attack.AiAttackTarget(me, target)
@@ -285,7 +191,7 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 
 // Performs an aoe attack against centered at the specified position.
 //    Format:
-//    res = doAoeAttack(attack, pos)
+//    res = DoAoeAttack(attack, pos)
 //
 //    Inputs:
 //    attack - string     - Name of the attack to use.
@@ -295,22 +201,22 @@ func DoBasicAttackFunc(a *Ai) lua.GoFunction {
 //    res - boolean - true if the action performed, nil otherwise.
 func DoAoeAttackFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doAoeAttack", luaString, luaTable) {
+    if !game.LuaCheckParamsOk(L, "DoAoeAttack", game.LuaString, game.LuaPoint) {
       return 0
     }
     me := a.ent
     name := L.ToString(-2)
     action := getActionByName(me, name)
     if action == nil {
-      luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
+      game.LuaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
       return 0
     }
     attack, ok := action.(*actions.AoeAttack)
     if !ok {
-      luaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
+      game.LuaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
       return 0
     }
-    tx, ty := getPointFromTable(L)
+    tx, ty := game.LuaToPoint(L, -1)
     exec := attack.AiAttackPosition(me, tx, ty)
     if exec != nil {
       a.execs <- exec
@@ -325,7 +231,7 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
 
 // Performs an aoe attack against centered at the specified position.
 //    Format:
-//    target = bestAoeAttackPos(attack, extra_dist, spec)
+//    target = BestAoeAttackPos(attack, extra_dist, spec)
 //
 //    Inputs:
 //    attack     - string  - Name of the attack to use.
@@ -337,19 +243,19 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
 //    pos - table[x,y] - Position to place aoe for maximum results.
 func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "bestAoeAttackPos", luaString, luaInteger, luaString) {
+    if !game.LuaCheckParamsOk(L, "BestAoeAttackPos", game.LuaString, game.LuaInteger, game.LuaString) {
       return 0
     }
     me := a.ent
     name := L.ToString(-3)
     action := getActionByName(me, name)
     if action == nil {
-      luaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
+      game.LuaDoError(L, fmt.Sprintf("Entity '%s' (id=%d) has no action named '%s'.", me.Name, me.Id, name))
       return 0
     }
     attack, ok := action.(*actions.AoeAttack)
     if !ok {
-      luaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
+      game.LuaDoError(L, fmt.Sprintf("Action '%s' is not an aoe attack.", name))
       return 0
     }
     var spec actions.AiAoeTarget
@@ -361,12 +267,18 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
     case "enemies only":
       spec = actions.AiAoeHitNoAllies
     default:
-      luaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for bestAoeAttackPos().", L.ToString(-1)))
+      game.LuaDoError(L, fmt.Sprintf("'%s' is not a valid value of spec for BestAoeAttackPos().", L.ToString(-1)))
       return 0
     }
-    x, y := attack.AiBestTarget(me, L.ToInteger(-2), spec)
-    putPointToTable(L, x, y)
-    return 1
+    x, y, hits := attack.AiBestTarget(me, L.ToInteger(-2), spec)
+    game.LuaPushPoint(L, x, y)
+    L.NewTable()
+    for i := range hits {
+      L.PushInteger(i + 1)
+      game.LuaPushEntity(L, hits[i])
+      L.SetTable(-3)
+    }
+    return 2
   }
 }
 
@@ -374,7 +286,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 // points.  The movement can be restricted to not spend more than a certain
 // amount of ap.
 //    Format:
-//    p = doMove(dsts, max_ap)
+//    p = DoMove(dsts, max_ap)
 //
 //    Input:
 //    dsts  - array[table[x,y]] - Array of all points that are acceptable
@@ -387,18 +299,22 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doMove", luaTable, luaInteger) {
+    if !game.LuaCheckParamsOk(L, "DoMove", game.LuaArray, game.LuaInteger) {
       return 0
     }
     me := a.ent
     max_ap := L.ToInteger(-1)
     L.Pop(1)
+    cur_ap := me.Stats.ApCur()
+    if max_ap > cur_ap {
+      max_ap = cur_ap
+    }
     n := int(L.ObjLen(-1))
     dsts := make([]int, n)[0:0]
     for i := 1; i <= n; i++ {
       L.PushInteger(i)
       L.GetTable(-2)
-      x, y := getPointFromTable(L)
+      x, y := game.LuaToPoint(L, -1)
       dsts = append(dsts, me.Game().ToVertex(x, y))
       L.Pop(1)
     }
@@ -421,7 +337,7 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
       <-a.pause
       // TODO: Need to get a resolution
       x, y := me.Pos()
-      putPointToTable(L, x, y)
+      game.LuaPushPoint(L, x, y)
       base.Log().Printf("Finished move")
     } else {
       base.Log().Printf("Didn't bother moving")
@@ -431,10 +347,9 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
   }
 }
 
-
 // Computes the ranged distance between two points.
 //    Format:
-//    dist = rangedDistBetweenPositions(p1, p2)
+//    dist = RangedDistBetweenPositions(p1, p2)
 //
 //    Input:
 //    p1 - table[x,y]
@@ -444,12 +359,11 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
 //    dist - integer - The ranged distance between the two positions.
 func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "rangedDistBetweenPositions", luaTable, luaTable) {
+    if !game.LuaCheckParamsOk(L, "RangedDistBetweenPositions", game.LuaPoint, game.LuaPoint) {
       return 0
     }
-    x1, y1 := getPointFromTable(L)
-    L.Pop(1)
-    x2, y2 := getPointFromTable(L)
+    x1, y1 := game.LuaToPoint(L, -2)
+    x2, y2 := game.LuaToPoint(L, -1)
     dx := x2 - x1
     if dx < 0 {
       dx = -dx
@@ -469,7 +383,7 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 
 // Computes the ranged distance between two entities.
 //    Format:
-//    dist = rangedDistBetweenEntities(e1, e2)
+//    dist = RangedDistBetweenEntities(e1, e2)
 //
 //    Input:
 //    e1 - integer - An entity id.
@@ -478,296 +392,29 @@ func RangedDistBetweenPositionsFunc(a *Ai) lua.GoFunction {
 //    Output:
 //    dist - integer - The ranged distance between the two specified entities,
 //                     this will not necessarily be the same as
-//                     rangedDistBetweenPositions(pos(e1), pos(e2)) if at
+//                     RangedDistBetweenPositions(pos(e1), pos(e2)) if at
 //                     least one of the entities isn't 1x1.
 func RangedDistBetweenEntitiesFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "rangedDistBetweenEntities", luaInteger, luaInteger) {
+    if !game.LuaCheckParamsOk(L, "RangedDistBetweenEntities", game.LuaEntity, game.LuaEntity) {
       return 0
     }
-    id1 := game.EntityId(L.ToInteger(-2))
-    id2 := game.EntityId(L.ToInteger(-1))
-    e1 := a.ent.Game().EntityById(id1)
-    if e1 == nil {
-      L.PushNil()
-      return 1
-    }
-    x, y := e1.Pos()
-    dx, dy := e1.Dims()
-    if !a.ent.HasLos(x, y, dx, dy) {
-      L.PushNil()
-      return 1
-    }
-    e2 := a.ent.Game().EntityById(id2)
-    if e2 == nil {
-      L.PushNil()
-      return 1
-    }
-
-    x, y = e2.Pos()
-    dx, dy = e2.Dims()
-    if !a.ent.HasLos(x, y, dx, dy) {
-      L.PushNil()
-      return 1
+    e1 := game.LuaToEntity(L, a.ent.Game(), -2)
+    e2 := game.LuaToEntity(L, a.ent.Game(), -1)
+    for _, e := range []*game.Entity{e1, e2} {
+      if e == nil {
+        L.PushNil()
+        return 1
+      }
+      x, y := e.Pos()
+      dx, dy := e.Dims()
+      if !a.ent.HasLos(x, y, dx, dy) {
+        L.PushNil()
+        return 1
+      }
     }
 
     L.PushInteger(rangedDistBetween(e1, e2))
-    return 1
-  }
-}
-
-// Gets some stats about a basic attack.  If the specified action is not a
-// basic attack this function will return nil.  It is an error to query an
-// entity for an action that it does not have.
-//    Format:
-//    stats = getBasicAttackStats(id, name)
-//
-//    Input:
-//    id   - integer - Entity id of the entity with the action to query.
-//    name - string  - Name of the action to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    ap       (integer)
-//                    damage   (integer)
-//                    strength (integer)
-//                    range    (integer)
-//                    ammo     (integer)
-func GetBasicAttackStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getBasicAttackStats", luaInteger, luaString) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-2))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    name := L.ToString(-1)
-    for _, action := range ent.Actions {
-      if action.String() == name {
-        attack, ok := action.(*actions.BasicAttack)
-        if !ok {
-          // It's not a basic attack, that's ok but we have to return nil.
-          L.PushNil()
-          return 1
-        }
-        L.NewTable()
-        L.PushString("ap")
-        L.PushInteger(attack.Ap)
-        L.SetTable(-3)
-        L.PushString("damage")
-        L.PushInteger(attack.Damage)
-        L.SetTable(-3)
-        L.PushString("strength")
-        L.PushInteger(attack.Strength)
-        L.SetTable(-3)
-        L.PushString("range")
-        L.PushInteger(attack.Range)
-        L.SetTable(-3)
-        L.PushString("ammo")
-        if attack.Current_ammo == -1 {
-          L.PushInteger(1000)
-        } else {
-          L.PushInteger(attack.Current_ammo)
-        }
-        L.SetTable(-3)
-        return 1
-      }
-    }
-    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
-    return 0
-  }
-}
-
-// Gets some stats about an aoe attack.  If the specified action is not an
-// aoe attack this function will return nil.  It is an error to query an
-// entity for an action that it does not have.
-//    Format:
-//    stats = getAoeAttackStats(id, name)
-//
-//    Input:
-//    id   - integer - Entity id of the entity with the action to query.
-//    name - string  - Name of the action to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    ap       (integer)
-//                    damage   (integer)
-//                    strength (integer)
-//                    range    (integer)
-//                    diameter (integer)
-//                    ammo     (integer)
-func GetAoeAttackStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getAoeAttackStats", luaInteger, luaString) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-2))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    name := L.ToString(-1)
-    for _, action := range ent.Actions {
-      if action.String() == name {
-        attack, ok := action.(*actions.AoeAttack)
-        if !ok {
-          // It's not a basic attack, that's ok but we have to return nil.
-          L.PushNil()
-          return 1
-        }
-        L.NewTable()
-        L.PushString("ap")
-        L.PushInteger(attack.Ap)
-        L.SetTable(-3)
-        L.PushString("damage")
-        L.PushInteger(attack.Damage)
-        L.SetTable(-3)
-        L.PushString("strength")
-        L.PushInteger(attack.Strength)
-        L.SetTable(-3)
-        L.PushString("range")
-        L.PushInteger(attack.Range)
-        L.SetTable(-3)
-        L.PushString("diameter")
-        L.PushInteger(attack.Diameter)
-        L.SetTable(-3)
-        L.PushString("ammo")
-        if attack.Current_ammo == -1 {
-          L.PushInteger(1000)
-        } else {
-          L.PushInteger(attack.Current_ammo)
-        }
-        L.SetTable(-3)
-        return 1
-      }
-    }
-    luaDoError(L, fmt.Sprintf("Entity with id=%d has no action named %s", id, name))
-    return 0
-  }
-}
-
-// Gets some stats about an entity.
-//    Format:
-//    stats = getEntityStats(id)
-//
-//    Input:
-//    id   - integer - Entity id of the entity to query.
-//
-//    Output:
-//    stats - table - Table containing the following values:
-//                    corpus (integer)
-//                    ego    (integer)
-//                    hpCur  (integer)
-//                    hpMax  (integer)
-//                    apCur  (integer)
-//                    apMax  (integer)
-func GetEntityStatsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getEntityStats", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    if ent.Stats == nil {
-      luaDoError(L, fmt.Sprintf("Tried to query stats for entity with id=%d who doesn't have stats.", id))
-      return 0
-    }
-
-    L.NewTable()
-    L.PushString("corpus")
-    L.PushInteger(ent.Stats.Corpus())
-    L.SetTable(-3)
-    L.PushString("ego")
-    L.PushInteger(ent.Stats.Ego())
-    L.SetTable(-3)
-    L.PushString("hpCur")
-    L.PushInteger(ent.Stats.HpCur())
-    L.SetTable(-3)
-    L.PushString("hpMax")
-    L.PushInteger(ent.Stats.HpMax())
-    L.SetTable(-3)
-    L.PushString("apCur")
-    L.PushInteger(ent.Stats.ApCur())
-    L.SetTable(-3)
-    L.PushString("apMax")
-    L.PushInteger(ent.Stats.ApMax())
-    L.SetTable(-3)
-
-    return 1
-  }
-}
-
-// Returns a list of all conditions affecting an entity.
-//    Format:
-//    conditions = getConditions(id)
-//
-//    Input:
-//    id - integer - Entity id of the entity whose conditions to query.
-//
-//    Output:
-//    conditions - table - Contains a mapping from name to a true boolean for
-//                         every condition currently affecting the specified
-//                         entity.
-func GetConditionsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getConditions", luaInteger) {
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    for _, condition := range ent.Stats.ConditionNames() {
-      L.PushString(condition)
-      L.PushBoolean(true)
-      L.SetTable(-3)
-    }
-    return 1
-  }
-}
-
-// Returns a list of all actions that an entity has.
-//    Format:
-//    actions = getActions(id)
-//
-//    Input:
-//    id - integer - Entity id of the entity whose actions to query.
-//
-//    Output:
-//    actions - table - Contains a mapping from name to a true boolean for
-//                      every action that the specified entity has.
-func GetActionsFunc(a *Ai) lua.GoFunction {
-  return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "getActions", luaInteger) {
-      return 0
-    }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected getActions(int)"))
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
-    if ent == nil {
-      luaDoError(L, fmt.Sprintf("Tried to reference entity with id=%d who doesn't exist.", id))
-      return 0
-    }
-    L.NewTable()
-    for _, action := range ent.Actions {
-      L.PushString(action.String())
-      L.PushBoolean(true)
-      L.SetTable(-3)
-    }
     return 1
   }
 }
@@ -784,15 +431,13 @@ func GetActionsFunc(a *Ai) lua.GoFunction {
 //    e - boolean - True if the entity exists and has positive hp.
 func ExistsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "exists", luaInteger) {
+    // if !game.LuaCheckParamsOk(L, "exists", game.LuaTable) {
+    //   return 0
+    // }
+    if L.IsNil(-1) {
       return 0
     }
-    if !L.IsNumber(-1) {
-      luaDoError(L, fmt.Sprintf("Unexpected parameters, expected exists(int)"))
-      return 0
-    }
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
+    ent := game.LuaToEntity(L, a.ent.Game(), -1)
     L.PushBoolean(ent != nil && ent.Stats != nil && ent.Stats.HpCur() > 0)
     return 1
   }
@@ -815,26 +460,26 @@ func ExistsFunc(a *Ai) lua.GoFunction {
 //    Output:
 //    ents - array[integer] - Array of entity ids.
 func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
-  valid_kinds := map[string]bool {
-    "intruder": true,
-    "denizen": true,
-    "minion": true,
-    "servitor": true,
-    "master": true,
-    "non-minion": true,
+  valid_kinds := map[string]bool{
+    "intruder":     true,
+    "denizen":      true,
+    "minion":       true,
+    "servitor":     true,
+    "master":       true,
+    "non-minion":   true,
     "non-servitor": true,
-    "non-master": true,
-    "all" : true,
+    "non-master":   true,
+    "all":          true,
   }
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "nearestNEntities", luaInteger, luaString) {
+    if !game.LuaCheckParamsOk(L, "NearestNEntities", game.LuaInteger, game.LuaString) {
       return 0
     }
     g := me.Game()
     max := L.ToInteger(-2)
     kind := L.ToString(-1)
     if !valid_kinds[kind] {
-      err_str := fmt.Sprintf("nearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
+      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
       base.Warn().Printf(err_str)
       L.PushString(err_str)
       L.Error()
@@ -842,25 +487,46 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     }
     var eds entityDistSlice
     for _, ent := range g.Ents {
-      if ent.Stats == nil { continue }
+      if ent.Stats == nil {
+        continue
+      }
+      if ent.Stats.HpCur() <= 0 {
+        continue
+      }
       switch kind {
       case "all":
       case "intruder":
-        if ent.Side() != game.SideExplorers { continue }
+        if ent.Side() != game.SideExplorers {
+          continue
+        }
       case "denizen":
-        if ent.Side() != game.SideHaunt { continue }
+        if ent.Side() != game.SideHaunt {
+          continue
+        }
       case "minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
+          continue
+        }
       case "servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelServitor { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelServitor {
+          continue
+        }
       case "master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster {
+          continue
+        }
       case "non-minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
+          continue
+        }
       case "non-servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor {
+          continue
+        }
       case "non-master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster { continue }
+        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster {
+          continue
+        }
       }
       x, y := ent.Pos()
       dx, dy := ent.Dims()
@@ -883,51 +549,12 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     // populate it with the entity ids of the results.
     L.NewTable()
     for i := range eds {
-      L.PushInteger(i+1)
-      L.PushInteger(int(eds[i].ent.Id))
+      L.PushInteger(i + 1)
+      game.LuaPushEntity(L, eds[i].ent)
       L.SetTable(-3)
     }
     return 1
   }
-}
-
-func pushRoom(L *lua.State, floor, room int) {
-  L.NewTable()
-  L.PushString("floor")
-  L.PushInteger(floor)
-  L.SetTable(-3)
-  L.PushString("room")
-  L.PushInteger(room)
-  L.SetTable(-3)
-}
-
-func pushDoor(L *lua.State, floor, room, door int) {
-  L.NewTable()
-  L.PushString("floor")
-  L.PushInteger(floor)
-  L.SetTable(-3)
-  L.PushString("room")
-  L.PushInteger(room)
-  L.SetTable(-3)
-  L.PushString("door")
-  L.PushInteger(door)
-  L.SetTable(-3)
-}
-
-func getFloorRoomDoor(L *lua.State, index int) (floor, room, door int) {
-  L.PushString("floor")
-  L.GetTable(index-1)
-  floor = L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("room")
-  L.GetTable(index-1)
-  room = L.ToInteger(-1)
-  L.Pop(1)
-  L.PushString("door")
-  L.GetTable(index-1)
-  door = L.ToInteger(-1)
-  L.Pop(1)
-  return
 }
 
 func checkFloorRoom(h *house.HouseDef, floor, room int) bool {
@@ -957,7 +584,7 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
 // going through only explored rooms.  It will return one of the closest such
 // rooms.
 //    Format
-//    r = nearbyUnexploredRoom()
+//    r = NearbyUnexploredRoom()
 //
 //    Input:
 //    none
@@ -966,7 +593,7 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
 //    r - room - An unexplored room, or nil if no such room exists.
 func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "nearbyUnexploredRoom") {
+    if !game.LuaCheckParamsOk(L, "NearbyUnexploredRoom") {
       return 0
     }
 
@@ -992,7 +619,7 @@ func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
       return 1
     }
 
-    pushRoom(L, 0, path[len(path) - 1])
+    game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[path[len(path)-1]])
     return 1
   }
 }
@@ -1015,25 +642,31 @@ func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
 //    but including dst.
 func RoomPathFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomPath", luaTable, luaTable) {
+    if !game.LuaCheckParamsOk(L, "roomPath", game.LuaRoom, game.LuaRoom) {
       return 0
     }
 
     me := a.ent
     g := me.Game()
     graph := g.RoomGraph()
-    f1, r1, _ := getFloorRoomDoor(L, -2)
-    if !checkFloorRoom(g.House, f1, r1) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f1, r1))
-      return 0
-    }
-    f2, r2, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(g.House, f2, r2) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f2, r2))
+    r1 := game.LuaToRoom(L, g, -2)
+    r2 := game.LuaToRoom(L, g, -1)
+    if r1 == nil || r2 == nil {
+      game.LuaDoError(L, fmt.Sprintf("Referenced one or more invalid rooms."))
       return 0
     }
 
-    cost, path := algorithm.Dijkstra(graph, []int{r1}, []int{r2})
+    L.PushString("room")
+    L.GetTable(-3)
+    r1_index := L.ToInteger(-1)
+    L.Pop(1)
+
+    L.PushString("room")
+    L.GetTable(-2)
+    r2_index := L.ToInteger(-1)
+    L.Pop(1)
+
+    cost, path := algorithm.Dijkstra(graph, []int{r1_index}, []int{r2_index})
     if cost == -1 {
       L.PushNil()
       return 1
@@ -1050,9 +683,11 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     }
     L.NewTable()
     for i, v := range path {
-      if i == 0 { continue }  // Skip this one because we're in it already
+      if i == 0 {
+        continue
+      } // Skip this one because we're in it already
       L.PushInteger(i)
-      pushRoom(L, 0, v)
+      game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[v])
       L.SetTable(-3)
     }
     return 1
@@ -1073,16 +708,14 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
 //    seen right now.
 func RoomContainingFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomContaining", luaInteger) {
+    if !game.LuaCheckParamsOk(L, "roomContaining", game.LuaEntity) {
       return 0
     }
-
-    id := game.EntityId(L.ToInteger(-1))
-    ent := a.ent.Game().EntityById(id)
+    ent := game.LuaToEntity(L, a.ent.Game(), -1)
     if ent == nil || (ent.Side() != a.ent.Side() && !a.ent.Game().TeamLos(ent.Pos())) {
       L.PushNil()
     } else {
-      pushRoom(L, 0, ent.CurrentRoom())
+      game.LuaPushRoom(L, ent.Game(), ent.Game().House.Floors[0].Rooms[ent.CurrentRoom()])
     }
     return 1
   }
@@ -1100,39 +733,33 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
 //    doors - array[door] - List of all doors connecting r1 and r2.
 func AllDoorsBetween(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allDoorsBetween", luaTable, luaTable) {
+    if !game.LuaCheckParamsOk(L, "allDoorsBetween", game.LuaRoom, game.LuaRoom) {
       return 0
     }
-    f1, r1, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f1, r1) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f1, r1))
+    room1 := game.LuaToRoom(L, a.ent.Game(), -2)
+    room2 := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room1 == nil || room2 == nil {
+      game.LuaDoError(L, "AllDoorsBetween: Specified an invalid door.")
       return 0
     }
-    f2, r2, _ := getFloorRoomDoor(L, -2)
-    if !checkFloorRoom(a.ent.Game().House, f2, r2) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f2, r2))
-      return 0
-    }
-    if f1 != f2 {
-      // Rooms on different floors can theoretically be connected in the
-      // future by a stairway, but right now that doesn't happen.
-      L.NewTable()
-      return 1
-    }
+
+    // TODO: Check for floors!
+    // if f1 != f2 {
+    //   // Rooms on different floors can theoretically be connected in the
+    //   // future by a stairway, but right now that doesn't happen.
+    //   L.NewTable()
+    //   return 1
+    // }
 
     L.NewTable()
     count := 1
-    room1 := a.ent.Game().House.Floors[f1].Rooms[r1]
-    room2 := a.ent.Game().House.Floors[f2].Rooms[r2]
-    base.Log().Printf("Room1: (%d, %d) dims (%d, %d)", room1.X, room1.Y, room1.Size.Dx, room1.Size.Dy)
-    base.Log().Printf("Room2: (%d, %d) dims (%d, %d)", room2.X, room2.Y, room2.Size.Dx, room2.Size.Dy)
-    for d_index, door1 := range room1.Doors {
+    for _, door1 := range room1.Doors {
       for _, door2 := range room2.Doors {
-        _, d := a.ent.Game().House.Floors[f1].FindMatchingDoor(room1, door1)
+        _, d := a.ent.Game().House.Floors[0].FindMatchingDoor(room1, door1)
         if d == door2 {
           L.PushInteger(count)
           count++
-          pushDoor(L, f1, r1, d_index)
+          game.LuaPushDoor(L, a.ent.Game(), door1)
           L.SetTable(-3)
         }
       }
@@ -1152,19 +779,19 @@ func AllDoorsBetween(a *Ai) lua.GoFunction {
 //    doors - array[door] - List of all doors attached to the specified room.
 func AllDoorsOn(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "allDoorsOn", luaTable) {
+    if !game.LuaCheckParamsOk(L, "allDoorsOn", game.LuaRoom) {
       return 0
     }
-    f, r, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f, r) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f, r))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room == nil {
+      game.LuaDoError(L, "Specified an invalid room.")
       return 0
     }
 
     L.NewTable()
-    for i := range a.ent.Game().House.Floors[f].Rooms[r].Doors {
+    for i := range room.Doors {
       L.PushInteger(i + 1)
-      pushDoor(L, f, r, i)
+      game.LuaPushDoor(L, a.ent.Game(), room.Doors[i])
       L.SetTable(-3)
     }
     return 1
@@ -1184,16 +811,15 @@ func AllDoorsOn(a *Ai) lua.GoFunction {
 //    and closed from.
 func DoorPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doorPositions", luaTable) {
+    if !game.LuaCheckParamsOk(L, "DoorPositions", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      luaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil || room == nil {
+      game.LuaDoError(L, "DoorPositions: Specified an invalid door.")
       return 0
     }
-    room := a.ent.Game().House.Floors[f].Rooms[r]
-    door := room.Doors[d]
 
     var x, y, dx, dy int
     switch door.Facing {
@@ -1214,22 +840,14 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
       y = -1
       dx = 1
     default:
-      luaDoError(L, fmt.Sprintf("Found a door with a bad facing."))
+      game.LuaDoError(L, fmt.Sprintf("Found a door with a bad facing."))
     }
     L.NewTable()
     count := 1
-    for i := -1; i < door.Width + 1; i++ {
+    for i := -1; i < door.Width+1; i++ {
       L.PushInteger(count)
       count++
-
-      L.NewTable()
-      L.PushString("x")
-      L.PushInteger(room.X + x + dx*i)
-      L.SetTable(-3)
-      L.PushString("y")
-      L.PushInteger(room.Y + y + dy*i)
-      L.SetTable(-3)
-
+      game.LuaPushPoint(L, room.X+x+dx*i, room.Y+y+dy*i)
       L.SetTable(-3)
     }
     return 1
@@ -1247,15 +865,15 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
 //    open - boolean - True if the door is open, false otherwise.
 func DoorIsOpenFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doorIsOpen", luaTable) {
+    if !game.LuaCheckParamsOk(L, "doorIsOpen", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      luaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil {
+      game.LuaDoError(L, "DoorIsOpen: Specified an invalid door.")
       return 0
     }
-    L.PushBoolean(a.ent.Game().House.Floors[f].Rooms[r].Doors[d].Opened)
+    L.PushBoolean(door.Opened)
     return 1
   }
 }
@@ -1272,12 +890,12 @@ func DoorIsOpenFunc(a *Ai) lua.GoFunction {
 //    res will be nil if the action could not be performed for some reason.
 func DoDoorToggleFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "doDoorToggle", luaTable) {
+    if !game.LuaCheckParamsOk(L, "doDoorToggle", game.LuaDoor) {
       return 0
     }
-    f, r, d := getFloorRoomDoor(L, -1)
-    if !checkFloorRoomDoor(a.ent.Game().House, f, r, d) {
-      luaDoError(L, fmt.Sprintf("Referenced floor, room, and door (%d, %d, %d) which doesn't exist.", f, r, d))
+    door := game.LuaToDoor(L, a.ent.Game(), -1)
+    if door == nil {
+      game.LuaDoError(L, "DoDoorToggle: Specified an invalid door.")
       return 0
     }
 
@@ -1290,15 +908,15 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
       }
     }
     if interact == nil {
-      luaDoError(L, fmt.Sprintf("Tried to toggle a door, but don't have an interact action."))
+      game.LuaDoError(L, fmt.Sprintf("Tried to toggle a door, but don't have an interact action."))
       L.PushNil()
       return 1
     }
-    exec := interact.AiToggleDoor(a.ent, f, r, d)
+    exec := interact.AiToggleDoor(a.ent, door)
     if exec != nil {
       a.execs <- exec
       <-a.pause
-      L.PushBoolean(a.ent.Game().House.Floors[f].Rooms[r].Doors[d].Opened)
+      L.PushBoolean(door.Opened)
     } else {
       L.PushNil()
     }
@@ -1317,23 +935,22 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
 //    ps - array[table[x,y]] - List of all position inside the specified room.
 func RoomPositionsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !luaCheckParamsOk(L, "roomPositions", luaTable) {
+    if !game.LuaCheckParamsOk(L, "roomPositions", game.LuaRoom) {
       return 0
     }
-    f, r, _ := getFloorRoomDoor(L, -1)
-    if !checkFloorRoom(a.ent.Game().House, f, r) {
-      luaDoError(L, fmt.Sprintf("Referenced floor and room (%d, %d) which doesn't exist.", f, r))
+    room := game.LuaToRoom(L, a.ent.Game(), -1)
+    if room == nil {
+      game.LuaDoError(L, "RoomPositions: Specified an invalid room.")
       return 0
     }
-    room := a.ent.Game().House.Floors[f].Rooms[r]
 
     L.NewTable()
     count := 1
-    for x := room.X; x < room.X + room.Size.Dx; x++ {
-      for y := room.Y; y < room.Y + room.Size.Dy; y++ {
+    for x := room.X; x < room.X+room.Size.Dx; x++ {
+      for y := room.Y; y < room.Y+room.Size.Dy; y++ {
         L.PushInteger(count)
         count++
-        putPointToTable(L, x, y)
+        game.LuaPushPoint(L, x, y)
         L.SetTable(-3)
       }
     }

@@ -5,24 +5,22 @@ function protectMaster(master, intruders)
     -- Check for the longest range basic attack that the intruder has that
     -- does positive damage.
     range = 1
-    actions = getActions(intruder)
-    for action, _ in pairs(actions) do
-      stats = getBasicAttackStats(intruder, action)
-      if stats then
-        if stats.range > range and stats.damage > 0 then
-          range = stats.range
+    for action, _ in intruder.Actions do
+      if action.Type == "Basic Attack" or action.Type == "Aoe Attack" then
+        if action.Range > range and action.Damage > 0 then
+          range = stats.Range
         end
       end
     end
 
     -- Check if the intruder is close enough to the master to hit it with
     -- a basic attack.
-    if rangedDistBetweenEntities(master, intruder) <= range then
+    if Utils.RangedDistBetweenEntities(master, intruder) <= range then
       -- We found an intruder that is too close to the master, so we will go
       -- after him.
-      ps = allPathablePoints(pos(me()), pos(intruder), 1, 1)
+      ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
       if ps[1] then
-        loc = doMove(ps, 1000)
+        loc = Do.Move(ps, 1000)
         if loc then
           return intruder
         end
@@ -37,9 +35,9 @@ function protectMaster(master, intruders)
   return nil
 end
 
-function think()
-  intruders = nearestNEntities(10, "intruder")
-  master = nearestNEntities(1, "master")[1]
+function Think()
+  intruders = Utils.NearestNEntities(10, "intruder")
+  master = Utils.NearestNEntities(1, "master")[1]
 
   -- If there are no intruders then we just stay put.
   if table.getn(intruders) == 0 then
@@ -50,26 +48,26 @@ function think()
   if master then
     target = protectMaster(master, intruders)
     if target then
-      while exists(target) do
-        res = doBasicAttack("Kick", target)
+      while Utils.Exists(target) do
+        res = Do.BasicAttack("Kick", target)
         if res == nil then
           return
         end
       end
       -- We took out the target, so check again for a new target
-      think()
+      Think()
     end
   end
 
   -- If we made it here then we are free to just attack the nearest intruder
   intruder = intruders[1]
-  ps = allPathablePoints(pos(me()), pos(intruder), 1, 1)
+  ps = Utils.AllPathablePoints(Me.Pos, intruder.Pos, 1, 1)
   if ps[1] then
-    loc = doMove(ps, 1000)
+    loc = Do.Move(ps, 1000)
   end
-  if rangedDistBetweenEntities(me(), intruder) == 1 then
-    while exists(intruder) do
-      res = doBasicAttack("Kick", intruder)
+  if Utils.RangedDistBetweenEntities(Me, intruder) == 1 then
+    while Utils.Exists(intruder) do
+      res = Do.BasicAttack("Kick", intruder)
       if res == nil then
         return
       end
@@ -78,7 +76,6 @@ function think()
     return
   end
 
-  think()
+  Think()
 end
 
-think()

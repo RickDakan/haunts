@@ -1,0 +1,13 @@
+{
+  "Name": "Statue 04 - Gladiatrix",
+  "Orientations" : [
+    {
+      "Dx": 1,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/statue_04/statue_04.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}

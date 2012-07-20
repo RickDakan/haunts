@@ -1,5 +1,5 @@
 {
-  "Name": "Harry",
+  "Name": "Harry2",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/occultist",
@@ -8,14 +8,14 @@
   },
   "Action_names": [
     "Move Test",
-    "Dire Curse",
- ],
+    "Dire Curse"
+  ],
   "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
       "Eumenides Codex",
-	  "Nazar Pendant",
-	  "Pain Killers"
+  	  "Nazar Pendant",
+  	  "Pain Killers"
     ]
   },
   "Base": {

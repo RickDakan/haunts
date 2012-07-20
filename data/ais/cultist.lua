@@ -2,10 +2,9 @@
 
 -- am I buffed?
 
-function think()
-	conditions = getConditions (me())
-		if not conditions ["Focused"] then 
-			doBasicAttack ("Cultic Mantra", me())
+function Think()
+		if not Me.Conditions ["Focused"] then 
+			Do.BasicAttack ("Cultic Mantra", Me)
 		end
 	end
 	target = pursue()
@@ -19,13 +18,8 @@ function think()
 		target = targetHasCondition(true, "Blindness")
 	end
 	if not target then
-		target = targetLowestStat(hpCur)
+		target = targetLowestStat(HpCur)
 	end
 	moveAndAttack("Sacrificial Blade", target)
 	end
 end
-think()
-
-		
-		
-		

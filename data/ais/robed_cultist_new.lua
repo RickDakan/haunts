@@ -1,9 +1,8 @@
 --robed cultist new
 
-function think()
-	conditions = getConditions(me())
-	if not conditions ["Focused"] then
-		doBasicAttack("Cultic Mantra", me())
+function Think()
+	if not Me.Conditions["Focused"] then
+		Do.BasicAttack("Cultic Mantra", Me)
 	else
 	target = pursue()
 	if target == nil then
@@ -15,4 +14,3 @@ function think()
 	end
 	moveWithinRangeAndAttack (1, "Sacrificial Blade", target)
 end
-think()
