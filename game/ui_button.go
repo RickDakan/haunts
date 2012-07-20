@@ -23,6 +23,11 @@ type Button struct {
   // Function to run whenever the button is clicked
   f func(interface{})
 
+  // If not nil this function can return false to indicate that it cannot
+  // be clicked.  Will only be called during Think.
+  valid_func func() bool
+  invalid    bool
+
   // Key that can be bound to have the same effect as clicking this button
   key gin.KeyId
 
@@ -35,7 +40,7 @@ type Button struct {
 // return true, otherwise it does nothing and returns false.
 func (b *Button) handleClick(x, y int, data interface{}) bool {
   in := pointInsideRect(x, y, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
-  if in {
+  if in && !b.invalid {
     b.f(data)
   }
   return in
@@ -43,7 +48,9 @@ func (b *Button) handleClick(x, y int, data interface{}) bool {
 
 func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
   if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
-    b.f(data)
+    if !b.invalid {
+      b.f(data)
+    }
     return true
   }
   return false
@@ -60,13 +67,12 @@ func doShading(current float64, in bool, dt int64) float64 {
 }
 
 func (b *Button) Think(x, y, mx, my int, dt int64) {
-  // var tdx, tdy int
-  // if b.Texture.Data() != nil {
-  //   tdx = b.Texture.Data().Dx()
-  //   tdy = b.Texture.Data().Dy()
-  // } else {
-  // }
-  in := pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
+  if b.valid_func != nil {
+    b.invalid = !b.valid_func()
+  } else {
+    b.invalid = false
+  }
+  in := !b.invalid && pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
   b.shade = doShading(b.shade, in, dt)
 }
 

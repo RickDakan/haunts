@@ -36,6 +36,13 @@
       "Path": "ui/arrow_lf.png"
     }
   },
+  "Next": {
+    "X": 861,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_rf.png"
+    }
+  },
   "Info": {
     "X": 565,
     "Y": 100,

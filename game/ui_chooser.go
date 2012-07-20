@@ -129,7 +129,7 @@ type chooseLayout struct {
     X, Y, Dx, Dy int
   }
 
-  Up, Down, Back Button
+  Up, Down, Back, Next Button
 
   Info struct {
     X, Y, Dx, Dy int
@@ -173,27 +173,18 @@ func (ob *OptionBasic) Think(hovered, selected, selectable bool, dt int64) {
   }
 }
 
-type ChooseParams struct {
-  Title struct {
-    X, Y    int
-    Texture texture.Object
-  }
-  Options []struct {
-    Texture texture.Object
-  }
-}
-
 type Chooser struct {
-  layout         chooseLayout
-  region         gui.Region
-  buttons        []*Button
-  options        []Option
-  selected       map[int]bool
-  selector       Selector
-  min, max       int
-  options_region gui.Region
-  info_region    gui.Region
-  mx, my         int
+  layout             chooseLayout
+  region             gui.Region
+  buttons            []*Button
+  non_scroll_buttons []*Button
+  options            []Option
+  selected           map[int]bool
+  selector           Selector
+  min, max           int
+  options_region     gui.Region
+  info_region        gui.Region
+  mx, my             int
 
   scroll struct {
     target, pos int
@@ -202,25 +193,23 @@ type Chooser struct {
   last_t int64
 }
 
-func MakeChooser() (*Chooser, <-chan map[int]bool, error) {
+func MakeChooser(opts []Option) (*Chooser, <-chan map[int]bool, error) {
   var ch Chooser
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "chooser", "layout.json"), "json", &ch.layout)
   if err != nil {
     return nil, nil, err
   }
-  var bops []OptionBasic
-  err = base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start", "versus", "goals.json"), "json", &bops)
-  if err != nil {
-    return nil, nil, err
-  }
-  for i := range bops {
-    ch.options = append(ch.options, &bops[i])
-  }
+  ch.options = opts
   ch.buttons = []*Button{
     &ch.layout.Up,
     &ch.layout.Down,
     &ch.layout.Back,
+    &ch.layout.Next,
+  }
+  ch.non_scroll_buttons = []*Button{
+    &ch.layout.Back,
+    &ch.layout.Next,
   }
   ch.layout.Up.f = func(interface{}) {
     ch.scroll.target -= ch.layout.Options.Dy
@@ -229,11 +218,18 @@ func MakeChooser() (*Chooser, <-chan map[int]bool, error) {
     ch.scroll.target += ch.layout.Options.Dy
   }
   done := make(chan map[int]bool, 1)
+  ch.selected = make(map[int]bool)
   ch.layout.Back.f = func(interface{}) {
     done <- nil
     close(done)
   }
-  ch.selected = make(map[int]bool)
+  ch.layout.Next.f = func(interface{}) {
+    done <- ch.selected
+    close(done)
+  }
+  ch.layout.Next.valid_func = func() bool {
+    return ch.selector(-1, ch.selected, false)
+  }
   ch.min, ch.max = 1, 1
   if ch.min == 1 && ch.max == 1 {
     ch.selector = SelectExactlyOne
@@ -317,7 +313,11 @@ func (c *Chooser) Think(g *gui.Gui, t int64) {
   if c.mx == 0 && c.my == 0 {
     c.mx, c.my = gin.In().GetCursor("Mouse").Point()
   }
-  for _, button := range c.buttons {
+  buttons := c.buttons
+  if c.optionsHeight() <= c.layout.Options.Dy {
+    buttons = c.non_scroll_buttons
+  }
+  for _, button := range buttons {
     button.Think(c.region.X, c.region.Y, c.mx, c.my, dt)
   }
   c.doOnOptions(func(index int, opt Option, data doOnOptionData) {
@@ -330,7 +330,11 @@ func (c *Chooser) Respond(g *gui.Gui, group gui.EventGroup) bool {
     c.mx, c.my = cursor.Point()
   }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    for _, button := range c.buttons {
+    buttons := c.buttons
+    if c.optionsHeight() <= c.layout.Options.Dy {
+      buttons = c.non_scroll_buttons
+    }
+    for _, button := range buttons {
       if button.handleClick(c.mx, c.my, nil) {
         return true
       }
@@ -355,11 +359,14 @@ func (c *Chooser) Draw(region gui.Region) {
   tex := c.layout.Scroller.Texture.Data()
   tex.RenderNatural(region.X+c.layout.Scroller.X, region.Y+c.layout.Scroller.Y)
 
-  if c.optionsHeight() > c.layout.Options.Dy {
-    for _, button := range c.buttons {
-      button.RenderAt(region.X, region.Y)
-    }
+  buttons := c.buttons
+  if c.optionsHeight() <= c.layout.Options.Dy {
+    buttons = c.non_scroll_buttons
   }
+  for _, button := range buttons {
+    button.RenderAt(region.X, region.Y)
+  }
+
   c.options_region.PushClipPlanes()
   hovered := -1
   c.doOnOptions(func(index int, opt Option, data doOnOptionData) {
