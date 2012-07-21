@@ -1,16 +1,6 @@
--- function setLosModeToRoomsWithSpawnsMatching(side, pattern)
---   sp = Script.GetSpawnPointsMatching(pattern)
---   rooms = {}
---   for i, spawn in pairs(sp) do
---     rooms[i] = Script.RoomAtPos(spawn.Pos)
---   end
---   Script.SetLosMode(side, rooms)
--- end
-
-
 
 function Init()
-  if not store.Ch01a then
+  if not store.Ch01b then
     store.Ch01b = {}
   end
   store.Ch01b.Spawnpoints_complete={}
@@ -66,7 +56,6 @@ end
 
 
 function IsPosInUnusedSpawnpoint(pos, list, used)
-  --name identifies spawnpoint
   for _, spawn in pairs(list) do
     if not used[spawn] and pointIsInSpawns(pos, spawn) then
       return spawn
@@ -83,6 +72,8 @@ function OnMove(ent, path)
     name = IsPosInUnusedSpawnpoint(pos, store.Ch01b.Spawnpoints, store.Ch01b.Spawnpoints_complete)
     if name then
       return i
+      --this stops them, if we don't stop them, then we need to store that it's true.
+      --     store.Ch01b.Spawnpoints_complete["Ch01_Dialog04"] = true
     end
   end
   return table.getn(path)
@@ -136,38 +127,41 @@ function OnAction(intruders, round, exec)
   end
 
   if name == "Dining Trigger01" then
-    shade_spawn = Script.GetSpawnPointsMatching("Shade Spawn02")
+    shade_spawn = Script.GetSpawnPointsMatching("^Shade Spawn02")
     store.temporary_shades = {}
+    store.Ch01b.Spawnpoints_complete["Dining Trigger01"] = true
     for i = 1,4 do
-      ent = SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
       store.temporary_shades[i] = ent
+
     end
   end
 
   if name == "Harry Trigger01" then
-    Script.DialogBox(ui/dialog/Ch01/"Ch01_Dialog04")
+    Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog04.json")
+    angry_shade_spawn = Script.GetSpawnPointsMatching("^Angry Shade Spawn01")
     harry_spawn = Script.GetSpawnPointsMatching("Harry Spawn")
-
+    store.Ch01b.Spawnpoints_complete["Harry Trigger01"] = true
     store.angry_shades = {}
     for i = 1,5 do
-      ent = SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
-      SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
-   end  
-end
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
+      Script.SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
+    end  
+  end
 
-  all_dead = true
-  for _, ent in pairs(store.angry_shades) do
-    if ent.Stats.HpCur > 0 then
-      all_dead = false
+  if store.Ch01b.Spawnpoints_complete["Harry Trigger01"] then
+    all_dead = true
+    for _, ent in pairs(Script.GetAllEnts()) do
+      if ent.Name == "Angry Shade" and ent.Stats.HpCur > 0 then
+        all_dead = false
+      end
+    end
+    if all_dead then
+      Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
+      store.Ch01b.Spawnpoints_complete["Ch01_Dialog06"] = true
+      Script.StartScript("Ch01c.lua")
     end
   end
-  if all_dead then
-    Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
-    store.Ch01b.Spawnpoints_complete["Ch01_Dialog06"] = true
-    Script.LoadScript("Ch01c.lua")
-  end
-end
-
 end
 
 function RoundEnd(intruders, round)

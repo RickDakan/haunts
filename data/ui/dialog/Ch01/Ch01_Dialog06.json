@@ -32,7 +32,7 @@
 		  "Next": "Start4",
           "Text": "I don't know! I was caught in the storm. I don't belong here.",
 		  "Image":{
-            "Path": "ui/dialog/Ch01/husband_temp.png"
+            "Path": "ui/dialog/Ch01/harry_temp.png"
           }
         }
 	    ]
