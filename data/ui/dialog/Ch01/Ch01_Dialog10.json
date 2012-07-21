@@ -54,7 +54,7 @@
       "Sections":[
         {
 		  "Next": "Start6",
-          "Text": "Together, we could do it. These...things... they've not stopped us thus far.",
+          "Text": "Together we could do it. These... things... they've not stopped us thus far.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/harry_temp.png"
           }

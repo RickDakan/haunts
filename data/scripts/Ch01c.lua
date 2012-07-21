@@ -1,20 +1,9 @@
-function setLosModeToRoomsWithSpawnsMatching(side, pattern)
-  sp = Script.GetSpawnPointsMatching(pattern)
-  rooms = {}
-  for i, spawn in pairs(sp) do
-    rooms[i] = Script.RoomAtPos(spawn.Pos)
-  end
-  Script.SetLosMode(side, rooms)
-end
---
-play_as_denizens = false
 function Init()
   if not store.Ch01c then
     store.Ch01c = {}
   end
-   store.Ch01c = {}
-   store.Ch01c.Dialog_complete = {}
-   store.Ch01c.Dialogs = {
+   store.Ch01c.Spawnpoints_complete = {}
+   store.Ch01c.Spawnpoints = {
       "Ch01_Dialog07",
       "Ch01_Dialog08",
       "Ch01_Dialog09",
@@ -43,8 +32,9 @@ function RoundStart(intruders, round)
     Script.SetVisibility("intruders")
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
-    Script.ShowMainBar(intruders ~= play_as_denizens)
+    Script.ShowMainBar(intruders)
 end
+
 
 
 function pointIsInSpawn(pos, sp)
@@ -52,9 +42,7 @@ function pointIsInSpawn(pos, sp)
 end
 
 function pointIsInSpawns(pos, regexp)
-  print("Regexp: '",regexp,"'")
   sps = Script.GetSpawnPointsMatching(regexp)
-  print("Got ", "spawns for ", regexp)
   for _, sp in pairs(sps) do
     if pointIsInSpawn(pos, sp) then
       return true
@@ -64,11 +52,10 @@ function pointIsInSpawns(pos, regexp)
 end
 
 
-function IsPosInUnusedSpawnpoint(pos, name, list)
-  --name identifies spawnpoint
+function IsPosInUnusedSpawnpoint(pos, list, used)
   for _, spawn in pairs(list) do
-    if not used[name] and pointIsInSpawns(pos, name) then
-      return name
+    if not used[spawn] and pointIsInSpawns(pos, spawn) then
+      return spawn
     end
   end
   return nil
@@ -88,10 +75,12 @@ function OnMove(ent, path)
 end
 
 function OnAction(intruders, round, exec)
-  if not exec.ent.Side.Intruder then
+  if not exec.Ent.Side.Intruder then
     return
   end
-  name = IsPosInUnusedSpawnpoint(pos, store.Ch01c.Spawnpoints, store.Ch01c.Spawnpoints_complete)
+  --LOOK AT THIS AND LEARN!!!
+  name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch01c.Spawnpoints, store.Ch01c.Spawnpoints_complete)
+ 
   if name == "Ch01_Dialog07" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog07.json")
     store.Ch01c.Spawnpoints_complete["Ch01_Dialog07"] = true
@@ -114,54 +103,74 @@ function OnAction(intruders, round, exec)
 
   if name == "Chair Trigger01" then
     chair_spawn = Script.GetSpawnPointsMatching("Chair Spawn01")
-    SpawnEntitySomewhereInSpawnPoints("Poltergeist", chair_spawn)
-    store.Ch01c.Spawnpoints_complete("Chair Trigger01") = true
+    print("Spawns:", table.getn(chair_spawn))
+    ent = Script.SpawnEntitySomewhereInSpawnPoints("Vengeful Wraith", chair_spawn)
+    print("ent:",ent)
+    store.Ch01c.Spawnpoints_complete["Chair Trigger01"] = true
   end
 
   if name == "Foyer Trigger01" then
     angry_shade_spawn = Script.GetSpawnPointsMatching("Angry Shade Spawn02")
      for i = 1,5 do
-      ent = SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
      end
-    store.Ch01c.Spawnpoints_complete("Foyer Trigger01") = true
+    store.Ch01c.Spawnpoints_complete["Foyer Trigger01"] = true
   end   
 
   if name == "Greathall Trigger01" then
     lost_soul_spawn = Script.GetSpawnPointsMatching("Lost Soul Spawn01")
       for i = 1,4 do
-      ent = SpawnEntitySomewhereInSpawnPoints("Lost Soul", lost_soul_spawn)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Lost Soul", lost_soul_spawn)
      end   
-    store.Ch01c.Spawnpoints_complete("Greathall Trigger01") = true
+    store.Ch01c.Spawnpoints_complete["Greathall Trigger01"] = true
   end
 
+-- REPLACE HARRY WITH BOSCH
+
   if name == "Finale Trigger01" then
-    Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog10.json")
-      choices = Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog10.json")
-      store.Ch01c.choice_a = choices[1]
-    bosch_spawn = Script.GetSpawnPointsMatching ("Bosch")
-    intruder_spawn02 = Script.GetSpawnPointsMatching ("Intruders Spawn02")
-    finale_shade_spawn = Script.GetSpawnPointsMatching ("Shade Finale")
-    store.Ch01c.Spawnpoints_complete("Finale Trigger01") = true
-      if store.Ch01c.choice_a == "Greedy" then
-        for i = 1,8 do
-          SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+    choices = Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog10.json")
+    store.Ch01c.choice_a = choices[1]
+    store.Ch01c.Spawnpoints_complete["Finale Trigger01"] = true
+    
+
+   
+    if store.Ch01c.choice_a == "Greedy" then
+      finale_shade_spawn = Script.GetSpawnPointsMatching ("Shade Finale")
+      for i = 1,8 do
+        Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", finale_shade_spawn)
+      end
+      for _, ent in pairs(Script.GetAllEnts()) do
+      if ent.Name == "Harry" then
+          Script.SetHp(ent, 0)
         end
       end
+      bosch_spawn = Script.GetSpawnPointsMatching ("Bosch")
+      Script.SpawnEntitySomewhereInSpawnPoints("Angry Bosch", bosch_spawn)
+    end
+    
 
-      if store.Ch01c.choica_a == "Discretion" then
-        for i = 1,8 do
-          SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+    if store.Ch01c.choice_a == "Discretion" then
+      finale_shade_spawn = Script.GetSpawnPointsMatching ("Shade Finale")
+      for i = 1,4 do
+        Script.SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
+      end
+      for _, ent in pairs(Script.GetAllEnts()) do
+      if ent.Name == "Harry" then
+          Script.SetHp(ent, 0)
         end
+      end
+      bosch_spawn = Script.GetSpawnPointsMatching ("Bosch")
+      Script.SpawnEntitySomewhereInSpawnPoints("Scornful Bosch", bosch_spawn)
       end
     end
 
-    if name == "Exit" and store.Ch01c.choice_a == "Greedy" then
-      if ent.Name == "Caitlin" then
-        Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog11.json")
-      end
-      if ent.Name == "Percy" then
+    if name == "Exit" and store.Ch01c.choice_a == "Greedy" then 
+      -- if ent.Name == "Caitlin" then
+      --   Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog11.json")
+      -- end
+      -- if ent.Name == "Percy" then
         Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog12.json")
-      end
+      -- end
     end
 
     if name == "Exit" and store.Ch01c.choice_a == "Discretion" then

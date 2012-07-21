@@ -19,13 +19,6 @@ function Init()
       "Ch01_Dialog01",
       "Ch01_Dialog02",
       "Ch01_Dialog03",
-      "Ch01_Dialog04",
-      "Ch01_Dialog05",
-      "Ch01_Dialog06",
-      "Ch01_Dialog07",
-      "Ch01_Dialog08",
-      "Ch01_Dialog09",
-      "Ch01_Dialog10",
    } 
 
   Script.LoadHouse("Chapter_01_a")

@@ -1,16 +1,3 @@
---Chapter 2
-function setLosModeToRoomsWithSpawnsMatching(side, pattern)
-  sp = Script.GetSpawnPointsMatching(pattern)
-  rooms = {}
-  for i, spawn in pairs(sp) do
-    rooms[i] = Script.RoomAtPos(spawn.Pos)
-  end
-  Script.SetLosMode(side, rooms)
-end
-
-
-
-play_as_denizens = true
 function Init()
   if not store.Ch02 then
   store.Ch02 = {}
@@ -24,15 +11,12 @@ function Init()
    } 
 
   Script.LoadHouse("Chapter_02")
-  Script.DialogBox("ui/dialog/Ch01/Ch02_Dialog01.json") 
+  Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog01.json") 
 
   Script.BindAi("denizen", "human")
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "intruders.lua")
     --always bind one to human!
-
-  store.cordelia_dead = false
-  store.sabina_dead = false
 end
 
 
@@ -41,12 +25,13 @@ function doDenizenSetup()
     {"Bosch", 1},
   }
 
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master-.*")
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Bosch-.*")
 
   placed = {}
   while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master-.*", 1, ents)
+    placed = Script.PlaceEntities("Bosch-.*", 1, ents)
   end
+
   ents = {
       {"Lost Soul", 1},
       {"Poltergeist", 1},
@@ -59,8 +44,8 @@ function doDenizenSetup()
  	ents = {
  		{"Tyree's Ghost", 1},
  	}
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Servitor-.*")
 	Script.PlaceEntities("Servitor-.*", 1, ents)
-	Script.SetLosMode("denizens", "none")
   end
 end
 
@@ -69,7 +54,7 @@ if store.Ch01c.choice_a == "Discretion" then
 end
 
 if store.Ch01c.choice_a == "Greedy" then
---  Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog02.json")
+  Script.DialogBox("ui/dialog/Ch02/Ch02_Dialog02_tyree.json")
 
 elias_spawn = Script.GetSpawnPointsMatching("Elias-Start")
 Script.SpawnEntitySomewhereInSpawnPoints ("Elias Tyree", elias_spawn)
@@ -104,11 +89,11 @@ function pointIsInSpawns(pos, regexp)
   return false
 end
 
-function IsPosInUnusedSpawnpoint(pos, name, list)
-  --name identifies spawnpoint
+
+function IsPosInUnusedSpawnpoint(pos, list, used)
   for _, spawn in pairs(list) do
-    if not used[name] and pointIsInSpawns(pos, name) then
-      return name
+    if not used[spawn] and pointIsInSpawns(pos, spawn) then
+      return spawn
     end
   end
   return nil
@@ -119,7 +104,7 @@ function OnMove(ent, path)
     return table.getn(path)
   end
   for i, pos in pairs(path) do
-    name = IsPosInUnusedSpawnpoint(pos, store.Spawnpoints, store.Spawnpoints_complete)
+    name = IsPosInUnusedSpawnpoint(pos, store.Ch02.Spawnpoints, store.Ch02.Spawnpoints_complete)
     if name then
       return i
     end
@@ -127,60 +112,61 @@ function OnMove(ent, path)
   return table.getn(path)
 end
 
+-- function OnAction(intruders, round, exec)
+--   if not exec.Ent.Side.Intruder then
+--     return
+--   end
+--   name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch02.Spawnpoints, store.Ch02.Spawnpoints_complete)
+ 
+--   if ent.Name("Cordelia Tyree") and ent.HpCur == 0 then
+--     store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] = true
+--     Script.DialogBox("Ch02_Cordelia_Dies")
+--  end
 
-function OnAction(denizens, round, exec)
+--   if ent.Name("Sabina Tyree") and ent.HpCur == 0 then
+--   store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] = true
+--   Script.DialogBox("Ch02_Sabina_Dies")
+--   end
 
- if ent.Name("Cordelia Tyree") and ent.HpCur == 0 then
-  store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] = true
-  Script.DialogBox("Ch02_Cordelia_Dies")
- end
-
- if ent.Name("Sabina Tyree") and ent.HpCur == 0 then
-  store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] = true
-  Script.DialogBox("Ch02_Sabina_Dies")
- end
-
-function OnAction(intruders, round, exec)
-  if name == "Tyrees_at_door" then
-    store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == true and store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == true then
-      Script.DialogBox("Ch02_Elias_Alone")
-    end
-    if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == true and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == nil then
-      Script.DialogBox("Ch02_Elias_and_Sabina")
-    end
-    if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == true then
-      Script.DialogBox("Ch02_Elias_and_Cordelia")
-    end
-    if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == nil then
-      Script.DialogBox("Ch02_Elias_and_Both")
-    end
-    Script.SetCondition ("Elias Tyree", "Determined", false)
-  end
-
-  if store.Ch01c.choice_a == "Discretion" then
-    Script.DialogBox("Ch02_Bosch_Choice_Without_Ghost")
-      store.Ch02.choice_a = choice[1]
-  end
-  if store.Ch01c.choice_a == "Greedy" then
-    Script.DialogBox("Ch02_Bosch_Choice_With_Ghost")
-      store.Ch02.choice_a = choice[1]
-  end
+--   if name == "Tyrees_at_door" then
+--   store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == true and store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == true then
+--     Script.DialogBox("Ch02_Elias_Alone")
+--   end
+--   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == true and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == nil then
+--     Script.DialogBox("Ch02_Elias_and_Sabina")
+--   end
+--   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == true then
+--     Script.DialogBox("Ch02_Elias_and_Cordelia")
+--   end
+--   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == nil then
+--     Script.DialogBox("Ch02_Elias_and_Both")
+--     Script.SetCondition ("Elias Tyree", "Determined", false)
+--   end
   
-  if store.Ch02.choice_a == "Bosch in Golem" then
-    golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
-    Script.SpawnEntitySomewhereInSpawnPoints ("Bosch Golem", golem_spawn)
-  end
+--   if store.Ch01c.choice_a == "Discretion" then
+--     Script.DialogBox("Ch02_Bosch_Choice_Without_Ghost")
+--       store.Ch02.choice_a = choice[1]
+--   end
+--   if store.Ch01c.choice_a == "Greedy" then
+--     Script.DialogBox("Ch02_Bosch_Choice_With_Ghost")
+--       store.Ch02.choice_a = choice[1]
+--   end
   
-  if store.Ch02.choice_a == "Pact Powers Golem" then
-    golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
-    Script.SpawnEntitySomewhereInSpawnPoints ("Pact Golem", golem_spawn)
-  end
+--   if store.Ch02.choice_a == "Bosch in Golem" then
+--     golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
+--     Script.SpawnEntitySomewhereInSpawnPoints ("Bosch Golem", golem_spawn)
+--   end
+  
+--   if store.Ch02.choice_a == "Pact Powers Golem" then
+--     golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
+--     Script.SpawnEntitySomewhereInSpawnPoints ("Pact Golem", golem_spawn)
+--   end
 
-  if store.Ch02.choice_a == "Tyree Powers Golem" then
-    golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
-    Script.SpawnEntitySomewhereInSpawnPoints ("Tyree Golem", golem_spawn)
-  end
-end
+--   if store.Ch02.choice_a == "Tyree Powers Golem" then
+--     golem_spawn = Script.GetSpawnPointsMatching("Golem_Start")
+--     Script.SpawnEntitySomewhereInSpawnPoints ("Tyree Golem", golem_spawn)
+--   end
+-- end
 
 -- NEED Tyree Golem Turns
 
