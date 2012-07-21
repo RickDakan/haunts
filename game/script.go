@@ -31,12 +31,12 @@ func (gs *gameScript) syncEnd() {
   gs.sync <- struct{}{}
 }
 
-func startGameScript(gp *GamePanel, path string, player *Player) {
+func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string) {
   // Clear out the panel, now the script can do whatever it wants
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   base.Log().Printf("startGameScript")
   if !filepath.IsAbs(path) {
-    path = filepath.Join(base.GetDataDir(), "scripts", path)
+    path = filepath.Join(base.GetDataDir(), "scripts", filepath.FromSlash(path))
   }
 
   // The game script runs in a separate go routine and functions that need to
@@ -53,6 +53,7 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
   gp.script.L.SetExecutionLimit(25000)
   gp.script.L.NewTable()
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
+    "ChooserFromFile":                   func() { gp.script.L.PushGoFunctionAsCFunction(chooserFromFile(gp)) },
     "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
@@ -94,8 +95,15 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     base.Error().Printf("There was an error running script %s:\n%s", path, prog)
   } else {
     go func() {
+      gp.script.L.NewTable()
+      for k, v := range data {
+        gp.script.L.PushString(k)
+        gp.script.L.PushString(v)
+        gp.script.L.SetTable(-3)
+      }
+      gp.script.L.SetGlobal("__data")
       gp.script.L.SetExecutionLimit(250000)
-      gp.script.L.DoString("Init()")
+      gp.script.L.DoString("Init(__data)")
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
       } else {
@@ -243,7 +251,7 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     script := L.ToString(-1)
-    startGameScript(gp, script, player)
+    startGameScript(gp, script, player, nil)
     return 0
   }
 }
@@ -270,6 +278,31 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
     base.Log().Printf("Removed seletor")
     L.PushString(name)
     return 1
+  }
+}
+
+func chooserFromFile(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "ChooserFromFile", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    path := filepath.Join(base.GetDataDir(), L.ToString(-1))
+    chooser, done, err := makeChooserFromOptionBasicsFile(path)
+    if err != nil {
+      base.Error().Printf("Error making chooser: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    gp.script.syncEnd()
+
+    res := <-done
+    base.Log().Printf("Received '%v'", res)
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(chooser)
+    // L.PushString(name)
+    return 0
   }
 }
 

@@ -45,7 +45,7 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
   }
   sm.layout.New.f = func(interface{}) {
     ui.RemoveChild(&sm)
-    ui.AddChild(MakeGamePanel())
+    ui.AddChild(MakeGamePanel("foo.lua", nil))
   }
   sm.layout.Continue.f = func(interface{}) {}
   ui.AddChild(&sm)

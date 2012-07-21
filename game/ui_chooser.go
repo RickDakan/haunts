@@ -1,6 +1,7 @@
 package game
 
 import (
+  "fmt"
   "math"
   "path/filepath"
   "github.com/runningwild/glop/gin"
@@ -15,6 +16,7 @@ type Option interface {
   // and is also the index into the map selected.  hovered indicates whether
   // or not the mouse is over this particular option.  selected is a map from
   // index to hether or not that option is selected right now.
+  String() string
   Draw(x, y, dx int)
   DrawInfo(x, y, dx, dy int)
   Height() int
@@ -25,6 +27,9 @@ type colorOption struct {
   r, g, b, a byte
 }
 
+func (co *colorOption) String() string {
+  return fmt.Sprintf("ColorOption(%d, %d, %d, %d)", co.r, co.g, co.b, co.a)
+}
 func (co *colorOption) Think(hovered, selected, selectable bool, dt int64) {
   var target byte
   switch {
@@ -145,6 +150,9 @@ type OptionBasic struct {
   alpha byte
 }
 
+func (ob *OptionBasic) String() string {
+  return ob.Id
+}
 func (ob *OptionBasic) Draw(x, y, dx int) {
   gl.Color4ub(255, 255, 255, ob.alpha)
   ob.Small.Data().RenderNatural(x, y)
@@ -193,7 +201,7 @@ type Chooser struct {
   last_t int64
 }
 
-func MakeChooser(opts []Option) (*Chooser, <-chan map[int]bool, error) {
+func MakeChooser(opts []Option) (*Chooser, <-chan []string, error) {
   var ch Chooser
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "chooser", "layout.json"), "json", &ch.layout)
@@ -217,14 +225,20 @@ func MakeChooser(opts []Option) (*Chooser, <-chan map[int]bool, error) {
   ch.layout.Down.f = func(interface{}) {
     ch.scroll.target += ch.layout.Options.Dy
   }
-  done := make(chan map[int]bool, 1)
+  done := make(chan []string, 1)
   ch.selected = make(map[int]bool)
   ch.layout.Back.f = func(interface{}) {
     done <- nil
     close(done)
   }
   ch.layout.Next.f = func(interface{}) {
-    done <- ch.selected
+    var res []string
+    for i := range ch.options {
+      if ch.selected[i] {
+        res = append(res, ch.options[i].String())
+      }
+    }
+    done <- res
     close(done)
   }
   ch.layout.Next.valid_func = func() bool {

@@ -38,7 +38,7 @@ type GamePanel struct {
   script *gameScript
 }
 
-func MakeGamePanel() *GamePanel {
+func MakeGamePanel(script string, data map[string]string) *GamePanel {
   var gp GamePanel
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   p, err := LoadPlayer(filepath.Join(base.GetDataDir(), "players", base.GetStoreVal("last player")))
@@ -46,7 +46,7 @@ func MakeGamePanel() *GamePanel {
     base.Warn().Printf("Couldn't load player '%s': %v", base.GetStoreVal("last player"), err)
     p = &Player{}
   }
-  startGameScript(&gp, "foo.lua", p)
+  startGameScript(&gp, script, p, data)
   return &gp
 
   // // the logic after this should be done by a lua script

@@ -1,0 +1,35 @@
+[
+  {
+    "Id": "Continue",
+    "Small": {
+      "Path": "ui/cute1.png"
+    },
+    "Large": {
+      "Path": "ui/cute1.png"
+    },
+    "Text": "Continue a game in progress.",
+    "Size": 18
+  },
+  {
+    "Id": "Select House",
+    "Small": {
+      "Path": "ui/cute2.png"
+    },
+    "Large": {
+      "Path": "ui/cute2.png"
+    },
+    "Text": "Choose the nefarious house.",
+    "Size": 18
+  },
+  {
+    "Id": "Random House",
+    "Small": {
+      "Path": "ui/cute3.png"
+    },
+    "Large": {
+      "Path": "ui/cute3.png"
+    },
+    "Text": "Let fate choose the house.",
+    "Size": 18
+  }
+]

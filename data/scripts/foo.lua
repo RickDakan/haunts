@@ -13,6 +13,7 @@ if not store.Ch01a then
 --
 play_as_denizens = false
 function Init()
+  Script.ChooserFromFile("ui/start/versus/goals.json")
    store.Ch01a = {}
    store.Ch01a.Spawnpoints_complete={}
    store.Ch01a.Spawnpoints = {
