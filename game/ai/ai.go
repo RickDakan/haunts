@@ -273,6 +273,13 @@ func (a *Ai) ActionExecs() <-chan game.ActionExec {
   return a.execs
 }
 
+func (a *Ai) GobDecode([]byte) error {
+  return nil
+}
+func (a *Ai) GobEncode() ([]byte, error) {
+  return nil, nil
+}
+
 func rangedDistBetween(e1, e2 *game.Entity) int {
   e1x, e1y := e1.Pos()
   e2x, e2y := e2.Pos()

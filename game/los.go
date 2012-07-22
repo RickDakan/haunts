@@ -67,10 +67,6 @@ type Game struct {
   // indicates that a complete round has happened.
   Turn int
 
-  // The purpose that the explorers have for entering the house, chosen at the
-  // beginning of the game.
-  // Purpose Purpose
-
   // The active cleanse points - when interacted with they will be removed
   // from this list, so in a Cleanse scenario the mission is accomplished
   // when this list is empty.  In other scenarios this list is always empty.

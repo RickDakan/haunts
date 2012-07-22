@@ -7,6 +7,8 @@ import (
   "path/filepath"
   "io/ioutil"
   "regexp"
+  "encoding/gob"
+  "encoding/base64"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -56,6 +58,8 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
     "ChooserFromFile":                   func() { gp.script.L.PushGoFunctionAsCFunction(chooserFromFile(gp)) },
     "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
+    "SaveGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(saveGameState(gp)) },
+    "LoadGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(loadGameState(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
@@ -278,6 +282,50 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
     gp.AnchorBox.RemoveChild(selector)
     base.Log().Printf("Removed seletor")
     L.PushString(name)
+    return 1
+  }
+}
+
+func saveGameState(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SaveGameState") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    buf := bytes.NewBuffer(nil)
+    enc := gob.NewEncoder(buf)
+    err := enc.Encode(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return 0
+    }
+    L.PushString(base64.StdEncoding.EncodeToString(buf.Bytes()))
+    return 1
+  }
+}
+
+func loadGameState(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "LoadGameState", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    data, err := base64.StdEncoding.DecodeString(L.ToString(-1))
+    if err != nil {
+      base.Error().Printf("Error decoding game state: %v", err)
+      return 0
+    }
+    dec := gob.NewDecoder(bytes.NewBuffer(data))
+    err = dec.Decode(gp.game)
+    for i := range gp.game.Ents {
+      gp.game.Ents[i].Load(gp.game)
+    }
+    if err != nil {
+      base.Error().Printf("Error degobbing game state: %v", err)
+      return 0
+    }
     return 1
   }
 }

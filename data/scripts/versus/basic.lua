@@ -81,6 +81,13 @@ end
  
 
 function RoundEnd(intruders, round)
+  if intruders and round == 1 then
+    store.game = Script.SaveGameState()
+  end
+  if intruders and round == 3 and not store.reset then
+    Script.LoadGameState(store.game)
+    store.reset = true
+  end
   if store.side == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "blind")
