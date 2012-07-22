@@ -7,8 +7,6 @@ import (
   "path/filepath"
   "io/ioutil"
   "regexp"
-  "encoding/gob"
-  "encoding/base64"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -191,6 +189,7 @@ func (gs *gameScript) OnRound(g *Game) {
       // Run OnAction here
       gs.L.SetExecutionLimit(250000)
       exec.Push(gs.L, g)
+
       //      base.Log().Printf("exec: ", LuaStringifyParam(gs.L, -1))
       gs.L.SetGlobal("__exec")
       cmd = fmt.Sprintf("OnAction(%t, %d, %s)", g.Side == SideExplorers, (g.Turn+1)/2, "__exec")
@@ -293,14 +292,12 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    buf := bytes.NewBuffer(nil)
-    enc := gob.NewEncoder(buf)
-    err := enc.Encode(gp.game)
+    str, err := base.ToGobToBase64(gp.game)
     if err != nil {
       base.Error().Printf("Error gobbing game state: %v", err)
       return 0
     }
-    L.PushString(base64.StdEncoding.EncodeToString(buf.Bytes()))
+    L.PushString(str)
     return 1
   }
 }
@@ -312,21 +309,15 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    data, err := base64.StdEncoding.DecodeString(L.ToString(-1))
+    err := base.FromBase64FromGob(gp.game, L.ToString(-1))
     if err != nil {
       base.Error().Printf("Error decoding game state: %v", err)
       return 0
     }
-    dec := gob.NewDecoder(bytes.NewBuffer(data))
-    err = dec.Decode(gp.game)
     for i := range gp.game.Ents {
       gp.game.Ents[i].Load(gp.game)
     }
-    if err != nil {
-      base.Error().Printf("Error degobbing game state: %v", err)
-      return 0
-    }
-    return 1
+    return 0
   }
 }
 
