@@ -298,11 +298,15 @@ func chooserFromFile(gp *GamePanel) lua.GoFunction {
     gp.script.syncEnd()
 
     res := <-done
-    base.Log().Printf("Received '%v'", res)
+    L.NewTable()
+    for i, s := range res {
+      L.PushInteger(i + 1)
+      L.PushString(s)
+      L.SetTable(-3)
+    }
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(chooser)
-    // L.PushString(name)
-    return 0
+    return 1
   }
 }
 
@@ -906,6 +910,8 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
     switch mode_str {
     case "none":
       gp.game.SetLosMode(side, LosModeNone, nil)
+    case "blind":
+      gp.game.SetLosMode(side, LosModeBlind, nil)
     case "all":
       gp.game.SetLosMode(side, LosModeAll, nil)
     case "entities":

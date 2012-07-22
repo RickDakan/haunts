@@ -21,6 +21,7 @@ type LosMode int
 
 const (
   LosModeNone LosMode = iota
+  LosModeBlind
   LosModeAll
   LosModeEntities
   LosModeRooms
@@ -678,6 +679,15 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
       for j := range pix[i] {
         if pix[i][j] >= house.LosVisibilityThreshold {
           pix[i][j] = house.LosVisibilityThreshold - 1
+        }
+      }
+    }
+
+  case LosModeBlind:
+    for i := range pix {
+      for j := range pix[i] {
+        if pix[i][j] >= house.LosVisibilityThreshold {
+          pix[i][j] = 0
         }
       }
     }

@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Text": "It is the Intruders' turn to play.",
+          "Image":{
+            "Path": "ui/select_side/intruders.png"
+          }
+        }
+      ]
+    }
+  }
+}

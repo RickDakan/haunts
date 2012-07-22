@@ -162,7 +162,7 @@ _side_: Either "denizens" or "intruders".
 ###Script.__SetLosMode__(_side_, _mode_)
 Sets what is visible to a given side.  
 _side_: One of "denizens" or "intruders".  
-_mode_: One of "none", "all", or "entities", or an array of rooms.  "none" will make everything dark, "all" makes everything visible, "entities" indicates that visibility will be determined by whatever entities are on that side (standard for gameplay).  If _mode_ is an array of rooms then visibility will be exactly those rooms.
+_mode_: One of "none", "blind", "all", or "entities", or an array of rooms.  "none" will fade everything to black, "blind" will make everything black immediately, "all" makes everything visible, "entities" indicates that visibility will be determined by whatever entities are on that side (standard for gameplay).  If _mode_ is an array of rooms then visibility will be exactly those rooms.
 
 ------
 

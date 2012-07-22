@@ -1,5 +1,16 @@
 [
   {
+    "Id": "Humans",
+    "Small": {
+      "Path": "ui/cute3.png"
+    },
+    "Large": {
+      "Path": "ui/cute3.png"
+    },
+    "Text": "Two player pass-and-play.",
+    "Size": 18
+  },
+  {
     "Id": "Intruders",
     "Small": {
       "Path": "ui/select_side/intruders.png"
