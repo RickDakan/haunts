@@ -18,13 +18,6 @@ type GamePanel struct {
   house  *house.HouseDef
   viewer *house.HouseViewer
 
-  // Only active on turn == 0
-  explorer_setup *explorerSetup
-
-  // Only active on turn == 1
-  haunt_setup *hauntSetup
-
-  // Only active for turns >= 2
   main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
@@ -132,47 +125,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
     } else {
       gp.main_bar.SelectEnt(gp.game.hovered_ent)
     }
-  }
-
-  return
-  // The logic after this should go into a lua script
-  switch gp.game.Turn {
-  case 0:
-  case 1:
-    if gp.explorer_setup != nil {
-      gp.AnchorBox.RemoveChild(gp.explorer_setup)
-      gp.explorer_setup = nil
-
-      gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-      var err error
-      gp.haunt_setup, err = MakeHauntSetupBar(gp.game)
-      if err == nil {
-        gp.AnchorBox.AddChild(gp.haunt_setup, gui.Anchor{0, 0.5, 0, 0.5})
-      } else {
-        base.Error().Printf("Unable to create haunt setup bar: %v", err)
-      }
-      // gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
-    }
-
-  case 2:
-    if gp.haunt_setup != nil {
-      gp.AnchorBox.RemoveChild(gp.haunt_setup)
-      gp.haunt_setup = nil
-      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
-      gp.viewer.Edit_mode = false
-    }
-  default:
-  }
-  gp.main_bar.SelectEnt(gp.game.selected_ent)
-  if gp.game.winner != SideNone {
-    var name string
-    if gp.game.winner == SideExplorers {
-      name = "A Winner is an Intruder"
-    } else {
-      name = "A Winner is a Denizen"
-    }
-    gp.complete = gui.MakeTextLine("standard", name, 300, 1, 1, 1, 1)
-    gp.AnchorBox.AddChild(gp.complete, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   }
 }
 
@@ -443,42 +395,6 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   }
 }
 
-// TODO: DEPRECATED
-func spawnAllRelics(g *Game) {
-  // relic_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-  //   return a.(*house.SpawnPoint).Type() == house.SpawnRelic
-  // }).([]*house.SpawnPoint)
-
-  // ent_names := base.GetAllNamesInRegistry("entities")
-  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-  //   return MakeEntity(a.(string), g)
-  // }).([]*Entity)
-  // relic_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-  //   e := a.(*Entity)
-  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalRelic
-  // }).([]*Entity)
-
-  // spawnEnts(g, relic_ents, relic_spawns)
-}
-
-// TODO: DEPRECATED
-func spawnAllCleanses(g *Game) {
-  // cleanse_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-  //   return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
-  // }).([]*house.SpawnPoint)
-
-  // ent_names := base.GetAllNamesInRegistry("entities")
-  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-  //   return MakeEntity(a.(string), g)
-  // }).([]*Entity)
-  // cleanse_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-  //   e := a.(*Entity)
-  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalCleanse
-  // }).([]*Entity)
-
-  // spawnEnts(g, cleanse_ents, cleanse_spawns)
-}
-
 func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   gp.house = def
   if len(gp.house.Floors) == 0 {
@@ -487,27 +403,6 @@ func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
   gp.game = makeGame(gp.house, gp.viewer, side)
-  return
-
-  spawnAllRelics(gp.game)
-  spawnAllCleanses(gp.game)
-
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-
-  var err error
-  gp.main_bar, err = MakeMainBar(gp.game)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
-  }
-
-  gp.explorer_setup, err = MakeExplorerSetupBar(gp.game)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
-  }
-
-  gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 }
 
 func (gp *GamePanel) LoadHouseFromPath(path string) {

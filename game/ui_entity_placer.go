@@ -7,7 +7,67 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/util/algorithm"
+  "github.com/runningwild/mathgl"
+  gl "github.com/chsc/gogl/gl21"
 )
+
+type entityLabel struct {
+  ent                           *Entity
+  hovered, selected, selectable bool
+}
+
+func makeEntLabel(ent *Entity) *entityLabel {
+  var e entityLabel
+  e.ent = ent
+  e.ent.TurnToFace(1, -2)
+  return &e
+}
+func (e *entityLabel) Draw(hovered, selected, selectable bool, region gui.Region) {
+  e.hovered = hovered
+  e.selected = selected
+  e.selectable = selectable
+  gl.Disable(gl.TEXTURE_2D)
+  var f float64
+  switch {
+  case selected:
+    f = 1
+  case hovered && selectable:
+    f = 0.8
+  case selectable:
+    f = 0.5
+  default:
+    f = 0.3
+  }
+  gl.Color4d(f, f, f, 1)
+  gl.Begin(gl.QUADS)
+  x := int32(region.X)
+  y := int32(region.Y)
+  dx := int32(region.Dx)
+  dy := int32(region.Dy)
+  gl.Vertex2i(x, y)
+  gl.Vertex2i(x, y+dy)
+  gl.Vertex2i(x+dx, y+dy)
+  gl.Vertex2i(x+dx, y)
+  gl.End()
+  d := base.GetDictionary(15)
+  gl.Color4d(0, 0, 0, 1)
+  d.RenderString(e.ent.Name, float64(region.X)+210, float64(region.Y)+100-d.MaxHeight()/2, 0, d.MaxHeight(), gui.Center)
+  if selectable || selected {
+    f = 1
+  }
+  gl.Color4d(f, f, f, 1)
+  e.ent.Render(mathgl.Vec2{float32(region.X + 55), float32(region.Y) + 20}, 100)
+}
+func (e *entityLabel) Think(dt int64) {
+  if e.hovered && e.selectable {
+    e.ent.sprite.Sprite().Command("move")
+  } else {
+    e.ent.sprite.Sprite().Command("stop")
+  }
+  if e.selected || e.selectable {
+    e.ent.Think(dt)
+  }
+}
 
 type entityPlacer struct {
   *gui.AnchorBox

@@ -60,12 +60,6 @@ type Game struct {
   // Next unique EntityId to be assigned
   Entity_id EntityId
 
-  // The side of the human player in the case that this is a one player game,
-  // this is so that if we load a saved game we know which side to put ais on.
-  // TODO: IN a game with two humans we'll need something more complicated
-  // here.
-  Human Side
-
   // Current player
   Side Side
 
@@ -75,7 +69,7 @@ type Game struct {
 
   // The purpose that the explorers have for entering the house, chosen at the
   // beginning of the game.
-  Purpose Purpose
+  // Purpose Purpose
 
   // The active cleanse points - when interacted with they will be removed
   // from this list, so in a Cleanse scenario the mission is accomplished
@@ -636,7 +630,6 @@ func (g *Game) setup() {
 
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   var g Game
-  g.Human = side
   g.Side = SideExplorers
   g.House = h
   g.House.Normalize()

@@ -13,6 +13,7 @@ import (
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game/hui"
+  gl "github.com/chsc/gogl/gl21"
   lua "github.com/xenith-studios/golua"
 )
 
@@ -580,6 +581,54 @@ func dialogBox(gp *GamePanel) lua.GoFunction {
     }
     return 1
   }
+}
+
+type iconWithText struct {
+  Name string
+  Icon texture.Object
+  Data interface{}
+}
+
+func (c *iconWithText) Draw(hovered, selected, selectable bool, region gui.Region) {
+  var f float64
+  switch {
+  case selected:
+    f = 1.0
+  case hovered || selectable:
+    f = 0.6
+  default:
+    f = 0.4
+  }
+  gl.Color4d(f, f, f, 1)
+  c.Icon.Data().RenderNatural(region.X, region.Y)
+  if hovered && selectable {
+    if selected {
+      gl.Color4d(1, 0, 0, 0.3)
+    } else {
+      gl.Color4d(1, 0, 0, 1)
+    }
+    gl.Disable(gl.TEXTURE_2D)
+    gl.Begin(gl.LINES)
+    x := int32(region.X + 1)
+    y := int32(region.Y + 1)
+    x2 := int32(region.X + region.Dx - 1)
+    y2 := int32(region.Y + region.Dy - 1)
+
+    gl.Vertex2i(x, y)
+    gl.Vertex2i(x, y2)
+
+    gl.Vertex2i(x, y2)
+    gl.Vertex2i(x2, y2)
+
+    gl.Vertex2i(x2, y2)
+    gl.Vertex2i(x2, y)
+
+    gl.Vertex2i(x2, y)
+    gl.Vertex2i(x, y)
+    gl.End()
+  }
+}
+func (c *iconWithText) Think(dt int64) {
 }
 
 func pickFromN(gp *GamePanel) lua.GoFunction {
