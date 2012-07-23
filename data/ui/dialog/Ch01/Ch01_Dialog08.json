@@ -18,7 +18,7 @@
       "Sections":[
         {
 		  "Next": "Start3",
-          "Text": "There's another way - the back door I came in through..",
+          "Text": "There's another way - the back door I came in through.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/harry_temp.png"
           }
@@ -42,7 +42,7 @@
       "Sections":[
         {
           "Next": "Start5",
-          "Text": "I did mention Bosch was said to be quite rich.",
+          "Text": "Did I mention that Bosch is said to be quite rich?",
 		  "Image":{
             "Path": "ui/dialog/Ch01/harry_temp.png"
           }
@@ -65,7 +65,7 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "No, I'm not. But I am a distant nephew. So I thought...well, I didn't think any of this would happen.",
+          "Text": "No, I'm not. But I am a distant nephew. So I thought... well, I didn't think any of this would happen.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/harry_temp.png"
           }

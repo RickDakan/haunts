@@ -15,7 +15,7 @@
       "Sections":[
         {
           "Next": "Start3",
-          "Text": "I don’t suppose whoever that poor fellow screaming is, he's just scared of rain.",
+          "Text": "It's coming from the next room.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/wife_temp.png"
 			    }
@@ -27,7 +27,7 @@
       "Sections":[
         {
           "Next": "Start4",
-          "Text": "I'm afraid not.",
+          "Text": "I don't suppose whoever that poor fellow screaming is, he's just scared of rain.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/husband_temp.png"
         }
@@ -39,7 +39,7 @@
       "Sections":[
         {
           "Next": "Start5",
-          "Text": "I'm just afraid....",
+          "Text": "I'm afraid not.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/wife_temp.png"
         }
@@ -50,7 +50,7 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Two of us, then, truth be told.",
+          "Text": "Truth be told, I'm just afraid.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/husband_temp.png"
           }

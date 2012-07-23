@@ -151,7 +151,7 @@ function OnAction(intruders, round, exec)
 
     if store.Ch01c.choice_a == "Discretion" then
       finale_shade_spawn = Script.GetSpawnPointsMatching ("Shade Finale")
-      for i = 1,4 do
+      for i = 1,3 do
         Script.SpawnEntitySomewhereInSpawnPoints("Shade", finale_shade_spawn)
       end
       for _, ent in pairs(Script.GetAllEnts()) do
@@ -165,12 +165,12 @@ function OnAction(intruders, round, exec)
     end
 
     if name == "Exit" and store.Ch01c.choice_a == "Greedy" then 
-      -- if ent.Name == "Caitlin" then
-      --   Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog11.json")
-      -- end
-      -- if ent.Name == "Percy" then
+      if exec.Ent.Name == "Caitlin" then
+        Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog11.json")
+      end
+      if exec.Ent.Name == "Percy" then
         Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog12.json")
-      -- end
+      end
     end
 
     if name == "Exit" and store.Ch01c.choice_a == "Discretion" then
