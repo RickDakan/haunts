@@ -370,6 +370,16 @@ func doExec(gp *GamePanel) lua.GoFunction {
     base.Log().Printf("ScriptComm: Sent exec")
     <-gp.game.comm.game_to_script
     base.Log().Printf("ScriptComm: exec done")
+    done := make(chan bool)
+    gp.script.syncStart()
+    go func() {
+      for i := range gp.game.Ents {
+        gp.game.Ents[i].Sprite().Wait([]string{"ready", "killed"})
+      }
+      done <- true
+    }()
+    gp.script.syncEnd()
+    <-done
     return 0
   }
 }

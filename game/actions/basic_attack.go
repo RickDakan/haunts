@@ -141,7 +141,7 @@ func init() {
   results = make(map[int]BasicAttackResult)
 }
 func GetBasicAttackResult(e game.ActionExec) *BasicAttackResult {
-  res, ok := results[e.(basicAttackExec).id]
+  res, ok := results[e.(*basicAttackExec).id]
   if !ok {
     return nil
   }
@@ -269,7 +269,6 @@ func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
 func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
-  base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
     a.exec = ae.(*basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())
@@ -299,7 +298,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     }
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     var defender_cmds []string
-    if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
+    if g.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _, name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
       }
@@ -316,10 +315,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
-    base.Log().Printf("Finished basic attack")
     return game.Complete
-  } else {
-    base.Log().Printf("Waiting: %s %s", a.ent.Sprite().State(), a.target.Sprite().State())
   }
   return game.InProgress
 }

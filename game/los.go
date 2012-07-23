@@ -70,6 +70,10 @@ type Game struct {
   // indicates that a complete round has happened.
   Turn int
 
+  // PRNG, need it here so that we serialize it along with everything
+  // else so that replays work properly.
+  Rand *base.CMWC
+
   // The active cleanse points - when interacted with they will be removed
   // from this list, so in a Cleanse scenario the mission is accomplished
   // when this list is empty.  In other scenarios this list is always empty.
@@ -633,6 +637,8 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.House = h
   g.House.Normalize()
   g.viewer = viewer
+  g.Rand = base.MakeCMWC()
+  g.Rand.SeedWithDevRand()
 
   // This way an unset id will be invalid
   g.Entity_id = 1

@@ -88,22 +88,25 @@ end
 function RoundEnd(intruders, round)
   if store.side == "Humans" then
     Script.ShowMainBar(false)
-    -- Script.SetLosMode("intruders", "blind")
-    -- Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("denizens", "blind")
+    if intruders then
+      Script.SetVisibility("denizens")
+    else
+      Script.SetVisibility("intruders")
+    end
     if intruders then
       Script.DialogBox("ui/start/versus/pass_to_denizens.json")
     else
       Script.DialogBox("ui/start/versus/pass_to_intruders.json")
     end
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "entities")
+    Script.LoadGameState(store.game)
+    for _, exec in pairs(store.execs) do
+      Script.DoExec(exec)
+    end
+    store.execs = {}
   end
-  if intruders then
-    Script.SetVisibility("denizens")
-  else
-    Script.SetVisibility("intruders")
-  end
-  Script.LoadGameState(store.game)
-  -- for _, exec in pairs(store.execs) do
-  --   Script.DoExec(exec)
-  -- end
 end
 

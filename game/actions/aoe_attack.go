@@ -367,7 +367,7 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
   }
   a.ent.Sprite().Command(a.Animation)
   for _, target := range a.targets {
-    if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
+    if g.DoAttack(a.ent, target, a.Strength, a.Kind) {
       for _, name := range a.Conditions {
         target.Stats.ApplyCondition(status.MakeCondition(name))
       }
