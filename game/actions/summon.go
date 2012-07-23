@@ -38,6 +38,7 @@ func registerSummonActions() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerSummonActions)
   gob.Register(&SummonAction{})
+  gob.Register(&summonExec{})
 }
 
 // Summon Actions target a single cell, are instant, and unreadyable.
@@ -163,7 +164,7 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, ga
       var exec summonExec
       exec.SetBasicData(a.ent, a)
       exec.Pos = a.ent.Game().ToVertex(a.cx, a.cy)
-      return true, exec
+      return true, &exec
     }
     return true, nil
   }
@@ -191,7 +192,7 @@ func (a *SummonAction) Cancel() {
 }
 func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(summonExec)
+    exec := ae.(*summonExec)
     _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     a.spawn = game.MakeEntity(a.Ent_name, a.ent.Game())

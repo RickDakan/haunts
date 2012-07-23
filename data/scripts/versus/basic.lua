@@ -56,6 +56,7 @@ function Init(data)
 end
 
 function RoundStart(intruders, round)
+  store.game = Script.SaveGameState()
   if store.side == "Humans" then
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
@@ -77,26 +78,32 @@ end
 
 function OnAction(intruders, round, exec)
   -- Check for players being dead here
+  if store.execs == nil then
+    store.execs = {}
+  end
+  store.execs[table.getn(store.execs) + 1] = exec
 end
  
 
 function RoundEnd(intruders, round)
-  if intruders and round == 1 then
-    store.game = Script.SaveGameState()
-  end
-  if intruders and round == 3 and not store.reset then
-    Script.LoadGameState(store.game)
-    store.reset = true
-  end
   if store.side == "Humans" then
     Script.ShowMainBar(false)
-    Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
+    -- Script.SetLosMode("intruders", "blind")
+    -- Script.SetLosMode("denizens", "blind")
     if intruders then
       Script.DialogBox("ui/start/versus/pass_to_denizens.json")
     else
       Script.DialogBox("ui/start/versus/pass_to_intruders.json")
     end
   end
+  if intruders then
+    Script.SetVisibility("denizens")
+  else
+    Script.SetVisibility("intruders")
+  end
+  Script.LoadGameState(store.game)
+  -- for _, exec in pairs(store.execs) do
+  --   Script.DoExec(exec)
+  -- end
 end
 

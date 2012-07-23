@@ -7,6 +7,7 @@ import (
   "path/filepath"
   "io/ioutil"
   "regexp"
+  "reflect"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -58,6 +59,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
     "SaveGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(saveGameState(gp)) },
     "LoadGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(loadGameState(gp)) },
+    "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
@@ -189,6 +191,14 @@ func (gs *gameScript) OnRound(g *Game) {
       // Run OnAction here
       gs.L.SetExecutionLimit(250000)
       exec.Push(gs.L, g)
+      str, err := base.ToGobToBase64([]ActionExec{exec})
+      if err != nil {
+        base.Error().Printf("Unable to encode exec: %v", err)
+      } else {
+        gs.L.PushString("__encoded")
+        gs.L.PushString(str)
+        gs.L.SetTable(-3)
+      }
 
       //      base.Log().Printf("exec: ", LuaStringifyParam(gs.L, -1))
       gs.L.SetGlobal("__exec")
@@ -202,9 +212,14 @@ func (gs *gameScript) OnRound(g *Game) {
     gs.L.SetExecutionLimit(250000)
     gs.L.DoString(fmt.Sprintf("RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
 
-    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase out")
     g.comm.script_to_game <- nil
-    base.Log().Printf("ScriptComm: Done with RoundEnd")
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase in")
+
+    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase in")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase out")
   }()
 }
 
@@ -309,7 +324,16 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    err := base.FromBase64FromGob(gp.game, L.ToString(-1))
+    gp.game.House.Floors = nil
+    err := base.FromBase64FromGob(&gp.game, L.ToString(-1))
+    base.Log().Printf("Pre : %p", gp.game.House)
+    base.ProcessObject(reflect.ValueOf(gp.game.House), "")
+    gp.house.Normalize()
+    base.Log().Printf("Post : %p", gp.game.House)
+    // gp.house = gp.game.House
+    // gp.game.viewer = house.MakeHouseViewer(gp.game.House, 62)
+    // gp.game.viewer.Los_tex = gp.game.los.denizens.tex
+    // gp.viewer = gp.game.viewer
     if err != nil {
       base.Error().Printf("Error decoding game state: %v", err)
       return 0
@@ -317,6 +341,35 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     for i := range gp.game.Ents {
       gp.game.Ents[i].Load(gp.game)
     }
+    return 0
+  }
+}
+
+func doExec(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "DoExec", LuaTable) {
+      return 0
+    }
+    L.PushString("__encoded")
+    L.GetTable(-2)
+    str := L.ToString(-1)
+    L.Pop(1)
+    var execs []ActionExec
+    base.Log().Printf("Decoding from: '%s'", str)
+    err := base.FromBase64FromGob(&execs, str)
+    if err != nil {
+      base.Error().Printf("Error decoding exec: %v", err)
+      return 0
+    }
+    if len(execs) != 1 {
+      base.Error().Printf("Error decoding exec: Found %d execs instead of exactly 1.", len(execs))
+      return 0
+    }
+    base.Log().Printf("ScriptComm: Exec: %v", execs[0])
+    gp.game.comm.script_to_game <- execs[0]
+    base.Log().Printf("ScriptComm: Sent exec")
+    <-gp.game.comm.game_to_script
+    base.Log().Printf("ScriptComm: exec done")
     return 0
   }
 }

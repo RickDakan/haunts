@@ -42,6 +42,9 @@ const (
   // Waiting for the script to finish OnAction()
   turnStateScriptOnAction
 
+  // Humans and Ai are done, now the script can run some actions if it wants
+  turnStateMainPhaseOver
+
   // Waiting for the script to finish OnEnd()
   turnStateEnd
 )
@@ -55,7 +58,7 @@ type Game struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
   House *house.HouseDef
-  Ents  []*Entity `registry:"loadfrom-entities"`
+  Ents  []*Entity
 
   // Next unique EntityId to be assigned
   Entity_id EntityId
@@ -752,6 +755,23 @@ func (g *Game) Think(dt int64) {
       }
     default:
     }
+  case turnStateMainPhaseOver:
+    select {
+    case exec := <-g.comm.script_to_game:
+      if exec != nil {
+        base.Log().Printf("ScriptComm: Got an exec: %v", exec)
+        g.current_exec = exec.(ActionExec)
+        g.action_state = doingAction
+        ent := g.EntityById(g.current_exec.EntityId())
+        g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+      } else {
+        g.turn_state = turnStateEnd
+        base.Log().Printf("ScriptComm: change to turnStateEnd for realzes")
+      }
+    default:
+      base.Log().Printf("ScriptComm: turnStateMainPhaseOver default")
+    }
+
   case turnStateEnd:
     select {
     case <-g.comm.script_to_game:
@@ -762,7 +782,7 @@ func (g *Game) Think(dt int64) {
     }
   }
 
-  if g.current_exec != nil && g.action_state != verifyingAction {
+  if g.current_exec != nil && g.action_state != verifyingAction && g.turn_state != turnStateMainPhaseOver {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
     g.action_state = verifyingAction
@@ -791,7 +811,9 @@ func (g *Game) Think(dt int64) {
       g.current_action.Cancel()
       g.current_action = nil
       g.action_state = noAction
-      g.turn_state = turnStateScriptOnAction
+      if g.turn_state != turnStateMainPhaseOver {
+        g.turn_state = turnStateScriptOnAction
+      }
       base.Log().Printf("ScriptComm: Action complete")
       g.comm.game_to_script <- nil
       g.checkWinConditions()
@@ -907,9 +929,10 @@ func (g *Game) Think(dt int64) {
     }
   }
   if !g.player_active && g.action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
-    g.turn_state = turnStateEnd
-    base.Log().Printf("ScriptComm: change to turnStateEnd")
+    g.turn_state = turnStateMainPhaseOver
+    base.Log().Printf("ScriptComm: change to turnStateMainPhaseOver")
     g.comm.game_to_script <- nil
+    base.Log().Printf("ScriptComm: sent nil")
   }
 }
 

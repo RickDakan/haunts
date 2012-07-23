@@ -38,6 +38,7 @@ var path_tex *house.LosTexture
 func init() {
   game.RegisterActionMakers(registerMoves)
   gob.Register(&Move{})
+  gob.Register(&moveExec{})
 }
 
 type Move struct {
@@ -72,13 +73,27 @@ type moveExec struct {
 }
 
 func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
+  if len(exec.Path) == 0 {
+    base.Error().Printf("Zero length path")
+    return -1
+  }
+  if g.ToVertex(ent.Pos()) != exec.Path[0] {
+    base.Error().Printf("Path doesn't begin at ent's position, %d != %d", g.ToVertex(ent.Pos()), exec.Path[0])
+    return -1
+  }
+  base.Log().Printf("Checking %v", exec.Path)
+  base.Log().Printf("Side: %d\n", ent.Side())
   graph := g.Graph(ent.Side(), nil)
   v := g.ToVertex(ent.Pos())
+  base.Log().Printf("Vert: %v", v)
   cost := 0
   for _, step := range exec.Path[1:] {
     dsts, costs := graph.Adjacent(v)
     ok := false
+    prev := v
+    base.Log().Printf("Adj(%d):", v)
     for j := range dsts {
+      base.Log().Printf("Node %d", dsts[j])
       if dsts[j] == step {
         cost += int(costs[j])
         v = dsts[j]
@@ -86,6 +101,7 @@ func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
         break
       }
     }
+    base.Log().Printf("%d -> %d: %t", prev, v, ok)
     if !ok {
       return -1
     }
@@ -112,10 +128,6 @@ func (exec *moveExec) GetPath() []int {
 }
 func (exec *moveExec) TruncatePath(length int) {
   exec.Path = exec.Path[0 : length+1]
-}
-
-func init() {
-  gob.Register(moveExec{})
 }
 
 func (a *Move) Push(L *lua.State) {
@@ -354,6 +366,7 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
       _, x, y := g.FromVertex(v)
       return [2]int{x, y}
     })
+    base.Log().Printf("Path Validated: %v", exec)
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
   }
   // Do stuff

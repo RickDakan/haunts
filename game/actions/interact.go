@@ -35,6 +35,7 @@ func registerInteracts() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerInteracts)
   gob.Register(&Interact{})
+  gob.Register(&interactExec{})
 }
 
 type Interact struct {
@@ -115,9 +116,6 @@ func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interac
   exec.Door = door
   exec.Toggle_door = true
   return exec
-}
-func init() {
-  gob.Register(interactExec{})
 }
 
 func (a *Interact) Push(L *lua.State) {
@@ -350,7 +348,7 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
         exec.SetBasicData(a.ent, a)
         exec.Room = room_num
         exec.Door = door_num
-        return true, exec
+        return true, &exec
       }
     }
   }
@@ -365,7 +363,7 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
         var exec interactExec
         exec.SetBasicData(a.ent, a)
         exec.Target = target.Id
-        return true, exec
+        return true, &exec
       }
     }
     return true, nil
@@ -390,9 +388,10 @@ func (a *Interact) Cancel() {
 }
 func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(interactExec)
+    exec := ae.(*interactExec)
     a.ent = g.EntityById(ae.EntityId())
-    g := a.ent.Game()
+    g2 := a.ent.Game()
+    base.Log().Printf("Games: %p %p", g, g2)
     if (exec.Target != 0) == (exec.Toggle_door) {
       base.Error().Printf("Got an interact that tried to target a door and an entity: %v", exec)
       return game.Complete

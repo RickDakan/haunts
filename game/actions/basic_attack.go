@@ -43,6 +43,7 @@ func registerBasicAttacks() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerBasicAttacks)
   gob.Register(&BasicAttack{})
+  gob.Register(&basicAttackExec{})
 }
 
 // Basic Attacks are single target and instant, they are also readyable
@@ -78,7 +79,7 @@ type basicAttackTempData struct {
   target *game.Entity
 
   // exec that we're currently executing
-  exec basicAttackExec
+  exec *basicAttackExec
 }
 
 type basicAttackExec struct {
@@ -96,10 +97,6 @@ func (exec basicAttackExec) Push(L *lua.State, g *game.Game) {
   L.PushString("Target")
   game.LuaPushEntity(L, target)
   L.SetTable(-3)
-}
-
-func init() {
-  gob.Register(basicAttackExec{})
 }
 
 func (a *BasicAttack) Push(L *lua.State) {
@@ -235,13 +232,13 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game
   }
   return a.makeExec(ent, target)
 }
-func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
+func (a *BasicAttack) makeExec(ent, target *game.Entity) *basicAttackExec {
   var exec basicAttackExec
   exec.id = exec_id
   exec_id++
   exec.SetBasicData(ent, a)
   exec.Target = target.Id
-  return exec
+  return &exec
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
@@ -274,7 +271,7 @@ func (a *BasicAttack) Cancel() {
 func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
-    a.exec = ae.(basicAttackExec)
+    a.exec = ae.(*basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())
     a.target = a.ent.Game().EntityById(a.exec.Target)
 

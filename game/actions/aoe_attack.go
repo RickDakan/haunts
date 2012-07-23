@@ -40,6 +40,7 @@ func registerAoeAttacks() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerAoeAttacks)
   gob.Register(&AoeAttack{})
+  gob.Register(&aoeExec{})
 }
 
 // Aoe Attacks are untargeted and instant, they are also readyable
@@ -73,7 +74,7 @@ type aoeAttackTempData struct {
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
 
-  exec aoeExec
+  exec *aoeExec
 }
 type aoeExec struct {
   game.BasicActionExec
@@ -88,10 +89,6 @@ func (exec aoeExec) Push(L *lua.State, g *game.Game) {
   L.PushString("Pos")
   game.LuaPushPoint(L, exec.X, exec.Y)
   L.SetTable(-3)
-}
-
-func init() {
-  gob.Register(aoeExec{})
 }
 
 func (a *AoeAttack) Push(L *lua.State) {
@@ -167,7 +164,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.
       var exec aoeExec
       exec.SetBasicData(a.ent, a)
       exec.X, exec.Y = a.tx, a.ty
-      return true, exec
+      return true, &exec
     } else {
       return true, nil
     }
@@ -270,7 +267,7 @@ func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec
   var exec aoeExec
   exec.SetBasicData(ent, a)
   exec.X, exec.Y = x, y
-  return exec
+  return &exec
 }
 
 // Used for doing los computation on aoe attacks, so we don't have to allocate
@@ -331,7 +328,7 @@ func (a *AoeAttack) getTargetsAt(g *game.Game, tx, ty int) []*game.Entity {
 
 func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    a.exec = ae.(aoeExec)
+    a.exec = ae.(*aoeExec)
     a.targets = a.getTargetsAt(g, a.exec.X, a.exec.Y)
     if a.Current_ammo > 0 {
       a.Current_ammo--
