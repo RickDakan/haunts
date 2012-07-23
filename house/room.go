@@ -530,6 +530,11 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   gl.LoadIdentity()
   gl.Disable(gl.STENCIL_TEST)
   room.renderFurniture(floor, 255, drawables, los_tex)
+
+  gl.ClientActiveTexture(gl.TEXTURE1)
+  gl.Disable(gl.TEXTURE_2D)
+  gl.ClientActiveTexture(gl.TEXTURE0)
+  base.EnableShader("")
 }
 
 func (room *Room) setupGlStuff() {
