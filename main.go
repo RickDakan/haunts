@@ -357,6 +357,7 @@ func main() {
       }
 
       if key_map["game mode"].FramePressCount()%2 == 1 {
+        base.Log().Printf("Game mode change: %t", edit_mode)
         if edit_mode {
           ui.RemoveChild(editor)
           ui.AddChild(game_box)
@@ -364,6 +365,7 @@ func main() {
           ui.RemoveChild(game_box)
           ui.AddChild(editor)
         }
+        edit_mode = !edit_mode
 
         if key_map["row up"].FramePressCount() > 0 {
           house.Num_rows += 25
