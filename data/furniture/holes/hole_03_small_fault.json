@@ -1,0 +1,13 @@
+{
+  "Name": "Hole 03 - Small Fault",
+  "Orientations" : [
+    {
+      "Dx": 3,
+      "Dy": 2,
+      "Texture": {
+        "Path": "furniture/holes/hole_03_small_fault.png"
+      }
+    }
+  ],
+  "Blocks_los" : false
+}

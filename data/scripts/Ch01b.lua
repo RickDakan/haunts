@@ -1,23 +1,10 @@
--- function setLosModeToRoomsWithSpawnsMatching(side, pattern)
---   sp = Script.GetSpawnPointsMatching(pattern)
---   rooms = {}
---   for i, spawn in pairs(sp) do
---     rooms[i] = Script.RoomAtPos(spawn.Pos)
---   end
---   Script.SetLosMode(side, rooms)
--- end
-
--- -- if not store.Ch01b then
--- --   store.Ch01b = {}
--- -- end
--- --
 
 function Init()
-  store.Ch01b = {}
+  if not store.Ch01b then
+    store.Ch01b = {}
+  end
   store.Ch01b.Spawnpoints_complete={}
   store.Ch01b.Spawnpoints = {
-    "Ch01_Dialog01",
-    "Ch01_Dialog02",
     "Ch01_Dialog03",
     "Ch01_Dialog04",
     "Ch01_Dialog05",
@@ -33,7 +20,7 @@ function Init()
 
 
   Script.LoadHouse("Chapter_01_b")
- 
+    
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "human")
@@ -42,6 +29,7 @@ function Init()
   print("Found", table.getn(intruder_spawn), "points")
   Script.SpawnEntitySomewhereInSpawnPoints("Caitlin", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Percy", intruder_spawn)
+  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog_MapB_Start.json")
 end
  
 
@@ -69,7 +57,6 @@ end
 
 
 function IsPosInUnusedSpawnpoint(pos, list, used)
-  --name identifies spawnpoint
   for _, spawn in pairs(list) do
     if not used[spawn] and pointIsInSpawns(pos, spawn) then
       return spawn
@@ -83,11 +70,11 @@ function OnMove(ent, path)
     return table.getn(path)
   end
   for i, pos in pairs(path) do
-    print("path", pos.X, pos.Y)
     name = IsPosInUnusedSpawnpoint(pos, store.Ch01b.Spawnpoints, store.Ch01b.Spawnpoints_complete)
-    print("Name: ", name)
     if name then
       return i
+      --this stops them, if we don't stop them, then we need to store that it's true.
+      --     store.Ch01b.Spawnpoints_complete["Ch01_Dialog04"] = true
     end
   end
   return table.getn(path)
@@ -100,35 +87,35 @@ function OnAction(intruders, round, exec)
   name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch01b.Spawnpoints, store.Ch01b.Spawnpoints_complete)
   if name == "Ch01_Dialog03" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog03.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog03"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog03"] = true
   end
   if name == "Ch01_Dialog04" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog04.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog04"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog04"] = true
   end
   if name == "Ch01_Dialog05" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog05.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog05"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog05"] = true
   end
   if name == "Ch01_Dialog06" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog06"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog06"] = true
   end
   if name == "Ch01_Dialog07" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog07.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog07"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog07"] = true
   end
   if name == "Ch01_Dialog08" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog08.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog08"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog08"] = true
   end
   if name == "Ch01_Dialog09" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog09.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog09"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog09"] = true
   end
   if name == "Ch01_Dialog10" then
     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog10.json")
-    store.Ch01b.Dialog_complete["Ch01_Dialog10"] = true
+    store.Ch01b.Spawnpoints_complete["Ch01_Dialog10"] = true
   end
 
   if name == "Shade Trigger01" then
@@ -140,45 +127,42 @@ function OnAction(intruders, round, exec)
     store.Ch01b.Spawnpoints_complete["Shade Trigger01"] = true
   end
 
---     if name == "Dining Trigger01" then
---       shade_spawn = Script.GetSpawnPointsMatching("Shade Spawn02")
+  if name == "Dining Trigger01" then
+    shade_spawn = Script.GetSpawnPointsMatching("^Shade Spawn02")
+    store.temporary_shades = {}
+    store.Ch01b.Spawnpoints_complete["Dining Trigger01"] = true
+    for i = 1,4 do
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
+      store.temporary_shades[i] = ent
 
---       store.temporary_shades = {}
---       for i = 1,4 do
---         ent = SpawnEntitySomewhereInSpawnPoints("Shade", shade_spawn)
---         store.temporary_shades[i] = ent
---       end
---     end
+    end
+  end
 
---     if name == "Harry Trigger01" then
---       Script.DialogBox(ui/dialog/Ch01/"Ch01_Dialog04")
---       harry_spawn = Script.GetSpawnPointsMatching("Harry Spawn")
+  if name == "Harry Trigger01" then
+    Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog04.json")
+    angry_shade_spawn = Script.GetSpawnPointsMatching("^Angry Shade Spawn01")
+    harry_spawn = Script.GetSpawnPointsMatching("Harry Spawn")
+    store.Ch01b.Spawnpoints_complete["Harry Trigger01"] = true
+    store.angry_shades = {}
+    for i = 1,5 do
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
+      Script.SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
+    end  
+  end
 
---       store.angry_shades = {}
---       for i = 1,5 do
---         ent = SpawnEntitySomewhereInSpawnPoints("Angry Shade", angry_shade_spawn)
---         SpawnEntitySomewhereInSpawnPoints("Scared Man", harry_spawn)
---      end  
---   end
-
---   all_dead = true
---   for _, ent in pairs(store.angry_shades) do
---     if ent.Stats.HpCur > 0 then
---       all_dead = false
---     end
---   end
---   if all_dead then
---     Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
---     Script.LoadScript("Chapter_01_c")
---   end
--- end
-
--- --ANY WAY TO CHANGE THE TIMING ON THIS?
--- --if ent.HpCur > 1 then 
--- --  Script.SetHp(ent, 1)
--- --if ent.HpCur == 1 then
--- --  Script.SetHp(ent, 0)
--- --end
+  if store.Ch01b.Spawnpoints_complete["Harry Trigger01"] then
+    all_dead = true
+    for _, ent in pairs(Script.GetAllEnts()) do
+      if ent.Name == "Angry Shade" and ent.Stats.HpCur > 0 then
+        all_dead = false
+      end
+    end
+    if all_dead then
+      Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog06.json")
+      store.Ch01b.Spawnpoints_complete["Ch01_Dialog06"] = true
+      Script.StartScript("Ch01c.lua")
+    end
+  end
 end
 
 function RoundEnd(intruders, round)

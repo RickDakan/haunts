@@ -13,24 +13,16 @@ if not store.Ch01a then
 --
 play_as_denizens = false
 function Init()
-  Script.ChooserFromFile("ui/start/versus/goals.json")
    store.Ch01a = {}
    store.Ch01a.Spawnpoints_complete={}
    store.Ch01a.Spawnpoints = {
       "Ch01_Dialog01",
       "Ch01_Dialog02",
       "Ch01_Dialog03",
-      "Ch01_Dialog04",
-      "Ch01_Dialog05",
-      "Ch01_Dialog06",
-      "Ch01_Dialog07",
-      "Ch01_Dialog08",
-      "Ch01_Dialog09",
-      "Ch01_Dialog10",
    } 
 
   Script.LoadHouse("Chapter_01_a")
-  -- Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json") 
+  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json") 
 
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")

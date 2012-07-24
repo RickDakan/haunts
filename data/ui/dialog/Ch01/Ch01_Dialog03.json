@@ -2,14 +2,11 @@
   "Size": "medium",
   "Pages": {
     "Start": {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsNoImage",
       "Sections":[
         {
-          "Text": "Last of the workmen sent off, along with the last of father's silver plate. I alone, and whatever aid I might muster, must finish the great work.I hope that you might join me soon, sweet Amelia.",
-          "Image":{
-            "Path": "ui/dialog/Ch01/wife_temp.png"
-          }
-        }
+          "Text": "From C. Bosch to Amelia S.  : Last of the workmen sent off, along with the last of father's silver plate. I alone, and whatever aid I might muster, must finish the great work.I hope that you might join me soon, sweet Amelia.",
+         }
       ]
     }
   }

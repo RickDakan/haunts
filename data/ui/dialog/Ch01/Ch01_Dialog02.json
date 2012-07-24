@@ -6,7 +6,7 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Come look at this.",
+          "Text": "Look at this, place. It's not even finished.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/wife_temp.png"
           }
@@ -29,7 +29,7 @@
       "Format": "NoOptionsCenterImage",
       "Sections":[
         {
-          "Text": "Lightning CRaSHHH!!!",
+          "Text": "Damn, what's happening to the lights?",
 		  "Image":{
             "Path": "ui/dialog/Ch01/house_temp.png"
           }

@@ -6,7 +6,7 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Out there is a courtyard with a low wall - that's how I got in.",
+          "Text": "Out that door, there's a courtyard with a gap in the hedge - that's how I got in.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/harry_temp.png"
         }
