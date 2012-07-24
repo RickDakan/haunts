@@ -191,7 +191,7 @@ func (d *Door) setupGlStuff(room *Room) {
   if d.Facing == FarLeft || d.Facing == NearRight {
     x1 := float32(d.Pos)
     x2 := float32(d.Pos + d.Width)
-    var y1 float32 = 0
+    var y1 float32 = -0.25
     var y2 float32 = 0.25
     if d.Facing == FarLeft {
       y1 = float32(room.roomDef.Size.Dy)
@@ -210,7 +210,7 @@ func (d *Door) setupGlStuff(room *Room) {
   if d.Facing == FarRight || d.Facing == NearLeft {
     y1 := float32(d.Pos)
     y2 := float32(d.Pos + d.Width)
-    var x1 float32 = 0
+    var x1 float32 = -0.25
     var x2 float32 = 0.25
     if d.Facing == FarRight {
       x1 = float32(room.roomDef.Size.Dx)
