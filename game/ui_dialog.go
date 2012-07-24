@@ -179,6 +179,9 @@ func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
     in := pointInsideRect(mdb.mx, mdb.my, mdb.region.X+section.Region.X, mdb.region.Y+section.Region.Y, section.Region.Dx, section.Region.Dy)
     data.shading = doShading(data.shading, in, t)
   }
+  if len(mdb.format.Sections) == 1 {
+    mdb.data.Pages[mdb.data.cur_page].Sections[0].shading = 1.0
+  }
 }
 
 func (mdb *MediumDialogBox) Respond(g *gui.Gui, group gui.EventGroup) bool {
@@ -231,15 +234,14 @@ func (mdb *MediumDialogBox) Respond(g *gui.Gui, group gui.EventGroup) bool {
 
 func (mdb *MediumDialogBox) Draw(region gui.Region) {
   mdb.region = region
+  if mdb.done {
+    return
+  }
   gl.Enable(gl.TEXTURE_2D)
   gl.Color4ub(255, 255, 255, 255)
   mdb.layout.Background.Data().RenderNatural(region.X, region.Y)
   for _, button := range mdb.buttons {
     button.RenderAt(region.X, region.Y)
-  }
-
-  if mdb.done {
-    return
   }
 
   for i := range mdb.format.Sections {
