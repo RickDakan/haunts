@@ -20,7 +20,7 @@ function Init()
 
 
   Script.LoadHouse("Chapter_01_b")
- 
+    
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "human")
@@ -29,6 +29,7 @@ function Init()
   print("Found", table.getn(intruder_spawn), "points")
   Script.SpawnEntitySomewhereInSpawnPoints("Caitlin", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Percy", intruder_spawn)
+  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog_MapB_Start.json")
 end
  
 

@@ -6,35 +6,35 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Look at this, place. It's not even finished.",
-		  "Image":{
+          "Text": "Oh, Dear God. How...?",
+      "Image":{
             "Path": "ui/dialog/Ch01/wife_temp.png"
           }
         }
       ]
     },
-	"Start2": {
+    "Start2": {
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
           "Next": "Start3",
-          "Text": "This furniture looks brand new, still under wraps.",
-		  "Image":{
+          "Text": "Quite a trick. It must mean someone is home.",
+      "Image":{
             "Path": "ui/dialog/Ch01/husband_temp.png"
           }
         }
       ]
     },
-	"Start3": {
-      "Format": "NoOptionsCenterImage",
+    "Start3": {
+      "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "Damn, what's happening to the lights?",
-		  "Image":{
-            "Path": "ui/dialog/Ch01/house_temp.png"
+          "Text": "Someone with a very strange way of greeting guests.",
+      "Image":{
+            "Path": "ui/dialog/Ch01/wife_temp.png"
           }
         }
       ]
-    }
+    }    
   }
 }

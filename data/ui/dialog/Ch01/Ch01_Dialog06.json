@@ -42,7 +42,7 @@
       "Sections":[
         {
           "Next": "Start5",
-          "Text": "Calm down. You’re safe now. Or slightly safer in any case.",
+          "Text": "Calm down. You're safe now. Or slightly safer in any case.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/wife_temp.png"
           }
@@ -54,7 +54,7 @@
       "Sections":[
         {
 		  "Next": "Start6",
-          "Text": "Not safe enough. I rather think we’re better off out in that storm.",
+          "Text": "Not safe enough. I rather think we're better off out in that storm.",
 		  "Image":{
             "Path": "ui/dialog/Ch01/husband_temp.png"
           }
