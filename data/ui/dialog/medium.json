@@ -22,10 +22,11 @@
         {
           "Paragraph":{
             "X": 50,
-            "Y": 290,
+            "Y": 200,
             "Dx": 754,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
@@ -37,10 +38,11 @@
           "Y": 192,
           "Paragraph":{
             "X": 280,
-            "Y": 290,
+            "Y": 200,
             "Dx": 525,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
@@ -52,10 +54,11 @@
           "Y": 192,
           "Paragraph":{
             "X": 49,
-            "Y": 290,
+            "Y": 200,
             "Dx": 525,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
@@ -70,7 +73,8 @@
             "Y": 135,
             "Dx": 854,
             "Size": 15,
-            "Justification": "center"
+            "Halign": "center",
+            "Valign": "center"
           }
         }
       ]
@@ -82,10 +86,11 @@
           "Y": 192,
           "Paragraph":{
             "X": 280,
-            "Y": 290,
+            "Y": 200,
             "Dx": 150,
             "Size": 12,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           },
           "Region":{
             "X": 25,
@@ -99,10 +104,11 @@
           "Y": 192,
           "Paragraph":{
             "X": 667,
-            "Y": 290,
+            "Y": 200,
             "Dx": 150,
             "Size": 12,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           },
           "Region":{
             "X": 437,

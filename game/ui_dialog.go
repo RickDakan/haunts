@@ -13,7 +13,8 @@ import (
 
 type Paragraph struct {
   X, Y, Dx, Size int
-  Justification  string
+  Halign         string
+  Valign         string
 }
 
 type dialogSection struct {
@@ -69,6 +70,8 @@ type MediumDialogBox struct {
   // Position of the mouse
   mx, my int
 
+  last_t int64
+
   done   bool
   result chan string
 }
@@ -122,6 +125,12 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
   }
 
   mdb.result = make(chan string, 1)
+
+  mdb.layout.Next.valid_func = func() bool {
+    sections := mdb.data.Pages[mdb.data.cur_page].Sections
+    return len(sections) == 1
+  }
+
   mdb.layout.Next.f = func(_data interface{}) {
     sections := mdb.data.Pages[mdb.data.cur_page].Sections
     if len(sections) == 1 {
@@ -137,6 +146,11 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
       }
     }
   }
+
+  mdb.layout.Prev.valid_func = func() bool {
+    return len(mdb.data.prev) > 0
+  }
+
   mdb.layout.Prev.f = func(_data interface{}) {
     if len(mdb.data.prev) > 0 {
       mdb.data.cur_page = mdb.data.prev[len(mdb.data.prev)-1]
@@ -167,8 +181,14 @@ func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
   if mdb.done {
     return
   }
+  if mdb.last_t == 0 {
+    mdb.last_t = t
+    return
+  }
+  dt := t - mdb.last_t
+  mdb.last_t = t
   for _, button := range mdb.buttons {
-    button.Think(mdb.region.X, mdb.region.Y, mdb.mx, mdb.my, t)
+    button.Think(mdb.region.X, mdb.region.Y, mdb.mx, mdb.my, dt)
   }
   for i := range mdb.format.Sections {
     section := mdb.format.Sections[i]
@@ -177,7 +197,7 @@ func (mdb *MediumDialogBox) Think(g *gui.Gui, t int64) {
       data.shading = 1.0
     }
     in := pointInsideRect(mdb.mx, mdb.my, mdb.region.X+section.Region.X, mdb.region.Y+section.Region.Y, section.Region.Dx, section.Region.Dy)
-    data.shading = doShading(data.shading, in, t)
+    data.shading = doShading(data.shading, in, dt)
   }
   if len(mdb.format.Sections) == 1 {
     mdb.data.Pages[mdb.data.cur_page].Sections[0].shading = 1.0
@@ -250,7 +270,7 @@ func (mdb *MediumDialogBox) Draw(region gui.Region) {
     p := section.Paragraph
     d := base.GetDictionary(p.Size)
     var just gui.Justification
-    switch p.Justification {
+    switch p.Halign {
     case "left":
       just = gui.Left
     case "right":
@@ -258,11 +278,23 @@ func (mdb *MediumDialogBox) Draw(region gui.Region) {
     case "center":
       just = gui.Center
     default:
-      base.Error().Printf("Unknown justification '%s'", p.Justification)
-      p.Justification = "left"
+      base.Error().Printf("Unknown justification '%s'", p.Halign)
+      p.Halign = "left"
+    }
+    var valign gui.Justification
+    switch p.Valign {
+    case "top":
+      valign = gui.Top
+    case "bottom":
+      valign = gui.Bottom
+    case "center":
+      valign = gui.Center
+    default:
+      base.Error().Printf("Unknown justification '%s'", p.Valign)
+      p.Valign = "top"
     }
     gl.Color4ub(255, 255, 255, 255)
-    d.RenderParagraph(data.Text, float64(p.X+region.X), float64(p.Y+region.Y)-d.MaxHeight(), 0, float64(p.Dx), d.MaxHeight(), just)
+    d.RenderParagraph(data.Text, float64(p.X+region.X), float64(p.Y+region.Y)-d.MaxHeight()/2, 0, float64(p.Dx), d.MaxHeight(), just, valign)
 
     gl.Color4ub(255, 255, 255, byte(data.shading*255))
     tex := data.Image.Data()
