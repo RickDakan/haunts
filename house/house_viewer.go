@@ -135,7 +135,9 @@ func (hv *HouseViewer) Zoom(dz float64) {
     return
   }
   exp := math.Log(float64(hv.zoom)) + dz
-  exp = float64(clamp(float32(exp), 2.5, 5.0))
+  // This effectively clamps the 100x150 sprites to a width in the range
+  // [25,100]
+  exp = float64(clamp(float32(exp), 2.87130468509059, 4.25759904621048))
   hv.zoom = float32(math.Exp(exp))
 }
 
