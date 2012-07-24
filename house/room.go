@@ -414,7 +414,8 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       }
     }
     if plane.mat == &floor {
-      gl.Color4ub(255, 255, 255, 255)
+      R, G, B, _ := room.Color()
+      gl.Color4ub(R, G, B, 255)
     }
     gl.DrawElements(gl.TRIANGLES, gl.Sizei(room.floor_count), gl.UNSIGNED_SHORT, nil)
     if los_tex != nil {
