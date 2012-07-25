@@ -6,6 +6,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/cmwc"
 )
 
 type Purpose int
@@ -72,7 +73,7 @@ type Game struct {
 
   // PRNG, need it here so that we serialize it along with everything
   // else so that replays work properly.
-  Rand *base.CMWC
+  Rand *cmwc.Cmwc
 
   // The active cleanse points - when interacted with they will be removed
   // from this list, so in a Cleanse scenario the mission is accomplished
@@ -636,7 +637,7 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.House = h
   g.House.Normalize()
   g.viewer = viewer
-  g.Rand = base.MakeCMWC()
+  g.Rand = cmwc.MakeCmwc(4285415527, 3)
   g.Rand.SeedWithDevRand()
 
   // This way an unset id will be invalid
