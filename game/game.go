@@ -400,6 +400,7 @@ func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
   if len(gp.house.Floors) == 0 {
     gp.house = house.MakeHouseDef()
   }
+  gp.house.Normalize()
   gp.viewer = house.MakeHouseViewer(gp.house, 62)
   gp.viewer.Edit_mode = true
   gp.game = makeGame(gp.house, gp.viewer, side)

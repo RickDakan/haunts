@@ -428,6 +428,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
       return 0
     }
     gp.house = def
+    gp.house.Normalize()
     gp.viewer = house.MakeHouseViewer(gp.house, 62)
     gp.viewer.Edit_mode = true
     gp.game = makeGame(gp.house, gp.viewer, SideExplorers)

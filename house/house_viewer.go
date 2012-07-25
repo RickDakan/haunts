@@ -39,6 +39,12 @@ type HouseViewer struct {
   Floor_drawers []FloorDrawer
   Edit_mode     bool
 
+  bounds struct {
+    on  bool
+    min struct{ x, y float32 }
+    max struct{ x, y float32 }
+  }
+
   Temp struct {
     Room *Room
 
@@ -67,6 +73,31 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.house = house
   hv.angle = angle
   hv.Zoom(1)
+
+  if hv.house != nil && len(hv.house.Floors) > 0 && len(hv.house.Floors[0].Rooms) > 0 {
+    minx := hv.house.Floors[0].Rooms[0].X
+    maxx := minx
+    miny := hv.house.Floors[0].Rooms[0].Y
+    maxy := miny
+    for _, floor := range hv.house.Floors {
+      for _, room := range floor.Rooms {
+        if room.X < minx {
+          minx = room.X
+        }
+        if room.Y < miny {
+          miny = room.Y
+        }
+        if room.X+room.Size.Dx > maxx {
+          maxx = room.X + room.Size.Dx
+        }
+        if room.Y+room.Size.Dy > maxy {
+          maxy = room.Y + room.Size.Dy
+        }
+      }
+    }
+    hv.SetBounds(minx, miny, maxx, maxy)
+  }
+
   return &hv
 }
 
@@ -141,6 +172,14 @@ func (hv *HouseViewer) Zoom(dz float64) {
   hv.zoom = float32(math.Exp(exp))
 }
 
+func (hv *HouseViewer) SetBounds(x, y, x2, y2 int) {
+  hv.bounds.on = true
+  hv.bounds.min.x = float32(x)
+  hv.bounds.min.y = float32(y)
+  hv.bounds.max.x = float32(x2)
+  hv.bounds.max.y = float32(y2)
+}
+
 func (hv *HouseViewer) Drag(dx, dy float64) {
   v := mathgl.Vec3{X: hv.fx, Y: hv.fy}
   vx := mathgl.Vec3{1, -1, 0}
@@ -151,7 +190,12 @@ func (hv *HouseViewer) Drag(dx, dy float64) {
   vy.Scale(float32(dy) / hv.zoom * 2)
   v.Add(&vx)
   v.Add(&vy)
-  hv.fx, hv.fy = v.X, v.Y
+  if hv.bounds.on {
+    hv.fx = clamp(v.X, hv.bounds.min.x, hv.bounds.max.x)
+    hv.fy = clamp(v.Y, hv.bounds.min.y, hv.bounds.max.y)
+  } else {
+    hv.fx, hv.fy = v.X, v.Y
+  }
   hv.target_on = false
 }
 
