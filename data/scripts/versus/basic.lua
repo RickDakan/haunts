@@ -57,6 +57,12 @@ end
 
 function RoundStart(intruders, round)
   store.game = Script.SaveGameState()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Side.Intruder == intruders then
+      Script.SelectEnt(ent)
+      break
+    end
+  end
   if store.side == "Humans" then
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")

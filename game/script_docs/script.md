@@ -22,6 +22,34 @@ _housename_: Name of the house to load.  This will get rid of everything in the 
 
 ------
 
+###_state_ = Script.__SaveGameState__()
+_state_ : An object representing the entire state of the game.  This object can be used in a call to _LoadGameState_() to restore the game to the state it was in when _SaveGameState_() was called.  
+
+------
+
+###Script.__LoadGameState__(_state_)
+_state_ : An object obtained from calling _SaveGameState_().  This will restore the game to a previous state.  
+
+------
+
+###Script.__DoExec__(_exec_)
+Executes the action speified by _exec_.  The action must be legal.  
+_exec_ : An exec object like that obtained during a call to _OnExec_().  
+
+------
+
+###Script.__SelectEnt__(_ent_)
+Selects _ent_ and focuses the camera on it.  
+_exec_ : Any entity that belongs to the active side.  
+
+------
+
+###Script.__FocusPos__(_pos_)
+Focuses the camera on _pos_.  
+_pos_: Any point.  
+
+------
+
 ###_dsts_ = Utils.AllPathablePoints(_src_, _dst_, _min_, _max_)
 Finds all positions that a 1x1 unit could walk to from one position to nearby another.  
 _src_: Where the path starts.  

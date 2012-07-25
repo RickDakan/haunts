@@ -307,7 +307,6 @@ func (g *Game) OnRound() {
     g.hovered_ent.hovered = false
     g.hovered_ent.selected = false
   }
-  g.selected_ent = nil
   g.hovered_ent = nil
 }
 

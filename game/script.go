@@ -60,6 +60,8 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SaveGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(saveGameState(gp)) },
     "LoadGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(loadGameState(gp)) },
     "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
+    "SelectEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(selectEnt(gp)) },
+    "FocusPos":                          func() { gp.script.L.PushGoFunctionAsCFunction(focusPos(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
@@ -380,6 +382,40 @@ func doExec(gp *GamePanel) lua.GoFunction {
     }()
     gp.script.syncEnd()
     <-done
+    return 0
+  }
+}
+
+func selectEnt(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SelectEnt", LuaEntity) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Error().Printf("Tried to SelectEnt on a non-existent entity.")
+      return 0
+    }
+    if ent.Side() != gp.game.Side {
+      base.Error().Printf("Tried to SelectEnt on an entity that's not on the current side.")
+      return 0
+    }
+    gp.game.SelectEnt(ent)
+    return 0
+  }
+}
+
+func focusPos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "FocusPos", LuaPoint) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    x, y := LuaToPoint(L, -1)
+    gp.game.viewer.Focus(float64(x), float64(y))
     return 0
   }
 }
