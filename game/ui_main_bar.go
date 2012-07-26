@@ -415,11 +415,15 @@ func (m *MainBar) Draw(region gui.Region) {
     button.RenderAt(region.X, region.Y)
   }
 
-  if m.ent != nil && m.ent.Stats != nil {
+  ent := m.game.HoveredEnt()
+  if ent == nil {
+    ent = m.ent
+  }
+  if ent != nil && ent.Stats != nil {
     gl.Color4d(1, 1, 1, 1)
-    m.ent.Still.Data().Bind()
-    tdx := m.ent.Still.Data().Dx()
-    tdy := m.ent.Still.Data().Dy()
+    ent.Still.Data().Bind()
+    tdx := ent.Still.Data().Dx()
+    tdy := ent.Still.Data().Dy()
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
@@ -436,11 +440,11 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.Vertex2i(cx+tdx/2, cy-tdy/2)
     gl.End()
 
-    m.layout.Name.RenderString(m.ent.Name)
-    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", m.ent.Stats.ApCur()))
-    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", m.ent.Stats.HpCur()))
-    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", m.ent.Stats.Corpus()))
-    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", m.ent.Stats.Ego()))
+    m.layout.Name.RenderString(ent.Name)
+    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", ent.Stats.ApCur()))
+    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", ent.Stats.HpCur()))
+    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", ent.Stats.Corpus()))
+    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", ent.Stats.Ego()))
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
@@ -461,7 +465,8 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.TexCoord2d(1, 0)
     gl.Vertex2i(cx+(tdx+1)/2, cy-tdy/2)
     gl.End()
-
+  }
+  if m.ent != nil && m.ent.Stats != nil {
     // Actions
     {
       spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)
