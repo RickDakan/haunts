@@ -104,6 +104,10 @@ type doorDef struct {
   // Number of cells wide the door is
   Width int
 
+  // If true then this door is always open, cannot be interacted with, and
+  // never draws a threshold.
+  Always_open bool
+
   Opened_texture texture.Object
   Closed_texture texture.Object
 
@@ -132,6 +136,18 @@ type Door struct {
   threshold_glids doorGlIds
   door_glids      doorGlIds
   state           doorState
+}
+
+func (d *Door) AlwaysOpen() bool {
+  return d.doorDef.Always_open
+}
+
+func (d *Door) IsOpened() bool {
+  return d.doorDef.Always_open || d.Opened
+}
+
+func (d *Door) SetOpened(opened bool) {
+  d.Opened = opened
 }
 
 func (d *Door) HighlightThreshold(v bool) {
@@ -312,7 +328,7 @@ func (d *Door) setupGlStuff(room *Room) {
 }
 
 func (d *Door) TextureData() *texture.Data {
-  if d.Opened {
+  if d.IsOpened() {
     return d.Opened_texture.Data()
   }
   return d.Closed_texture.Data()
@@ -1232,6 +1248,7 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
+  house.Normalize()
   house.setDoorsOpened(false)
   return &house, nil
 }
@@ -1269,6 +1286,8 @@ func (he *HouseEditor) Load(path string) error {
   if err != nil {
     return err
   }
+  base.Log().Printf("Loaded %s\n", path)
+  house.Normalize()
   he.house = *house
   for _, tab := range he.widgets {
     tab.Reload()

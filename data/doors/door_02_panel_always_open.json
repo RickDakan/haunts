@@ -1,0 +1,11 @@
+{
+  "Name": "Door 02 - Panel",
+  "Width": 1,
+  "Always_open": true,
+  "Opened_texture": {
+    "Path": "doors/door_02_panel_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_02_panel_closed.png"
+  }
+}

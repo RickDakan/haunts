@@ -873,7 +873,7 @@ func DoorIsOpenFunc(a *Ai) lua.GoFunction {
       game.LuaDoError(L, "DoorIsOpen: Specified an invalid door.")
       return 0
     }
-    L.PushBoolean(door.Opened)
+    L.PushBoolean(door.IsOpened())
     return 1
   }
 }
@@ -916,7 +916,7 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
     if exec != nil {
       a.execs <- exec
       <-a.pause
-      L.PushBoolean(door.Opened)
+      L.PushBoolean(door.IsOpened())
     } else {
       L.PushNil()
     }

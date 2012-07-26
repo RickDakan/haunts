@@ -429,7 +429,7 @@ func connected(r, r2 *house.Room, x, y, x2, y2 int) bool {
       pos = x
     }
     if pos >= door.Pos && pos < door.Pos+door.Width {
-      return door.Opened
+      return door.IsOpened()
     }
   }
   return false

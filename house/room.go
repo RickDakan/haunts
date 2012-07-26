@@ -487,6 +487,9 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
     if door.threshold_glids.vbuffer == 0 {
       continue
     }
+    if door.AlwaysOpen() {
+      continue
+    }
     if door.highlight_threshold {
       do_color(255, 255, 255, 255)
     } else {

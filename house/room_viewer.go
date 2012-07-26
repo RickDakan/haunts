@@ -402,7 +402,7 @@ func drawWall(room *Room, floor, left, right mathgl.Mat4, temp_tex *WallTexture,
       if door.Facing != FarRight {
         continue
       }
-      if door.Opened != opened {
+      if door.IsOpened() != opened {
         continue
       }
       door.TextureData().Bind()
@@ -534,7 +534,7 @@ func drawWall(room *Room, floor, left, right mathgl.Mat4, temp_tex *WallTexture,
       if door.Facing != FarLeft {
         continue
       }
-      if door.Opened != opened {
+      if door.IsOpened() != opened {
         continue
       }
       door.TextureData().Bind()

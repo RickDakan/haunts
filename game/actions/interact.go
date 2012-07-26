@@ -241,6 +241,9 @@ func makeRectForDoor(room *house.Room, door *house.Door) frect {
 }
 
 func (a *Interact) AiToggleDoor(ent *game.Entity, door *house.Door) game.ActionExec {
+  if door.AlwaysOpen() {
+    return nil
+  }
   for fi, f := range ent.Game().House.Floors {
     for ri, r := range f.Rooms {
       for di, d := range r.Doors {
@@ -261,6 +264,9 @@ func (a *Interact) findDoors(ent *game.Entity, g *game.Game) []*house.Door {
   ent_rect := makeIntFrect(x, y, x+dx, y+dy)
   var valid []*house.Door
   for _, door := range room.Doors {
+    if door.AlwaysOpen() {
+      continue
+    }
     if ent_rect.Overlaps(makeRectForDoor(room, door)) {
       valid = append(valid, door)
     }
@@ -457,9 +463,9 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
 
       _, other_door := floor.FindMatchingDoor(room, door)
       if other_door != nil {
-        door.Opened = !door.Opened
-        other_door.Opened = door.Opened
-        if door.Opened {
+        door.SetOpened(!door.IsOpened())
+        other_door.SetOpened(door.IsOpened())
+        if door.IsOpened() {
           sound.PlaySound(door.Open_sound)
         } else {
           sound.PlaySound(door.Shut_sound)
