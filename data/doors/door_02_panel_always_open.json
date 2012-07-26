@@ -1,5 +1,5 @@
 {
-  "Name": "Door 02 - Panel",
+  "Name": "Door 02 - Panel Always Open",
   "Width": 1,
   "Always_open": true,
   "Opened_texture": {
