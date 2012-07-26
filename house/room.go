@@ -491,9 +491,9 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
       continue
     }
     if door.highlight_threshold {
-      do_color(255, 255, 255, 255)
+      gl.Color4ub(255, 255, 255, 255)
     } else {
-      do_color(128, 128, 128, 255)
+      gl.Color4ub(128, 128, 128, 255)
     }
     gl.BindBuffer(gl.ARRAY_BUFFER, door.threshold_glids.vbuffer)
     gl.VertexPointer(3, gl.FLOAT, gl.Sizei(unsafe.Sizeof(vert)), gl.Pointer(unsafe.Offsetof(vert.x)))
