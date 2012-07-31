@@ -360,6 +360,13 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
     if a.cost == -1 {
       base.Error().Printf("Got a move that followed an invalid path: %v", exec)
       base.Error().Printf("Path: %v", exec.Path)
+      if a.ent == nil {
+        base.Error().Printf("ENT was Nil!")
+      } else {
+        x, y := a.ent.Pos()
+        v := g.ToVertex(x, y)
+        base.Error().Printf("Ent pos: (%d, %d) -> (%d)", x, y, v)
+      }
       return game.Complete
     }
     algorithm.Map2(exec.Path, &a.path, func(v int) [2]int {
