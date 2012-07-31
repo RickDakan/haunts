@@ -770,6 +770,7 @@ func (g *Game) Think(dt int64) {
         g.action_state = doingAction
         ent := g.EntityById(g.current_exec.EntityId())
         g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+        ent.current_action = g.current_action
       } else {
         g.turn_state = turnStateEnd
         base.Log().Printf("ScriptComm: change to turnStateEnd for realzes")
@@ -791,6 +792,7 @@ func (g *Game) Think(dt int64) {
   if g.current_exec != nil && g.action_state != verifyingAction && g.turn_state != turnStateMainPhaseOver {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+    ent.current_action = g.current_action
     g.action_state = verifyingAction
     base.Log().Printf("ScriptComm: request exec verification")
     g.comm.game_to_script <- g.current_exec
@@ -830,8 +832,12 @@ func (g *Game) Think(dt int64) {
   }
 
   g.viewer.Floor_drawer = g.current_action
-  for i := range g.Ents {
-    g.Ents[i].Think(dt)
+  for _, ent := range g.Ents {
+    ent.Think(dt)
+    s := ent.Sprite()
+    if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
+      ent.current_action = nil
+    }
   }
   if g.new_ent != nil {
     g.new_ent.Think(dt)
@@ -899,7 +905,7 @@ func (g *Game) Think(dt int64) {
     if state != "ready" && state != "killed" {
       return
     }
-    if ent.sprite.Sprite().NumPendingCmds() > 0 {
+    if !ent.sprite.Sprite().Idle() {
       return
     }
   }

@@ -233,7 +233,6 @@ func main() {
   }
 
   sound.Init()
-  // sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)

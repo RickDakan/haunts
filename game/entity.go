@@ -9,6 +9,7 @@ import (
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
   "regexp"
@@ -130,6 +131,20 @@ func (e *Entity) LoadAi() {
 // loading one from a saved game.
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
+  e.Sprite().SetTriggerFunc(func(s *sprite.Sprite, name string) {
+    if e.current_action != nil {
+      if sound_name, ok := e.current_action.SoundMap()[name]; ok {
+        sound.PlaySound(sound_name)
+        return
+      }
+    }
+    if e.Sounds != nil {
+      if sound_name, ok := e.Sounds[name]; ok {
+        sound.PlaySound(sound_name)
+      }
+    }
+  })
+
   e.Ai_file_override = e.Ai_path
   e.LoadAi()
 
@@ -212,6 +227,9 @@ type entityDef struct {
 
   // List of actions that this entity defaults to having
   Action_names []string
+
+  // Mapping from trigger name to sound name.
+  Sounds map[string]string
 
   // Path to the Ai that this entity should use if not player-controlled
   Ai_path base.Path
@@ -358,6 +376,10 @@ type EntityInst struct {
   // Actions that this entity currently has available to it for use.  This
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
+
+  // If this entity is currently executing an Action it will be stored here
+  // until the Action is complete.
+  current_action Action
 
   Stats *status.Inst
 

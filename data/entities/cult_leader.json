@@ -19,9 +19,12 @@
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 15,
+    "Hp_max": 1,
     "Corpus": 12,
     "Ego": 11,
     "Sight": 30
+  },
+  "Sounds": {
+    "death": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/UNNAMED ATTACK"
   }
 }

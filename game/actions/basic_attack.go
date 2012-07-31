@@ -7,7 +7,6 @@ import (
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
@@ -97,6 +96,10 @@ func (exec basicAttackExec) Push(L *lua.State, g *game.Game) {
   L.PushString("Target")
   game.LuaPushEntity(L, target)
   L.SetTable(-3)
+}
+
+func (a *BasicAttack) SoundMap() map[string]string {
+  return a.Sounds
 }
 
 func (a *BasicAttack) Push(L *lua.State) {
@@ -221,9 +224,6 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   a.ent = ent
   a.targets = a.findTargets(ent, g)
-  if a.Sounds != nil {
-    sound.MapSounds(a.Sounds)
-  }
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game.ActionExec {

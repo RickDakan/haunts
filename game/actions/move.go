@@ -130,6 +130,10 @@ func (exec *moveExec) TruncatePath(length int) {
   exec.Path = exec.Path[0 : length+1]
 }
 
+func (a *Move) SoundMap() map[string]string {
+  return nil
+}
+
 func (a *Move) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")

@@ -82,6 +82,10 @@ func (exec summonExec) Push(L *lua.State, g *game.Game) {
   L.SetTable(-3)
 }
 
+func (a *SummonAction) SoundMap() map[string]string {
+  return nil
+}
+
 func (a *SummonAction) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")

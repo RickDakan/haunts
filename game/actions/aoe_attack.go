@@ -91,6 +91,10 @@ func (exec aoeExec) Push(L *lua.State, g *game.Game) {
   L.SetTable(-3)
 }
 
+func (a *AoeAttack) SoundMap() map[string]string {
+  return nil
+}
+
 func (a *AoeAttack) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")

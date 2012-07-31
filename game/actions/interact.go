@@ -10,7 +10,6 @@ import (
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game/status"
   lua "github.com/xenith-studios/golua"
 )
@@ -104,6 +103,10 @@ func (exec interactExec) getDoor(g *game.Game) *house.Door {
     return nil
   }
   return room.Doors[exec.Door]
+}
+
+func (a *Interact) SoundMap() map[string]string {
+  return nil
 }
 
 func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interactExec {
@@ -465,11 +468,11 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
       if other_door != nil {
         door.SetOpened(!door.IsOpened())
         other_door.SetOpened(door.IsOpened())
-        if door.IsOpened() {
-          sound.PlaySound(door.Open_sound)
-        } else {
-          sound.PlaySound(door.Shut_sound)
-        }
+        // if door.IsOpened() {
+        //   sound.PlaySound(door.Open_sound)
+        // } else {
+        //   sound.PlaySound(door.Shut_sound)
+        // }
         g.RecalcLos()
         a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       } else {

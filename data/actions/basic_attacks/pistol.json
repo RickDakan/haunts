@@ -11,7 +11,6 @@
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "load": "gun_load.wav",
-    "fire": "gun_fire.wav"
+    "fire": "Haunts/SFX/Intruders/Teen/Pistol"
   }
 }
