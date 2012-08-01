@@ -30,32 +30,100 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
+  -- Script.SetLosMode("intruders", "entities")
+  -- Script.SetLosMode("denizens", "entities")
+  -- if store.side == "Intruders" then
+  --   Script.SetVisibility("intruders")
+  -- end
+  -- if store.side == "Denizens" then
+  --   Script.SetVisibility("denizens")
+  -- end
+  -- Script.ShowMainBar(true)
+end
+
+function intrudersSetup()
+  store.goal = Script.ChooserFromFile("ui/start/versus/goals.json")
+  if store.goal == "Cleanse" then
+  end
+  if store.goal == "Mystery" then
+  end
+  if store.goal == "Relic" then
+  end
+
+  intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
-  Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruder_spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruder_spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Ghost Hunter", intruder_spawn)
 
-  -- Temporary - just for testing:
-  spawn = Script.GetSpawnPointsMatching("Master-Start")
-  Script.SpawnEntitySomewhereInSpawnPoints("Chosen One", spawn)
-  spawn = Script.GetSpawnPointsMatching("Servitors-Start")
-  Script.SpawnEntitySomewhereInSpawnPoints("Corpse", spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Corpse", spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Corpse", spawn)
-  -- End Temporary
+  for _, name in pairs(intruder_names) do
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    Script.SetGear(ent, "Pre-loaded Playlist")
+    -- PRETEND!
+  end
 
-  Script.SetLosMode("intruders", "entities")
-  Script.SetLosMode("denizens", "entities")
-  if store.side == "Intruders" then
-    Script.SetVisibility("intruders")
+  -- Choose entry point here.
+
+  Script.SaveStore()
+end
+
+function denizensSetup()
+  -- This creates a list of entities and associated point values.  The order
+  -- the names are listed in here is the order they will appear to the user.
+  ents = {
+    {"Chosen One", 1},
+    {"Master of the Manse", 1},
+  }
+
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Master-.*")
+
+  -- Now we give the user a ui with which to place these entities.  The user
+  -- will have 1 point to spend, and each of the options costs one point, so
+  -- they will only place 1.  We will make sure they place exactly one.
+  -- Also the "Master-.*" indicates that the entity can only be placed in
+  -- spawn points that have a name that matches the regular expression
+  -- "Master-.*", which means anything that begins with "Master-".  So
+  -- "Master-BackRoom" and "Master-Center" both match, for example.
+  placed = {}
+  while table.getn(placed) == 0 do
+    placed = Script.PlaceEntities("Master-.*", 1, ents)
   end
-  if store.side == "Denizens" then
-    Script.SetVisibility("denizens")
+
+  -- placed is an array containing all of the entities placed, in this case
+  -- there will only be one, and we will use that one to determine what
+  -- servitors to make available to the user to place.
+  if placed[1].Name == "Chosen One" then
+    ents = {
+      {"Disciple", 1},
+      {"Devotee", 1},
+      {"Eidolon", 3},
+    }
+  else
+    ents = {
+      {"Corpse", 1},
+      {"Vengeful Wraith", 1},
+      {"Poltergeist", 1},
+      {"Angry Shade", 1},
+    }
   end
-  Script.ShowMainBar(true)
+
+  -- Just like before the user gets a ui to place these entities, but this
+  -- time they can place more, and this time they go into spawn points that
+  -- match anything with the prefix "Servitor-".
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
+  placed = Script.PlaceEntities("Servitors-.*", 10, ents)
 end
 
 function RoundStart(intruders, round)
+  if round == 1 then
+    if intruders then
+      intrudersSetup()
+    else
+      denizensSetup()
+    end
+    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("denizens", "blind")
+    Script.EndPlayerInteraction()
+    return
+  end
+
   store.game = Script.SaveGameState()
   for _, ent in pairs(Script.GetAllEnts()) do
     if ent.Side.Intruder == intruders then
@@ -92,6 +160,9 @@ end
  
 
 function RoundEnd(intruders, round)
+  if round == 1 then
+    return
+  end
   if store.side == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "blind")
