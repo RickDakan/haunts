@@ -46,6 +46,10 @@ func (b *Button) handleClick(x, y int, data interface{}) bool {
   return in
 }
 
+func (b *Button) Over(mx, my int) bool {
+  return pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
+}
+
 func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
   if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
     if !b.invalid {

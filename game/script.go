@@ -610,17 +610,14 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
 
 func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "PlaceEntities", LuaString, LuaInteger, LuaTable) {
+    if !LuaCheckParamsOk(L, "PlaceEntities", LuaString, LuaTable, LuaInteger, LuaInteger) {
       return 0
     }
     gp.script.syncStart()
-    pattern := L.ToString(-3)
-    points := L.ToInteger(-2)
-
+    L.PushNil()
     var names []string
     var costs []int
-    L.PushNil()
-    for L.Next(-2) != 0 {
+    for L.Next(-4) != 0 {
       L.PushInteger(1)
       L.GetTable(-2)
       names = append(names, L.ToString(-1))
@@ -628,25 +625,57 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
       L.PushInteger(2)
       L.GetTable(-2)
       costs = append(costs, L.ToInteger(-1))
-      L.Pop(1)
-      L.Pop(1)
+      L.Pop(2)
     }
-
-    ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
-    gp.AnchorBox.AddChild(ep, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    ep, done, err := MakeEntityPlacer(gp.game, names, costs, L.ToInteger(-2), L.ToInteger(-1), L.ToString(-4))
+    if err != nil {
+      base.Error().Printf("Unable to make entity placer: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(ep, gui.Anchor{0, 0, 0, 0})
+    for i, kid := range gp.AnchorBox.GetChildren() {
+      base.Log().Printf("Kid[%d] = %s", i, kid.String())
+    }
     gp.script.syncEnd()
-
-    placed := <-placed_chan
-    L.NewTable()
-    for i := range placed {
-      L.PushInteger(i + 1)
-      LuaPushEntity(L, placed[i])
-      L.SetTable(-3)
-    }
-
+    <-done
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(ep)
     gp.script.syncEnd()
+    return 0
+    // gp.script.syncStart()
+    // pattern := L.ToString(-3)
+    // points := L.ToInteger(-2)
+
+    // var names []string
+    // var costs []int
+    // L.PushNil()
+    // for L.Next(-2) != 0 {
+    //   L.PushInteger(1)
+    //   L.GetTable(-2)
+    //   names = append(names, L.ToString(-1))
+    //   L.Pop(1)
+    //   L.PushInteger(2)
+    //   L.GetTable(-2)
+    //   costs = append(costs, L.ToInteger(-1))
+    //   L.Pop(1)
+    //   L.Pop(1)
+    // }
+
+    // ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
+    // gp.AnchorBox.AddChild(ep, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    // gp.script.syncEnd()
+
+    // placed := <-placed_chan
+    // L.NewTable()
+    // for i := range placed {
+    //   L.PushInteger(i + 1)
+    //   LuaPushEntity(L, placed[i])
+    //   L.SetTable(-3)
+    // }
+
+    // gp.script.syncStart()
+    // gp.AnchorBox.RemoveChild(ep)
+    // gp.script.syncEnd()
     return 1
   }
 }

@@ -29,7 +29,7 @@ function doDenizenSetup()
 
   placed = {}
   while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Bosch-.*", 1, ents)
+    placed = Script.PlaceEntities("Bosch-.*", ents, 1, 1)
   end
 
   ents = {
@@ -38,14 +38,14 @@ function doDenizenSetup()
       {"Angry Shade", 1},
     }
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
-  Script.PlaceEntities("Servitors-.*", 10, ents)
+  Script.PlaceEntities("Servitors-.*", ents, 0, 10)
 
   if store.Ch01c.choice_a == "Greedy" then
  	ents = {
  		{"Tyree's Ghost", 1},
  	}
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
-	Script.PlaceEntities("Servitors-.*", 1, ents)
+	Script.PlaceEntities("Servitors-.*", ents, 1, 1)
   end
 end
 

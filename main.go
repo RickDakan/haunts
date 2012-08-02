@@ -39,7 +39,7 @@ var (
   anchor                    *gui.AnchorBox
   chooser                   *gui.FileChooser
   wdx, wdy                  int
-  game_box                  *gui.VerticalTable
+  game_box                  *lowerLeftTable
   game_panel                *game.GamePanel
   zooming, dragging, hiding bool
 )
@@ -215,6 +215,14 @@ func editMode() {
   }
 }
 
+type lowerLeftTable struct {
+  *gui.AnchorBox
+}
+
+func (llt *lowerLeftTable) AddChild(w gui.Widget) {
+  llt.AnchorBox.AddChild(w, gui.Anchor{0, 0, 0, 0})
+}
+
 func main() {
   defer func() {
     if r := recover(); r != nil {
@@ -272,7 +280,7 @@ func main() {
   editor_name = "room"
   editor = editors[editor_name]
 
-  game_box = gui.MakeVerticalTable()
+  game_box = &lowerLeftTable{gui.MakeAnchorBox(gui.Dims{1024, 768})}
   edit_mode := false
   err = game.InsertStartMenu(game_box)
   if err != nil {

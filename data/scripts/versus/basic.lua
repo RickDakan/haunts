@@ -8,10 +8,23 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
 end
 
 function Init(data)
-  side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
-
   -- check data.map == "random" or something else
   Script.LoadHouse("versus-1")
+  while true do
+    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("denizens", "all")
+    ents = {
+      {"Teen", 1},
+      {"Occultist", 1},
+      {"Ghost Hunter", 1},
+      {"Corpse", 1},
+      {"Master of the Manse", 1},
+    }
+    Script.PlaceEntities("Servitors-.*", ents, 0, 4)
+  end
+
+  side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+
 
   store.side = side_choices[1]
   if store.side == "Humans" then

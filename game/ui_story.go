@@ -103,5 +103,5 @@ func (sm *StoryMenu) DrawFocused(region gui.Region) {
 }
 
 func (sm *StoryMenu) String() string {
-  return "start menu"
+  return "story menu"
 }
