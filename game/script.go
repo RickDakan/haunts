@@ -614,6 +614,7 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
       return 0
     }
     gp.script.syncStart()
+    defer gp.script.syncEnd()
     L.PushNil()
     var names []string
     var costs []int
@@ -640,43 +641,7 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
     <-done
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(ep)
-    gp.script.syncEnd()
     return 0
-    // gp.script.syncStart()
-    // pattern := L.ToString(-3)
-    // points := L.ToInteger(-2)
-
-    // var names []string
-    // var costs []int
-    // L.PushNil()
-    // for L.Next(-2) != 0 {
-    //   L.PushInteger(1)
-    //   L.GetTable(-2)
-    //   names = append(names, L.ToString(-1))
-    //   L.Pop(1)
-    //   L.PushInteger(2)
-    //   L.GetTable(-2)
-    //   costs = append(costs, L.ToInteger(-1))
-    //   L.Pop(1)
-    //   L.Pop(1)
-    // }
-
-    // ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
-    // gp.AnchorBox.AddChild(ep, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    // gp.script.syncEnd()
-
-    // placed := <-placed_chan
-    // L.NewTable()
-    // for i := range placed {
-    //   L.PushInteger(i + 1)
-    //   LuaPushEntity(L, placed[i])
-    //   L.SetTable(-3)
-    // }
-
-    // gp.script.syncStart()
-    // gp.AnchorBox.RemoveChild(ep)
-    // gp.script.syncEnd()
-    return 1
   }
 }
 

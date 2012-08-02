@@ -18,9 +18,18 @@ type placerLayout struct {
   Face    struct {
     X, Y int
   }
+  Points_remaining struct {
+    X, Y   int
+    String string
+    Size   int
+  }
   Roster struct {
     X, Y, X2    int
     Max_options int
+    Points      struct {
+      X_off, Y_off int
+      Size         int
+    }
   }
   Name   TextArea
   Ap     TextArea
@@ -41,6 +50,7 @@ type EntityPlacer struct {
   buttons      []*Button
   game         *Game
   hovered      *Entity
+  show_points  bool
   points       int
   pattern      string
   mx, my       int
@@ -56,7 +66,7 @@ func MakeEntityPlacer(game *Game, roster_names []string, roster_costs []int, min
   if len(roster_names) != len(roster_costs) {
     return nil, nil, errors.New("Must have as many names as costs.")
   }
-  if len(roster_names) <= 0 || len(roster_names) >= 8 {
+  if len(roster_names) <= 0 || len(roster_names) > ep.layout.Roster.Max_options {
     return nil, nil, errors.New(fmt.Sprintf("Can't have more than %d ents in a roster.", ep.layout.Roster.Max_options))
   }
 
@@ -86,6 +96,7 @@ func MakeEntityPlacer(game *Game, roster_names []string, roster_costs []int, min
     ep.roster[name] = roster_costs[i]
   }
   ep.game = game
+  ep.show_points = !(min == 1 && max == 1)
   ep.points = max
   ep.pattern = pattern
   house.PushSpawnRegexp(ep.pattern)
@@ -219,6 +230,15 @@ func (ep *EntityPlacer) Draw(region gui.Region) {
   for _, button := range ep.buttons {
     button.RenderAt(ep.region.X, ep.region.Y)
   }
+  d := base.GetDictionary(ep.layout.Roster.Points.Size)
+  x_off := ep.layout.Roster.Points.X_off
+  y_off := ep.layout.Roster.Points.Y_off
+  for i, button := range ep.ent_buttons {
+    cost := ep.roster[ep.roster_names[i]]
+    x := float64(button.X + x_off)
+    y := float64(button.Y + y_off)
+    d.RenderString(fmt.Sprintf("%d", cost), x, y, 0, d.MaxHeight(), gui.Right)
+  }
   gl.Color4ub(255, 255, 255, 255)
   var ent *Entity
   if !pointInsideRect(ep.mx, ep.my, region.X, region.Y, region.Dx, region.Dy) {
@@ -234,6 +254,14 @@ func (ep *EntityPlacer) Draw(region gui.Region) {
     ep.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", ent.Stats.HpCur()))
     ep.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", ent.Stats.Corpus()))
     ep.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", ent.Stats.Ego()))
+  }
+  if ep.show_points {
+    d := base.GetDictionary(ep.layout.Points_remaining.Size)
+    x := float64(ep.layout.Points_remaining.X)
+    y := float64(ep.layout.Points_remaining.Y)
+    d.RenderString(ep.layout.Points_remaining.String, x, y, 0, d.MaxHeight(), gui.Left)
+    w := d.StringWidth(ep.layout.Points_remaining.String)
+    d.RenderString(fmt.Sprintf("%d", ep.points), x+w, y, 0, d.MaxHeight(), gui.Right)
   }
 }
 

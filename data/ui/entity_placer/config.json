@@ -4,13 +4,24 @@
   },
   "Face": {
     "X": 50,
-    "Y": 30  
+    "Y": 30
+  },
+  "Points_remaining": {
+    "X": 117,
+    "Y": 6,
+    "Size": 12,
+    "String": "Points:    "
   },
   "Roster": {
     "X": 340,
     "X2": 830,
     "Y": 30,
-    "Max_options": 7
+    "Max_options": 7,
+    "Points": {
+      "X_off": 4,
+      "Y_off": 1,
+      "Size": 18
+    }
   },
   "Name": {
     "X": 195,
