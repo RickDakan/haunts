@@ -89,6 +89,8 @@ func MakeEntityPlacer(game *Game, roster_names []string, roster_costs []int, min
     done <- ep.ents
     close(done)
     house.PopSpawnRegexp()
+    game.viewer.RemoveDrawable(game.new_ent)
+    game.new_ent = nil
   }
   ep.roster_names = roster_names
   ep.roster = make(map[string]int)

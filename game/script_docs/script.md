@@ -50,7 +50,7 @@ _pos_: Any point.
 
 ------
 
-###_dsts_ = Utils.AllPathablePoints(_src_, _dst_, _min_, _max_)
+###_dsts_ = Utils.__AllPathablePoints__(_src_, _dst_, _min_, _max_)
 Finds all positions that a 1x1 unit could walk to from one position to nearby another.  
 _src_: Where the path starts.  
 _dst_: A point near where the path ends.  
@@ -93,11 +93,12 @@ _ent_: The entity that was spawned, or nil if it could not be spawned.
 
 ------
 
-###_placed_ = Script.__PlaceEntities__(_regexp_, _points_, _ents_)
+###_placed_ = Script.__PlaceEntities__(_regexp_, _ents_, _min_, _max_)
 Provides an ui to the user to place entities in the house.  
 _regexp_: A string describing a regular expression.  The spawn points whose names match _regexp_ will be available to the user to place the entities.  
-_points_: The number of points available to the user to spend when placing these entities.  
 _ents_: A table mapping entity name to point cost of that entity.  
+_min_: The minimum number of points worth of entities the user must place.  
+_max_: The maximum number of points worth of entities the user may place.  
 
 ------
 

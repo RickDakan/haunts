@@ -8,23 +8,10 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
 end
 
 function Init(data)
-  -- check data.map == "random" or something else
-  Script.LoadHouse("versus-1")
-  while true do
-    Script.SetLosMode("intruders", "all")
-    Script.SetLosMode("denizens", "all")
-    ents = {
-      {"Teen", 1},
-      {"Occultist", 1},
-      {"Ghost Hunter", 1},
-      {"Corpse", 1},
-      {"Master of the Manse", 1},
-    }
-    Script.PlaceEntities("Servitors-.*", ents, 0, 4)
-  end
-
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
+  -- check data.map == "random" or something else
+  Script.LoadHouse("versus-1")
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -96,7 +83,7 @@ function denizensSetup()
   -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
   while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master-.*", 1, ents)
+    placed = Script.PlaceEntities("Master-.*", ents, 1, 1)
   end
 
   -- placed is an array containing all of the entities placed, in this case
@@ -121,7 +108,7 @@ function denizensSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor-".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
-  placed = Script.PlaceEntities("Servitors-.*", 10, ents)
+  placed = Script.PlaceEntities("Servitors-.*", ents, 0, 10)
 end
 
 function RoundStart(intruders, round)

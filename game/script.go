@@ -638,10 +638,16 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
       base.Log().Printf("Kid[%d] = %s", i, kid.String())
     }
     gp.script.syncEnd()
-    <-done
+    ents := <-done
+    L.NewTable()
+    for i := range ents {
+      L.PushInteger(i + 1)
+      LuaPushEntity(L, ents[i])
+      L.SetTable(-3)
+    }
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(ep)
-    return 0
+    return 1
   }
 }
 
