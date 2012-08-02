@@ -68,7 +68,7 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   var err error
   ai_struct.watcher, err = fsnotify.NewWatcher()
   if err != nil {
-    base.Warn().Printf("Unable to create a filewatcher - '%s' will not reload ai files dynamically.", path)
+    base.Warn().Printf("Unable to create a filewatcher - '%s' will not reload ai files dynamically: %v", path, err)
     ai_struct.watcher = nil
   }
   ai_struct.ent = ent
@@ -180,7 +180,9 @@ func (a *Ai) masterRoutine() {
   for {
     select {
     case <-a.terminate:
-      base.Log().Printf("Terminated Ai(p=%p)", a)
+      if a.watcher != nil {
+        a.watcher.Close()
+      }
       return
 
     case a.active = <-a.active_set:

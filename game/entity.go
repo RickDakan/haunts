@@ -4,6 +4,7 @@ import (
   "image"
   "path/filepath"
   "encoding/gob"
+  "runtime"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -124,6 +125,10 @@ func (e *Entity) LoadAi() {
   base.Log().Printf("Made Ai for '%s'", e.Name)
   if e.Ai == nil {
     e.Ai = inactiveAi{}
+  } else {
+    runtime.SetFinalizer(e, func(ent *Entity) {
+      ent.Ai.Terminate()
+    })
   }
 }
 
@@ -160,6 +165,10 @@ func (e *Entity) Load(g *Game) {
   e.game = g
 }
 
+func (e *Entity) Release() {
+  e.Ai.Terminate()
+}
+
 func MakeEntity(name string, g *Game) *Entity {
   ent := Entity{Defname: name}
   base.GetObject("entities", &ent)
@@ -180,7 +189,7 @@ func MakeEntity(name string, g *Game) *Entity {
   g.Entity_id++
 
   ent.Load(g)
-
+  g.all_ents_in_memory[&ent] = true
   return &ent
 }
 

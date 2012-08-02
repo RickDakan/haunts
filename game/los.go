@@ -61,6 +61,12 @@ type Game struct {
   House *house.HouseDef
   Ents  []*Entity
 
+  // Set of all Entities that are still resident.  This is so we can safely
+  // clean things up since they will all have ais running in the background
+  // preventing them from getting GCed.
+  all_ents_in_game   map[*Entity]bool
+  all_ents_in_memory map[*Entity]bool
+
   // Next unique EntityId to be assigned
   Entity_id EntityId
 
@@ -639,6 +645,8 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   g.viewer = viewer
   g.Rand = cmwc.MakeCmwc(4285415527, 3)
   g.Rand.SeedWithDevRand()
+  g.all_ents_in_game = make(map[*Entity]bool)
+  g.all_ents_in_memory = make(map[*Entity]bool)
 
   // This way an unset id will be invalid
   g.Entity_id = 1
@@ -730,6 +738,25 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
 }
 
 func (g *Game) Think(dt int64) {
+
+  for _, ent := range g.Ents {
+    if !g.all_ents_in_game[ent] {
+      g.all_ents_in_game[ent] = true
+      g.all_ents_in_memory[ent] = true
+    }
+  }
+  var mark []*Entity
+  for ent := range g.all_ents_in_memory {
+    if !g.all_ents_in_game[ent] {
+      mark = append(mark, ent)
+    }
+  }
+  for _, ent := range mark {
+    delete(g.all_ents_in_game, ent)
+    delete(g.all_ents_in_memory, ent)
+    ent.Release()
+  }
+
   switch g.turn_state {
   case turnStateInit:
     select {
