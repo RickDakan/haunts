@@ -4,7 +4,6 @@ import (
   "image"
   "path/filepath"
   "encoding/gob"
-  "runtime"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -125,10 +124,6 @@ func (e *Entity) LoadAi() {
   base.Log().Printf("Made Ai for '%s'", e.Name)
   if e.Ai == nil {
     e.Ai = inactiveAi{}
-  } else {
-    runtime.SetFinalizer(e, func(ent *Entity) {
-      ent.Ai.Terminate()
-    })
   }
 }
 

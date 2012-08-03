@@ -747,7 +747,7 @@ func (g *Game) Think(dt int64) {
   }
   var mark []*Entity
   for ent := range g.all_ents_in_memory {
-    if !g.all_ents_in_game[ent] {
+    if !g.all_ents_in_game[ent] && ent != g.new_ent {
       mark = append(mark, ent)
     }
   }

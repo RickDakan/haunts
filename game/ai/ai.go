@@ -183,6 +183,7 @@ func (a *Ai) masterRoutine() {
       if a.watcher != nil {
         a.watcher.Close()
       }
+      close(a.active_query)
       return
 
     case a.active = <-a.active_set:
