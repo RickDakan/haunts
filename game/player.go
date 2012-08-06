@@ -25,13 +25,9 @@ type Player struct {
   // This data persists for the lifetime of the player.
   Lua_store []byte
 
-  // This is the value of the global table named 'level' in the lua scripts.
-  // This data persists for the duration of a single level.
-  Lua_level []byte
-
   // Game data - if the player is in the middle of a game then the state is
   // stored here.
-  // Game *game
+  Game_state string
 }
 
 // Returns a map from player name to the path of that player's file.
@@ -39,7 +35,7 @@ func GetAllPlayers() map[string]string {
   root := filepath.Join(base.GetDataDir(), "players")
   players := make(map[string]string)
   filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-    if err != nil || info.IsDir() {
+    if info.IsDir() {
       return nil
     }
     f, err := os.Open(path)
@@ -55,9 +51,7 @@ func GetAllPlayers() map[string]string {
       base.Warn().Printf("Unable to read player file: %s.", path)
       return nil
     }
-    if err != nil {
-      players[name] = path
-    }
+    players[name] = path
     return nil
   })
   return players
