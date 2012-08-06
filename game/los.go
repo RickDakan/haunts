@@ -1,6 +1,9 @@
 package game
 
 import (
+  "bytes"
+  "encoding/gob"
+  "reflect"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
@@ -53,7 +56,46 @@ type sideLosData struct {
   tex  *house.LosTexture
 }
 
-type Game struct {
+type gameDataTransient struct {
+  los struct {
+    denizens, intruders sideLosData
+
+    // When merging the los from different entities we'll do it here, and we
+    // keep it around to avoid reallocating it every time we need it.
+    full_merger []bool
+    merger      [][]bool
+  }
+
+  // Used to sync up with the script, the value passed is usually nil, but
+  // whenever an action happens it will get passed along this channel too.
+  comm struct {
+    script_to_game chan interface{}
+    game_to_script chan interface{}
+  }
+
+  script *gameScript
+}
+
+func (gdt *gameDataTransient) alloc() {
+  if gdt.los.denizens.tex != nil {
+    return
+  }
+  gdt.los.denizens.tex = house.MakeLosTexture()
+  gdt.los.intruders.tex = house.MakeLosTexture()
+  gdt.los.full_merger = make([]bool, house.LosTextureSizeSquared)
+  gdt.los.merger = make([][]bool, house.LosTextureSize)
+  for i := range gdt.los.merger {
+    gdt.los.merger[i] = gdt.los.full_merger[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
+  }
+
+  gdt.comm.script_to_game = make(chan interface{}, 1)
+  gdt.comm.game_to_script = make(chan interface{}, 1)
+
+  gdt.script = &gameScript{}
+}
+
+type gameDataPrivate struct{}
+type gameDataGobbable struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
   House *house.HouseDef
@@ -97,15 +139,6 @@ type Game struct {
   // If the user is dragging around a new Entity to place, this is it
   new_ent *Entity
 
-  los struct {
-    denizens, intruders sideLosData
-
-    // When merging the los from different entities we'll do it here, and we
-    // keep it around to avoid reallocating it every time we need it.
-    full_merger []bool
-    merger      [][]bool
-  }
-
   selected_ent *Entity
   hovered_ent  *Entity
 
@@ -129,19 +162,52 @@ type Game struct {
   // Indicates if we're waiting for a script to run or something
   turn_state turnState
 
-  // Used to sync up with the script, the value passed is usually nil, but
-  // whenever an action happens it will get passed along this channel too.
-  comm struct {
-    script_to_game chan interface{}
-    game_to_script chan interface{}
-  }
-
   // Goals ******************************************************
 
   // Defaults to the zero value which is NoSide
   winner Side
+}
 
-  script *gameScript
+type Game struct {
+  gameDataTransient
+  gameDataPrivate
+  gameDataGobbable
+}
+
+func (g *Game) GobDecode(data []byte) error {
+  g.gameDataPrivate = gameDataPrivate{}
+  for ent := range g.all_ents_in_memory {
+    ent.Release()
+  }
+
+  g.gameDataGobbable = gameDataGobbable{}
+
+  dec := gob.NewDecoder(bytes.NewBuffer(data))
+  if err := dec.Decode(&g.gameDataGobbable); err != nil {
+    return err
+  }
+
+  base.ProcessObject(reflect.ValueOf(g.House), "")
+  g.House.Normalize()
+  g.viewer = house.MakeHouseViewer(g.House, 62)
+  for _, ent := range g.Ents {
+    base.GetObject("entities", ent)
+  }
+  g.setup()
+  for _, ent := range g.Ents {
+    ent.Load(g)
+    g.viewer.AddDrawable(ent)
+  }
+  return nil
+}
+
+func (g *Game) GobEncode() ([]byte, error) {
+  buf := bytes.NewBuffer(nil)
+  enc := gob.NewEncoder(buf)
+  if err := enc.Encode(g.gameDataGobbable); err != nil {
+    return nil, err
+  }
+  return buf.Bytes(), nil
 }
 
 func (g *Game) EntityById(id EntityId) *Entity {
@@ -612,19 +678,21 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
 }
 
 func (g *Game) setup() {
-  g.los.denizens.tex = house.MakeLosTexture()
-  g.los.intruders.tex = house.MakeLosTexture()
-  g.los.full_merger = make([]bool, house.LosTextureSizeSquared)
-  g.los.merger = make([][]bool, house.LosTextureSize)
-  for i := range g.los.merger {
-    g.los.merger[i] = g.los.full_merger[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
-  }
+  g.gameDataTransient.alloc()
+  g.all_ents_in_game = make(map[*Entity]bool)
+  g.all_ents_in_memory = make(map[*Entity]bool)
   for i := range g.Ents {
+    base.Log().Printf("Ungob, ent: %p", g.Ents[i])
     if g.Ents[i].Side() == g.Side {
+      base.Log().Printf("Ungob, ent: %p", g.Ents[i])
       g.UpdateEntLos(g.Ents[i], true)
     }
   }
-  g.viewer.Los_tex = g.los.denizens.tex
+  if g.Side == SideHaunt {
+    g.viewer.Los_tex = g.los.intruders.tex
+  } else {
+    g.viewer.Los_tex = g.los.denizens.tex
+  }
 
   g.minion_ai = inactiveAi{}
   g.haunts_ai = inactiveAi{}
@@ -639,14 +707,9 @@ func makeGame(h *house.HouseDef) *Game {
   g.viewer = house.MakeHouseViewer(g.House, 62)
   g.Rand = cmwc.MakeCmwc(4285415527, 3)
   g.Rand.SeedWithDevRand()
-  g.all_ents_in_game = make(map[*Entity]bool)
-  g.all_ents_in_memory = make(map[*Entity]bool)
 
   // This way an unset id will be invalid
   g.Entity_id = 1
-
-  g.comm.script_to_game = make(chan interface{}, 1)
-  g.comm.game_to_script = make(chan interface{}, 1)
 
   g.setup()
 
@@ -726,7 +789,6 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
 }
 
 func (g *Game) Think(dt int64) {
-
   for _, ent := range g.Ents {
     if !g.all_ents_in_game[ent] {
       g.all_ents_in_game[ent] = true

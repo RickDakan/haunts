@@ -4,6 +4,7 @@ import (
   "image"
   "path/filepath"
   "encoding/gob"
+  "regexp"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
@@ -12,7 +13,6 @@ import (
   "github.com/runningwild/haunts/sound"
   "github.com/runningwild/mathgl"
   gl "github.com/chsc/gogl/gl21"
-  "regexp"
 )
 
 type Ai interface {

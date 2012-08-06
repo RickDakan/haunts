@@ -37,20 +37,6 @@ func MakeGamePanel(script string, data map[string]string) *GamePanel {
   }
   startGameScript(&gp, script, p, data)
   return &gp
-
-  // // the logic after this should be done by a lua script
-  // gp.house = house.MakeHouseDef()
-  // gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  // gp.viewer.Edit_mode = true
-
-  // start_menu, err := MakeUiStart(&gp)
-  // if err != nil {
-  //   base.Error().Printf("%v\n", err)
-  //   panic(err)
-  // }
-  // gp.AnchorBox.AddChild(start_menu, gui.Anchor{0,0,0,0})
-
-  // return &gp
 }
 
 func (gp *GamePanel) SaveGame(filename string) {
@@ -60,7 +46,7 @@ func (gp *GamePanel) SaveGame(filename string) {
   }
 }
 
-// Call after loading game state by base.LoadGob() or something similar
+// DEPRECATE THIS ASAP
 func (gp *GamePanel) LoadGame() {
   var err error
 
@@ -72,11 +58,6 @@ func (gp *GamePanel) LoadGame() {
   gp.game.viewer.Edit_mode = true
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-
-  for i := range gp.game.Ents {
-    gp.game.Ents[i].Load(gp.game)
-    gp.game.viewer.AddDrawable(gp.game.Ents[i])
-  }
 
   gp.game.setup()
   gp.game.viewer.Los_tex = gp.game.los.denizens.tex

@@ -7,7 +7,6 @@ import (
   "path/filepath"
   "io/ioutil"
   "regexp"
-  "reflect"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
@@ -27,6 +26,7 @@ type gameScript struct {
 }
 
 func (gs *gameScript) syncStart() {
+  base.Log().Printf("SyncStart: %p, %p", gs, gs.L)
   <-gs.sync
 }
 func (gs *gameScript) syncEnd() {
@@ -96,6 +96,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     gp.script.L.SetGlobal("store")
   }
   gp.script.sync = make(chan struct{})
+  base.Log().Printf("Sync: %p", gp.script.sync)
   res := gp.script.L.DoString(string(prog))
   if !res {
     base.Error().Printf("There was an error running script %s:\n%s", path, prog)
@@ -238,29 +239,13 @@ func (gp *GamePanel) scriptThinkOnce() {
     // Think then it can run now and we'll wait for it to finish before
     // continuing.
     case s <- struct{}{}:
-      <-s
+      base.Log().Printf("In think....")
+      _, ok := <-s
+      base.Log().Printf("Out think: %p, %t", s, ok)
     default:
       done = true
     }
   }
-}
-
-// Thinks continually until a value is passed along done
-func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
-  done_chan := make(chan struct{})
-
-  go func() {
-    for {
-      select {
-      case <-gp.script.sync:
-        <-gp.script.sync
-      case <-done_chan:
-        return
-      }
-    }
-  }()
-
-  return done_chan
 }
 
 func startScript(gp *GamePanel, player *Player) lua.GoFunction {
@@ -325,31 +310,24 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    gp.game.House.Floors = nil
-    for ent := range gp.game.all_ents_in_memory {
-      if gp.game.all_ents_in_game[ent] {
-        gp.game.viewer.RemoveDrawable(ent)
-      }
-      ent.Release()
-    }
-    gp.game.all_ents_in_memory = make(map[*Entity]bool)
-    gp.game.all_ents_in_game = make(map[*Entity]bool)
+    base.Log().Printf("Ungobbing")
+    viewer := gp.game.viewer
     err := base.FromBase64FromGob(&gp.game, L.ToString(-1))
-    base.Log().Printf("Pre : %p", gp.game.House)
-    base.ProcessObject(reflect.ValueOf(gp.game.House), "")
-    gp.game.House.Normalize()
-    base.Log().Printf("Post : %p", gp.game.House)
-    // gp.game.House = gp.game.House
-    // gp.game.viewer = house.MakeHouseViewer(gp.game.House, 62)
-    // gp.game.viewer.Los_tex = gp.game.los.denizens.tex
     if err != nil {
       base.Error().Printf("Error decoding game state: %v", err)
       return 0
     }
-    for i := range gp.game.Ents {
-      gp.game.Ents[i].Load(gp.game)
-      gp.game.viewer.AddDrawable(gp.game.Ents[i])
+    children := gp.AnchorBox.GetChildren()
+    for i := range children {
+      gp.AnchorBox.RemoveChild(children[i])
     }
+    gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    for i := range children {
+      if children[i] != viewer {
+        gp.AnchorBox.RemoveChild(children[i])
+      }
+    }
+    base.Log().Printf("Replaced viewer %p with viewer %p", viewer, gp.game.viewer)
     return 0
   }
 }
