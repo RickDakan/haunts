@@ -60,8 +60,6 @@ function intrudersSetup()
   end
 
   -- Choose entry point here.
-
-  Script.SaveStore()
 end
 
 function denizensSetup()

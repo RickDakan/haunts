@@ -198,9 +198,4 @@ _mode_: One of "none", "blind", "all", or "entities", or an array of rooms.  "no
 ###Script.__EndPlayerInteraction__()
 Indicates that the current human player is done.  Ais will continue to perform their actions and then the turn will end.  
 
-------
-
-###Script.__SaveStore__()
-Saves any values written to the store table.  This should be called any time data is written to those files to ensure that it is available later.  
-
 

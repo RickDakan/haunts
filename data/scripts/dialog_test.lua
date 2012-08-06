@@ -23,13 +23,12 @@ function Init()
 		"Ch01_Dialog08",
 		"Ch01_Dialog09",
 		"Ch01_Dialog10",
-}
-	Script.SaveStore()
+  }
 	
 	Script.BindAi("intruder", "human")
 	Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "entities")
-	
+  Script.SetLosMode("denizens", "entities")
+end	
 
 function doIntrudersSetup()
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")

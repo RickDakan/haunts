@@ -78,7 +78,6 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "BindAi":                            func() { gp.script.L.PushGoFunctionAsCFunction(bindAi(gp)) },
     "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
-    "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
