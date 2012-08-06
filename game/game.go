@@ -15,9 +15,6 @@ import (
 type GamePanel struct {
   *gui.AnchorBox
 
-  house  *house.HouseDef
-  viewer *house.HouseViewer
-
   main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
@@ -26,9 +23,8 @@ type GamePanel struct {
 
   complete gui.Widget
 
-  game *Game
-
   script *gameScript
+  game   *Game
 }
 
 func MakeGamePanel(script string, data map[string]string) *GamePanel {
@@ -72,16 +68,14 @@ func (gp *GamePanel) LoadGame() {
   base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
   base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
 
-  gp.house = gp.game.House
-  gp.game.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.viewer.Edit_mode = true
-  gp.viewer = gp.game.viewer
+  gp.game.viewer = house.MakeHouseViewer(gp.game.House, 62)
+  gp.game.viewer.Edit_mode = true
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
   for i := range gp.game.Ents {
     gp.game.Ents[i].Load(gp.game)
-    gp.viewer.AddDrawable(gp.game.Ents[i])
+    gp.game.viewer.AddDrawable(gp.game.Ents[i])
   }
 
   gp.game.setup()
@@ -97,7 +91,7 @@ func (gp *GamePanel) LoadGame() {
 // Returns  true iff the game panel has an active game with a viewer already
 // installed.
 func (gp *GamePanel) Active() bool {
-  return gp.house != nil && gp.viewer != nil && gp.game != nil
+  return gp.game != nil && gp.game.House != nil && gp.game.viewer != nil
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
@@ -228,7 +222,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     mx, my := cursor.Point()
     for i := range gp.game.Ents {
       fx, fy := gp.game.Ents[i].FPos()
-      wx, wy := gp.viewer.BoardToWindow(float32(fx), float32(fy))
+      wx, wy := gp.game.viewer.BoardToWindow(float32(fx), float32(fy))
       if gp.game.Ents[i].Stats != nil && gp.game.Ents[i].Stats.HpCur() <= 0 {
         continue // Don't bother showing dead units
       }
@@ -390,26 +384,6 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   }
 }
 
-func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
-  gp.house = def
-  if len(gp.house.Floors) == 0 {
-    gp.house = house.MakeHouseDef()
-  }
-  gp.house.Normalize()
-  gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.viewer.Edit_mode = true
-  gp.game = makeGame(gp.house, gp.viewer, side)
-}
-
-func (gp *GamePanel) LoadHouseFromPath(path string) {
-  def, err := house.MakeHouseFromPath(path)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    return
-  }
-  gp.LoadHouse(def, SideExplorers)
-}
-
 func (gp *GamePanel) GetViewer() house.Viewer {
-  return gp.viewer
+  return gp.game.viewer
 }

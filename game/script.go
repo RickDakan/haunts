@@ -337,12 +337,11 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     err := base.FromBase64FromGob(&gp.game, L.ToString(-1))
     base.Log().Printf("Pre : %p", gp.game.House)
     base.ProcessObject(reflect.ValueOf(gp.game.House), "")
-    gp.house.Normalize()
+    gp.game.House.Normalize()
     base.Log().Printf("Post : %p", gp.game.House)
-    // gp.house = gp.game.House
+    // gp.game.House = gp.game.House
     // gp.game.viewer = house.MakeHouseViewer(gp.game.House, 62)
     // gp.game.viewer.Los_tex = gp.game.los.denizens.tex
-    // gp.viewer = gp.game.viewer
     if err != nil {
       base.Error().Printf("Error decoding game state: %v", err)
       return 0
@@ -471,16 +470,13 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("No house exists with the name '%s'.", name)
       return 0
     }
-    gp.house = def
-    gp.house.Normalize()
-    gp.viewer = house.MakeHouseViewer(gp.house, 62)
-    gp.viewer.Edit_mode = true
-    gp.game = makeGame(gp.house, gp.viewer, SideExplorers)
+    gp.game = makeGame(def)
+    gp.game.viewer.Edit_mode = true
     gp.game.script = gp.script
 
     gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+    gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
-    gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     base.Log().Printf("Done making stuff")
     return 0
   }

@@ -1,8 +1,6 @@
 package game
 
 import (
-  // "path/filepath"
-  "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
@@ -633,32 +631,12 @@ func (g *Game) setup() {
   g.explorers_ai = inactiveAi{}
 }
 
-func bindGameToPanel(gp *GamePanel, h *house.HouseDef, script *gameScript) {
-  h.Normalize()
-  gp.house = h
-  gp.game.House = h
-
-  viewer := house.MakeHouseViewer(gp.house, 62)
-  gp.viewer = viewer
-  gp.viewer.Edit_mode = true
-  gp.game.viewer = viewer
-
-  gp.script = script
-  gp.game.script = script
-
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-
-  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-
-  gp.game.setup()
-}
-
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
+func makeGame(h *house.HouseDef) *Game {
   var g Game
   g.Side = SideExplorers
   g.House = h
   g.House.Normalize()
-  g.viewer = viewer
+  g.viewer = house.MakeHouseViewer(g.House, 62)
   g.Rand = cmwc.MakeCmwc(4285415527, 3)
   g.Rand.SeedWithDevRand()
   g.all_ents_in_game = make(map[*Entity]bool)
