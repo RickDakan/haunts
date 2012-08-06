@@ -96,10 +96,6 @@ type Game struct {
 
   viewer *house.HouseViewer
 
-  selection_tab      *gui.TabFrame
-  haunts_selection   *gui.VerticalTable
-  explorer_selection *gui.VerticalTable
-
   // If the user is dragging around a new Entity to place, this is it
   new_ent *Entity
 
@@ -637,6 +633,26 @@ func (g *Game) setup() {
   g.explorers_ai = inactiveAi{}
 }
 
+func bindGameToPanel(gp *GamePanel, h *house.HouseDef, script *gameScript) {
+  h.Normalize()
+  gp.house = h
+  gp.game.House = h
+
+  viewer := house.MakeHouseViewer(gp.house, 62)
+  gp.viewer = viewer
+  gp.viewer.Edit_mode = true
+  gp.game.viewer = viewer
+
+  gp.script = script
+  gp.game.script = script
+
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+
+  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+
+  gp.game.setup()
+}
+
 func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   var g Game
   g.Side = SideExplorers
@@ -651,16 +667,10 @@ func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
   // This way an unset id will be invalid
   g.Entity_id = 1
 
-  g.setup()
-
-  g.explorer_selection = gui.MakeVerticalTable()
-  g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))
-  g.haunts_selection = gui.MakeVerticalTable()
-  g.haunts_selection.AddChild(gui.MakeTextLine("standard", "bar", 300, 1, 1, 1, 1))
-  g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
-
   g.comm.script_to_game = make(chan interface{}, 1)
   g.comm.game_to_script = make(chan interface{}, 1)
+
+  g.setup()
 
   return &g
 }

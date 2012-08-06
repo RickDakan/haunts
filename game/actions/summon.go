@@ -197,6 +197,12 @@ func (a *SummonAction) Cancel() {
 func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
     exec := ae.(*summonExec)
+    ent := g.EntityById(exec.Ent)
+    if ent == nil {
+      base.Error().Printf("Got a summon action without a valid entity.")
+      return game.Complete
+    }
+    a.ent = ent
     _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     a.spawn = game.MakeEntity(a.Ent_name, a.ent.Game())

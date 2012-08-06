@@ -64,15 +64,10 @@ func (gp *GamePanel) SaveGame(filename string) {
   }
 }
 
-func (gp *GamePanel) LoadGame(path string) {
+// Call after loading game state by base.LoadGob() or something similar
+func (gp *GamePanel) LoadGame() {
   var err error
-  gp.game = &Game{}
 
-  err = base.LoadGob(filepath.Join(path), gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to load: %v", err)
-    return
-  }
   base.ProcessObject(reflect.ValueOf(gp.game.House), "")
   base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
   base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")

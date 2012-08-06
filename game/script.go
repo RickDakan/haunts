@@ -326,6 +326,14 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     gp.game.House.Floors = nil
+    for ent := range gp.game.all_ents_in_memory {
+      if gp.game.all_ents_in_game[ent] {
+        gp.game.viewer.RemoveDrawable(ent)
+      }
+      ent.Release()
+    }
+    gp.game.all_ents_in_memory = make(map[*Entity]bool)
+    gp.game.all_ents_in_game = make(map[*Entity]bool)
     err := base.FromBase64FromGob(&gp.game, L.ToString(-1))
     base.Log().Printf("Pre : %p", gp.game.House)
     base.ProcessObject(reflect.ValueOf(gp.game.House), "")
@@ -341,6 +349,7 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     for i := range gp.game.Ents {
       gp.game.Ents[i].Load(gp.game)
+      gp.game.viewer.AddDrawable(gp.game.Ents[i])
     }
     return 0
   }

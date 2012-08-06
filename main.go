@@ -127,8 +127,8 @@ func gameMode() {
       ui.RemoveChild(anchor)
       chooser = nil
       anchor = nil
-      game_panel.LoadGame(path)
-      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
+
+      game_panel.LoadGame()
     }
     chooser = gui.MakeFileChooser(filepath.Join(datadir, "games"), callback, gui.MakeFileFilter(fmt.Sprintf(".game")))
     anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
