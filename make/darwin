@@ -17,4 +17,6 @@ mv haunts haunts.app/Contents/MacOS/haunts
 cp lib/darwin/* haunts.app/Contents/lib/
 install_name_tool -change  ./libfmodex.dylib @executable_path/../lib/libfmodex.dylib haunts.app/Contents/lib/libfmodevent.dylib
 
-cp -r data/* haunts.app/Contents/
+#cp -r data/* haunts.app/Contents/
+ls data | awk '{print "scr --src data/" $0 " --dst haunts.app/Contents/" $0}' | bash
+
