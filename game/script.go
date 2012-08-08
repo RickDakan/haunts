@@ -50,6 +50,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     return
   }
   gp.script = &gameScript{}
+
   gp.script.L = lua.NewState()
   gp.script.L.OpenLibs()
   gp.script.L.SetExecutionLimit(25000)
@@ -64,6 +65,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "FocusPos":                          func() { gp.script.L.PushGoFunctionAsCFunction(focusPos(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
+    "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
     "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
     "SpawnEntityAtPosition":             func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntityAtPosition(gp)) },
     "GetSpawnPointsMatching":            func() { gp.script.L.PushGoFunctionAsCFunction(getSpawnPointsMatching(gp)) },
@@ -91,6 +93,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   if player.Lua_store != nil {
     LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
     gp.script.L.SetGlobal("store")
+    loadGameStateRaw(gp, player.Game_state)
   } else {
     gp.script.L.NewTable()
     gp.script.L.SetGlobal("store")
@@ -256,6 +259,13 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     script := L.ToString(-1)
+    player.Script_path = script
+    gp.script.syncEnd()
+    res := gp.script.L.DoString("Script.SaveStore()")
+    gp.script.syncStart()
+    if !res {
+      base.Error().Printf("Unable to properly autosave.")
+    }
     startGameScript(gp, script, player, nil)
     return 0
   }
@@ -303,6 +313,20 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func loadGameStateRaw(gp *GamePanel, state string) {
+  var viewer gui.Widget
+  if gp.game != nil {
+    viewer = gp.game.viewer
+  }
+  err := base.FromBase64FromGob(&gp.game, state)
+  if err != nil {
+    base.Error().Printf("Error decoding game state: %v", err)
+    return
+  }
+  gp.AnchorBox.RemoveChild(viewer)
+  gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+}
+
 func loadGameState(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "LoadGameState", LuaString) {
@@ -310,24 +334,7 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    base.Log().Printf("Ungobbing")
-    viewer := gp.game.viewer
-    err := base.FromBase64FromGob(&gp.game, L.ToString(-1))
-    if err != nil {
-      base.Error().Printf("Error decoding game state: %v", err)
-      return 0
-    }
-    children := gp.AnchorBox.GetChildren()
-    for i := range children {
-      gp.AnchorBox.RemoveChild(children[i])
-    }
-    gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    for i := range children {
-      if children[i] != viewer {
-        gp.AnchorBox.RemoveChild(children[i])
-      }
-    }
-    base.Log().Printf("Replaced viewer %p with viewer %p", viewer, gp.game.viewer)
+    loadGameStateRaw(gp, L.ToString(-1))
     return 0
   }
 }
@@ -945,7 +952,14 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     UpdatePlayer(player, gp.script.L)
-    err := SavePlayer(player)
+    str, err := base.ToGobToBase64(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return 0
+    }
+    player.Game_state = str
+    player.Name = "foocake"
+    err = SavePlayer(player)
     if err != nil {
       base.Warn().Printf("Unable to save player: %v", err)
     }

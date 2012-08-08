@@ -111,11 +111,11 @@ func InsertVersusMenu(ui gui.WidgetParent, replace func(gui.WidgetParent) error)
       base.Log().Printf("Chose: %v", m)
       switch m[0] {
       case "Select House":
-        ui.AddChild(MakeGamePanel("versus/basic.lua", map[string]string{"map": "select"}))
+        ui.AddChild(MakeGamePanel("versus/basic.lua", nil, map[string]string{"map": "select"}))
       case "Random House":
-        ui.AddChild(MakeGamePanel("versus/basic.lua", map[string]string{"map": "random"}))
+        ui.AddChild(MakeGamePanel("versus/basic.lua", nil, map[string]string{"map": "random"}))
       case "Continue":
-        ui.AddChild(MakeGamePanel("versus/basic.lua", map[string]string{"map": "continue"}))
+        ui.AddChild(MakeGamePanel("versus/basic.lua", nil, map[string]string{"map": "continue"}))
       default:
         base.Error().Printf("Unknown meta choice '%s'", m[0])
         return

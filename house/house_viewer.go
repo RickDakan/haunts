@@ -312,6 +312,7 @@ func (o offsetDrawable) Pos() (int, int) {
 func (hv *HouseViewer) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
+
   hv.Render_region = region
 
   hv.Floor_drawers = hv.Floor_drawers[0:0]

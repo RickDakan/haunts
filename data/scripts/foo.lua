@@ -92,6 +92,7 @@ function OnAction(intruders, round, exec)
     Script.DialogBox(dialog_path)
     store.Ch01a.Spawnpoints_complete[name] = true 
     if name == "Ch01_Dialog02" then
+      -- Script.SaveStore()
       Script.StartScript("Ch01b.lua")
     --INSERT other names and functions here
     end  

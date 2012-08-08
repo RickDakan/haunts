@@ -28,6 +28,10 @@ type Player struct {
   // Game data - if the player is in the middle of a game then the state is
   // stored here.
   Game_state string
+
+  // Also if the player is in the middle of a game the script that should be
+  // running is stored here.
+  Script_path string
 }
 
 // Returns a map from player name to the path of that player's file.

@@ -74,6 +74,10 @@ type gameDataTransient struct {
   }
 
   script *gameScript
+
+  // Indicates if we're waiting for a script to run or something
+  Turn_state   turnState
+  Action_state actionState
 }
 
 func (gdt *gameDataTransient) alloc() {
@@ -155,12 +159,8 @@ type gameDataGobbable struct {
   // If an Ai is executing currently it is referenced here
   active_ai Ai
 
-  action_state   actionState
   current_exec   ActionExec
   current_action Action
-
-  // Indicates if we're waiting for a script to run or something
-  turn_state turnState
 
   // Goals ******************************************************
 
@@ -224,7 +224,7 @@ func (g *Game) HoveredEnt() *Entity {
 }
 
 func (g *Game) SelectEnt(ent *Entity) bool {
-  if g.action_state != noAction {
+  if g.Action_state != noAction {
     return false
   }
   found := false
@@ -315,7 +315,7 @@ func (g *Game) SetVisibility(side Side) {
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
-  if g.action_state != noAction {
+  if g.Action_state != noAction {
     return
   }
   // Any master ai is still active
@@ -807,12 +807,12 @@ func (g *Game) Think(dt int64) {
     ent.Release()
   }
 
-  switch g.turn_state {
+  switch g.Turn_state {
   case turnStateInit:
     select {
     case <-g.comm.script_to_game:
       base.Log().Printf("ScriptComm: change to turnStateStart")
-      g.turn_state = turnStateStart
+      g.Turn_state = turnStateStart
       g.OnRound()
     default:
     }
@@ -820,7 +820,7 @@ func (g *Game) Think(dt int64) {
     select {
     case <-g.comm.script_to_game:
       base.Log().Printf("ScriptComm: change to turnStateAiAction")
-      g.turn_state = turnStateAiAction
+      g.Turn_state = turnStateAiAction
     default:
     }
   case turnStateScriptOnAction:
@@ -833,7 +833,7 @@ func (g *Game) Think(dt int64) {
           g.current_exec = exec.(ActionExec)
         } else {
           base.Log().Printf("ScriptComm: change to turnStateAiAction")
-          g.turn_state = turnStateAiAction
+          g.Turn_state = turnStateAiAction
         }
       }
     default:
@@ -844,12 +844,12 @@ func (g *Game) Think(dt int64) {
       if exec != nil {
         base.Log().Printf("ScriptComm: Got an exec: %v", exec)
         g.current_exec = exec.(ActionExec)
-        g.action_state = doingAction
+        g.Action_state = doingAction
         ent := g.EntityById(g.current_exec.EntityId())
         g.current_action = ent.Actions[g.current_exec.ActionIndex()]
         ent.current_action = g.current_action
       } else {
-        g.turn_state = turnStateEnd
+        g.Turn_state = turnStateEnd
         base.Log().Printf("ScriptComm: change to turnStateEnd for realzes")
       }
     default:
@@ -859,33 +859,33 @@ func (g *Game) Think(dt int64) {
   case turnStateEnd:
     select {
     case <-g.comm.script_to_game:
-      g.turn_state = turnStateStart
+      g.Turn_state = turnStateStart
       base.Log().Printf("ScriptComm: change to turnStateStart")
       g.OnRound()
     default:
     }
   }
 
-  if g.current_exec != nil && g.action_state != verifyingAction && g.turn_state != turnStateMainPhaseOver {
+  if g.current_exec != nil && g.Action_state != verifyingAction && g.Turn_state != turnStateMainPhaseOver {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
     ent.current_action = g.current_action
-    g.action_state = verifyingAction
+    g.Action_state = verifyingAction
     base.Log().Printf("ScriptComm: request exec verification")
     g.comm.game_to_script <- g.current_exec
   }
 
-  if g.action_state == verifyingAction {
+  if g.Action_state == verifyingAction {
     select {
     case <-g.comm.script_to_game:
-      g.action_state = doingAction
+      g.Action_state = doingAction
     default:
     }
   }
 
   // If there is an action that is currently executing we need to advance that
   // action.
-  if g.action_state == doingAction {
+  if g.Action_state == doingAction {
     res := g.current_action.Maintain(dt, g, g.current_exec)
     if g.current_exec != nil {
       base.Log().Printf("ScriptComm: sent action")
@@ -895,9 +895,9 @@ func (g *Game) Think(dt int64) {
     case Complete:
       g.current_action.Cancel()
       g.current_action = nil
-      g.action_state = noAction
-      if g.turn_state != turnStateMainPhaseOver {
-        g.turn_state = turnStateScriptOnAction
+      g.Action_state = noAction
+      if g.Turn_state != turnStateMainPhaseOver {
+        g.Turn_state = turnStateScriptOnAction
       }
       base.Log().Printf("ScriptComm: Action complete")
       g.comm.game_to_script <- nil
@@ -966,7 +966,7 @@ func (g *Game) Think(dt int64) {
   }
 
   // Also don't do an ai stuff if this isn't the appropriate state
-  if g.turn_state != turnStateAiAction {
+  if g.Turn_state != turnStateAiAction {
     return
   }
 
@@ -991,34 +991,34 @@ func (g *Game) Think(dt int64) {
   if g.Side == SideHaunt {
     if g.minion_ai.Active() {
       g.active_ai = g.minion_ai
-      g.action_state = waitingAction
+      g.Action_state = waitingAction
     } else {
       if g.haunts_ai.Active() {
         g.active_ai = g.haunts_ai
-        g.action_state = waitingAction
+        g.Action_state = waitingAction
       }
     }
   } else {
     if g.explorers_ai.Active() {
       g.active_ai = g.explorers_ai
-      g.action_state = waitingAction
+      g.Action_state = waitingAction
     }
   }
-  if g.action_state == waitingAction {
+  if g.Action_state == waitingAction {
     select {
     case exec := <-g.active_ai.ActionExecs():
       if exec != nil {
         g.current_exec = exec
       } else {
-        g.action_state = noAction
+        g.Action_state = noAction
         // TODO: indicate that the master ai can go now
       }
 
     default:
     }
   }
-  if !g.player_active && g.action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
-    g.turn_state = turnStateMainPhaseOver
+  if !g.player_active && g.Action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
+    g.Turn_state = turnStateMainPhaseOver
     base.Log().Printf("ScriptComm: change to turnStateMainPhaseOver")
     g.comm.game_to_script <- nil
     base.Log().Printf("ScriptComm: sent nil")

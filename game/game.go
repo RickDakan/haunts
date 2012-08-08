@@ -4,7 +4,6 @@ import (
   "reflect"
   "math/rand"
   "sort"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -27,23 +26,17 @@ type GamePanel struct {
   game   *Game
 }
 
-func MakeGamePanel(script string, data map[string]string) *GamePanel {
+func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel {
   var gp GamePanel
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  p, err := LoadPlayer(filepath.Join(base.GetDataDir(), "players", base.GetStoreVal("last player")))
-  if err != nil {
-    base.Warn().Printf("Couldn't load player '%s': %v", base.GetStoreVal("last player"), err)
+  if p == nil {
     p = &Player{}
+  }
+  if script == "" {
+    script = p.Script_path
   }
   startGameScript(&gp, script, p, data)
   return &gp
-}
-
-func (gp *GamePanel) SaveGame(filename string) {
-  err := base.SaveGob(filepath.Join(base.GetDataDir(), "games", filename+".game"), *gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to save: %v", err)
-  }
 }
 
 // DEPRECATE THIS ASAP
@@ -144,7 +137,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
 // action cannot be selected (because it is invalid or the entity has
 // insufficient Ap), or if there is an action currently executing.
 func (g *Game) SetCurrentAction(action Action) bool {
-  if g.action_state != noAction && g.action_state != preppingAction {
+  if g.Action_state != noAction && g.Action_state != preppingAction {
     return false
   }
   // the action should be one that belongs to the current entity, if not then
@@ -170,9 +163,9 @@ func (g *Game) SetCurrentAction(action Action) bool {
     g.current_action.Cancel()
   }
   if action == nil {
-    g.action_state = noAction
+    g.Action_state = noAction
   } else {
-    g.action_state = preppingAction
+    g.Action_state = preppingAction
   }
   g.current_action = action
   return true
@@ -223,7 +216,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if found, event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     if gp.game.selected_ent != nil {
-      switch gp.game.action_state {
+      switch gp.game.Action_state {
       case noAction:
         gp.game.selected_ent.selected = false
         gp.game.selected_ent.hovered = false
@@ -240,7 +233,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if gp.game.action_state == noAction {
+  if gp.game.Action_state == noAction {
     if found, _ := group.FindEvent(gin.MouseLButton); found {
       if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {
         if gp.game.selected_ent != nil {
@@ -253,7 +246,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if gp.game.action_state == preppingAction {
+  if gp.game.Action_state == preppingAction {
     consumed, exec := gp.game.current_action.HandleInput(group, gp.game)
     if consumed {
       if exec != nil {
@@ -269,7 +262,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.game.selected_ent == nil {
     return false
   }
-  if gp.game.action_state == noAction || gp.game.action_state == preppingAction {
+  if gp.game.Action_state == noAction || gp.game.Action_state == preppingAction {
     if len(group.Events) == 1 && group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
       index := int(group.Events[0].Key.Id() - '1')
       if index >= 0 && index < len(gp.game.selected_ent.Actions) {
