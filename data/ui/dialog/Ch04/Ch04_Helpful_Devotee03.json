@@ -1,0 +1,28 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Inside! I hear from inside the fleeing mind.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/devoted_servant.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "The symphony of desperation, orchestrated in the stars.",
+          "Image":{
+          "Path": "ui/dialog/Ch04/devoted_servant.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

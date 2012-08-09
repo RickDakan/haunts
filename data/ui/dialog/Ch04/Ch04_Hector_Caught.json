@@ -1,0 +1,29 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "I know now what you're doing Tyree, and it won't work. You'll end everything you've built.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/hector.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Everything ends. But with your sacrifice, I might have a new beginning.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

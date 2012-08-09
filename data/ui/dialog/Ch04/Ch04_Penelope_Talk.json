@@ -1,0 +1,65 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Feels like the end of our world, doesn't it?",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/penelope.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "I won't miss the world when it's gone. When the slate is wiped clean.",
+		  "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "You mean the world won't miss you. I'm sure it will churn along without us.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/penelope.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "No, the world will miss ME very much indeed.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/Tyree.png"
+          }
+        }
+      ]
+    },
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

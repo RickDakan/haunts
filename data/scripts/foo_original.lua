@@ -52,7 +52,7 @@ function doDenizenSetup()
   -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
   while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master-.*", 1, ents)
+    placed = Script.PlaceEntities("Master-.*", ents, 1, 1)
     
   end
 
@@ -78,7 +78,7 @@ function doDenizenSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor-".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitor-.*")
-  placed = Script.PlaceEntities("Servitor-.*", 10, ents)
+  placed = Script.PlaceEntities("Servitor-.*", ents, 0, 10)
 
   -- set the denizens to not be able to see anything - it's not very
   -- significant since their turn is about to end anyway.

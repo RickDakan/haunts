@@ -1,0 +1,29 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Simon's final betrayal - fleeing me.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/simon.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "A true heir would sacrifice himself for the family's greater good.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

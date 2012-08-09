@@ -29,7 +29,7 @@ function doDenizenSetup()
 
   placed = {}
   while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Bosch-.*", 1, ents)
+    placed = Script.PlaceEntities("Bosch-.*", ents, 1, 1)
   end
 
   ents = {
@@ -38,14 +38,14 @@ function doDenizenSetup()
       {"Angry Shade", 1},
     }
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
-  Script.PlaceEntities("Servitors-.*", 10, ents)
+  Script.PlaceEntities("Servitors-.*", ents, 0, 10)
 
   if store.Ch01c.choice_a == "Greedy" then
  	ents = {
  		{"Tyree's Ghost", 1},
  	}
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors-.*")
-	Script.PlaceEntities("Servitors-.*", 1, ents)
+	Script.PlaceEntities("Servitors-.*", ents, 1, 1)
   end
 end
 
@@ -127,36 +127,36 @@ function OnIntrudersAction(intruders, round, exec)
  
   if exec.Ent.Name("Cordelia Tyree") and ent.HpCur == 0 then
     store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] = true
-    Script.DialogBox("Ch02_Cordelia_Dies.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Cordelia_Dies.json")
  end
 
   if exec.Ent.Name("Sabina Tyree") and ent.HpCur == 0 then
   store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] = true
-  Script.DialogBox("Ch02_Sabina_Dies.json")
+  Script.DialogBox("ui/dialog/Ch02/Ch02_Sabina_Dies.json")
   end
 
   if name == "Tyrees_at_door" then
   store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] and store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] then
-    Script.DialogBox("Ch02_Elias_Alone.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Elias_Alone.json")
   end
   
   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] then
-    Script.DialogBox("Ch02_Elias_and_Sabina.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Elias_and_Sabina.json")
   end
   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == true then
-    Script.DialogBox("Ch02_Elias_and_Cordelia.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Elias_and_Cordelia.json")
   end
   if store.Ch02.Spawnpoints_complete["Ch02_Cordelia_Dies"] == nil and store.Ch02.Spawnpoints_complete["Ch02_Sabina_Dies"] == nil then
-    Script.DialogBox("Ch02_Elias_and_Both.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Elias_and_Both.json")
     Script.SetCondition ("Elias Tyree", "Determined", false)
   end
   
   if store.Ch01c.choice_a == "Discretion" then
-    Script.DialogBox("Ch02_Bosch_Choice_Without_Ghost.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Bosch_Choice_Without_Ghost.json")
       store.Ch02.choice_a = choice[1]
   end
   if store.Ch01c.choice_a == "Greedy" then
-    Script.DialogBox("Ch02_Bosch_Choice_With_Ghost.json")
+    Script.DialogBox("ui/dialog/Ch02/Ch02_Bosch_Choice_With_Ghost.json")
       store.Ch02.choice_a = choice[1]
   end
    
@@ -179,6 +179,11 @@ end
 -- NEED Tyree Golem Turns
 
 --NEED ENDING DIALOGS
+
+
+function RoundEnd(intruders, round)
+  print("end", intruders, round)
+end
 
 
 
