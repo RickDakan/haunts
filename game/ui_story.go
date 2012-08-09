@@ -1,6 +1,7 @@
 package game
 
 import (
+  "fmt"
   "path/filepath"
   "sort"
   "github.com/runningwild/glop/gin"
@@ -17,15 +18,24 @@ type storyLayout struct {
   }
   Background texture.Object
   Back       Button
-  New        Button
-  Continue   Button
+  Text       struct {
+    String        string
+    Size          int
+    Justification string
+  }
+  Up      Button
+  Down    Button
+  Options ScrollingRegion
 }
 
 type StoryMenu struct {
-  layout  storyLayout
-  region  gui.Region
-  buttons []*Button
-  mx, my  int
+  layout             storyLayout
+  region             gui.Region
+  buttons            []*Button
+  option_buttons     []*Button
+  non_option_buttons []*Button
+  mx, my             int
+  last_t             int64
 }
 
 func InsertStoryMenu(ui gui.WidgetParent) error {
@@ -35,18 +45,20 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
   if err != nil {
     return err
   }
-  sm.buttons = []*Button{
+  sm.non_option_buttons = []*Button{
     &sm.layout.Back,
-    &sm.layout.New,
-    // &sm.layout.Continue,
+    &sm.layout.Up,
+    &sm.layout.Down,
   }
   sm.layout.Back.f = func(interface{}) {
     ui.RemoveChild(&sm)
     InsertStartMenu(ui)
   }
-  sm.layout.New.f = func(interface{}) {
-    ui.RemoveChild(&sm)
-    ui.AddChild(MakeGamePanel("foo.lua", &Player{}, nil))
+  sm.layout.Up.f = func(interface{}) {
+    sm.layout.Options.Up()
+  }
+  sm.layout.Down.f = func(interface{}) {
+    sm.layout.Options.Down()
   }
 
   players := GetAllPlayers()
@@ -54,17 +66,20 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
   for player_name := range players {
     player_names = append(player_names, player_name)
   }
+  for i := 0; i < 10; i++ {
+    player_names = append(player_names, fmt.Sprintf("Player %d", i))
+  }
   sort.Strings(player_names)
-  y := sm.layout.Continue.Y
+  line_height := int(base.GetDictionary(sm.layout.Text.Size).MaxHeight())
+  y := -line_height
   for i := range player_names {
     player_name := player_names[i]
     var button Button
-    button.X = sm.layout.Continue.X
+    button.X = sm.layout.Options.X
     button.Y = y
-    y -= sm.layout.New.Y - sm.layout.Continue.Y
+    y -= line_height
+    button.Text = sm.layout.Text
     button.Text.String = player_name
-    button.Text.Size = sm.layout.Continue.Text.Size
-    button.Text.Justification = sm.layout.Continue.Text.Justification
     button.f = func(interface{}) {
       ui.RemoveChild(&sm)
       p, err := LoadPlayer(players[player_name])
@@ -74,10 +89,16 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
       ui.AddChild(MakeGamePanel("", p, nil))
       base.Log().Printf("Pressed %s", player_name)
     }
-    sm.buttons = append(sm.buttons, &button)
+    sm.option_buttons = append(sm.option_buttons, &button)
   }
-
-  // sm.layout.Continue.f = func(interface{}) {}
+  sm.layout.Options.Height = line_height * len(sm.option_buttons)
+  base.Log().Printf("Num elements: %d", len(sm.option_buttons))
+  for _, b := range sm.non_option_buttons {
+    sm.buttons = append(sm.buttons, b)
+  }
+  for _, b := range sm.option_buttons {
+    sm.buttons = append(sm.buttons, b)
+  }
   ui.AddChild(&sm)
   return nil
 }
@@ -95,6 +116,13 @@ func (sm *StoryMenu) Rendered() gui.Region {
 }
 
 func (sm *StoryMenu) Think(g *gui.Gui, t int64) {
+  if sm.last_t == 0 {
+    sm.last_t = t
+    return
+  }
+  dt := t - sm.last_t
+  sm.last_t = t
+  sm.layout.Options.Think(dt)
   if sm.mx == 0 && sm.my == 0 {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
@@ -124,7 +152,12 @@ func (sm *StoryMenu) Draw(region gui.Region) {
   sm.layout.Background.Data().RenderNatural(region.X, region.Y)
   title := sm.layout.Title
   title.Texture.Data().RenderNatural(region.X+title.X, region.Y+title.Y)
-  for _, button := range sm.buttons {
+  sm.layout.Options.Region().PushClipPlanes()
+  for _, button := range sm.option_buttons {
+    button.RenderAt(sm.region.X, sm.region.Y+sm.layout.Options.Top())
+  }
+  sm.layout.Options.Region().PopClipPlanes()
+  for _, button := range sm.non_option_buttons {
     button.RenderAt(sm.region.X, sm.region.Y)
   }
 }

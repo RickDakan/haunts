@@ -9,29 +9,36 @@
   "Background": {
     "Path": "ui/dialog/large.png"
   },
-  "New": {
-    "X": 100,
-    "Y": 400,
-    "Text": {
-      "String": "Start New Game",
-      "Size": 18,
-      "Justification": "left"
-    }
+  "Options": {
+    "X": 180,
+    "Y": 84,
+    "Dx": 550,
+    "Dy": 200
   },
-  "Continue": {
-    "X": 100,
-    "Y": 300,
-    "Text": {
-      "String": "Continue Game",
-      "Size": 18,
-      "Justification": "left"
-    }
+  "Text": {
+    "String": "Start New Game",
+    "Size": 15,
+    "Justification": "left"
   },
   "Back": {
     "X": 100,
     "Y": 100,
     "Texture": {
       "Path": "ui/arrow_lf.png"
+    }
+  },
+  "Up": {
+    "X": 600,
+    "Y": 400,
+    "Texture": {
+      "Path": "ui/up_arrow.png"
+    }
+  },
+  "Down": {
+    "X": 600,
+    "Y": 200,
+    "Texture": {
+      "Path": "ui/down_arrow.png"
     }
   }
 }

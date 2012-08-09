@@ -130,9 +130,7 @@ type chooseLayout struct {
     Texture texture.Object
   }
 
-  Options struct {
-    X, Y, Dx, Dy int
-  }
+  Options ScrollingRegion
 
   Up, Down, Back, Next Button
 
@@ -190,11 +188,8 @@ type Chooser struct {
   selected           map[int]bool
   selector           Selector
   min, max           int
-  options_region     gui.Region
   info_region        gui.Region
   mx, my             int
-
-  scroller ScrollingRegion
 
   last_t int64
 }
@@ -218,10 +213,10 @@ func MakeChooser(opts []Option) (*Chooser, <-chan []string, error) {
     &ch.layout.Next,
   }
   ch.layout.Up.f = func(interface{}) {
-    ch.scroller.Move(-ch.layout.Options.Dy)
+    ch.layout.Options.Up()
   }
   ch.layout.Down.f = func(interface{}) {
-    ch.scroller.Move(ch.layout.Options.Dy)
+    ch.layout.Options.Down()
   }
   done := make(chan []string, 1)
   ch.selected = make(map[int]bool)
@@ -248,11 +243,6 @@ func MakeChooser(opts []Option) (*Chooser, <-chan []string, error) {
   } else {
     ch.selector = SelectInRange(ch.min, ch.max)
   }
-  ch.options_region = gui.Region{
-    gui.Point{ch.layout.Options.X, ch.layout.Options.Y},
-    gui.Dims{ch.layout.Options.Dx, ch.layout.Options.Dy},
-  }
-  ch.scroller.Region = ch.options_region
   ch.info_region = gui.Region{
     gui.Point{ch.layout.Info.X, ch.layout.Info.Y},
     gui.Dims{ch.layout.Info.Dx, ch.layout.Info.Dy},
@@ -278,7 +268,7 @@ type doOnOptionData struct {
 func (c *Chooser) doOnOptions(f func(index int, opt Option, data doOnOptionData)) {
   var data doOnOptionData
   data.x = c.layout.Options.X + c.region.X
-  data.y = c.region.Y + c.layout.Options.Y + c.layout.Options.Dy + c.scroller.Top()
+  data.y = c.region.Y + c.layout.Options.Top()
   data.dx = c.layout.Options.Dx
   for i, option := range c.options {
     data.dy = option.Height()
@@ -314,8 +304,8 @@ func (c *Chooser) Think(g *gui.Gui, t int64) {
   }
   dt := t - c.last_t
   c.last_t = t
-  c.scroller.Height = c.optionsHeight()
-  c.scroller.Think(dt)
+  c.layout.Options.Height = c.optionsHeight()
+  c.layout.Options.Think(dt)
   if c.mx == 0 && c.my == 0 {
     c.mx, c.my = gin.In().GetCursor("Mouse").Point()
   }
@@ -373,7 +363,7 @@ func (c *Chooser) Draw(region gui.Region) {
     button.RenderAt(region.X, region.Y)
   }
 
-  c.scroller.Region.PushClipPlanes()
+  c.layout.Options.Region().PushClipPlanes()
   hovered := -1
   c.doOnOptions(func(index int, opt Option, data doOnOptionData) {
     if data.hovered {
@@ -381,7 +371,7 @@ func (c *Chooser) Draw(region gui.Region) {
     }
     opt.Draw(data.x, data.y, data.dx)
   })
-  c.scroller.Region.PopClipPlanes()
+  c.layout.Options.Region().PopClipPlanes()
   c.info_region.PushClipPlanes()
   if hovered != -1 {
     c.options[hovered].DrawInfo(c.layout.Info.X, c.layout.Info.Y, c.layout.Info.Dx, c.layout.Info.Dy)
