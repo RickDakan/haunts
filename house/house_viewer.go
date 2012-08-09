@@ -74,29 +74,7 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.angle = angle
   hv.Zoom(1)
 
-  if hv.house != nil && len(hv.house.Floors) > 0 && len(hv.house.Floors[0].Rooms) > 0 {
-    minx := hv.house.Floors[0].Rooms[0].X
-    maxx := minx
-    miny := hv.house.Floors[0].Rooms[0].Y
-    maxy := miny
-    for _, floor := range hv.house.Floors {
-      for _, room := range floor.Rooms {
-        if room.X < minx {
-          minx = room.X
-        }
-        if room.Y < miny {
-          miny = room.Y
-        }
-        if room.X+room.Size.Dx > maxx {
-          maxx = room.X + room.Size.Dx
-        }
-        if room.Y+room.Size.Dy > maxy {
-          maxy = room.Y + room.Size.Dy
-        }
-      }
-    }
-    hv.SetBounds(minx, miny, maxx, maxy)
-  }
+  hv.SetBounds()
 
   return &hv
 }
@@ -172,12 +150,31 @@ func (hv *HouseViewer) Zoom(dz float64) {
   hv.zoom = float32(math.Exp(exp))
 }
 
-func (hv *HouseViewer) SetBounds(x, y, x2, y2 int) {
+func (hv *HouseViewer) SetBounds() {
+  if hv.house == nil || len(hv.house.Floors[0].Rooms) == 0 {
+    return
+  }
   hv.bounds.on = true
-  hv.bounds.min.x = float32(x)
-  hv.bounds.min.y = float32(y)
-  hv.bounds.max.x = float32(x2)
-  hv.bounds.max.y = float32(y2)
+  hv.bounds.min.x = float32(hv.house.Floors[0].Rooms[0].X)
+  hv.bounds.max.x = hv.bounds.min.x
+  hv.bounds.min.y = float32(hv.house.Floors[0].Rooms[0].Y)
+  hv.bounds.max.y = hv.bounds.min.y
+  for _, floor := range hv.house.Floors {
+    for _, room := range floor.Rooms {
+      if float32(room.X) < hv.bounds.min.x {
+        hv.bounds.min.x = float32(room.X)
+      }
+      if float32(room.Y) < hv.bounds.min.y {
+        hv.bounds.min.y = float32(room.Y)
+      }
+      if float32(room.X+room.Size.Dx) > hv.bounds.max.x {
+        hv.bounds.max.x = float32(room.X + room.Size.Dx)
+      }
+      if float32(room.Y+room.Size.Dy) > hv.bounds.max.y {
+        hv.bounds.max.y = float32(room.Y + room.Size.Dy)
+      }
+    }
+  }
 }
 
 func (hv *HouseViewer) Drag(dx, dy float64) {

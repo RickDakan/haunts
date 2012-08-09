@@ -827,6 +827,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       })
       hdt.temp_room = nil
       hdt.prev_room = nil
+      hdt.viewer.SetBounds()
     }
     return true
   }
@@ -839,6 +840,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         floor.removeInvalidDoors()
         hdt.temp_room = nil
         hdt.prev_room = nil
+        hdt.viewer.SetBounds()
       }
     } else {
       cx, cy := event.Key.Cursor().Point()
@@ -1289,6 +1291,7 @@ func (he *HouseEditor) Load(path string) error {
   base.Log().Printf("Loaded %s\n", path)
   house.Normalize()
   he.house = *house
+  he.viewer.SetBounds()
   for _, tab := range he.widgets {
     tab.Reload()
   }
