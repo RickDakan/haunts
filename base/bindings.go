@@ -51,6 +51,9 @@ func getKeysFromString(str string) []gin.KeyId {
     case part == "lmouse":
       kid = gin.MouseLButton
 
+    case part == "vwheel":
+      kid = gin.MouseWheelVertical
+
     case part == "up":
       kid = gin.Up
 
