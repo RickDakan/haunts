@@ -241,6 +241,9 @@ func pointInsideRect(px, py, x, y, dx, dy int) bool {
 }
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
+  if g.FocusWidget() != nil {
+    return
+  }
   if m.ent != nil {
     // If an action is selected and we can't see it then we scroll just enough
     // so that we can.
@@ -351,6 +354,9 @@ func (m *MainBar) pointInsideAction(px, py int) int {
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  if g.FocusWidget() != nil {
+    return false
+  }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()

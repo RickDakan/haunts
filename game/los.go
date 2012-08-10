@@ -98,7 +98,11 @@ func (gdt *gameDataTransient) alloc() {
   gdt.script = &gameScript{}
 }
 
-type gameDataPrivate struct{}
+type gameDataPrivate struct {
+  // Hacky - but gives us a way to prevent selecting ents and whatnot while
+  // any kind of modal dialog box is up.
+  modal bool
+}
 type gameDataGobbable struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point

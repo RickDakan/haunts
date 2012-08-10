@@ -66,6 +66,8 @@ func (sm *SystemMenu) Think(g *gui.Gui, t int64) {
     for _, button := range sm.buttons {
       button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
     }
+    // This makes it so that the button lights up while the menu
+    sm.layout.Main.Think(0, 0, sm.layout.Main.bounds.x+1, sm.layout.Main.bounds.y+1, dt)
   } else {
     sm.layout.Main.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
   }
@@ -89,7 +91,7 @@ func (sm *SystemMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
       return true
     }
   }
-  return false
+  return (g.FocusWidget() == sm)
 }
 
 func (sm *SystemMenu) Draw(region gui.Region) {

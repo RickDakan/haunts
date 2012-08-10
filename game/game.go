@@ -6,7 +6,6 @@ import (
   "sort"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
 )
@@ -74,6 +73,9 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   if !gp.Active() {
     return
   }
+  if gp.game != nil {
+    gp.game.modal = (ui.FocusWidget() != nil)
+  }
 
   if gp.last_think == 0 {
     gp.last_think = t
@@ -111,25 +113,6 @@ func (g *Game) SpawnEntity(spawn *Entity, x, y int) bool {
   g.viewer.AddDrawable(spawn)
   g.Ents = append(g.Ents, spawn)
   return true
-}
-
-func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
-  if group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
-    if group.Events[0].Type == gin.Press {
-      index := int(group.Events[0].Key.Id() - '1')
-      names := base.GetAllNamesInRegistry("entities")
-      ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
-        return MakeEntity(a.(string), g)
-      }).([]*Entity)
-      algorithm.Choose2(&ents, func(ent *Entity) bool { return ent.Side() != g.Side })
-      if index >= 0 && index < len(ents) {
-        g.viewer.RemoveDrawable(g.new_ent)
-        g.new_ent = ents[index]
-        g.viewer.AddDrawable(g.new_ent)
-      }
-    }
-  }
-  return false
 }
 
 // Returns true iff the action was set
