@@ -89,6 +89,9 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
       ui.AddChild(MakeGamePanel("", p, nil))
       base.Log().Printf("Pressed %s", player_name)
     }
+    button.valid_func = func() bool {
+      return pointInsideRect(sm.mx, sm.my, sm.layout.Options.X, sm.layout.Options.Y, sm.layout.Options.Dx, sm.layout.Options.Dy)
+    }
     sm.option_buttons = append(sm.option_buttons, &button)
   }
   sm.layout.Options.Height = line_height * len(sm.option_buttons)

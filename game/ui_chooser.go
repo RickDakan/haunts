@@ -270,10 +270,11 @@ func (c *Chooser) doOnOptions(f func(index int, opt Option, data doOnOptionData)
   data.x = c.layout.Options.X + c.region.X
   data.y = c.region.Y + c.layout.Options.Top()
   data.dx = c.layout.Options.Dx
+  in_box := pointInsideRect(c.mx, c.my, c.layout.Options.X, c.layout.Options.Y, c.layout.Options.Dx, c.layout.Options.Dy)
   for i, option := range c.options {
     data.dy = option.Height()
     data.y -= data.dy
-    data.hovered = pointInsideRect(c.mx, c.my, data.x, data.y, data.dx, data.dy)
+    data.hovered = in_box && pointInsideRect(c.mx, c.my, data.x, data.y, data.dx, data.dy)
     data.selected = c.selected[i]
     data.selectable = c.selector(i, c.selected, false)
     f(i, option, data)
