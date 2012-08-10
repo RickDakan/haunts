@@ -1,7 +1,6 @@
 package game
 
 import (
-  "fmt"
   "path/filepath"
   "sort"
   "github.com/runningwild/glop/gin"
@@ -66,10 +65,9 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
   for player_name := range players {
     player_names = append(player_names, player_name)
   }
-  for i := 0; i < 10; i++ {
-    player_names = append(player_names, fmt.Sprintf("Player %d", i))
-  }
+  player_names = append(player_names, "")
   sort.Strings(player_names)
+  player_names[0] = "New Game"
   line_height := int(base.GetDictionary(sm.layout.Text.Size).MaxHeight())
   y := -line_height
   for i := range player_names {
@@ -80,14 +78,21 @@ func InsertStoryMenu(ui gui.WidgetParent) error {
     y -= line_height
     button.Text = sm.layout.Text
     button.Text.String = player_name
-    button.f = func(interface{}) {
-      ui.RemoveChild(&sm)
-      p, err := LoadPlayer(players[player_name])
-      if err != nil {
-        base.Warn().Printf("Failed to load player '%s': %v", player_name, err)
+    if player_name == "New Game" {
+      button.f = func(interface{}) {
+        ui.RemoveChild(&sm)
+        ui.AddChild(MakeGamePanel("foo.lua", nil, nil))
       }
-      ui.AddChild(MakeGamePanel("", p, nil))
-      base.Log().Printf("Pressed %s", player_name)
+    } else {
+      button.f = func(interface{}) {
+        ui.RemoveChild(&sm)
+        p, err := LoadPlayer(players[player_name])
+        if err != nil {
+          base.Warn().Printf("Failed to load player '%s': %v", player_name, err)
+        }
+        ui.AddChild(MakeGamePanel("", p, nil))
+        base.Log().Printf("Pressed %s", player_name)
+      }
     }
     button.valid_func = func() bool {
       return pointInsideRect(sm.mx, sm.my, sm.layout.Options.X, sm.layout.Options.Y, sm.layout.Options.Dx, sm.layout.Options.Dy)
