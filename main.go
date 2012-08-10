@@ -253,17 +253,19 @@ func main() {
   editor_name = "room"
   editor = editors[editor_name]
 
-  game_box = &lowerLeftTable{gui.MakeAnchorBox(gui.Dims{1024, 768})}
   edit_mode := false
-  err = game.InsertStartMenu(game_box)
-  if err != nil {
-    panic(err)
-  }
-  if edit_mode {
-    ui.AddChild(editor)
-  } else {
+  game.Restart = func() {
+    base.Log().Printf("Restarting...")
+    ui.RemoveChild(game_box)
+    game_box = &lowerLeftTable{gui.MakeAnchorBox(gui.Dims{1024, 768})}
+    err = game.InsertStartMenu(game_box)
+    if err != nil {
+      panic(err)
+    }
     ui.AddChild(game_box)
+    base.Log().Printf("Restarted")
   }
+  game.Restart()
 
   if base.IsDevel() {
     ui.AddChild(base.MakeConsole())

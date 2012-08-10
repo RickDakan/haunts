@@ -492,7 +492,7 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
         return 0
       }
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
-      system, err := MakeSystemMenu()
+      system, err := MakeSystemMenu(gp)
       if err != nil {
         LuaDoError(L, err.Error())
         return 0

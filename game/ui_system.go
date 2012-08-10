@@ -11,10 +11,13 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
+var Restart func()
+
 type systemLayout struct {
   Main Button
   Sub  struct {
     Background texture.Object
+    Return     Button
   }
 }
 
@@ -27,7 +30,7 @@ type SystemMenu struct {
   focus   bool
 }
 
-func MakeSystemMenu() (gui.Widget, error) {
+func MakeSystemMenu(gp *GamePanel) (gui.Widget, error) {
   var sm SystemMenu
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "system", "layout.json"), "json", &sm.layout)
@@ -36,6 +39,18 @@ func MakeSystemMenu() (gui.Widget, error) {
   }
 
   sm.layout.Main.f = func(interface{}) {}
+
+  sm.buttons = []*Button{
+    &sm.layout.Sub.Return,
+  }
+
+  sm.layout.Sub.Return.f = func(_ui interface{}) {
+    ui := _ui.(*gui.Gui)
+    gp.game.Ents = nil
+    gp.game.Think(1) // This should clean things up
+    ui.DropFocus()
+    Restart()
+  }
 
   return &sm, nil
 }
@@ -89,6 +104,11 @@ func (sm *SystemMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
       sm.focus = true
       base.Log().Printf("focus: %v %v", sm, g.FocusWidget())
       return true
+    }
+    if sm.focus {
+      for _, button := range sm.buttons {
+        button.handleClick(sm.mx, sm.my, g)
+      }
     }
   }
   return (g.FocusWidget() == sm)

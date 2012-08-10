@@ -7,6 +7,15 @@
   "Sub": {
     "Background": {
       "Path": "ui/dialog/medium.png"
+    },
+    "Return": {
+      "X": 60,
+      "Y": 260,
+      "Text": {
+        "String": "Return to Main Menu",
+        "Size": 15,
+        "Justification": "left"
+      }
     }
   }
 }

@@ -1,7 +1,6 @@
 package game
 
 import (
-  "github.com/runningwild/haunts/base"
   "github.com/runningwild/glop/gui"
 )
 
@@ -32,6 +31,5 @@ func (sr *ScrollingRegion) Think(dt int64) {
   sr.pos = doApproach(sr.pos, sr.target, dt)
 }
 func (sr *ScrollingRegion) Region() gui.Region {
-  base.Log().Printf("%v", gui.Region{gui.Point{sr.X, sr.Y}, gui.Dims{sr.Dx, sr.Dy}})
   return gui.Region{gui.Point{sr.X, sr.Y}, gui.Dims{sr.Dx, sr.Dy}}
 }
