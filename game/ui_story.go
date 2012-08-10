@@ -127,7 +127,7 @@ func (sm *StoryMenu) Think(g *gui.Gui, t int64) {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
   for _, button := range sm.buttons {
-    button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, t)
+    button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
   }
 }
 

@@ -1,0 +1,12 @@
+{
+  "Main": {
+    "Texture": {
+      "Path": "ui/system/main.png"
+    }
+  },
+  "Sub": {
+    "Background": {
+      "Path": "ui/dialog/medium.png"
+    }
+  }
+}

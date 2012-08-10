@@ -95,7 +95,6 @@ func draggingAndZooming(dz draggerZoomer) {
   if gin.In().GetKey(gin.Space).FramePressAmt() > 0 {
     zoom = gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
   }
-  base.Log().Printf("Zoom: %v", zoom)
   dz.Zoom(zoom / 100)
 
   dz.Zoom(key_map["zoom in"].FramePressAmt() / 20)
