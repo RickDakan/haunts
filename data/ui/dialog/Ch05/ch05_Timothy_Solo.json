@@ -1,0 +1,76 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "This is it good sir and madame, we're in!",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Good work, Timothy. We'll handle things from here.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "An' just what is that supposed to mean?",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "It means we've had enough of your prattling nonsense.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+	"Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "No one will notice one more corpse in this place.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Aye, and they won’t mind two either!",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,1 +1,40 @@
-ch05_Private_Entrance
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "What do you say, Timmy-boy? Did you holiday here with the family?",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Our branch of the family wasn't exactly welcome here. Not since before I was born.",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "I was here once, for a party. Thankfully, I couldn't make it to the party in '29.",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    }
+  }
+}

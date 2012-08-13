@@ -1,53 +1,42 @@
---Ch05a
-function setLosModeToRoomsWithSpawnsMatching(side, pattern)
-  sp = Script.GetSpawnPointsMatching(pattern)
-  rooms = {}
-  for i, spawn in pairs(sp) do
-    rooms[i] = Script.RoomAtPos(spawn.Pos)
-  end
-  Script.SetLosMode(side, rooms)
-end
 
-if not store.Ch05a then
-  store.Ch05a = {}
-  end
---
-play_as_denizens = false
 function Init()
-   store.Ch05a = {}
-   store.Ch05a.Spawnpoints_complete={}
-   store.Ch05a.Spawnpoints = {
-      "Foyer",
-      "Private Entrance",
-      "Study Desk",
-      "Lab",
-      "Vault Door",
-      "Choose Character"
-      "Creepy1",
-      "Creepy2",
-      "Creepy3",
+  if not store.Ch05a then
+    store.Ch05a = {}
+  end
+  store.Ch05a.Spawnpoints_complete={}
+  store.Ch05a.Spawnpoints = {
+    "Foyer",
+    "Creepy1",
+    "Creepy2",
+    "Study Desk",
+    "Private Entrance",
+    "Creepy3",
+    "Lab",
+    "Coffin",
+  } 
 
-   } 
 
   Script.LoadHouse("Chapter_05_a")
-  Script.DialogBox("ui/dialog/Ch05/Ch05_Intro.json") 
-
+    
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "human")
-    --always bind one to human!
+ 
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-Start")
+  print("Found", table.getn(intruder_spawn), "points")
   Script.SpawnEntitySomewhereInSpawnPoints("Timothy K.", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Constance M.", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Samuel T.", intruder_spawn)
+-- "ui/dialog/Ch05/ch05_Intro.json"
+  Script.DialogBox("ui/dialog/Ch05/Ch05_Intro.json")
+end
+ 
 
-
-
-  function RoundStart(intruders, round)
-    Script.SetVisibility("intruders")
-    Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "entities")
-    Script.ShowMainBar(intruders ~= play_as_denizens)
+function RoundStart(intruders, round)
+  Script.SetVisibility("intruders")
+  Script.SetLosMode("intruders", "entities")
+  Script.SetLosMode("denizens", "entities")
+  Script.ShowMainBar(intruders)
 end
 
 
@@ -67,7 +56,6 @@ end
 
 
 function IsPosInUnusedSpawnpoint(pos, list, used)
-  --name identifies spawnpoint
   for _, spawn in pairs(list) do
     if not used[spawn] and pointIsInSpawns(pos, spawn) then
       return spawn
@@ -76,8 +64,6 @@ function IsPosInUnusedSpawnpoint(pos, list, used)
   return nil
 end
 
-
---THIS STOPS a unit in a spawn point not yet activated.
 function OnMove(ent, path)
   if not ent.Side.Intruder then
     return table.getn(path)
@@ -86,6 +72,8 @@ function OnMove(ent, path)
     name = IsPosInUnusedSpawnpoint(pos, store.Ch05a.Spawnpoints, store.Ch05a.Spawnpoints_complete)
     if name then
       return i
+      --this stops them, if we don't stop them, then we need to store that it's true.
+      --     store.Ch05a.Spawnpoints_complete["Ch01_Dialog04"] = true
     end
   end
   return table.getn(path)
@@ -97,18 +85,46 @@ function OnAction(intruders, round, exec)
   end
   name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch05a.Spawnpoints, store.Ch05a.Spawnpoints_complete)
 
-  if name == "Creep1" then
-  	--SOUND CUE!
+  if name == "Foyer" then
+    Script.DialogBox("ui/dialog/Ch05/Ch05_Foyer.json")
+    store.Ch05a.Spawnpoints_complete["Foyer"] = true
+  end
 
+  if name == "Study Desk" then
+    Script.DialogBox("ui/dialog/Ch05/Ch05_Study_Desk.json")
+    store.Ch05a.Spawnpoints_complete["Study Desk"] = true
+  end
 
- end
+  if name == "Private Entrance" then
+    Script.DialogBox("ui/dialog/Ch05/Ch05_Private_Entrance.json")
+    store.Ch05a.Spawnpoints_complete["Private Entrance"] = true
+  end
+
+  if name == "Lab" then
+    Script.DialogBox("ui/dialog/Ch05/Ch05_Lab.json")
+    store.Ch05a.Spawnpoints_complete["Lab"] = true
+  end
+
+  if name == "Coffin" then
+    Script.DialogBox("ui/dialog/Ch05/Ch05_Coffin.json")
+    store.Ch05a.Spawnpoints_complete["Coffin"] = true
+    -- Script.DialogBox("ui/dialog/Ch05/Ch05_Choose_Character")
+    -- store.Ch01a.choice_a = choice[1]
+  end
+
+  if name == "Creepy1" then
+    store.Ch05a.Spawnpoints_complete["Creepy1"] = true
+  end
+
+  if name == "Creepy2" then
+    store.Ch05a.Spawnpoints_complete["Creepy2"] = true
+  end
+
+  if name == "Creepy3" then
+    store.Ch05a.Spawnpoints_complete["Creepy3"] = true
+  end
 end
-
 
 function RoundEnd(intruders, round)
-  print("end", intruders, round)
+
 end
-
-
-
-

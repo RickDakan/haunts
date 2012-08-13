@@ -6,7 +6,7 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "You've come far, searcher, but what you seek is not here.",
+          "Text": "4000 Summers come and gone and still you hunt me, favored of Ishtar.",
 		      "Image":{
           "Path": "ui/dialog/Ch05/ancient.png"
           }
@@ -18,9 +18,9 @@
       "Sections":[
         {
           "Next": "Start3",
-          "Text": "High Priestess Nuratum! You live...",
+          "Text": " I don't know what yer gabbin' about, ma'am. Never knew no Ishtar.",
 		      "Image":{
-          "Path": "ui/dialog/Ch05/constance.png"
+          "Path": "ui/dialog/Ch05/timothy.png"
           }       
         }   
      ] 
@@ -30,7 +30,7 @@
       "Sections":[
         {
           "Next": "Start4",
-          "Text": "No, I would not call it life. But it's the jewel you seek, not me.",
+          "Text": "But Ishtar knew you. Knew you and bade you hunt me. Ordered you to take the Jewel.",
 		      "Image":{
           "Path": "ui/dialog/Ch05/ancient.png"
           }
@@ -42,9 +42,9 @@
       "Sections":[
         {
           "Next": "Start5",
-          "Text": "You don't have it. Tyree's nephew was wrong.",
+          "Text": "A dream I once had... Us, in Nineveh... you'd stolen something. The jewel?",
 		      "Image":{
-          "Path": "ui/dialog/Ch05/constance.png"
+          "Path": "ui/dialog/Ch05/timothy.png"
           }
         }
       ]
@@ -54,7 +54,7 @@
       "Sections":[
         {
           "Next": "Start6",
-          "Text": "Were the jewel with me, I would not be in this state. But, Tyree did have it. Stole it and sealed it away from me.",
+          "Text": "Ahh you recall a little something. But the jewel was always mine.",
 		      "Image":{
           "Path": "ui/dialog/Ch05/ancient.png"
           }
@@ -66,9 +66,9 @@
       "Sections":[
         {
           "Next": "Start7",
-          "Text": "And if I bring it back to you, you'll suddenly start to feel a whole lot better.",
+          "Text": "Oh, aye. I see it now. It was the King's son. You stole him.",
 		      "Image":{
-          "Path": "ui/dialog/Ch05/constance.png"
+          "Path": "ui/dialog/Ch05/timothy.png"
           }
         }
       ]
@@ -78,7 +78,7 @@
       "Sections":[
         {
         "Next": "Start8",         
-        "Text": "The best I've felt in 4000 Summers.",
+        "Text": "I loved him, and he loved me. And you were sent to slay us both.",
 		"Image":{
           "Path": "ui/dialog/Ch05/ancient.png"
           }
@@ -90,9 +90,9 @@
       "Sections":[
         {
           "Next": "Start9",
-          "Text": "The jewel is here in the house somewhere.",
+          "Text": "I don't remember...",
 		      "Image":{
-          "Path": "ui/dialog/Ch05/constance.png"
+          "Path": "ui/dialog/Ch05/timothy.png"
           }
         }
       ]
@@ -101,7 +101,7 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Locked and guarded in the vaults below. Recover it And I will reward you with everything I've learned over all those years.",
+          "Text": "The jewel. It is locked away in the vaults below. Bring it back and all is forgiven. I will be freed, you will be redeemed. And rewarded.",
 		      "Image":{
           "Path": "ui/dialog/Ch05/ancient.png"
           }

@@ -1,1 +1,40 @@
-ch05_Study_Desk
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The doctor's study, I reckon. It looks like others have been through it already.",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "All the books are gone. It was quite the library in its day.",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Over there on the West wall. That door was sealed up when I was here.",
+		  "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,1 +1,112 @@
-ch05_Choose_Character
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "A flood of images overcomes you when you touch the box. Memories of another life in an ancient river valley. A surge of emotions: love, betrayal, obsession, and discovery. The pipes play just for you, a dirge for your former self. Once upon a time, in an antique age, you were deeply connected to this box. Who are you?"
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Timothy, the charming second-story man making his own way in the world.",
+           "Image":{
+            "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+      "Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "Constance, the driven collector of ancient artifacts and knowledge.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+      "Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Choice1",
+          "Text": "CSamuel, the exiled Tyree heir, searching for his birthright.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+    "Choice1": {
+      "Format": "ThreeOptions",
+      "Sections":[
+        {
+          "Id":   "Samuel",
+          "Next": "ChoiceA-1",
+          "Text": "I am Timothy.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        },
+        {
+          "Id":   "Constance",
+          "Next": "ChoiceB-1",
+          "Text": "I am Constance.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/constance.png"
+          }
+        },
+        {
+          "Id":   "Samuel",
+          "Next": "ChoiceC-1",
+          "Text": "I am Samuel",
+          "Image":{
+            "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+    "ChoiceA-1": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "'Tis a familiar scent. Some grudge from when I was a lad? This whole thing's going bad.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+     "ChoiceB-1": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "I know that sound, even though I've only ever read of it in books. The others can't possibly understand.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+    "ChoiceC-1": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Oh, Violet. This place is as awful as your parents said. But if I bring back the jewel, they have to change their mind about me.",
+          "Image":{
+            "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    }
+  }
+}
