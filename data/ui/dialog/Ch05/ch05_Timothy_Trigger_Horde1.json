@@ -1,0 +1,61 @@
+{
+"Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "EEEEEEEEEEEEeeeeeeeeeeeeeeeeeeeeeeeeee!"
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Now that can't be good.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Looks like that woke up some more corpsified fellas behind me.  Could be too many to fight 'em all.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    },    
+    "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Maybe I can avoid some.  Just like that old saying: 'Discression is the better part of not getting yer face ate.'",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}

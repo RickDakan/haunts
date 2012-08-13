@@ -1,0 +1,9 @@
+{
+  "Name": "Off-Balance",
+  "Strength": 10,
+  "Kind": "Poison",
+  "Duration": 1,
+  "Dynamic": {
+    "Ap": -2
+  }
+}
