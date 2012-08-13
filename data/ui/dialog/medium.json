@@ -1,66 +1,77 @@
 {
-  "Background":{
+  "Background":
+  {
     "Path": "ui/dialog/medium.png"
   },
   "Prev":{
-    "X": 70,
-    "Y": 20,
+    "X": 100,
+    "Y": 70,
     "Texture":{
       "Path": "ui/arrow_lf.png"
     }
   },
-  "Next":{
-    "X": 721,
-    "Y": 20,
+  "Next":
+  {
+    "X": 700,
+    "Y": 70,
     "Texture":{
       "Path": "ui/arrow_rf.png"
     }
   },
-  "Formats": {
-    "NoOptionsNoImage": {
+  "Formats": 
+  {
+    "NoOptionsNoImage": 
+    {
       "Sections":[
         {
           "Paragraph":{
             "X": 50,
-            "Y": 290,
+            "Y": 200,
             "Dx": 754,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
     },
-    "NoOptionsLeftImage":{
+    "NoOptionsLeftImage":
+    {
       "Sections":[
         {
           "X": 150,
           "Y": 192,
           "Paragraph":{
             "X": 280,
-            "Y": 290,
+            "Y": 200,
             "Dx": 525,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
     },
-    "NoOptionsRightImage":{
-      "Sections":[
+    "NoOptionsRightImage":
+    {
+      "Sections":
+      [
         {
           "X": 704,
           "Y": 192,
           "Paragraph":{
             "X": 49,
-            "Y": 290,
+            "Y": 200,
             "Dx": 525,
             "Size": 15,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           }
         }
       ]
     },
-    "NoOptionsCenterImage": {
+    "NoOptionsCenterImage": 
+    {
       "Sections":[
         {
           "X": 427,
@@ -70,22 +81,27 @@
             "Y": 135,
             "Dx": 854,
             "Size": 15,
-            "Justification": "center"
+            "Halign": "center",
+            "Valign": "center"
           }
         }
       ]
     },
-    "TwoOptions": {
-      "Sections":[
+    "TwoOptions": 
+    {
+      "Sections":
+      [
         {
           "X": 150,
           "Y": 192,
-          "Paragraph":{
+          "Paragraph":
+          {
             "X": 280,
-            "Y": 290,
+            "Y": 200,
             "Dx": 150,
             "Size": 12,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           },
           "Region":{
             "X": 25,
@@ -97,12 +113,14 @@
         {
           "X": 547,
           "Y": 192,
-          "Paragraph":{
+          "Paragraph":
+          {
             "X": 667,
-            "Y": 290,
+            "Y": 200,
             "Dx": 150,
             "Size": 12,
-            "Justification": "left"
+            "Halign": "left",
+            "Valign": "center"
           },
           "Region":{
             "X": 437,
@@ -113,7 +131,155 @@
         }
       ]
     },
-    "ThreeOptions": {},
-    "FourOptions": {}
+    "ThreeOptions": 
+    {      
+      "Sections":
+      [
+        {
+          "X": 90,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 145,
+            "Y": 200,
+            "Dx": 140,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 20,
+            "Y": 70,
+            "Dx": 250,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 350,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 410,
+            "Y": 200,
+            "Dx": 140,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":
+          {
+            "X": 300,
+            "Y": 70,
+            "Dx": 250,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 620,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 685,
+            "Y": 200,
+            "Dx": 140,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":
+          {
+            "X": 570,
+            "Y": 70,
+            "Dx": 250,
+            "Dy": 248
+          }
+        }        
+      ]
+    },
+    "FourOptions": 
+       {      
+      "Sections":
+      [
+        {
+          "X": 50,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 40,
+            "Y": 200,
+            "Dx": 180,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 50,
+            "Y": 70,
+            "Dx": 180,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 250,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 250,
+            "Y": 200,
+            "Dx": 180,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":
+          {
+            "X": 250,
+            "Y": 70,
+            "Dx": 180,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 450,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 470,
+            "Y": 200,
+            "Dx": 180,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":
+          {
+            "X": 450,
+            "Y": 70,
+            "Dx": 180,
+            "Dy": 248
+          }
+        },        
+        {
+          "X": 630,
+          "Y": 192,
+          "Paragraph":
+          {
+            "X": 630,
+            "Y": 200,
+            "Dx": 180,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":
+          {
+            "X": 630,
+            "Y": 70,
+            "Dx": 180,
+            "Dy": 248
+          }
+        }        
+      ]
+    }
   }
 }
