@@ -7,6 +7,9 @@
   "Range"     : 10,
   "Target_enemies": true,
   "Animation" : "cast",
+  "Sounds"   : {
+    "cast": "Haunts/SFX/Intruders/Teen/Telepathic Coordination"
+  },
   "Texture"   : {
     "Path": "actions/icons/coordination.png"
   },

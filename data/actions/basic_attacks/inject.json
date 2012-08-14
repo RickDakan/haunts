@@ -10,6 +10,9 @@
   "Damage"   : 1,
   "Range"    : 1,
   "Target_enemies": true,
+ "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Cultists/Male Cultist/Inject"
+  },
   "Conditions" : [
      "Agony"
    ]

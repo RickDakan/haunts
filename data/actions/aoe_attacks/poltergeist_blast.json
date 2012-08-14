@@ -7,6 +7,10 @@
   "Range"     : 3,
   "Diameter"  : 2,
   "Animation" : "ranged",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Poltergeist Blast"
+  },
   "Texture"   : {
     "Path": "actions/icons/blast.png"
   },

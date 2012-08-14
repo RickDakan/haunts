@@ -1,0 +1,31 @@
+{
+  "Name": "Cordelia",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/cordelia",
+  "Still": {
+    "Path": "entities/cordelia_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Interact",
+    "Pistol",
+    "Kick",
+    "Telepathic Coordination",
+    "Psychic Shroud"
+  ],
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Curb Stompers",
+      "Tantric Mantra",
+      "Pre-loaded Playlist"
+    ]
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 15
+  }
+}
