@@ -18,13 +18,15 @@ type systemLayout struct {
   Sub  struct {
     Background texture.Object
     Return     Button
+    TEST       TextEntry
+    TEST2      TextEntry
   }
 }
 
 type SystemMenu struct {
   layout  systemLayout
   region  gui.Region
-  buttons []*Button
+  buttons []ButtonLike
   mx, my  int
   last_t  int64
   focus   bool
@@ -40,8 +42,10 @@ func MakeSystemMenu(gp *GamePanel) (gui.Widget, error) {
 
   sm.layout.Main.f = func(interface{}) {}
 
-  sm.buttons = []*Button{
+  sm.buttons = []ButtonLike{
     &sm.layout.Sub.Return,
+    &sm.layout.Sub.TEST,
+    // &sm.layout.Sub.TEST2,
   }
 
   sm.layout.Sub.Return.f = func(_ui interface{}) {
@@ -95,7 +99,7 @@ func (sm *SystemMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
     sm.mx, sm.my = cursor.Point()
   }
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    if sm.layout.Main.handleClick(sm.mx, sm.my, nil) {
+    if sm.layout.Main.handleClick(sm.mx, sm.my, g) {
       if sm.focus {
         g.DropFocus()
       } else {
@@ -106,9 +110,25 @@ func (sm *SystemMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
       return true
     }
     if sm.focus {
+      hit := false
       for _, button := range sm.buttons {
-        button.handleClick(sm.mx, sm.my, g)
+        if button.handleClick(sm.mx, sm.my, g) {
+          hit = true
+        }
       }
+      if hit {
+        return true
+      }
+    }
+  } else {
+    hit := false
+    for _, button := range sm.buttons {
+      if button.Respond(group, nil) {
+        hit = true
+      }
+    }
+    if hit {
+      return true
     }
   }
   return (g.FocusWidget() == sm)

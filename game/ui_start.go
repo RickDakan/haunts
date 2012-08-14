@@ -24,7 +24,7 @@ type startLayout struct {
 type StartMenu struct {
   layout  startLayout
   region  gui.Region
-  buttons []*Button
+  buttons []ButtonLike
   mx, my  int
   last_t  int64
 }
@@ -36,7 +36,7 @@ func InsertStartMenu(ui gui.WidgetParent) error {
   if err != nil {
     return err
   }
-  sm.buttons = []*Button{
+  sm.buttons = []ButtonLike{
     &sm.layout.Menu.Continue,
     &sm.layout.Menu.Versus,
     &sm.layout.Menu.Story,
@@ -99,10 +99,24 @@ func (sm *StartMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
   }
 
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
+    hit := false
     for _, button := range sm.buttons {
       if button.handleClick(sm.mx, sm.my, nil) {
-        return true
+        hit = true
       }
+    }
+    if hit {
+      return true
+    }
+  } else {
+    hit := false
+    for _, button := range sm.buttons {
+      if button.Respond(group, nil) {
+        hit = true
+      }
+    }
+    if hit {
+      return true
     }
   }
   return false

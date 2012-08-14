@@ -8,6 +8,13 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
+type ButtonLike interface {
+  handleClick(x, y int, data interface{}) bool
+  Respond(group gui.EventGroup, data interface{}) bool
+  Think(x, y, mx, my int, dt int64)
+  RenderAt(x, y int)
+}
+
 type Button struct {
   X, Y    int
   Texture texture.Object

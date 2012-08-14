@@ -16,6 +16,38 @@
         "Size": 15,
         "Justification": "left"
       }
+    },
+    "TEST": {
+      "Button": {
+        "X": 75,
+        "Y": 105,
+        "Text": {
+          "String": "Test MONKEYS",
+          "Size": 15,
+          "Justification": "left"
+        }
+      },
+      "Entry": {
+        "Default": "ThundeR",
+        "X": 0,
+        "Dx": 300
+      }
+    },
+    "TEST2": {
+      "Button": {
+        "X": 75,
+        "Y": 5,
+        "Text": {
+          "String": "Monk MONKEYS",
+          "Size": 15,
+          "Justification": "left"
+        }
+      },
+      "Entry": {
+        "Default": "ThundeR",
+        "X": 0,
+        "Dx": 300
+      }
     }
   }
 }
