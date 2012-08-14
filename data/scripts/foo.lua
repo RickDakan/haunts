@@ -22,7 +22,7 @@ function Init()
    } 
 
   Script.LoadHouse("Chapter_01_a")
-  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json") 
+  -- Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json") 
 
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")
@@ -36,10 +36,10 @@ end
  
 
 function RoundStart(intruders, round)
-    Script.SetVisibility("intruders")
-    Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "entities")
-    Script.ShowMainBar(intruders ~= play_as_denizens)
+  Script.SetVisibility("intruders")
+  Script.SetLosMode("intruders", "entities")
+  Script.SetLosMode("denizens", "entities")
+  Script.ShowMainBar(intruders ~= play_as_denizens)
 end
 
 

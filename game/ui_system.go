@@ -1,9 +1,8 @@
 package game
 
 import (
-  // "fmt"
   "path/filepath"
-  // "sort"
+  "time"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/texture"
@@ -18,21 +17,22 @@ type systemLayout struct {
   Sub  struct {
     Background texture.Object
     Return     Button
-    TEST       TextEntry
-    TEST2      TextEntry
+    Save       TextEntry
   }
 }
 
 type SystemMenu struct {
-  layout  systemLayout
-  region  gui.Region
-  buttons []ButtonLike
-  mx, my  int
-  last_t  int64
-  focus   bool
+  layout      systemLayout
+  region      gui.Region
+  buttons     []ButtonLike
+  mx, my      int
+  last_t      int64
+  focus       bool
+  saved_time  time.Time
+  saved_alpha float64
 }
 
-func MakeSystemMenu(gp *GamePanel) (gui.Widget, error) {
+func MakeSystemMenu(gp *GamePanel, player *Player) (gui.Widget, error) {
   var sm SystemMenu
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "system", "layout.json"), "json", &sm.layout)
@@ -44,8 +44,7 @@ func MakeSystemMenu(gp *GamePanel) (gui.Widget, error) {
 
   sm.buttons = []ButtonLike{
     &sm.layout.Sub.Return,
-    &sm.layout.Sub.TEST,
-    // &sm.layout.Sub.TEST2,
+    &sm.layout.Sub.Save,
   }
 
   sm.layout.Sub.Return.f = func(_ui interface{}) {
@@ -54,6 +53,27 @@ func MakeSystemMenu(gp *GamePanel) (gui.Widget, error) {
     gp.game.Think(1) // This should clean things up
     ui.DropFocus()
     Restart()
+  }
+
+  sm.layout.Sub.Save.Entry.text = player.Name
+  sm.layout.Sub.Save.Button.f = func(interface{}) {
+    UpdatePlayer(player, gp.script.L)
+    str, err := base.ToGobToBase64(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return
+    }
+    player.Game_state = str
+    player.Name = sm.layout.Sub.Save.Text()
+    player.No_init = true
+    base.Log().Printf("Saving player: %v", player)
+    err = SavePlayer(player)
+    if err != nil {
+      base.Warn().Printf("Unable to save player: %v", err)
+      return
+    }
+    sm.saved_time = time.Now()
+    sm.saved_alpha = 1.0
   }
 
   return &sm, nil
@@ -90,6 +110,11 @@ func (sm *SystemMenu) Think(g *gui.Gui, t int64) {
   } else {
     sm.layout.Main.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
   }
+
+  if sm.saved_time != (time.Time{}) && time.Now().Sub(sm.saved_time).Seconds() > 3 {
+    sm.saved_alpha = doApproach(sm.saved_alpha, 0.0, dt)
+  }
+
   sm.focus = (g.FocusWidget() == sm)
 }
 
@@ -151,6 +176,12 @@ func (sm *SystemMenu) DrawFocused(region gui.Region) {
   for _, button := range sm.buttons {
     button.RenderAt(x, y)
   }
+
+  gl.Color4ub(255, 255, 255, byte(255*sm.saved_alpha))
+  d := base.GetDictionary(sm.layout.Sub.Save.Button.Text.Size)
+  sx := x + sm.layout.Sub.Save.Entry.X + sm.layout.Sub.Save.Entry.Dx + 10
+  sy := y + sm.layout.Sub.Save.Button.Y
+  d.RenderString("Game Saved!", float64(sx), float64(sy), 0, d.MaxHeight(), gui.Left)
 }
 
 func (sm *SystemMenu) String() string {

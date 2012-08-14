@@ -96,6 +96,7 @@ func (gdt *gameDataTransient) alloc() {
   gdt.comm.game_to_script = make(chan interface{}, 1)
 
   gdt.script = &gameScript{}
+  base.Log().Printf("script = %p", gdt.script)
 }
 
 type gameDataPrivate struct {
@@ -140,7 +141,7 @@ type gameDataGobbable struct {
 
   // Transient data - none of the following are exported
 
-  player_active bool
+  player_inactive bool
 
   viewer *house.HouseViewer
 
@@ -153,12 +154,12 @@ type gameDataGobbable struct {
   // Stores the current acting entity - if it is an Ai controlled entity
   ai_ent *Entity
 
-  // This controls the minions on the haunting side, regardless of whether a
-  // human or ai is controlling the rest of that side.
-  minion_ai Ai
-
-  haunts_ai    Ai
-  explorers_ai Ai
+  Ai struct {
+    Path struct {
+      Minions, Denizens, Intruders string
+    }
+    minions, denizens, intruders Ai
+  }
 
   // If an Ai is executing currently it is referenced here
   active_ai Ai
@@ -183,6 +184,15 @@ func (g *Game) GobDecode(data []byte) error {
   for ent := range g.all_ents_in_memory {
     ent.Release()
   }
+  if g.Ai.intruders != nil {
+    g.Ai.intruders.Terminate()
+  }
+  if g.Ai.minions != nil {
+    g.Ai.minions.Terminate()
+  }
+  if g.Ai.denizens != nil {
+    g.Ai.denizens.Terminate()
+  }
 
   g.gameDataGobbable = gameDataGobbable{}
 
@@ -202,6 +212,28 @@ func (g *Game) GobDecode(data []byte) error {
     ent.Load(g)
     g.viewer.AddDrawable(ent)
   }
+
+  // If Ais were bound then their paths will be listed here and we have to
+  // reload them
+  if g.Ai.Path.Denizens != "" {
+    ai_maker(g.Ai.Path.Denizens, g, nil, &g.Ai.denizens, DenizensAi)
+  }
+  if g.Ai.denizens == nil {
+    g.Ai.denizens = inactiveAi{}
+  }
+  if g.Ai.Path.Intruders != "" {
+    ai_maker(g.Ai.Path.Intruders, g, nil, &g.Ai.intruders, IntrudersAi)
+  }
+  if g.Ai.intruders == nil {
+    g.Ai.intruders = inactiveAi{}
+  }
+  if g.Ai.Path.Minions != "" {
+    ai_maker(g.Ai.Path.Minions, g, nil, &g.Ai.minions, MinionsAi)
+  }
+  if g.Ai.minions == nil {
+    g.Ai.minions = inactiveAi{}
+  }
+
   return nil
 }
 
@@ -323,7 +355,7 @@ func (g *Game) OnRound() {
     return
   }
   // Any master ai is still active
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
+  if g.Side == SideHaunt && (g.Ai.minions.Active() || g.Ai.denizens.Active()) {
     return
   }
 
@@ -350,13 +382,13 @@ func (g *Game) OnRound() {
   }
 
   if g.Side == SideHaunt {
-    g.minion_ai.Activate()
-    base.Log().Printf("minion ai: %t", g.minion_ai.Active())
-    g.haunts_ai.Activate()
-    g.player_active = !g.haunts_ai.Active()
+    g.Ai.minions.Activate()
+    base.Log().Printf("minion ai: %t", g.Ai.minions.Active())
+    g.Ai.denizens.Activate()
+    g.player_inactive = g.Ai.denizens.Active()
   } else {
-    g.explorers_ai.Activate()
-    g.player_active = !g.explorers_ai.Active()
+    g.Ai.intruders.Activate()
+    g.player_inactive = g.Ai.intruders.Active()
   }
 
   for i := range g.Ents {
@@ -698,9 +730,9 @@ func (g *Game) setup() {
     g.viewer.Los_tex = g.los.denizens.tex
   }
 
-  g.minion_ai = inactiveAi{}
-  g.haunts_ai = inactiveAi{}
-  g.explorers_ai = inactiveAi{}
+  g.Ai.minions = inactiveAi{}
+  g.Ai.denizens = inactiveAi{}
+  g.Ai.intruders = inactiveAi{}
 }
 
 func makeGame(h *house.HouseDef) *Game {
@@ -714,6 +746,9 @@ func makeGame(h *house.HouseDef) *Game {
 
   // This way an unset id will be invalid
   g.Entity_id = 1
+
+  g.Turn = 1
+  g.Side = SideHaunt
 
   g.setup()
 
@@ -817,7 +852,8 @@ func (g *Game) Think(dt int64) {
     case <-g.comm.script_to_game:
       base.Log().Printf("ScriptComm: change to turnStateStart")
       g.Turn_state = turnStateStart
-      g.OnRound()
+      g.script.OnRound(g)
+      // g.OnRound()
     default:
     }
   case turnStateStart:
@@ -923,7 +959,6 @@ func (g *Game) Think(dt int64) {
   if g.new_ent != nil {
     g.new_ent.Think(dt)
   }
-
   for i := range g.Ents {
     g.UpdateEntLos(g.Ents[i], false)
   }
@@ -990,21 +1025,20 @@ func (g *Game) Think(dt int64) {
       return
     }
   }
-
   // Do Ai - if there is any to do
   if g.Side == SideHaunt {
-    if g.minion_ai.Active() {
-      g.active_ai = g.minion_ai
+    if g.Ai.minions.Active() {
+      g.active_ai = g.Ai.minions
       g.Action_state = waitingAction
     } else {
-      if g.haunts_ai.Active() {
-        g.active_ai = g.haunts_ai
+      if g.Ai.denizens.Active() {
+        g.active_ai = g.Ai.denizens
         g.Action_state = waitingAction
       }
     }
   } else {
-    if g.explorers_ai.Active() {
-      g.active_ai = g.explorers_ai
+    if g.Ai.intruders.Active() {
+      g.active_ai = g.Ai.intruders
       g.Action_state = waitingAction
     }
   }
@@ -1021,7 +1055,7 @@ func (g *Game) Think(dt int64) {
     default:
     }
   }
-  if !g.player_active && g.Action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
+  if g.player_inactive && g.Action_state == noAction && !g.Ai.intruders.Active() && !g.Ai.denizens.Active() && !g.Ai.minions.Active() {
     g.Turn_state = turnStateMainPhaseOver
     base.Log().Printf("ScriptComm: change to turnStateMainPhaseOver")
     g.comm.game_to_script <- nil

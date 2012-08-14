@@ -1,7 +1,6 @@
 package game
 
 import (
-  "reflect"
   "math/rand"
   "sort"
   "github.com/runningwild/glop/gin"
@@ -31,34 +30,12 @@ func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel 
   if p == nil {
     p = &Player{}
   }
+  base.Log().Printf("Script path: %s / %s", script, p.Script_path)
   if script == "" {
     script = p.Script_path
   }
   startGameScript(&gp, script, p, data)
   return &gp
-}
-
-// DEPRECATE THIS ASAP
-func (gp *GamePanel) LoadGame() {
-  var err error
-
-  base.ProcessObject(reflect.ValueOf(gp.game.House), "")
-  base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
-  base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
-
-  gp.game.viewer = house.MakeHouseViewer(gp.game.House, 62)
-  gp.game.viewer.Edit_mode = true
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-
-  gp.game.setup()
-  gp.game.viewer.Los_tex = gp.game.los.denizens.tex
-  gp.main_bar, err = MakeMainBar(gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to make main bar: %v", err)
-    return
-  }
-  gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
 }
 
 // Returns  true iff the game panel has an active game with a viewer already

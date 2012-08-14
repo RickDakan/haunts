@@ -26,7 +26,6 @@ type gameScript struct {
 }
 
 func (gs *gameScript) syncStart() {
-  base.Log().Printf("SyncStart: %p, %p", gs, gs.L)
   <-gs.sync
 }
 func (gs *gameScript) syncEnd() {
@@ -35,6 +34,7 @@ func (gs *gameScript) syncEnd() {
 
 func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string) {
   // Clear out the panel, now the script can do whatever it wants
+  player.Script_path = path
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
   base.Log().Printf("startGameScript")
   if !filepath.IsAbs(path) {
@@ -50,6 +50,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     return
   }
   gp.script = &gameScript{}
+  base.Log().Printf("script = %p", gp.script)
 
   gp.script.L = lua.NewState()
   gp.script.L.OpenLibs()
@@ -66,7 +67,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
-    "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
+    "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp, player)) },
     "SpawnEntityAtPosition":             func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntityAtPosition(gp)) },
     "GetSpawnPointsMatching":            func() { gp.script.L.PushGoFunctionAsCFunction(getSpawnPointsMatching(gp)) },
     "SpawnEntitySomewhereInSpawnPoints": func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntitySomewhereInSpawnPoints(gp)) },
@@ -104,6 +105,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   if !res {
     base.Error().Printf("There was an error running script %s:\n%s", path, prog)
   } else {
+    base.Log().Printf("No_init: %v\n", player.No_init)
     go func() {
       gp.script.L.NewTable()
       for k, v := range data {
@@ -113,7 +115,14 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
       }
       gp.script.L.SetGlobal("__data")
       gp.script.L.SetExecutionLimit(250000)
-      gp.script.L.DoString("Init(__data)")
+      if player.No_init {
+        gp.script.syncStart()
+        loadGameStateRaw(gp, player.Game_state)
+        gp.game.script = gp.script
+        gp.script.syncEnd()
+      } else {
+        gp.script.L.DoString("Init(__data)")
+      }
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
       } else {
@@ -135,6 +144,8 @@ func (gs *gameScript) OnRound(g *Game) {
     //   <-action stuff
     // <- round end
     // <- round end done
+    base.Log().Printf("Game script: %p", gs)
+    base.Log().Printf("Lua state: %p", gs.L)
     gs.L.SetExecutionLimit(250000)
     cmd := fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
     base.Log().Printf("cmd: '%s'", cmd)
@@ -242,9 +253,7 @@ func (gp *GamePanel) scriptThinkOnce() {
     // Think then it can run now and we'll wait for it to finish before
     // continuing.
     case s <- struct{}{}:
-      base.Log().Printf("In think....")
-      _, ok := <-s
-      base.Log().Printf("Out think: %p, %t", s, ok)
+      <-s
     default:
       done = true
     }
@@ -260,6 +269,7 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     defer gp.script.syncEnd()
     script := L.ToString(-1)
     player.Script_path = script
+    player.No_init = false
     gp.script.syncEnd()
     res := gp.script.L.DoString("Script.SaveStore()")
     gp.script.syncStart()
@@ -458,6 +468,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
     gp.game = makeGame(def)
     gp.game.viewer.Edit_mode = true
     gp.game.script = gp.script
+    base.Log().Printf("script = %p", gp.game.script)
 
     gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
     gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
@@ -467,7 +478,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func showMainBar(gp *GamePanel) lua.GoFunction {
+func showMainBar(gp *GamePanel, player *Player) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "ShowMainBar", LuaBoolean) {
       return 0
@@ -492,7 +503,7 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
         return 0
       }
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
-      system, err := MakeSystemMenu(gp)
+      system, err := MakeSystemMenu(gp, player)
       if err != nil {
         LuaDoError(L, err.Error())
         return 0
@@ -875,36 +886,42 @@ func bindAi(gp *GamePanel) lua.GoFunction {
     case "denizen":
       switch source {
       case "human":
-        gp.game.haunts_ai = inactiveAi{}
+        gp.game.Ai.denizens = inactiveAi{}
       case "net":
         base.Error().Printf("bindAi('denizen', 'net') is not implemented.")
         return 0
       default:
-        gp.game.haunts_ai = nil
-        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.haunts_ai, DenizensAi)
-        if gp.game.haunts_ai == nil {
-          gp.game.haunts_ai = inactiveAi{}
+        gp.game.Ai.denizens = nil
+        path := filepath.Join(base.GetDataDir(), "ais", source)
+        gp.game.Ai.Path.Denizens = path
+        ai_maker(path, gp.game, nil, &gp.game.Ai.denizens, DenizensAi)
+        if gp.game.Ai.denizens == nil {
+          gp.game.Ai.denizens = inactiveAi{}
         }
       }
     case "intruder":
       switch source {
       case "human":
-        gp.game.explorers_ai = inactiveAi{}
+        gp.game.Ai.intruders = inactiveAi{}
       case "net":
         base.Error().Printf("bindAi('intruder', 'net') is not implemented.")
         return 0
       default:
-        gp.game.explorers_ai = nil
-        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.explorers_ai, IntrudersAi)
-        if gp.game.explorers_ai == nil {
-          gp.game.explorers_ai = inactiveAi{}
+        gp.game.Ai.intruders = nil
+        path := filepath.Join(base.GetDataDir(), "ais", source)
+        gp.game.Ai.Path.Intruders = path
+        ai_maker(path, gp.game, nil, &gp.game.Ai.intruders, IntrudersAi)
+        if gp.game.Ai.intruders == nil {
+          gp.game.Ai.intruders = inactiveAi{}
         }
       }
     case "minions":
-      gp.game.minion_ai = nil
-      ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.minion_ai, MinionsAi)
-      if gp.game.minion_ai == nil {
-        gp.game.minion_ai = inactiveAi{}
+      gp.game.Ai.minions = nil
+      path := filepath.Join(base.GetDataDir(), "ais", source)
+      gp.game.Ai.Path.Minions = path
+      ai_maker(path, gp.game, nil, &gp.game.Ai.minions, MinionsAi)
+      if gp.game.Ai.minions == nil {
+        gp.game.Ai.minions = inactiveAi{}
       }
     default:
       base.Error().Printf("Specified unknown Ai target '%s'", target)
@@ -945,7 +962,7 @@ func endPlayerInteraction(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    gp.game.player_active = false
+    gp.game.player_inactive = true
     return 0
   }
 }
@@ -964,7 +981,7 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
       return 0
     }
     player.Game_state = str
-    player.Name = "foocake"
+    player.Name = "autosave"
     err = SavePlayer(player)
     if err != nil {
       base.Warn().Printf("Unable to save player: %v", err)

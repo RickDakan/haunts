@@ -32,6 +32,11 @@ type Player struct {
   // Also if the player is in the middle of a game the script that should be
   // running is stored here.
   Script_path string
+
+  // If the script indicated by Script_path has already been inited by the
+  // time this player was saved then this will be set to true so that the
+  // init function is not run again.
+  No_init bool
 }
 
 // Returns a map from player name to the path of that player's file.

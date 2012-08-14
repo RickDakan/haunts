@@ -12,6 +12,7 @@ function Init(data)
 
   -- check data.map == "random" or something else
   Script.LoadHouse("versus-1")
+  print("Loaded house")
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -42,6 +43,7 @@ function Init(data)
 end
 
 function intrudersSetup()
+  Script.SetVisibility("intruders")
   store.goal = Script.ChooserFromFile("ui/start/versus/goals.json")
   if store.goal == "Cleanse" then
   end
@@ -63,6 +65,7 @@ function intrudersSetup()
 end
 
 function denizensSetup()
+  Script.SetVisibility("denizens")
   -- This creates a list of entities and associated point values.  The order
   -- the names are listed in here is the order they will appear to the user.
   ents = {
@@ -110,6 +113,7 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
+  print("Round Start: ", intruders, round)
   if round == 1 then
     if intruders then
       intrudersSetup()

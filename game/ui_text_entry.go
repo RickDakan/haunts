@@ -131,43 +131,45 @@ func (te *TextEntry) Respond(group gui.EventGroup, data interface{}) bool {
   if !te.Entry.entering {
     return false
   }
-  if group.Events[0].Type == gin.Press {
-    id := group.Events[0].Key.Id()
-    if id <= 255 && valid_keys[byte(id)] {
-      b := byte(id)
-      if gin.In().GetKey(gin.EitherShift).CurPressAmt() > 0 {
-        b = shift_keys[b]
-      }
-      t := te.Entry.text
-      index := te.Entry.cursor.index
-      t = t[0:index] + string([]byte{b}) + t[index:]
-      te.Entry.text = t
-      te.Entry.cursor.index++
-    } else if group.Events[0].Key.Id() == gin.DeleteOrBackspace {
-      if te.Entry.cursor.index > 0 {
-        index := te.Entry.cursor.index
+  for _, event := range group.Events {
+    if event.Type == gin.Press {
+      id := event.Key.Id()
+      if id <= 255 && valid_keys[byte(id)] {
+        b := byte(id)
+        if gin.In().GetKey(gin.EitherShift).CurPressAmt() > 0 {
+          b = shift_keys[b]
+        }
         t := te.Entry.text
-        te.Entry.text = t[0:index-1] + t[index:]
-        te.Entry.cursor.index--
-      }
-    } else if group.Events[0].Key.Id() == gin.Left {
-      if te.Entry.cursor.index > 0 {
-        te.Entry.cursor.index--
-      }
-    } else if group.Events[0].Key.Id() == gin.Right {
-      if te.Entry.cursor.index < len(te.Entry.text) {
+        index := te.Entry.cursor.index
+        t = t[0:index] + string([]byte{b}) + t[index:]
+        te.Entry.text = t
         te.Entry.cursor.index++
+      } else if event.Key.Id() == gin.DeleteOrBackspace {
+        if te.Entry.cursor.index > 0 {
+          index := te.Entry.cursor.index
+          t := te.Entry.text
+          te.Entry.text = t[0:index-1] + t[index:]
+          te.Entry.cursor.index--
+        }
+      } else if event.Key.Id() == gin.Left {
+        if te.Entry.cursor.index > 0 {
+          te.Entry.cursor.index--
+        }
+      } else if event.Key.Id() == gin.Right {
+        if te.Entry.cursor.index < len(te.Entry.text) {
+          te.Entry.cursor.index++
+        }
+      } else if event.Key.Id() == gin.Return {
+        te.Entry.entering = false
+      } else if event.Key.Id() == gin.Escape {
+        te.Entry.entering = false
+        te.Entry.text = te.Entry.prev
+        te.Entry.prev = ""
+        te.Entry.cursor.index = 0
       }
-    } else if group.Events[0].Key.Id() == gin.Return {
-      te.Entry.entering = false
-    } else if group.Events[0].Key.Id() == gin.Escape {
-      te.Entry.entering = false
-      te.Entry.text = te.Entry.prev
-      te.Entry.prev = ""
-      te.Entry.cursor.index = 0
+      d := base.GetDictionary(te.Button.Text.Size)
+      te.Entry.cursor.offset = int(d.StringWidth(te.Entry.text[0:te.Entry.cursor.index]))
     }
-    d := base.GetDictionary(te.Button.Text.Size)
-    te.Entry.cursor.offset = int(d.StringWidth(te.Entry.text[0:te.Entry.cursor.index]))
   }
   return false
 }
@@ -184,7 +186,7 @@ func (te *TextEntry) Think(x, y, mx, my int, dt int64) {
 func (te *TextEntry) RenderAt(x, y int) {
   te.Button.RenderAt(x, y)
   d := base.GetDictionary(te.Button.Text.Size)
-  x += te.Button.X + int(d.StringWidth(te.Button.Text.String)) + 5
+  x += te.Entry.X
   y += te.Button.Y
   x2 := x + te.Entry.Dx
   y2 := y + int(d.MaxHeight())
@@ -199,10 +201,10 @@ func (te *TextEntry) RenderAt(x, y int) {
     gl.Color4ub(255, 255, 255, 128)
   }
   gl.Begin(gl.QUADS)
-  gl.Vertex2i(x-5, y-5)
-  gl.Vertex2i(x-5, y2+5)
-  gl.Vertex2i(x2+5, y2+5)
-  gl.Vertex2i(x2+5, y-5)
+  gl.Vertex2i(x-3, y-3)
+  gl.Vertex2i(x-3, y2+3)
+  gl.Vertex2i(x2+3, y2+3)
+  gl.Vertex2i(x2+3, y-3)
   gl.End()
   gl.Color4ub(0, 0, 0, 255)
   gl.Begin(gl.QUADS)

@@ -123,8 +123,7 @@ type MainBar struct {
 
 func buttonFuncEndTurn(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.player_active = false
-  base.Log().Printf("player_active set to false")
+  mb.game.player_inactive = true
 }
 func buttonFuncActionLeft(mbi interface{}) {
   mb := mbi.(*MainBar)
