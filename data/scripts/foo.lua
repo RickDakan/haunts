@@ -26,15 +26,14 @@ function Init()
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
   Script.SpawnEntitySomewhereInSpawnPoints("Caitlin", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Percy", intruder_spawn)
-
-  Script.SetVisibility("intruders")
-  Script.SetLosMode("intruders", "entities")
-  Script.SetLosMode("denizens", "entities")
 end
  
 
 function RoundStart(intruders, round)
   print("Intr:" , intruders)
+  Script.SetVisibility("intruders")
+  Script.SetLosMode("intruders", "entities")
+  Script.SetLosMode("denizens", "entities")
   Script.ShowMainBar(intruders)
 end
 
