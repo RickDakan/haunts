@@ -35,7 +35,7 @@ func (gs *gameScript) syncEnd() {
 func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string) {
   // Clear out the panel, now the script can do whatever it wants
   player.Script_path = path
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   base.Log().Printf("startGameScript")
   if !filepath.IsAbs(path) {
     path = filepath.Join(base.GetDataDir(), "scripts", filepath.FromSlash(path))
@@ -479,7 +479,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
     gp.game.script = gp.script
     base.Log().Printf("script = %p", gp.game.script)
 
-    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
     gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
     base.Log().Printf("Done making stuff")

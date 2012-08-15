@@ -26,7 +26,7 @@ type GamePanel struct {
 
 func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel {
   var gp GamePanel
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   if p == nil {
     p = &Player{}
   }
