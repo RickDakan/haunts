@@ -11,8 +11,9 @@
   "Range"    : 3,
   "Target_allies": true,
   "Sounds"   : {
-    "howl": "Haunts/Denizens/Ghosts/Vengeful Wraith/Ghastly Howl",
+    "howl": "Haunts/SFX/Denizens/Ghosts/Vengeful Wraith/Ghastly Howl"
+  },
   "Conditions": [
      "Focused"
-   ]
+  ]
 }

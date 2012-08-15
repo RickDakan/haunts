@@ -9,7 +9,7 @@
   "Action_names": [
     "Move Test",
     "Interact",
-    "Psychometric Disruptor",
+    "Psychometric Disruptor"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": {
@@ -17,7 +17,7 @@
     	"Pick Me Ups",
     	"Experimental Battery",
     	"Spectral Goggles v2"
-        ]
+    ]
   },
   "Base": {
     "Ap_max": 8,

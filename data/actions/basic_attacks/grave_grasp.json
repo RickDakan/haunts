@@ -11,8 +11,9 @@
   "Range"    : 7,
   "Target_enemies": true,
   "Sounds"   : {
-    "grasp": "Haunts/Denizens/Ghosts/Vengeful Wraith/Grave Grasp",
+    "grasp": "Haunts/SFX/Denizens/Ghosts/Vengeful Wraith/Grave Grasp"
+  },
   "Conditions": [
      "Horrified"
-   ]
+  ]
 }

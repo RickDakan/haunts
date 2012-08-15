@@ -11,9 +11,9 @@
   "Range"    : 6,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/Denizens/Cultists/Cult Leader/Crozier",
-    },
+    "fire": "Haunts/SFX/Denizens/Cultists/Cult Leader/Crozier"
+  },
   "Conditions": [
      "Agony"
-   ]
+  ]
 }
