@@ -122,6 +122,15 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
         gp.script.syncEnd()
       } else {
         gp.script.L.DoString("Init(__data)")
+        if gp.game.Side == SideHaunt {
+          gp.game.Ai.minions.Activate()
+          gp.game.Ai.denizens.Activate()
+          gp.game.player_inactive = gp.game.Ai.denizens.Active()
+        } else {
+          gp.game.Ai.intruders.Activate()
+          gp.game.player_inactive = gp.game.Ai.intruders.Active()
+        }
+
       }
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")

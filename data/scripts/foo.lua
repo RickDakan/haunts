@@ -6,12 +6,7 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   end
   Script.SetLosMode(side, rooms)
 end
-
-if not store.Ch01a then
-  store.Ch01a = {}
-  end
 --
-play_as_denizens = false
 function Init()
    store.Ch01a = {}
    store.Ch01a.Spawnpoints_complete={}
@@ -31,15 +26,16 @@ function Init()
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
   Script.SpawnEntitySomewhereInSpawnPoints("Caitlin", intruder_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Percy", intruder_spawn)
-  ents = Script.GetAllEnts()
+
+  Script.SetVisibility("intruders")
+  Script.SetLosMode("intruders", "entities")
+  Script.SetLosMode("denizens", "entities")
 end
  
 
 function RoundStart(intruders, round)
-  Script.SetVisibility("intruders")
-  Script.SetLosMode("intruders", "entities")
-  Script.SetLosMode("denizens", "entities")
-  Script.ShowMainBar(intruders ~= play_as_denizens)
+  print("Intr:" , intruders)
+  Script.ShowMainBar(intruders)
 end
 
 

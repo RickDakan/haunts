@@ -383,7 +383,6 @@ func (g *Game) OnRound() {
 
   if g.Side == SideHaunt {
     g.Ai.minions.Activate()
-    base.Log().Printf("minion ai: %t", g.Ai.minions.Active())
     g.Ai.denizens.Activate()
     g.player_inactive = g.Ai.denizens.Active()
   } else {
