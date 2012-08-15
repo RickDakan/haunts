@@ -705,13 +705,30 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
 
 func dialogBox(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "DialogBox", LuaString) {
-      return 0
+    if L.GetTop() == 1 {
+      if !LuaCheckParamsOk(L, "DialogBox", LuaString) {
+        return 0
+      }
+    } else {
+      if !LuaCheckParamsOk(L, "DialogBox", LuaString, LuaTable) {
+        return 0
+      }
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    path := L.ToString(-1)
-    box, output, err := MakeDialogBox(filepath.ToSlash(path))
+    path := L.ToString(1)
+    var args map[string]string
+    if L.GetTop() > 1 {
+      args = make(map[string]string)
+      L.PushValue(2)
+      L.PushNil()
+      for L.Next(-2) != 0 {
+        args[L.ToString(-2)] = L.ToString(-1)
+        L.Pop(1)
+      }
+      L.Pop(1)
+    }
+    box, output, err := MakeDialogBox(filepath.ToSlash(path), args)
     if err != nil {
       base.Error().Printf("Error making dialog: %v", err)
       return 0

@@ -17,7 +17,7 @@ function Init()
    } 
 
   Script.LoadHouse("Chapter_01_a")
-  -- Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json") 
+  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json", {foo="10", bar="wingding", monkey="banana"})
 
   Script.BindAi("denizen", "denizens.lua")
   Script.BindAi("minions", "minions.lua")

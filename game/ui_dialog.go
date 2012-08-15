@@ -3,6 +3,7 @@ package game
 import (
   "fmt"
   "path/filepath"
+  "strings"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
@@ -57,6 +58,20 @@ type dialogData struct {
   cur_page string
 }
 
+func (d *dialogData) process(m map[string]string) {
+  for key, value := range m {
+    for name := range d.Pages {
+      page := d.Pages[name]
+      for i := range page.Sections {
+        section := &page.Sections[i]
+        old := fmt.Sprintf("{%s}", key)
+        section.Text = strings.Replace(section.Text, old, value, -1)
+      }
+      d.Pages[name] = page
+    }
+  }
+}
+
 type MediumDialogBox struct {
   layout dialogLayout
   format dialogLayoutSpec
@@ -76,7 +91,7 @@ type MediumDialogBox struct {
   result chan string
 }
 
-func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
+func MakeDialogBox(source string, args map[string]string) (*MediumDialogBox, <-chan string, error) {
   var mdb MediumDialogBox
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, source), "json", &mdb.data)
@@ -158,6 +173,8 @@ func MakeDialogBox(source string) (*MediumDialogBox, <-chan string, error) {
       mdb.format = mdb.layout.Formats[mdb.data.Pages[mdb.data.cur_page].Format]
     }
   }
+
+  mdb.data.process(args)
 
   return &mdb, mdb.result, nil
 }
@@ -294,6 +311,7 @@ func (mdb *MediumDialogBox) Draw(region gui.Region) {
       p.Valign = "top"
     }
     gl.Color4ub(255, 255, 255, 255)
+
     d.RenderParagraph(data.Text, float64(p.X+region.X), float64(p.Y+region.Y)-d.MaxHeight()/2, 0, float64(p.Dx), d.MaxHeight(), just, valign)
 
     gl.Color4ub(255, 255, 255, byte(data.shading*255))
