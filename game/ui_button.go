@@ -58,6 +58,11 @@ func (b *Button) Over(mx, my int) bool {
 }
 
 func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
+  if b.valid_func != nil {
+    b.invalid = !b.valid_func()
+  } else {
+    b.invalid = false
+  }
   if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
     if !b.invalid {
       b.f(data)
