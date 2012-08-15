@@ -1,1 +1,26 @@
 Choices
+
+
+
+
+
+CHAPTER 3
+
+store.Ch03c.choice_a
+[1]	"Cultists" or "Nightmares"
+
+store.Ch03d.choice_a 
+[1]	"Commit to Cultists" or "Defy Cultists"
+[2]	"Dream Scion" or "Nightmare Life"
+
+
+Chapter 4
+
+store.Ch04a.choice_a = choices
+[1] "Antonia" or "Gottlieb"
+[2] "Hector" or "Penelope"
+[3] "Elizabeth" or "Simon"
+
+
+
+

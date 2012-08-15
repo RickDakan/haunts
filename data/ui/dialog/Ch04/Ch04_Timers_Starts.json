@@ -1,0 +1,65 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "They have spread out about the house.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/devoted_servant.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Find as many as you can, before the ritual hour is come.",
+		  "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "Yes, Doctor. At once.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/devoted_servant.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Bring them back here, and prepare this chamber. The more sacrifices we bring the better our chances.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/Tyree.png"
+          }
+        }
+      ]
+    },
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

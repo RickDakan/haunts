@@ -1,0 +1,65 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "So the old hospital goes to the creditors on Monday, eh? A shame.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/gottlieb.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "My patients might be gone, but I've one last experiment. One last reality to open.",
+		  "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "Whatever you say, doc. Any reality has to be better than the one that his me on Friday.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/gottlieb.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "There are hidden worlds inside each of us, whole other existences waiting to overflow into reality.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/Tyree.png"
+          }
+        }
+      ]
+    },
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

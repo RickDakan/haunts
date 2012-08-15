@@ -1,0 +1,35 @@
+{
+"Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "What's this then?  Never did like the walkin' dead much.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "She doesn't look too bright.  Betting if I can knock her off balance near that there hole, she'd fall right in.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}

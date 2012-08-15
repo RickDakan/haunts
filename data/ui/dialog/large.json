@@ -3,14 +3,14 @@
     "Path": "ui/dialog/large.png"
   },
   "Prev":{
-    "X": 70,
+    "X": 170,
     "Y": 40,
     "Texture":{
       "Path": "ui/arrow_lf.png"
     }
   },
   "Next":{
-    "X": 721,
+    "X": 781,
     "Y": 40,
     "Texture":{
       "Path": "ui/arrow_rf.png"
@@ -119,7 +119,142 @@
         }
       ]
     },
-    "ThreeOptions": {},
-    "FourOptions": {}
+    "ThreeOptions": 
+    {      
+      "Sections":
+      [
+        {
+          "X": 150,
+          "Y": 550,
+          "Paragraph":{
+            "X": 250,
+            "Y": 550,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 100,
+            "Y": 500,
+            "Dx": 392,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 547,
+          "Y": 550,
+          "Paragraph":{
+            "X": 647,
+            "Y": 550,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 500,
+            "Y": 500,
+            "Dx": 395,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 150,
+          "Y": 250,
+          "Paragraph":{
+            "X": 250,
+            "Y": 250,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 100,
+            "Y": 175,
+            "Dx": 392,
+            "Dy": 248
+          }
+        }
+      ]      
+    },
+    "FourOptions": 
+    {
+      "Sections":[
+        {
+          "X": 150,
+          "Y": 550,
+          "Paragraph":{
+            "X": 250,
+            "Y": 550,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 100,
+            "Y": 500,
+            "Dx": 392,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 547,
+          "Y": 550,
+          "Paragraph":{
+            "X": 647,
+            "Y": 550,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 500,
+            "Y": 500,
+            "Dx": 395,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 150,
+          "Y": 250,
+          "Paragraph":{
+            "X": 250,
+            "Y": 250,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 100,
+            "Y": 175,
+            "Dx": 392,
+            "Dy": 248
+          }
+        },
+        {
+          "X": 547,
+          "Y": 250,
+          "Paragraph":{
+            "X": 647,
+            "Y": 250,
+            "Dx": 200,
+            "Size": 12,
+            "Halign": "left",
+            "Valign": "center"
+          },
+          "Region":{
+            "X": 500,
+            "Y": 175,
+            "Dx": 395,
+            "Dy": 248
+          }
+        }
+      ]      
+    }
   }
 }

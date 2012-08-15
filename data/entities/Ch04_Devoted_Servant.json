@@ -1,0 +1,25 @@
+{
+  "Name": "Devoted Servant",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/female_cultist",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+	"Parasitic Gift",
+	"Envenomed Blade"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 6,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 10
+  }
+}

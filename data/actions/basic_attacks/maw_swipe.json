@@ -6,6 +6,9 @@
     "Path": "actions/icons/pummel.png"
   },
   "Target_enemies": true,
+  "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Maw"
+  },
   "Ap"       : 2,
   "Strength" : 6,
   "Damage"   : 2,

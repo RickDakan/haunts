@@ -1,0 +1,65 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "I've always admired what you did here, Tyree. Even the parties of sometimes.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/simon.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "I was on the brink of something momentous, something you couldn't imagine.",
+		  "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "I've heard the same from every new beggar on Wall Street, but I believe you when you say it.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/simon.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Begging on the streets is no fate for the likes of us. I know another way.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/Tyree.png"
+          }
+        }
+      ]
+    },
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

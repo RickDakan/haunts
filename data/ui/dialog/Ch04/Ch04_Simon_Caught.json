@@ -1,0 +1,29 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Elias, why? You've been a father to me in so many ways.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/simon.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "And now, dear boy, you must be the Isaac to the demanding powers that be.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

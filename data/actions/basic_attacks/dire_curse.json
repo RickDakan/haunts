@@ -11,6 +11,6 @@
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "jaguar.wav"
+    "curse": "Haunts/SFX/Intruders/Occultist/Dire Curse"
   }
 }

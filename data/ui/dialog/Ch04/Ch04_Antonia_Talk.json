@@ -1,0 +1,65 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "I always wondered why you chose to live here among the mad.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/antonia.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "The psychotic and the delusional see universes as they are. And I distilled that vision from their gray matter.",
+		  "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "Sounds like my kind of cocktail, Tyree. Like the ones you served at your birthday batch back in '27?",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/antonia.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Much more life-changing than those, I promise you.",
+		      "Image":{
+          "Path": "ui/dialog/Ch04/Tyree.png"
+          }
+        }
+      ]
+    },
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

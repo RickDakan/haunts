@@ -1,0 +1,76 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Gentlemen, we've done it! The jewel awaits!",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "This house hasn't been the treasure trove you promised Constance.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "nd that jewel is mine by all rights.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "I'm sure I can pay you a fair price for it, Samuel. As agreed.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+	"Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "Oh, he's already offered ME a fair price. Everything else but the jewel..",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+	"Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "And nothing for you, greedy scavenger. The jewel is mine and mine alone!",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    }
+  }
+}

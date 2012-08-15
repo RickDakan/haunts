@@ -10,6 +10,9 @@
   "Damage"   : 2,
   "Range"    : 7,
   "Target_enemies": true,
+  "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Cultists/Male Cultist/Envenomed Dart"
+  },
   "Conditions": [
      "Poison"
    ]

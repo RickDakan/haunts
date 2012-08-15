@@ -1,0 +1,28 @@
+{
+  "Name": "Bosch",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/bosch",
+  "Still": {
+    "Path": "entities/bosch_alive_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Arc of Decay",
+    "Visions of Despair",
+    "Summon Lost Soul",
+    "Summon Angry Shade"
+  ],
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 0,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 12,
+    "Hp_max": 10,
+    "Corpus": 12,
+    "Ego": 11,
+    "Sight": 30
+  }
+}

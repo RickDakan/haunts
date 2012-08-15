@@ -1,0 +1,88 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "I can't thank you two enough for your help.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Nor does it seem you can pay me enough for this horror show.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "What do you mean? You'll get your share. Once I show my future in-laws the jewel, they're sure to...",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "I'm afraid I'll have to insist on keeping that jewel for myself, Samuel.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+	"Start5": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "You said you just wanted to study it!",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start6": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start7",
+          "Text": "I do - for all the eternity of life it will give me! Time enough to earn back another fortune.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+		"Start7": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "After she pays me the first one, which she promised me for turnin' my back on you, boyo.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    }
+  }
+}

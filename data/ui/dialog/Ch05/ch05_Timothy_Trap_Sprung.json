@@ -1,0 +1,20 @@
+{
+"Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Down she goes, easy squeazy.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }
+        }
+      ]
+    }
+  }
+}

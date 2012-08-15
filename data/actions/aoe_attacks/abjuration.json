@@ -7,6 +7,10 @@
   "Range"     : 10,
   "Diameter"  : 10,
   "Animation" : "pulse",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "blast": "Haunts/SFX/Intruders/Occultist/Exorcise"
+  },
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"
   },

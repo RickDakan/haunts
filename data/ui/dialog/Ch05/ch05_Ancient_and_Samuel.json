@@ -1,0 +1,112 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "You have found me, at last.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/ancient.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Violet? What are you doing... I don’t understand. You said...",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }       
+        }   
+     ] 
+    },
+	"Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "Young man, you poor, deluded thing. Your mind is a blur.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/ancient.png"
+          }
+        }
+      ]
+    },
+	"Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "Violet! It's me, Sammy! Your parents told me you'd gone to Paris. What are you doing in my uncle's home?",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "I... I am trapped here. Sam-ee, I am imprisoned. Your uncle. He did this.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/ancient.png"
+          }
+        }
+      ]
+    },
+	"Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start7",
+          "Text": "But he’s been dead for years. How...",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start7": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+        "Next": "Start8",         
+        "Text": "The jewel, Samm-ye. Retrieve it from the vaults below and we can be together again.",
+		"Image":{
+          "Path": "ui/dialog/Ch05/ancient.png"
+          }
+        }
+      ]
+    },
+	"Start8": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start9",
+          "Text": "Yes, yes, of course. I'll save you my love and sun.",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+	"Start9": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Love and sun... I've not heard that in 4000 summers. Samuel. Could he be?",
+		      "Image":{
+          "Path": "ui/dialog/Ch05/ancient.png"
+          }
+        }
+      ]
+    }    
+  }
+}

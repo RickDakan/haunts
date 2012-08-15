@@ -23,6 +23,8 @@ function Init()
       "Armed_And_New_Map",
       "Vanish_Patient03",
       "Patient04-Spawn",
+      "Vanish_Patient03",
+      "Hallway-01",
    } 
 
   Script.LoadHouse("Chapter_03_a")
@@ -100,6 +102,7 @@ function OnAction(intruders, round, exec)
     return
   end
   name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch03a.Spawnpoints, store.Ch03a.Spawnpoints_complete)
+ 
   if name == "Bedroom-01" then
     Script.DialogBox("ui/dialog/Ch03/Ch03_Patient01_bedroom.json")
     store.Ch03a.Spawnpoints_complete["Bedroom-01"] = true
@@ -107,7 +110,7 @@ function OnAction(intruders, round, exec)
 
   if name == "Bedroom-02" then
     Script.DialogBox("ui/dialog/Ch03/Ch03_Patient02_bedroom.json")
-    store.Ch03a.Spawnpoints_complete["Bedroom-01"] = true
+    store.Ch03a.Spawnpoints_complete["Bedroom-02"] = true
   end
 
   if name == "Vanish_Patient03" then
@@ -115,7 +118,6 @@ function OnAction(intruders, round, exec)
         if ent.Name == "Patient" then
           Script.PlayAnimations(ent, {"defend", "killed"})
           Script.SetHp(ent, 0)
-          end
         end
     end
     store.Ch03a.Spawnpoints_complete["Vanish_Patient03"] = true
@@ -125,6 +127,21 @@ function OnAction(intruders, round, exec)
     patient04_spawn = Script.GetSpawnPointsMatching("Patient04-Start")
     Script.SpawnEntitySomewhereInSpawnPoints("Patient", patient04_spawn)
     store.Ch03a.Spawnpoints_complete["Patient04-Spawn"] = true
+  end
+
+  if name == "Hallway-01" then
+    Script.DialogBox("ui/dialog/Ch03/Ch03_Patient04_hallway.json")
+    store.Ch03a.Spawnpoints_complete["Hallway-01"] = true
+  end
+
+  if name == "Vanish_Patient04" then
+    for _, ent in pairs(Script.GetAllEnts()) do
+        if ent.Name == "Patient" then
+          Script.PlayAnimations(ent, {"defend", "killed"})
+          Script.SetHp(ent, 0)
+        end
+    end
+    store.Ch03a.Spawnpoints_complete["Vanish_Patient04"] = true
   end
 
   if name == "Trigger_Patients" then
@@ -139,7 +156,6 @@ function OnAction(intruders, round, exec)
     Script.DialogBox("ui/dialog/Ch03/Ch03_rec_room_arming.json")
     Script.StartScript("Ch03b.lua")
   end
-
 end
 
 

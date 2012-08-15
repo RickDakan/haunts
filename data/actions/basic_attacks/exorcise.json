@@ -9,5 +9,8 @@
   "Strength" : 7,
   "Damage"   : 5,
   "Range"    : 10,
-  "Target_enemies": true
+  "Target_enemies": true,
+  "Sounds"   : {
+    "exorcise": "Haunts/SFX/Intruders/Occultist/Exorcise"
+  }
 }

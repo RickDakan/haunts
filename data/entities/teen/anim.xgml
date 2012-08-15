@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="MacRoman"?>
+<?xml version="1.0" encoding="Cp1252"?>
 <section name="xgml">
 	<attribute key="Creator" type="String">yFiles</attribute>
-	<attribute key="Version" type="String">2.8</attribute>
+	<attribute key="Version" type="String">2.9</attribute>
 	<section name="graph">
 		<attribute key="hierarchic" type="int">1</attribute>
 		<attribute key="label" type="String"></attribute>
@@ -344,8 +344,7 @@ sync:hit</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">17</attribute>
-			<attribute key="label" type="String">melee_01
-func:kick</attribute>
+			<attribute key="label" type="String">melee_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
 				<attribute key="y" type="double">246.144775390625</attribute>
@@ -356,16 +355,18 @@ func:kick</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">melee_01
-func:kick</attribute>
+				<attribute key="text" type="String">melee_01</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
 			</section>
+			<section name="LabelGraphics">
+			</section>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">18</attribute>
-			<attribute key="label" type="String">melee_02</attribute>
+			<attribute key="label" type="String">melee_02
+func:kick</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
 				<attribute key="y" type="double">305.144775390625</attribute>
@@ -376,7 +377,8 @@ func:kick</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">melee_02</attribute>
+				<attribute key="text" type="String">melee_02
+func:kick</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -473,9 +475,9 @@ time:150</attribute>
 			<attribute key="label" type="String">readyGroup</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">0.0</attribute>
-				<attribute key="y" type="double">-213.73196411132812</attribute>
+				<attribute key="y" type="double">-213.80301666259766</attribute>
 				<attribute key="w" type="double">358.0</attribute>
-				<attribute key="h" type="double">307.72955322265625</attribute>
+				<attribute key="h" type="double">309.0083770751953</attribute>
 				<attribute key="type" type="String">roundrectangle</attribute>
 				<attribute key="fill" type="String">#CAECFF84</attribute>
 				<attribute key="outline" type="String">#666699</attribute>
@@ -567,9 +569,9 @@ time:0</attribute>
 			<attribute key="label" type="String">Group 2</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">-150.0</attribute>
-				<attribute key="y" type="double">305.5</attribute>
+				<attribute key="y" type="double">305.144775390625</attribute>
 				<attribute key="w" type="double">178.0</attribute>
-				<attribute key="h" type="double">257.666015625</attribute>
+				<attribute key="h" type="double">258.37646484375</attribute>
 				<attribute key="type" type="String">roundrectangle</attribute>
 				<attribute key="fill" type="String">#CAECFF84</attribute>
 				<attribute key="outline" type="String">#666699</attribute>
@@ -699,8 +701,7 @@ time:300</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">33</attribute>
-			<attribute key="label" type="String">ranged_04
-func:fire</attribute>
+			<attribute key="label" type="String">ranged_04</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">43.0</attribute>
 				<attribute key="y" type="double">350.78955078125</attribute>
@@ -711,8 +712,7 @@ func:fire</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">ranged_04
-func:fire</attribute>
+				<attribute key="text" type="String">ranged_04</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -744,19 +744,21 @@ time:200</attribute>
 		<section name="node">
 			<attribute key="id" type="int">35</attribute>
 			<attribute key="label" type="String">cast_01
-time:150</attribute>
+time:150
+func:cast</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
-				<attribute key="y" type="double">199.0791015625</attribute>
+				<attribute key="y" type="double">198.55239958521264</attribute>
 				<attribute key="w" type="double">148.0</attribute>
-				<attribute key="h" type="double">29.0</attribute>
+				<attribute key="h" type="double">45.19171323292528</attribute>
 				<attribute key="type" type="String">rectangle</attribute>
 				<attribute key="fill" type="String">#FFCC00</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">cast_01
-time:150</attribute>
+time:150
+func:cast</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -867,7 +869,8 @@ time:400</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">41</attribute>
-			<attribute key="label" type="String">soothe_01</attribute>
+			<attribute key="label" type="String">soothe_01
+func:soothe</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
 				<attribute key="y" type="double">199.0791015625</attribute>
@@ -878,7 +881,8 @@ time:400</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">soothe_01</attribute>
+				<attribute key="text" type="String">soothe_01
+func:soothe</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -1078,7 +1082,8 @@ sync:hit</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">52</attribute>
-			<attribute key="label" type="String">push_01</attribute>
+			<attribute key="label" type="String">push_01
+func:soothe</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">873.94482421875</attribute>
 				<attribute key="y" type="double">199.0791015625</attribute>
@@ -1089,7 +1094,8 @@ sync:hit</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">push_01</attribute>
+				<attribute key="text" type="String">push_01
+func:soothe</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -1219,7 +1225,7 @@ time:100</attribute>
 		<section name="node">
 			<attribute key="id" type="int">59</attribute>
 			<attribute key="label" type="String">prepare_ranged_01
-func:load
+func:fire
 </attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">90.0</attribute>
@@ -1232,7 +1238,7 @@ func:load
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">prepare_ranged_01
-func:load
+func:fire
 </attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
@@ -1519,7 +1525,7 @@ weight:0.5</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-150.0</attribute>
@@ -1537,7 +1543,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">-0.38399025797843933</attribute>
-				<attribute key="ySource" type="double">0.9968461394309998</attribute>
+				<attribute key="ySource" type="double">0.9927207933410382</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">move
@@ -1629,7 +1635,7 @@ weight:0.5</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">179.85885620117188</attribute>
@@ -1655,7 +1661,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.56959468126297</attribute>
-				<attribute key="ySource" type="double">0.7567678093910217</attribute>
+				<attribute key="ySource" type="double">0.7536359653261513</attribute>
 				<attribute key="xTarget" type="double">-0.21959459781646729</attribute>
 			</section>
 			<section name="LabelGraphics">
@@ -1774,7 +1780,7 @@ weight:5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.32025226950645447</attribute>
-				<attribute key="ySource" type="double">-0.03853635862469673</attribute>
+				<attribute key="ySource" type="double">-0.03837687705197483</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">defend
@@ -2022,7 +2028,7 @@ facing:1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">169.48377990722656</attribute>
@@ -2147,7 +2153,7 @@ facing:1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">286.7859802246094</attribute>
@@ -2240,7 +2246,7 @@ facing:1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-48.557090759277344</attribute>
@@ -2272,7 +2278,7 @@ facing:-1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-131.4429168701172</attribute>
@@ -2434,7 +2440,7 @@ facing:-1</attribute>
 				<section name="Line">
 					<section name="point">
 						<attribute key="x" type="double">0.0</attribute>
-						<attribute key="y" type="double">-213.73196411132812</attribute>
+						<attribute key="y" type="double">-213.80301666259766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">303.6554260253906</attribute>

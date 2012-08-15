@@ -1,0 +1,29 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Elias, I once truly felt something for you. We could have made a life together.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Elizabeth.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "I know. But with your sacrifice, I can make a life eternal for myself. My great work will continue.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

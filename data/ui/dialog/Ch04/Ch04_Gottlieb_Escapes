@@ -1,0 +1,29 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Gottlieb's escape is a blow to my plans.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/gottlieb.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "There is no telling now what the house will do to me without his soul to consume.",
+      "Image":{
+            "Path": "ui/dialog/Ch04/Tyree.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}

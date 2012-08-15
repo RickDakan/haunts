@@ -1,0 +1,85 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "Look, the label names the contents as the remains of High Priestess Nuratum.",
+          "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "Tis a more modern coffin, though. Part of Tyree's collection, no doubt.",
+          "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }       
+        }   
+     ] 
+    },
+  "Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start4",
+          "Text": "The jewel belonged to Nuratum. It should be in there.",
+          "Image":{
+          "Path": "ui/dialog/Ch05/samuel.png"
+          }
+        }
+      ]
+    },
+  "Start4": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start5",
+          "Text": "There's a cursed sigil here, but nothing I can't negate with some oil of St. Anselm.",
+          "Image":{
+          "Path": "ui/dialog/Ch05/constance.png"
+          }
+        }
+      ]
+    },
+  "Start5": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start6",
+          "Text": "And the lock’s in good shape - no rust and easy to pick.",
+      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+  "Start6": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start7",
+          "Text": "According to my uncle's papers, there should be a hidden compartment inside.",
+      "Image":{
+          "Path": "ui/dialog/Ch05/timothy.png"
+          }
+        }
+      ]
+    },
+    "Start7": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Text": "As the three intruders prepare to unseal the coffin, the strange piping begins again, louder this time."
+        }
+      ]
+    }
+  }
+}

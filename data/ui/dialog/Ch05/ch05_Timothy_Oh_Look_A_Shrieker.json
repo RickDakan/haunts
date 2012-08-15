@@ -1,0 +1,50 @@
+{
+"Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Awe, hey.  You're just a little fella.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "...",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Child_temp.png"
+          }             
+        }
+      ]
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "And 'less I miss my guess, that gem in your hand is what I'm here for.",
+          "Image":
+          {
+            "Path": "ui/dialog/Ch05/Timothy.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}

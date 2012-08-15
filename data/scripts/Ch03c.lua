@@ -96,48 +96,41 @@ function OnAction(intruders, round, exec)
     return
   end
   name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch03c.Spawnpoints, store.Ch03c.Spawnpoints_complete)
+end
 
+
+function RoundEnd(intruders, round)
   cultists_dead = true
-    for _, ent in pairs(Script.GetAllEnts()) do
-      if ent.Name == "Cultist" and ent.Stats.HpCur > 0 then
-        cultists_dead = false
-      end
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name == "Cultist" and ent.Stats.HpCur > 0 then
+      cultists_dead = false
     end
+  end
 
-    maws_dead = true
-    for _, ent in pairs (Script.GetAllEnts()) do
-      if ent.Name == "Transdimensional Maw" and ent.Stats.HpCur > 0 then
-        cultists_dead = false
-      end
+  maws_dead = true
+  for _, ent in pairs (Script.GetAllEnts()) do
+    if ent.Name == "Transdimensional Maw" and ent.Stats.HpCur > 0 then
+      cultists_dead = false
     end
+  end
 
-     if cultists_dead == true and maws_dead == true then
-      Script.DialogBox("Ch03_Cultists_Defeated.json")
+  wraiths_dead = true
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name == "Vengeful Wraith" and ent.Stats.HpCur > 0 then
+      cultists_dead = false
     end
+  end
 
-    wraiths_dead = true
-    for _, ent in pairs(Script.GetAllEnts()) do
-      if ent.Name == "Vengeful Wraith" and ent.Stats.HpCur > 0 then
-        cultists_dead = false
-      end
+  shades_dead = true
+  for _, ent in pairs (Script.GetAllEnts()) do
+    if ent.Name == "Angry Shade" and ent.Stats.HpCur > 0 then
+      cultists_dead = false
     end
+  end
 
-    shades_dead = true
-    for _, ent in pairs (Script.GetAllEnts()) do
-      if ent.Name == "Angry Shade" and ent.Stats.HpCur > 0 then
-        cultists_dead = false
-      end
-    end
-
-    if cultists_dead == true and maws_dead == true then
-      Script.DialogBox("Ch03_Ghosts_Defeated.json")
-    end
-
-    -- check is everything dead, then Director Tyree asks
-
-
+  if cultists_dead == true and maws_dead == true and wraiths_dead == true and shades_dead == true then
+    Script.DialogBox("Ch03_Tyree_Congrats.json")
+    store.Ch03c.choice_a = choices[1]  
+    Script.StartScript("Ch03d.lua")
+  end
 end
-
-
-end
-

@@ -10,6 +10,9 @@
   "Damage"   : 0,
   "Range"    : 1,
   "Target_allies": true,
+  "Sounds"   : {
+    "fire": "Haunts/Denizens/Cultists/Robed Cultist/Mantra"
+    },  
   "Conditions": [
      "Focused"
    ]

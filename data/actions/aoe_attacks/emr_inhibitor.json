@@ -7,6 +7,10 @@
   "Range"     : 6,
   "Diameter"  : 3,
   "Animation" : "inhibit",
+  "Target_enemies": true,
+  "Sounds"   : {
+  "inhibit": "Haunts/SFX/Intruders/Hunter/Paramagnetic Pulse"
+  },
   "Texture"   : {
     "Path": "actions/icons/inhibit.png"
   },
