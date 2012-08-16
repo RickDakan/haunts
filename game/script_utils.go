@@ -19,6 +19,7 @@ const (
   luaEncNil
   luaEncTable
   luaEncString
+  luaEncEntity
 )
 
 // Encodes a lua value, only bool, number, nil, table, and string can be
@@ -39,6 +40,12 @@ func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
     err2 = binary.Write(w, binary.LittleEndian, L.ToNumber(index))
   case L.IsNil(index):
     err1 = binary.Write(w, binary.LittleEndian, luaEncNil)
+  case LuaIsEntity(L, index):
+    err1 = binary.Write(w, binary.LittleEndian, luaEncEntity)
+    L.PushString("id")
+    L.GetTable(index - 1)
+    err2 = binary.Write(w, binary.LittleEndian, uint64(L.ToInteger(-1)))
+    L.Pop(1)
   case L.IsTable(index):
     err1 = binary.Write(w, binary.LittleEndian, luaEncTable)
     err2 = LuaEncodeTable(w, L, index)
@@ -62,7 +69,7 @@ func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
 }
 
 // Decodes a value from the reader and pushes it onto the stack
-func LuaDecodeValue(r io.Reader, L *lua.State) error {
+func LuaDecodeValue(r io.Reader, L *lua.State, g *Game) error {
   var le luaEncodable
   err := binary.Read(r, binary.LittleEndian, &le)
   if err != nil {
@@ -79,8 +86,12 @@ func LuaDecodeValue(r io.Reader, L *lua.State) error {
     L.PushNumber(f)
   case luaEncNil:
     L.PushNil()
+  case luaEncEntity:
+    var id uint64
+    err = binary.Read(r, binary.LittleEndian, &id)
+    LuaPushEntity(L, g.EntityById(EntityId(id)))
   case luaEncTable:
-    err = LuaDecodeTable(r, L)
+    err = LuaDecodeTable(r, L, g)
   case luaEncString:
     var length uint32
     err = binary.Read(r, binary.LittleEndian, &length)
@@ -117,23 +128,40 @@ func LuaEncodeTable(w io.Writer, L *lua.State, index int) error {
 }
 
 // decodes a lua table and pushes it onto the stack
-func LuaDecodeTable(r io.Reader, L *lua.State) error {
+func LuaDecodeTable(r io.Reader, L *lua.State, g *Game) error {
   L.NewTable()
   var cont byte
   err := binary.Read(r, binary.LittleEndian, &cont)
   for cont != 0 && err == nil {
     for i := 0; i < 2 && err == nil; i++ {
-      err = LuaDecodeValue(r, L)
+      err = LuaDecodeValue(r, L, g)
     }
     if err == nil {
       err = binary.Read(r, binary.LittleEndian, &cont)
     }
+
     L.SetTable(-3)
   }
   if err != nil {
     return err
   }
+
   return nil
+}
+
+func LuaIsEntity(L *lua.State, index int) bool {
+  L.PushString("type")
+  L.GetTable(index - 1)
+  if L.IsNil(-1) {
+    L.Pop(1)
+    return false
+  }
+  if L.ToString(-1) == "Entity" {
+    L.Pop(1)
+    return true
+  }
+  L.Pop(1)
+  return false
 }
 
 // Gets the id out of the table at the specified index and returns the

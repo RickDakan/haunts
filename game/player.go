@@ -69,7 +69,10 @@ func GetAllPlayers() map[string]string {
 func UpdatePlayer(p *Player, L *lua.State) {
   buffer := bytes.NewBuffer(nil)
   L.GetGlobal("store")
-  LuaEncodeTable(buffer, L, -1)
+  err := LuaEncodeTable(buffer, L, -1)
+  if err != nil {
+    base.Warn().Printf("Error encoding lua state: %v", err)
+  }
   L.Pop(1)
   p.Lua_store = buffer.Bytes()
 }

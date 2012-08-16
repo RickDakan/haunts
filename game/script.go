@@ -92,9 +92,12 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
 
   registerUtilityFunctions(gp.script.L)
   if player.Lua_store != nil {
-    LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
-    gp.script.L.SetGlobal("store")
     loadGameStateRaw(gp, player.Game_state)
+    err := LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L, gp.game)
+    if err != nil {
+      base.Warn().Printf("Error decoding lua state: %v", err)
+    }
+    gp.script.L.SetGlobal("store")
   } else {
     gp.script.L.NewTable()
     gp.script.L.SetGlobal("store")
