@@ -211,8 +211,8 @@ func (g *Game) GobDecode(data []byte) error {
   }
   g.setup()
   for _, ent := range g.Ents {
+    g.viewer.RemoveDrawable(ent)
     ent.Load(g)
-    g.viewer.AddDrawable(ent)
   }
   var sss []sprite.SpriteState
   if err := dec.Decode(&sss); err != nil {
