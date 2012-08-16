@@ -3,7 +3,9 @@ package game
 import (
   "bytes"
   "encoding/gob"
+  "errors"
   "reflect"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
@@ -212,6 +214,16 @@ func (g *Game) GobDecode(data []byte) error {
     ent.Load(g)
     g.viewer.AddDrawable(ent)
   }
+  var sss []sprite.SpriteState
+  if err := dec.Decode(&sss); err != nil {
+    return err
+  }
+  if len(sss) != len(g.Ents) {
+    return errors.New("SpriteStates were not recorded properly.")
+  }
+  for i := range sss {
+    g.Ents[i].Sprite().SetSpriteState(sss[i])
+  }
 
   // If Ais were bound then their paths will be listed here and we have to
   // reload them
@@ -241,6 +253,13 @@ func (g *Game) GobEncode() ([]byte, error) {
   buf := bytes.NewBuffer(nil)
   enc := gob.NewEncoder(buf)
   if err := enc.Encode(g.gameDataGobbable); err != nil {
+    return nil, err
+  }
+  var sss []sprite.SpriteState
+  for i := range g.Ents {
+    sss = append(sss, g.Ents[i].Sprite().GetSpriteState())
+  }
+  if err := enc.Encode(sss); err != nil {
     return nil, err
   }
   return buf.Bytes(), nil
