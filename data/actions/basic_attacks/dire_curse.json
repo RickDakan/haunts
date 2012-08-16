@@ -11,6 +11,6 @@
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "curse": "Haunts/SFX/Intruders/Occultist/Dire Curse"
+    "fire": "Haunts/SFX/Intruders/Occultist/Dire Curse"
   }
 }

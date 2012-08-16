@@ -15,7 +15,7 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 7,
+    "Ap_max": 13,
     "Hp_max": 3,
     "Corpus": 7,
     "Ego": 7,

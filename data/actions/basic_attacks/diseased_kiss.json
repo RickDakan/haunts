@@ -11,8 +11,9 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "kiss": "Haunts/Denizens/Ghosts/Corpse/Diseased Kiss",
+    "kiss": "Haunts/SFX/Denizens/Ghosts/Corpse/Diseased Kiss"
+  },
   "Conditions": [
      "Poison"
-   ]
+  ]
 }

@@ -14,6 +14,7 @@
     "Telepathic Coordination",
     "Psychic Shroud"
   ],
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
       "Curb Stompers",
@@ -22,7 +23,7 @@
     ]
   },
   "Base": {
-    "Ap_max": 800,
+    "Ap_max": 10,
     "Hp_max": 20,
     "Corpus": 10,
     "Ego": 10,

@@ -1,6 +1,7 @@
 {
   "Name": "Door 12 - Open Archway",
   "Width": 5,
+  "Always_open": true,
   "Opened_texture": {
     "Path": "doors/door_12_archway_open.png"
   },

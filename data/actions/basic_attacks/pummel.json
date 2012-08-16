@@ -11,5 +11,6 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "melee": "Haunts/Denizens/Ghosts/Corpse/Pummel"
+    "melee": "Haunts/SFX/Denizens/Ghosts/Corpse/Pummel"
+  }
 }

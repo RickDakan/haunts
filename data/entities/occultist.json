@@ -8,6 +8,7 @@
   },
   "Action_names": [
     "Move Test",
+    "Interact",
     "Dire Curse",
     "Abjuration",
     "Exorcise"

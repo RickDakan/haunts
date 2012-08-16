@@ -11,8 +11,9 @@
   "Range"    : 5,
   "Target_enemies": true,
   "Sounds"   : {
-    "curse": "Haunts/Denizens/Ghosts/Vengeful Wraith/Vengeful Curse",
+    "curse": "Haunts/SFX/Denizens/Ghosts/Vengeful Wraith/Vengeful Curse"
+  },
   "Conditions": [
      "Dread"
-   ]
+  ]
 }

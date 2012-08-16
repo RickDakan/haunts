@@ -5,9 +5,9 @@
   "Texture"   : {
     "Path": "actions/icons/discharge.png"
   },
-  "Ap"       : 4,
+  "Ap"       : 5,
   "Strength" : 5,
-  "Damage"   : 5,
-  "Range"    : 4,
+  "Damage"   : 4,
+  "Range"    : 6,
   "Target_enemies": true
 }
