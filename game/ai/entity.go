@@ -461,15 +461,12 @@ func ExistsFunc(a *Ai) lua.GoFunction {
 //    ents - array[integer] - Array of entity ids.
 func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
   valid_kinds := map[string]bool{
-    "intruder":     true,
-    "denizen":      true,
-    "minion":       true,
-    "servitor":     true,
-    "master":       true,
-    "non-minion":   true,
-    "non-servitor": true,
-    "non-master":   true,
-    "all":          true,
+    "intruder": true,
+    "denizen":  true,
+    "minion":   true,
+    "servitor": true,
+    "master":   true,
+    "object":   true,
   }
   return func(L *lua.State) int {
     if !game.LuaCheckParamsOk(L, "NearestNEntities", game.LuaInteger, game.LuaString) {
@@ -487,14 +484,10 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     }
     var eds entityDistSlice
     for _, ent := range g.Ents {
-      if ent.Stats == nil {
-        continue
-      }
-      if ent.Stats.HpCur() <= 0 {
+      if ent.Stats != nil && ent.Stats.HpCur() <= 0 {
         continue
       }
       switch kind {
-      case "all":
       case "intruder":
         if ent.Side() != game.SideExplorers {
           continue
@@ -515,16 +508,8 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
         if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster {
           continue
         }
-      case "non-minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
-          continue
-        }
-      case "non-servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor {
-          continue
-        }
-      case "non-master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster {
+      case "object":
+        if ent.ObjectEnt == nil {
           continue
         }
       }
@@ -669,6 +654,7 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     cost, path := algorithm.Dijkstra(graph, []int{r1_index}, []int{r2_index})
     if cost == -1 {
       L.PushNil()
+      base.Error().Printf("PATH: cost was -1")
       return 1
     }
     num_unexplored := 0
@@ -679,10 +665,12 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     }
     if num_unexplored > 1 {
       L.PushNil()
+      base.Error().Printf("PATH: num explored > 1")
       return 1
     }
     L.NewTable()
     for i, v := range path {
+      base.Log().Printf("PATH: putitng %d", i)
       if i == 0 {
         continue
       } // Skip this one because we're in it already

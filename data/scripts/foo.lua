@@ -12,16 +12,22 @@ function Init()
 
   Script.BindAi("denizen", "human")
   Script.BindAi("minions", "minions.lua")
-  Script.BindAi("intruder", "human")
+  Script.BindAi("intruder", "smrt/intruders.lua")
     --always bind one to human!
 
   intruders_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
   denizens_spawn = Script.GetSpawnPointsMatching("Master-Start")
   relics_spawn = Script.GetSpawnPointsMatching("Relics")
-  Script.SpawnEntitySomewhereInSpawnPoints("Altar01", relics_spawn)
+  altar = Script.SpawnEntitySomewhereInSpawnPoints("Altar01", relics_spawn)
+  print("Sides")
+  print(altar.Side.Denizen)
+  print(altar.Side.Intruder)
+  print(altar.Side.Npc)
+  print(altar.Side.Object)
   Script.SpawnEntitySomewhereInSpawnPoints("Chosen One", intruders_spawn)
   Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruders_spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruders_spawn)
+  teen = Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruders_spawn)
+  Script.BindAi(teen, "smrt/teen.lua")
 end
  
 

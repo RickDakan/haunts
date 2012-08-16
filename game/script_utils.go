@@ -253,7 +253,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
         "Denizen":  SideHaunt,
         "Intruder": SideExplorers,
         "Npc":      SideNpc,
-        "Objects":  SideObject,
+        "Object":   SideObject,
       }
       for str, side := range sides {
         L.PushString(str)

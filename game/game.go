@@ -87,6 +87,7 @@ func (g *Game) SpawnEntity(spawn *Entity, x, y int) bool {
   }
   spawn.X = float64(x)
   spawn.Y = float64(y)
+  spawn.Info.RoomsExplored[spawn.CurrentRoom()] = true
   g.Ents = append(g.Ents, spawn)
   return true
 }
