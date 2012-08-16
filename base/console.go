@@ -6,23 +6,40 @@ import (
   "bufio"
   "github.com/runningwild/opengl/gl"
   "strings"
-  "unicode"
+  "regexp"
 )
 
-const maxLines = 25
-const maxLineLength = 150
+const maxLines = 10000
+const maxLineLength = 255
+const maxLinesDisplayed = 30
+
+var valid_keys map[byte]bool
+var shift_keys map[byte]byte
+
+func init() {
+  valid_keys = make(map[byte]bool)
+  shift_keys = make(map[byte]byte)
+  keys := []byte(" abcdefghijklmnopqrstuvwxyz`1234567890-=,./;[]\\'")
+  shif := []byte(" ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+<>?:{}|\"")
+  for i := range keys {
+    valid_keys[keys[i]] = true
+    shift_keys[keys[i]] = shif[i]
+  }
+}
 
 // A simple gui element that will display the last several lines of text from
 // a log file (TODO: and also allow you to enter some basic commands).
 type Console struct {
   gui.BasicZone
-  lines      [maxLines]string
-  start, end int
-  xscroll    float64
+  lines       [maxLines]string
+  line_buffer []string
+  start, end  int
+  xscroll     float64
 
-  input *bufio.Reader
-  cmd   []byte
-  dict  *gui.Dictionary
+  input   *bufio.Reader
+  cmd     []byte
+  dict    *gui.Dictionary
+  matcher *regexp.Regexp
 }
 
 func MakeConsole() *Console {
@@ -74,16 +91,34 @@ func (c *Console) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     c.xscroll = 0
   }
 
-  if group.Events[0].Type == gin.Press {
-    r := rune(group.Events[0].Key.Id())
-    if r < 256 {
-      if gin.In().GetKey(gin.EitherShift).IsDown() {
-        r = unicode.ToUpper(r)
+  changed := false
+  for i := range group.Events {
+    event := group.Events[i]
+    if event.Type == gin.Press {
+      r := rune(event.Key.Id())
+      if r < 256 && valid_keys[byte(r)] {
+        if gin.In().GetKey(gin.EitherShift).IsDown() {
+          r = rune(shift_keys[byte(r)])
+        }
+        c.cmd = append(c.cmd, byte(r))
+        changed = true
       }
-      c.cmd = append(c.cmd, byte(r))
     }
   }
-
+  if found, event := group.FindEvent(gin.DeleteOrBackspace); found && event.Type == gin.Press {
+    if len(c.cmd) > 0 {
+      c.cmd = c.cmd[0 : len(c.cmd)-1]
+      changed = true
+    }
+  }
+  if changed {
+    r, err := regexp.Compile(string(c.cmd))
+    if err != nil {
+      c.matcher = nil
+    } else {
+      c.matcher = r
+    }
+  }
   return group.Focus
 }
 
@@ -100,7 +135,6 @@ func (c *Console) DrawFocused(region gui.Region) {
   gl.Vertex2i(region.X+region.Dx, region.Y)
   gl.End()
   gl.Color4d(1, 1, 1, 1)
-  y := float64(region.Y) + float64(len(c.lines))*c.dict.MaxHeight()
   do_color := func(line string) {
     if strings.HasPrefix(line, "LOG") {
       gl.Color4d(1, 1, 1, 1)
@@ -112,23 +146,45 @@ func (c *Console) DrawFocused(region gui.Region) {
       gl.Color4d(1, 0, 0, 1)
     }
   }
+
+  c.line_buffer = c.line_buffer[0:0]
   if c.start > c.end {
-    for i := c.start; i < len(c.lines); i++ {
-      do_color(c.lines[i])
-      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
-      y -= c.dict.MaxHeight()
+    for i := c.end - 1; i >= 0; i-- {
+      if len(c.line_buffer) >= maxLinesDisplayed {
+        break
+      }
+      if c.matcher == nil || c.matcher.MatchString(c.lines[i]) {
+        c.line_buffer = append(c.line_buffer, c.lines[i])
+      }
     }
-    for i := 0; i < c.end; i++ {
-      do_color(c.lines[i])
-      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
-      y -= c.dict.MaxHeight()
+    for i := len(c.lines) - 1; i >= c.start; i-- {
+      if len(c.line_buffer) >= maxLinesDisplayed {
+        break
+      }
+      if c.matcher == nil || c.matcher.MatchString(c.lines[i]) {
+        c.line_buffer = append(c.line_buffer, c.lines[i])
+      }
     }
   } else {
-    for i := c.start; i < c.end && i < len(c.lines); i++ {
-      do_color(c.lines[i])
-      c.dict.RenderString(c.lines[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
-      y -= c.dict.MaxHeight()
+    end := len(c.lines)
+    if c.end < end {
+      end = c.end
     }
+    for i := end - 1; i >= c.start; i-- {
+      if len(c.line_buffer) >= maxLinesDisplayed {
+        break
+      }
+      if c.matcher == nil || c.matcher.MatchString(c.lines[i]) {
+        c.line_buffer = append(c.line_buffer, c.lines[i])
+      }
+    }
+  }
+
+  y := float64(region.Y) + float64(len(c.line_buffer))*c.dict.MaxHeight()
+  for i := len(c.line_buffer) - 1; i >= 0; i-- {
+    do_color(c.line_buffer[i])
+    c.dict.RenderString(c.line_buffer[i], c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
+    y -= c.dict.MaxHeight()
   }
   c.dict.RenderString(string(c.cmd), c.xscroll, y, 0, c.dict.MaxHeight(), gui.Left)
 }
