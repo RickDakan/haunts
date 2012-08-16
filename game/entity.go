@@ -158,6 +158,8 @@ func (e *Entity) Load(g *Game) {
   }
 
   g.all_ents_in_memory[e] = true
+  g.viewer.RemoveDrawable(e)
+  g.viewer.AddDrawable(e)
 
   e.game = g
 }

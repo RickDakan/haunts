@@ -87,7 +87,6 @@ func (g *Game) SpawnEntity(spawn *Entity, x, y int) bool {
   }
   spawn.X = float64(x)
   spawn.Y = float64(y)
-  g.viewer.AddDrawable(spawn)
   g.Ents = append(g.Ents, spawn)
   return true
 }
