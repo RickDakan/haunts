@@ -5,7 +5,6 @@ import (
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/house"
@@ -287,9 +286,6 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
     if e.ObjectEnt == nil {
       continue
     }
-    if e.ObjectEnt.Goal != game.ObjectGoal(a.Name) {
-      continue
-    }
     if distBetweenEnts(e, ent) > a.Range {
       continue
     }
@@ -299,20 +295,7 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
 
     // Make sure it's still active:
     active := false
-    switch a.Name {
-    case string(game.GoalCleanse):
-      for i := range g.Active_cleanses {
-        if g.Active_cleanses[i] == e {
-          active = true
-          break
-        }
-      }
-
-    case string(game.GoalRelic):
-      active = (e == g.Active_relic)
-
-    case string(game.GoalMystery):
-    }
+    active = true
     if !active {
       continue
     }
@@ -361,7 +344,6 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
       }
     }
   }
-
   target := g.HoveredEnt()
   if target == nil {
     return false, nil
@@ -399,8 +381,6 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
   if ae != nil {
     exec := ae.(*interactExec)
     a.ent = g.EntityById(ae.EntityId())
-    g2 := a.ent.Game()
-    base.Log().Printf("Games: %p %p", g, g2)
     if (exec.Target != 0) == (exec.Toggle_door) {
       base.Error().Printf("Got an interact that tried to target a door and an entity: %v", exec)
       return game.Complete
@@ -411,33 +391,9 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
         base.Error().Printf("Tried to interact with an entity that doesn't exist: %v", exec)
         return game.Complete
       }
-      switch a.Name {
-      case string(game.GoalCleanse):
-        found := false
-        for i := range g.Active_cleanses {
-          if g.Active_cleanses[i] == target {
-            found = true
-          }
-        }
-        if !found {
-          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
-          return game.Complete
-        }
-        g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-          return a.(*game.Entity) != target
-        }).([]*game.Entity)
-
-      case string(game.GoalRelic):
-        if g.Active_relic != target {
-          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
-          return game.Complete
-        }
-        g.Active_relic = nil
-
-      case string(game.GoalMystery):
-      }
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       target.Sprite().Command("inspect")
+      return game.Complete
     } else {
       // We're interacting with a door here
       if exec.Floor < 0 || exec.Floor >= len(g.House.Floors) {

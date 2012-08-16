@@ -6,35 +6,34 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   end
   Script.SetLosMode(side, rooms)
 end
---
+
 function Init()
-   store.Ch01a = {}
-   store.Ch01a.Spawnpoints_complete={}
-   store.Ch01a.Spawnpoints = {
-      "Ch01_Dialog01",
-      "Ch01_Dialog02",
-      "Ch01_Dialog03",
-   } 
+  Script.LoadHouse("versus-1")
 
-  Script.LoadHouse("Chapter_01_a")
-  Script.DialogBox("ui/dialog/Ch01/Ch01_Dialog01.json", {foo="10", bar="wingding", monkey="banana"})
-
-  Script.BindAi("denizen", "denizens.lua")
+  Script.BindAi("denizen", "human")
   Script.BindAi("minions", "minions.lua")
   Script.BindAi("intruder", "human")
     --always bind one to human!
-  intruder_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
-  Script.SpawnEntitySomewhereInSpawnPoints("Caitlin", intruder_spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints("Percy", intruder_spawn)
+
+  intruders_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
+  denizens_spawn = Script.GetSpawnPointsMatching("Master-Start")
+  relics_spawn = Script.GetSpawnPointsMatching("Relics")
+  Script.SpawnEntitySomewhereInSpawnPoints("Altar01", relics_spawn)
+  Script.SpawnEntitySomewhereInSpawnPoints("Chosen One", intruders_spawn)
+  Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruders_spawn)
+  Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruders_spawn)
 end
  
 
 function RoundStart(intruders, round)
-  print("Intr:" , intruders)
-  Script.SetVisibility("intruders")
+  if intruders then
+    Script.SetVisibility("intruders")
+  else
+    Script.SetVisibility("denizens")
+  end
   Script.SetLosMode("intruders", "entities")
   Script.SetLosMode("denizens", "entities")
-  Script.ShowMainBar(intruders)
+  Script.ShowMainBar(true)
 end
 
 
@@ -65,33 +64,10 @@ end
 
 --THIS STOPS a unit in a spawn point not yet activated.
 function OnMove(ent, path)
-  if not ent.Side.Intruder then
-    return table.getn(path)
-  end
-  for i, pos in pairs(path) do
-    name = IsPosInUnusedSpawnpoint(pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
-    if name then
-      return i
-    end
-  end
   return table.getn(path)
 end
 
 function OnAction(intruders, round, exec)
-  if not exec.Ent.Side.Intruder then
-    return
-  end
-  name = IsPosInUnusedSpawnpoint(exec.Ent.Pos, store.Ch01a.Spawnpoints, store.Ch01a.Spawnpoints_complete)
-  if name then
-    dialog_path = "ui/dialog/Ch01/" .. name .. ".json"
-    Script.DialogBox(dialog_path)
-    store.Ch01a.Spawnpoints_complete[name] = true 
-    if name == "Ch01_Dialog02" then
-      -- Script.SaveStore()
-      Script.StartScript("Ch01b.lua")
-    --INSERT other names and functions here
-    end  
-  end
 end
  
 

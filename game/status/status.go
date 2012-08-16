@@ -164,6 +164,9 @@ func (s Inst) Sight() int {
 // has.  This lets external packages see the conditions without accidentally
 // mucking with them.
 func (s *Inst) ConditionNames() []string {
+  if s == nil {
+    return nil
+  }
   names := make([]string, len(s.inst.Conditions))
   for i := range names {
     names[i] = s.inst.Conditions[i].Name()
