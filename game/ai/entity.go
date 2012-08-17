@@ -19,10 +19,11 @@ func (a *Ai) addEntityContext() {
 
   a.L.NewTable()
   game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
-    "BasicAttack": func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
-    "AoeAttack":   func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
-    "Move":        func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
-    "DoorToggle":  func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
+    "BasicAttack":        func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
+    "AoeAttack":          func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
+    "Move":               func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
+    "DoorToggle":         func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
+    "InteractWithObject": func() { a.L.PushGoFunctionAsCFunction(DoInteractWithObjectFunc(a)) },
   })
   a.L.SetMetaTable(-2)
   a.L.SetGlobal("Do")
@@ -905,6 +906,37 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
       a.execs <- exec
       <-a.pause
       L.PushBoolean(door.IsOpened())
+    } else {
+      L.PushNil()
+    }
+    return 1
+  }
+}
+
+func DoInteractWithObjectFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "DoInteractWithObject", game.LuaEntity) {
+      return 0
+    }
+    object := game.LuaToEntity(L, a.ent.Game(), -1)
+    var interact *actions.Interact
+    for _, action := range a.ent.Actions {
+      var ok bool
+      interact, ok = action.(*actions.Interact)
+      if ok {
+        break
+      }
+    }
+    if interact == nil {
+      game.LuaDoError(L, "Tried to interact with an object, but don't have an interact action.")
+      L.PushNil()
+      return 1
+    }
+    exec := interact.AiInteractWithObject(a.ent, object)
+    if exec != nil {
+      a.execs <- exec
+      <-a.pause
+      L.PushBoolean(true)
     } else {
       L.PushNil()
     }

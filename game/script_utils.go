@@ -261,6 +261,9 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
         L.SetTable(-3)
       }
     },
+    "State": func() {
+      L.PushString(ent.Sprite().State())
+    },
     "GearOptions": func() {
       L.NewTable()
       if ent.ExplorerEnt != nil {
