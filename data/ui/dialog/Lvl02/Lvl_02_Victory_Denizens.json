@@ -2,12 +2,12 @@
   "Size": "medium",
   "Pages": {
     "Start": {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":[
         {
-          "Text": "Denizens turn.",
+          "Text": "The Golem is victorious.",
           "Image":{
-            "Path": "ui/select_side/denizens.png"
+            "Path": "ui/dialog/Relic_Dash/golem.png"
           }
         }
       ]

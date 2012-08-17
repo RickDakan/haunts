@@ -5,9 +5,9 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "Intruders turn.",
+          "Text": "It is the Intruders' turn.",
           "Image":{
-            "Path": "ui/select_side/intruders.png"
+            "Path": "ui/dialog/Relic_Dash/intruders2.png"
           }
         }
       ]

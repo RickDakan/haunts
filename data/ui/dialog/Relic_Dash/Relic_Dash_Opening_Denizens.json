@@ -1,0 +1,93 @@
+{
+  "Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "The Bosch Estate, 1909. Trapped in the halls beneath the manse, Cornelius Bosch's final experiment lies in wait, locked behind mystic wards.",
+    		  "Image":
+          {
+                "Path": "ui/dialog/Relic_Dash/house_temp.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Bosch's killer, Elias Tyree, has come in search of the dead occultist's last secret: You.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/Relic_Dash/occultist3.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "As the Golem, you need otherworldly energy to unlock your true power. Until now, you've had no source for such energy.",
+		      "Image":
+          {
+            "Path": "ui/dialog/Relic_Dash/golem.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "By breaking the wards Bosch left to hold you in place, Tyree has created an arcane rift.",
+          "Image":
+          {
+            "Path": "ui/dialog/Relic_Dash/occultist3.png"
+          }
+        }
+      ]
+    },    
+  	"Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "You must control the rift youself, absorbing its energy while preventing Tyree and his intruders from getting there first.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/Relic_Dash/golem.png"
+          }
+        }
+      ]
+    }
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

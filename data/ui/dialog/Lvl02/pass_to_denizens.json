@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Denizens turn.",
+          "Text": "It is the Denizens' turn.",
           "Image":{
-            "Path": "ui/select_side/denizens.png"
+            "Path": "ui/dialog/Relic_Dash/denizens.png"
           }
         }
       ]
