@@ -574,12 +574,13 @@ func (g *Game) IsCellOccupied(x, y int) bool {
 
 type exclusionGraph struct {
   side Side
+  los  bool
   ex   map[*Entity]bool
   g    *Game
 }
 
 func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
-  return eg.g.adjacent(v, eg.side, eg.ex)
+  return eg.g.adjacent(v, eg.los, eg.side, eg.ex)
 }
 func (eg *exclusionGraph) NumVertex() int {
   return eg.g.numVertex()
@@ -624,15 +625,15 @@ func (rg *roomGraph) Adjacent(n int) ([]int, []float64) {
   return adj, cost
 }
 
-func (g *Game) Graph(side Side, exclude []*Entity) algorithm.Graph {
+func (g *Game) Graph(side Side, los bool, exclude []*Entity) algorithm.Graph {
   ex := make(map[*Entity]bool, len(exclude))
   for i := range exclude {
     ex[exclude[i]] = true
   }
-  return &exclusionGraph{side, ex, g}
+  return &exclusionGraph{side, los, ex, g}
 }
 
-func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64) {
+func (g *Game) adjacent(v int, los bool, side Side, ex map[*Entity]bool) ([]int, []float64) {
   room, x, y := g.FromVertex(v)
   var adj []int
   var weight []float64
@@ -651,14 +652,16 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
     }
   }
   var data *sideLosData
-  switch side {
-  case SideHaunt:
-    data = &g.los.denizens
-  case SideExplorers:
-    data = &g.los.intruders
-  default:
-    base.Error().Printf("Unable to SetLosMode for side == %d.", side)
-    return nil, nil
+  if los {
+    switch side {
+    case SideHaunt:
+      data = &g.los.denizens
+    case SideExplorers:
+      data = &g.los.intruders
+    default:
+      base.Error().Printf("Unable to SetLosMode for side == %d.", side)
+      return nil, nil
+    }
   }
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
@@ -671,7 +674,7 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
       if ent_occupied[[2]int{tx, ty}] {
         continue
       }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+      if data != nil && data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
         continue
       }
       // TODO: This is obviously inefficient
@@ -701,7 +704,7 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
       if ent_occupied[[2]int{tx, ty}] {
         continue
       }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+      if data != nil && data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
         continue
       }
       // TODO: This is obviously inefficient

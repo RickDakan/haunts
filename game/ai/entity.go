@@ -120,7 +120,7 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
-    graph := a.ent.Game().Graph(a.ent.Side(), nil)
+    graph := a.ent.Game().Graph(a.ent.Side(), true, nil)
     src := []int{a.ent.Game().ToVertex(x1, y1)}
     reachable := algorithm.ReachableDestinations(graph, src, dst)
     L.NewTable()
@@ -654,7 +654,6 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     cost, path := algorithm.Dijkstra(graph, []int{r1_index}, []int{r2_index})
     if cost == -1 {
       L.PushNil()
-      base.Error().Printf("PATH: cost was -1")
       return 1
     }
     num_unexplored := 0
@@ -665,12 +664,10 @@ func RoomPathFunc(a *Ai) lua.GoFunction {
     }
     if num_unexplored > 1 {
       L.PushNil()
-      base.Error().Printf("PATH: num explored > 1")
       return 1
     }
     L.NewTable()
     for i, v := range path {
-      base.Log().Printf("PATH: putitng %d", i)
       if i == 0 {
         continue
       } // Skip this one because we're in it already
@@ -813,10 +810,10 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     switch door.Facing {
     case house.FarLeft:
       x = door.Pos
-      y = room.Size.Dy
+      y = room.Size.Dy - 1
       dx = 1
     case house.FarRight:
-      x = room.Size.Dy
+      x = room.Size.Dx - 1
       y = door.Pos
       dy = 1
     case house.NearLeft:
@@ -832,11 +829,14 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     }
     L.NewTable()
     count := 1
-    for i := -1; i < door.Width+1; i++ {
-      L.PushInteger(count)
-      count++
+    for i := 0; i < door.Width; i++ {
+      L.PushInteger(count*2 - 1)
       game.LuaPushPoint(L, room.X+x+dx*i, room.Y+y+dy*i)
       L.SetTable(-3)
+      L.PushInteger(count * 2)
+      game.LuaPushPoint(L, room.X+x+dx*i+dy, room.Y+y+dy*i+dx)
+      L.SetTable(-3)
+      count++
     }
     return 1
   }

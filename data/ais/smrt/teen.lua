@@ -1,35 +1,46 @@
+-- First check for an untouched relic in the room you're in
+-- Then look for a nearby unexplored room and head in that direction
 
-function Think()
-  -- objects = Utils.NearestNEntities(1, "object")
-  -- if table.getn(objects) > 0 then
-  --   ps = Utils.AllPathablePoints(Me.Pos, objects[1].Pos, 1, 1)
-  --   Do.Move(ps, 1000)
-  --   return
-  -- end
+function CheckForRelic()
+end
+
+-- Moves towards an unexplored room, returns false if it couldn't move towards
+-- it, or if there were no more unexplored rooms to go to, true otherwise.
+function GoToUnexploredRoom()
   unexplored = Utils.NearbyUnexploredRoom()
   if not unexplored then
-    print("Couldn't find an unexplored room!")
-    return
+    return false  -- No more rooms to explore
   end
+
   current = Utils.RoomContaining(Me)
-  for k,v in pairs(unexplored) do
-    print("Unexplored", k, v)
-  end
-  for k,v in pairs(current) do
-    print("Current", k, v)
-  end
   path = Utils.RoomPath(current, unexplored)
   if table.getn(path) == 0 then
-    print("Unable to find a path to the unexplored room!")
-    return
+    return false  -- No room path to the unexplored room - shouldn't happen
   end
+
   target = path[1]
   doors = Utils.AllDoorsBetween(current, target)
   if table.getn(doors) == 0 then
-    print("Unable to find a door to the next room!")
-    return
+    return  -- No doors to the next room, also shouldn't happen
   end
-  ps = Utils.DoorPositions(doors[1])
-  Do.Move(ps, 1000)
-  return
+
+  -- If the door is closed then go to it and open it.
+  if not Utils.DoorIsOpen(doors[1]) then
+    ps = Utils.DoorPositions(doors[1])
+    res = Do.Move(ps, 1000)
+    Do.DoorToggle(doors[1])
+  end
+
+  -- Now that we know the door is open, step into the next room.
+  ps = Utils.RoomPositions(target)
+  res = Do.Move(ps, 1000)
+
+  return true
+end
+
+function Think()
+  CheckForRelic()
+  
+  while GoToUnexploredRoom() do
+  end
 end

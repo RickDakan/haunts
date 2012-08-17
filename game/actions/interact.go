@@ -108,7 +108,7 @@ func (a *Interact) SoundMap() map[string]string {
   return nil
 }
 
-func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interactExec {
+func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) *interactExec {
   var exec interactExec
   exec.id = exec_id
   exec_id++
@@ -117,7 +117,7 @@ func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interac
   exec.Room = room
   exec.Door = door
   exec.Toggle_door = true
-  return exec
+  return &exec
 }
 
 func (a *Interact) Push(L *lua.State) {
@@ -240,6 +240,24 @@ func makeRectForDoor(room *house.Room, door *house.Door) frect {
   dr.x2 += float64(room.X)
   dr.y2 += float64(room.Y)
   return dr
+}
+
+func (a *Interact) AiInteractWithObject(ent, object *game.Entity) game.ActionExec {
+  if ent.Stats.ApCur() < a.Ap {
+    return nil
+  }
+  if distBetweenEnts(ent, object) > a.Range {
+    return nil
+  }
+  x, y := object.Pos()
+  dx, dy := object.Dims()
+  if !ent.HasLos(x, y, dx, dy) {
+    return nil
+  }
+  var exec interactExec
+  exec.SetBasicData(ent, a)
+  exec.Target = object.Id
+  return &exec
 }
 
 func (a *Interact) AiToggleDoor(ent *game.Entity, door *house.Door) game.ActionExec {

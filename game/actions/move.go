@@ -83,7 +83,7 @@ func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
   }
   base.Log().Printf("Checking %v", exec.Path)
   base.Log().Printf("Side: %d\n", ent.Side())
-  graph := g.Graph(ent.Side(), nil)
+  graph := g.Graph(ent.Side(), true, nil)
   v := g.ToVertex(ent.Pos())
   base.Log().Printf("Vert: %v", v)
   cost := 0
@@ -162,9 +162,10 @@ func (a *Move) Readyable() bool {
 
 func limitPath(ent *game.Entity, start int, path []int, max int) []int {
   total := 0
-  graph := ent.Game().Graph(ent.Side(), nil)
+  graph := ent.Game().Graph(ent.Side(), true, nil)
   for last := 1; last < len(path); last++ {
     adj, cost := graph.Adjacent(start)
+    found := false
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
@@ -172,24 +173,36 @@ func limitPath(ent *game.Entity, start int, path []int, max int) []int {
           return path[0 : last+1]
         }
         start = adj[index]
+        found = true
         break
       }
+    }
+    if !found {
+      base.Log().Printf("PATH: DIdn't find, %d / %d", last+1, len(path))
+      return path[0:last]
     }
   }
   return path
 }
 
 func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(ent.Side(), nil)
+  base.Log().Printf("PATH: Request move to %v", dst)
+  graph := ent.Game().Graph(ent.Side(), false, nil)
   src := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(graph, src, dst)
+  base.Log().Printf("PATH: Found path of length %d", len(path))
+  ppx, ppy := ent.Pos()
   if path == nil {
     return nil
   }
+  _, xx, yy := ent.Game().FromVertex(path[len(path)-1])
+  base.Log().Printf("PATH: %d,%d -> %d,%d", ppx, ppy, xx, yy)
   if ent.Stats.ApCur() < max_ap {
     max_ap = ent.Stats.ApCur()
   }
   path = limitPath(ent, src[0], path, max_ap)
+  _, xx, yy = ent.Game().FromVertex(path[len(path)-1])
+  base.Log().Printf("PATH: (limited) %d,%d -> %d,%d", ppx, ppy, xx, yy)
   if len(path) <= 1 {
     return nil
   }
@@ -197,57 +210,6 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
   exec.SetBasicData(ent, a)
   exec.Path = path
   return &exec
-}
-
-// Attempts to move such that the shortest path from any location
-// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
-// than max_ap Ap doing this.
-func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist, max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(ent.Side(), targets)
-  var src []int
-  for i := range targets {
-    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
-  }
-  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
-  if len(dst) == 0 {
-    return nil
-  }
-
-  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  _, path := algorithm.Dijkstra(graph, source_cell, dst)
-  if path == nil {
-    return nil
-  }
-  if ent.Stats.ApCur() > max_ap {
-    max_ap = ent.Stats.ApCur()
-  }
-  path = limitPath(ent, source_cell[0], path, max_ap)
-  if len(path) <= 1 {
-    return nil
-  }
-  var exec moveExec
-  exec.SetBasicData(ent, a)
-  exec.Path = path
-  return &exec
-}
-
-func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist int) int {
-  graph := ent.Game().Graph(ent.Side(), targets)
-  var src []int
-  for i := range targets {
-    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
-  }
-  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
-  if len(dst) == 0 {
-    return 0
-  }
-
-  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  cost, path := algorithm.Dijkstra(graph, source_cell, dst)
-  if path == nil {
-    return -1
-  }
-  return int(cost)
 }
 
 func (a *Move) findPath(ent *game.Entity, x, y int) {
@@ -257,7 +219,7 @@ func (a *Move) findPath(ent *game.Entity, x, y int) {
     a.dst = dst
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
-    graph := g.Graph(ent.Side(), nil)
+    graph := g.Graph(ent.Side(), true, nil)
     cost, path := algorithm.Dijkstra(graph, []int{src}, []int{dst})
     if len(path) <= 1 {
       return
