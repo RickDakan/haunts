@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Denizens' turn.",
+          "Image":{
+            "Path": "ui/select_side/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

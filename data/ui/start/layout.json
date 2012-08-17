@@ -1,0 +1,48 @@
+{
+  "Background": {
+    "Path": "ui/start/start.png"
+  },
+  "Menu": {
+    "X": 585,
+    "Y": 105,
+    "Texture": {
+      "Path": "ui/start/menu.png"
+    },
+    "Continue": {
+      "X": 805,
+      "Y": 425,
+      "Text": {
+        "String": "Continue",
+        "Size": 18,
+        "Justification": "center"
+      }
+    },
+    "Versus": {
+      "X": 805,
+      "Y": 365,
+      "Text": {
+        "String": "Versus Mode",
+        "Size": 18,
+        "Justification": "center"
+      }
+    },
+    "Story": {
+      "X": 805,
+      "Y": 305,
+      "Text": {
+        "String": "Story Mode",
+        "Size": 18,
+        "Justification": "center"
+      }
+    },
+    "Settings": {
+      "X": 805,
+      "Y": 245,
+      "Text": {
+        "String": "Settings",
+        "Size": 18,
+        "Justification": "center"
+      }
+    }
+  }
+}

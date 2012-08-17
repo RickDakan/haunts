@@ -1,0 +1,35 @@
+[
+  {
+    "Id": "Humans",
+    "Small": {
+      "Path": "ui/select_side/vs2.png"
+    },
+    "Large": {
+      "Path": "ui/select_side/vs2.png"
+    },
+    "Text": "Two player pass-and-play.",
+    "Size": 18
+  },
+  {
+    "Id": "Intruders",
+    "Small": {
+      "Path": "ui/select_side/intruders.png"
+    },
+    "Large": {
+      "Path": "ui/select_side/intruders.png"
+    },
+    "Text": "You are intruding, punk.  Someone in the house is going to be mad at you and you probably going to die a horrible, horrible death.  You are a stupid person.",
+    "Size": 18
+  },
+  {
+    "Id": "Denizens",
+    "Small": {
+      "Path": "ui/select_side/denizens.png"
+    },
+    "Large": {
+      "Path": "ui/select_side/denizens.png"
+    },
+    "Text": "You are denizing, like the denizen that you are.  Your dens are izened, and your house is currently being broken into, so like, go do something about it.",
+    "Size": 18
+  }
+]

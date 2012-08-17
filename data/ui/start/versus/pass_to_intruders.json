@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Intruders' turn.",
+          "Image":{
+            "Path": "ui/select_side/intruders.png"
+          }
+        }
+      ]
+    }
+  }
+}

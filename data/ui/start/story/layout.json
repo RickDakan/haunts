@@ -1,0 +1,44 @@
+{
+  "Title": {
+    "X": 212,
+    "Y": 500,
+    "Texture": {
+      "Path": "ui/start/story/title.png"
+    }
+  },
+  "Background": {
+    "Path": "ui/dialog/large.png"
+  },
+  "Options": {
+    "X": 180,
+    "Y": 84,
+    "Dx": 550,
+    "Dy": 200
+  },
+  "Text": {
+    "String": "Start New Game",
+    "Size": 15,
+    "Justification": "left"
+  },
+  "Back": {
+    "X": 100,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    }
+  },
+  "Up": {
+    "X": 600,
+    "Y": 400,
+    "Texture": {
+      "Path": "ui/up_arrow.png"
+    }
+  },
+  "Down": {
+    "X": 600,
+    "Y": 200,
+    "Texture": {
+      "Path": "ui/down_arrow.png"
+    }
+  }
+}

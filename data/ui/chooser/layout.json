@@ -1,0 +1,49 @@
+{
+  "Background": {
+    "Path": "ui/dialog/large.png"
+  },
+  "Scroller": {
+    "X": 170,
+    "Y": 50
+  },
+  "Options": {
+    "X": 180,
+    "Y": 84,
+    "Dx": 250,
+    "Dy": 600
+  },
+  "Up": {
+    "X": 130,
+    "Y": 425,
+    "Texture": {
+      "Path": "ui/up_arrow.png"
+    }
+  },
+  "Down": {
+    "X": 130,
+    "Y": 200,
+    "Texture": {
+      "Path": "ui/down_arrow.png"
+    }
+  },
+  "Back": {
+    "X": 100,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    }
+  },
+  "Next": {
+    "X": 861,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_rf.png"
+    }
+  },
+  "Info": {
+    "X": 565,
+    "Y": 100,
+    "Dx": 350,
+    "Dy": 568
+  }
+}
