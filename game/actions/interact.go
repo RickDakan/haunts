@@ -304,6 +304,9 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
     if e.ObjectEnt == nil {
       continue
     }
+    if e.Sprite().State() != "ready" {
+      continue
+    }
     if distBetweenEnts(e, ent) > a.Range {
       continue
     }
@@ -407,6 +410,24 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
       target := g.EntityById(exec.Target)
       if target == nil {
         base.Error().Printf("Tried to interact with an entity that doesn't exist: %v", exec)
+        return game.Complete
+      }
+      if target.ObjectEnt == nil {
+        base.Error().Printf("Tried to interact with an entity that wasn't an object: %v", exec)
+        return game.Complete
+      }
+      if target.Sprite().State() != "ready" {
+        base.Error().Printf("Tried to interact with an object that wasn't in its ready state: %v", exec)
+        return game.Complete
+      }
+      if distBetweenEnts(a.ent, target) > a.Range {
+        base.Error().Printf("Tried to interact with an object that was out of range: %v", exec)
+        return game.Complete
+      }
+      x, y := target.Pos()
+      dx, dy := target.Dims()
+      if !a.ent.HasLos(x, y, dx, dy) {
+        base.Error().Printf("Tried to interact with an object without having los: %v", exec)
         return game.Complete
       }
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)

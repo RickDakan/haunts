@@ -12,7 +12,7 @@ function Init()
 
   Script.BindAi("denizen", "human")
   Script.BindAi("minions", "minions.lua")
-  Script.BindAi("intruder", "smrt/intruders.lua")
+  Script.BindAi("intruder", "human")
     --always bind one to human!
 
   intruders_spawn = Script.GetSpawnPointsMatching("Intruders-FrontDoor")
