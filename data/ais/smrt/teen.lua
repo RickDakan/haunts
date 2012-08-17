@@ -1,5 +1,60 @@
--- First check for an untouched relic in the room you're in
--- Then look for a nearby unexplored room and head in that direction
+-- First make sure allies are ok
+-- Then deal with enemies
+-- Then check for an untouched relic in the room you're in
+-- Last look for a nearby unexplored room and head in that direction
+function Think()
+  while SupportAllies() do
+  end
+
+  while CrushEnemies() do
+  end
+
+  while CheckForRelic() do
+  end
+  
+  while GoToUnexploredRoom() do
+  end
+end
+
+function SupportAllies()
+  -- First make sure I'm always buffed
+  if not Me.Conditions["Psychic Shroud"] then
+    Do.BasicAttack("Psychic Shroud", Me)
+    return true
+  end
+
+  -- Now make sure my teammates are buffed if they are in trouble
+  allies = Utils.NearestNEntities(3, "intruder")
+  for _, ally in pairs(allies) do
+    if ally.HpCur <= 5 and not ally.Conditions["Psychic Shroud"] then
+      Do.BasicAttack("Psychic Shroud", ally)
+      return true
+    end
+  end
+
+  return false
+end
+
+function CrushEnemies()
+  enemies = Utils.NearestNEntities(5, "denizen")
+  for _, enemy in pairs(enemies) do
+    dist = Utils.RangedDistBetweenEntities(Me, enemy)
+    if dist > 10 then
+      return false
+    end
+    attack = "Pistol"
+    if dist == 1 then
+      attack = "Kick"
+    end
+    if enemy.HpCur > Me.Actions[attack].Damage and not enemy.Conditions["Telepathic Target"] then
+      Do.BasicAttack("Telepathic Coordination", enemy)
+      return true
+    end
+    Do.BasicAttack(attack, enemy)
+    return true
+  end
+  return false
+end
 
 function CheckForRelic()
   objects = Utils.NearestNEntities(3, "object")
@@ -60,12 +115,4 @@ function GoToUnexploredRoom()
   res = Do.Move(ps, 1000)
 
   return true
-end
-
-function Think()
-  while CheckForRelic() do
-  end
-  
-  while GoToUnexploredRoom() do
-  end
 end
