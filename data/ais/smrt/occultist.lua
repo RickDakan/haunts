@@ -20,10 +20,9 @@ end
 -- Then check for an untouched relic in the room you're in
 -- Last look for a nearby unexplored room and head in that direction
 function Think()
-  while SupportAllies() do
-  end
-
+  print("OCC:")
   leader = GetLeader()
+  print("OCC:", leader.Name)
   if Utils.RangedDistBetweenEntities(Me, leader) < 5 then
     while CrushEnemies() do
     end
@@ -32,16 +31,20 @@ function Think()
     end
   end
 
+  print("OCC: Here1")
   if leader.id == Me.id then
+  print("OCC: Here2")
     while GoToUnexploredRoom() do
     end
   else
+  print("OCC: Here3")
     while Follow(leader) do
     end
   end
 end
 
 function Follow(leader)
+  print("OCC: Following", leader.Name)
   ps = Utils.AllPathablePoints(Me.Pos, leader.Pos, 1, 3)
   pos = Me.Pos
   new = Do.Move(ps, 1000)
@@ -74,14 +77,7 @@ function CrushEnemies()
     if dist > 10 then
       return false
     end
-    attack = "Pistol"
-    if dist == 1 then
-      attack = "Kick"
-    end
-    if enemy.HpCur > Me.Actions[attack].Damage and not enemy.Conditions["Telepathic Target"] then
-      Do.BasicAttack("Telepathic Coordination", enemy)
-      return true
-    end
+    attack = "Exorcise"
     Do.BasicAttack(attack, enemy)
     return true
   end

@@ -19,7 +19,7 @@
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 1,
+    "Hp_max": 100,
     "Corpus": 12,
     "Ego": 11,
     "Sight": 30

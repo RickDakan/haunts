@@ -264,6 +264,14 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
     "State": func() {
       L.PushString(ent.Sprite().State())
     },
+    "Master": func() {
+      L.NewTable()
+      for key, val := range ent.Ai_data {
+        L.PushString(key)
+        L.PushString(val)
+        L.SetTable(-3)
+      }
+    },
     "GearOptions": func() {
       L.NewTable()
       if ent.ExplorerEnt != nil {

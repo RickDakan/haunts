@@ -397,6 +397,8 @@ type EntityInst struct {
   Ai               Ai
   Ai_file_override base.Path
 
+  Ai_data map[string]string
+
   // Info that may be of use to the Ai
   Info Info
 
