@@ -1,19 +1,19 @@
 package actions
 
 import (
-  "math"
   "encoding/gob"
-  "path/filepath"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
-  gl "github.com/chsc/gogl/gl21"
   lua "github.com/xenith-studios/golua"
+  "math"
+  "path/filepath"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -81,11 +81,8 @@ func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
     base.Error().Printf("Path doesn't begin at ent's position, %d != %d", g.ToVertex(ent.Pos()), exec.Path[0])
     return -1
   }
-  base.Log().Printf("Checking %v", exec.Path)
-  base.Log().Printf("Side: %d\n", ent.Side())
   graph := g.Graph(ent.Side(), true, nil)
   v := g.ToVertex(ent.Pos())
-  base.Log().Printf("Vert: %v", v)
   cost := 0
   for _, step := range exec.Path[1:] {
     dsts, costs := graph.Adjacent(v)
@@ -169,8 +166,8 @@ func limitPath(ent *game.Entity, start int, path []int, max int) []int {
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total >= max && last < len(path)-1 {
-          return path[0 : last+1]
+        if total > max {
+          return path[0:last]
         }
         start = adj[index]
         found = true

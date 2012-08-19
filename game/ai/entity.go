@@ -3,9 +3,9 @@ package ai
 import (
   "fmt"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
   "sort"
@@ -287,7 +287,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 // points.  The movement can be restricted to not spend more than a certain
 // amount of ap.
 //    Format:
-//    p = DoMove(dsts, max_ap)
+//    success, p = DoMove(dsts, max_ap)
 //
 //    Input:
 //    dsts  - array[table[x,y]] - Array of all points that are acceptable
@@ -297,6 +297,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 //                       as far as possible towards a destination.
 //
 //    Output:
+//    success = bool - True iff the move made it to a position in dsts.
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
@@ -330,7 +331,8 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
     if !ok {
       // TODO: what to do here?  This poor guy didn't have a move action :(
       L.PushNil()
-      return 1
+      L.PushNil()
+      return 2
     }
     exec := move.AiMoveToPos(me, dsts, max_ap)
     if exec != nil {
@@ -338,13 +340,23 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
       <-a.pause
       // TODO: Need to get a resolution
       x, y := me.Pos()
+      v := me.Game().ToVertex(x, y)
+      complete := false
+      for i := range dsts {
+        if v == dsts[i] {
+          complete = true
+          break
+        }
+      }
+      L.PushBoolean(complete)
       game.LuaPushPoint(L, x, y)
       base.Log().Printf("Finished move")
     } else {
       base.Log().Printf("Didn't bother moving")
+      L.PushBoolean(true)
       L.PushNil()
     }
-    return 1
+    return 2
   }
 }
 

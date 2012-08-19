@@ -4,11 +4,11 @@
 package sound
 
 import (
-  "math"
-  "time"
-  "path/filepath"
-  "github.com/runningwild/haunts/base"
   fmod "github.com/runningwild/fmod/event"
+  "github.com/runningwild/haunts/base"
+  "math"
+  "path/filepath"
+  "time"
 )
 
 var (

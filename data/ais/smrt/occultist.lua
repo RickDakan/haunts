@@ -20,9 +20,7 @@ end
 -- Then check for an untouched relic in the room you're in
 -- Last look for a nearby unexplored room and head in that direction
 function Think()
-  print("OCC:")
   leader = GetLeader()
-  print("OCC:", leader.Name)
   if Utils.RangedDistBetweenEntities(Me, leader) < 5 then
     while CrushEnemies() do
     end
@@ -31,43 +29,20 @@ function Think()
     end
   end
 
-  print("OCC: Here1")
   if leader.id == Me.id then
-  print("OCC: Here2")
-    while GoToUnexploredRoom() do
+    if GoToUnexploredRoom() then
+      Think()
     end
   else
-  print("OCC: Here3")
     while Follow(leader) do
     end
   end
 end
 
 function Follow(leader)
-  print("OCC: Following", leader.Name)
   ps = Utils.AllPathablePoints(Me.Pos, leader.Pos, 1, 3)
-  pos = Me.Pos
-  new = Do.Move(ps, 1000)
-  return pos.X ~= new.X or pos.Y ~= new.Y
-end
-
-function SupportAllies()
-  -- First make sure I'm always buffed
-  if not Me.Conditions["Psychic Shroud"] then
-    Do.BasicAttack("Psychic Shroud", Me)
-    return true
-  end
-
-  -- Now make sure my teammates are buffed if they are in trouble
-  allies = Utils.NearestNEntities(3, "intruder")
-  for _, ally in pairs(allies) do
-    if ally.HpCur <= 5 and not ally.Conditions["Psychic Shroud"] then
-      Do.BasicAttack("Psychic Shroud", ally)
-      return true
-    end
-  end
-
-  return false
+  valid, pos = Do.Move(ps, 1000)
+  return valid and pos
 end
 
 function CrushEnemies()
@@ -78,8 +53,7 @@ function CrushEnemies()
       return false
     end
     attack = "Exorcise"
-    Do.BasicAttack(attack, enemy)
-    return true
+    return Do.BasicAttack(attack, enemy)
   end
   return false
 end
@@ -102,9 +76,11 @@ function CheckForRelic()
   end
 
   ps = Utils.AllPathablePoints(Me.Pos, object.Pos, 1, Me.Actions.Interact.Range)
-  Do.Move(ps, 1000)
-  Do.InteractWithObject(object)
-  return true
+  valid, pos = Do.Move(ps, 1000)
+  if not valid then
+    return false
+  end
+  return Do.InteractWithObject(object)
 end
 
 -- Moves towards an unexplored room, returns false if it couldn't move towards
@@ -129,18 +105,18 @@ function GoToUnexploredRoom()
 
   -- If the door is closed then go to it and open it.
   if not Utils.DoorIsOpen(doors[1]) then
-    cpos = Me.Pos
     ps = Utils.DoorPositions(doors[1])
-    Do.Move(ps, 1000)
-    if cpos.X == Me.Pos.X and cpos.Y == Me.Pos.Y then
-      Do.DoorToggle(doors[1])
+    complete = Do.Move(ps, 1000)
+    if not complete then
+      return false
     end
-    return true
+    if not Do.DoorToggle(doors[1]) then
+      return false
+    end
   end
 
   -- Now that we know the door is open, step into the next room.
   ps = Utils.RoomPositions(target)
-  res = Do.Move(ps, 1000)
-
-  return true
+  complete, other = Do.Move(ps, 1000)
+  return complete
 end
