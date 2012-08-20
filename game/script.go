@@ -1,20 +1,21 @@
 package game
 
 import (
-  "fmt"
   "bytes"
-  "math/rand"
-  "path/filepath"
-  "io/ioutil"
-  "regexp"
+  "fmt"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/haunts/house"
-  "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game/hui"
-  gl "github.com/chsc/gogl/gl21"
+  "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/sound"
+  "github.com/runningwild/haunts/texture"
   lua "github.com/xenith-studios/golua"
+  "io/ioutil"
+  "math/rand"
+  "path/filepath"
+  "regexp"
 )
 
 type gameScript struct {
@@ -86,6 +87,10 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
     "SetAp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setAp(gp)) },
     "PlayAnimations":                    func() { gp.script.L.PushGoFunctionAsCFunction(playAnimations(gp)) },
+    "PlayMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(playMusic(gp)) },
+    "StopMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(stopMusic(gp)) },
+    "SetMusicParam":                     func() { gp.script.L.PushGoFunctionAsCFunction(setMusicParam(gp)) },
+    "PlaySound":                         func() { gp.script.L.PushGoFunctionAsCFunction(playSound(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -1115,6 +1120,46 @@ func playAnimations(gp *GamePanel) lua.GoFunction {
       }
       ent.Sprite().Wait([]string{"ready", "killed"})
     }
+    return 0
+  }
+}
+
+func playMusic(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlayMusic", LuaString) {
+      return 0
+    }
+    sound.PlayMusic(L.ToString(-1))
+    return 0
+  }
+}
+
+func stopMusic(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "StopMusic", LuaString) {
+      return 0
+    }
+    sound.StopMusic()
+    return 0
+  }
+}
+
+func setMusicParam(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetMusicParam", LuaString, LuaFloat) {
+      return 0
+    }
+    sound.SetMusicParam(L.ToString(-2), L.ToNumber(-1))
+    return 0
+  }
+}
+
+func playSound(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlaySound", LuaString) {
+      return 0
+    }
+    sound.PlaySound(L.ToString(-1))
     return 0
   }
 }

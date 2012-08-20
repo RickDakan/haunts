@@ -10,4 +10,5 @@ openme
 *.gob
 *.log
 data/store
+*.fsb
 

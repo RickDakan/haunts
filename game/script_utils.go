@@ -1,14 +1,14 @@
 package game
 
 import (
-  "fmt"
-  "io"
   "encoding/binary"
   "errors"
-  "sort"
+  "fmt"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
+  "io"
+  "sort"
 )
 
 type luaEncodable int32
@@ -512,6 +512,7 @@ type LuaType int
 
 const (
   LuaInteger LuaType = iota
+  LuaFloat
   LuaBoolean
   LuaString
   LuaEntity
@@ -530,6 +531,8 @@ func luaMakeSigniature(name string, params []LuaType) string {
     switch params[i] {
     case LuaInteger:
       sig += "integer"
+    case LuaFloat:
+      sig += "float"
     case LuaBoolean:
       sig += "boolean"
     case LuaString:
@@ -572,6 +575,8 @@ func LuaCheckParamsOk(L *lua.State, name string, params ...LuaType) bool {
     ok := false
     switch params[i+n] {
     case LuaInteger:
+      ok = L.IsNumber(i)
+    case LuaFloat:
       ok = L.IsNumber(i)
     case LuaBoolean:
       ok = L.IsBoolean(i)

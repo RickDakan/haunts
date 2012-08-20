@@ -172,9 +172,31 @@ Plays through one or more of _ent_'s animations.
 _ent_: The entity to animate.  
 _anims_: An array of animations to issue.  
 Waits until _ent_ is in a ready state and then issues the animations one at a time.  If the _ent_ has been killed it will never be in a ready state and so this function does nothing.  
+------
+
+###Script.__PlayMusic__(_music_name_)
+Plays a music track.  
+_music_name_: Name of the music track, as specified in Haunts.txt, and prefixed by "Haunts/".  
 
 ------
 
+###Script.__StopMusic__()
+Stops playing whatever music track is currently playing.  
+
+------
+
+###Script.__SetMusicParam__(_param_, _val_)
+_param_: Name of the parameter as specified in the Haunts.txt file.  
+_val_: The value to set the parameter to, the range of acceptable value is parameter-specified.  
+_param_ is adjusted to _val_ quickly, but not immediately, so there shouldn't be any problem changing values significantly.  
+
+------
+
+###Script.__PlaySound__(_sound_name_)
+Plays a sound effect.  
+_sound_name_: Name of the sound effect to play, as specified in Haunts.txt, and prefixed by "Haunts/".  
+
+------
 ###Script.__BindAi__(_target_, _source_)
 Binds an ai to something.  
 _target_: The thing to bind the ai to.  This can be an entity, or it can be one of the following strings: "denizen" "intruder" "minions".  
