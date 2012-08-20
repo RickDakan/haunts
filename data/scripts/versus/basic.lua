@@ -73,7 +73,7 @@ function denizensSetup()
     {"Master of the Manse", 1},
   }
 
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master-.*")
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Master.*")
 
   -- Now we give the user a ui with which to place these entities.  The user
   -- will have 1 point to spend, and each of the options costs one point, so

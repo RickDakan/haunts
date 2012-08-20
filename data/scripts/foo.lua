@@ -8,7 +8,7 @@ function setLosModeToRoomsWithSpawnsMatching(side, pattern)
 end
 
 function Init()
-  Script.LoadHouse("versus-1")
+  Script.LoadHouse("versus-2")
 
   Script.BindAi("denizen", "human")
   Script.BindAi("minions", "minions.lua")
