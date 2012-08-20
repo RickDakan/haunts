@@ -4,10 +4,7 @@
   },
   "Scroller": {
     "X": 170,
-    "Y": 50,
-    "Texture": {
-      "Path": "ui/chooser/scroller.png"
-    }
+    "Y": 50
   },
   "Options": {
     "X": 180,

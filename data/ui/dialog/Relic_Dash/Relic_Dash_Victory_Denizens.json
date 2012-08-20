@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Text": "The Golem is victorious.",
+          "Image":{
+            "Path": "ui/dialog/Relic_Dash/golem.png"
+          }
+        }
+      ]
+    }
+  }
+}

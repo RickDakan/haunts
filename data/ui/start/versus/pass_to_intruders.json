@@ -2,10 +2,10 @@
   "Size": "medium",
   "Pages": {
     "Start": {
-      "Format": "NoOptionsCenterImage",
+      "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "It is the Intruders' turn to play.",
+          "Text": "Intruders turn.",
           "Image":{
             "Path": "ui/select_side/intruders.png"
           }

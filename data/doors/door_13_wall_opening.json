@@ -1,6 +1,7 @@
 {
   "Name": "Door 13 - Wall Opening",
-  "Width": 7,
+  "Width": 4,
+  "Always_open": true,
   "Opened_texture": {
     "Path": "doors/door_13_wall_opening_small.png"
   },

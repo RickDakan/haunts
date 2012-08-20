@@ -12,5 +12,5 @@
   "Target_enemies": true,
   "Sounds"   : {
     "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
-  }
+    }  
 }

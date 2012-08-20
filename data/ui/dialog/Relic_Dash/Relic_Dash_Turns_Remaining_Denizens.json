@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "It is the Denizens' turn to play.  There are X turns remaining.",
+          "Image":{
+            "Path": "ui/dialog/Relic_Dash/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

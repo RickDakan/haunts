@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "It is the Intruders' turn to play.  There are X turns remaining.",
+          "Image":{
+            "Path": "ui/dialog/Relic_Dash/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}

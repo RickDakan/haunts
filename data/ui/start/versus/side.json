@@ -2,10 +2,10 @@
   {
     "Id": "Humans",
     "Small": {
-      "Path": "ui/cute3.png"
+      "Path": "ui/select_side/vs2.png"
     },
     "Large": {
-      "Path": "ui/cute3.png"
+      "Path": "ui/select_side/vs2.png"
     },
     "Text": "Two player pass-and-play.",
     "Size": 18

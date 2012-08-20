@@ -12,7 +12,7 @@
   "Target_allies": true,
   "Conditions": [
     "Invigorated",
-  	"Inspired",
-  	"Focused"
+	"Inspired",
+	"Focused"
   ]
 }
