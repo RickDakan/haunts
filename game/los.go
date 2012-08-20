@@ -867,6 +867,53 @@ func (g *Game) Think(dt int64) {
     ent.Release()
   }
 
+  // Figure out if there are any entities that might be occluded be any
+  // furniture, if so we'll want to make that furniture a little transparent.
+  for _, floor := range g.House.Floors {
+    for _, room := range floor.Rooms {
+      for _, furn := range room.Furniture {
+        if !furn.Blocks_los {
+          continue
+        }
+        x, y2 := furn.Pos()
+        dx, dy := furn.Dims()
+        x2 := x + dx
+        y := y2 + dy
+        tex := furn.Orientations[furn.Rotation].Texture.Data()
+        tex_dy := 2 * (tex.Dy() * ((x2 - y2) - (x - y))) / tex.Dx()
+        v1 := y - x
+        v2 := y2 - x2
+        hit := false
+        for _, ent := range g.Ents {
+          if ent.Side() != g.Side {
+            continue
+          }
+          ex, ey2 := ent.Pos()
+          edx, edy := ent.Dims()
+          ex2 := ex + edx
+          ey := ey2 + edy
+          if ex+ey2 < x+y2 || ex+ey2 > x+y2+tex_dy {
+            continue
+          }
+
+          ev1 := ey - ex
+          ev2 := ey2 - ex2
+          if ev2 >= v1 || ev1 <= v2 {
+            continue
+          }
+          hit = true
+          break
+        }
+        alpha := furn.Alpha()
+        if hit {
+          furn.SetAlpha(doApproach(alpha, 0.3, dt))
+        } else {
+          furn.SetAlpha(doApproach(alpha, 1.0, dt))
+        }
+      }
+    }
+  }
+
   switch g.Turn_state {
   case turnStateInit:
     select {
