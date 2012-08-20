@@ -1,6 +1,7 @@
 package house
 
 import (
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -9,7 +10,6 @@ import (
   "image"
   "math"
   "path/filepath"
-  gl "github.com/chsc/gogl/gl21"
   "unsafe"
 )
 
@@ -1092,11 +1092,11 @@ func (hdt *houseRelicsTab) markTempSpawnValidity() {
   x, y := hdt.temp_relic.Pos()
   for ix := 0; ix < hdt.temp_relic.Dx; ix++ {
     for iy := 0; iy < hdt.temp_relic.Dy; iy++ {
-      room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(x+ix, y+iy)
+      room_at, furn_at, _ := floor.RoomFurnSpawnAtPos(x+ix, y+iy)
       if room == nil {
         room = room_at
       }
-      if room_at == nil || room_at != room || furn_at != nil || spawn_at != nil {
+      if room_at == nil || room_at != room || furn_at != nil {
         hdt.temp_relic.invalid = true
         return
       }
