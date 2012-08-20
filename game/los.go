@@ -4,12 +4,12 @@ import (
   "bytes"
   "encoding/gob"
   "errors"
-  "reflect"
+  "github.com/runningwild/cmwc"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/cmwc"
+  "github.com/runningwild/haunts/house"
+  "reflect"
 )
 
 type Purpose int
@@ -206,6 +206,7 @@ func (g *Game) GobDecode(data []byte) error {
   base.ProcessObject(reflect.ValueOf(g.House), "")
   g.House.Normalize()
   g.viewer = house.MakeHouseViewer(g.House, 62)
+  g.viewer.Edit_mode = true
   for _, ent := range g.Ents {
     base.GetObject("entities", ent)
   }
