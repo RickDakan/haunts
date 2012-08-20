@@ -13,7 +13,5 @@
   },
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"
-  },
-  "Conditions": [
-  ]
+  }
 }

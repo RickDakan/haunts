@@ -1,0 +1,41 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The Tyrees have stolen Bosch's ritual notes! They mean to undo all his great work.",
+		  "Image":{
+            "Path": "ui/dialog/lvl1/intruders.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Bosch calls up more angry spirits to his aid. Damn the risks, the Tyrees must be stopped!",
+		  "Image":{
+            "Path": "ui/dialog/lvl1/master.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

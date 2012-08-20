@@ -1,0 +1,18 @@
+{
+  "Name": "Waypoint",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/sigil",
+  "Still": {
+    "Path": "entities/sigil_still.png"
+  },
+  "ExplorerEnt": {
+  },
+  "Base": {
+    "Ap_max": 0,
+    "Hp_max": 1000,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 1
+  }
+}

@@ -9,5 +9,8 @@
   "Strength" : 5,
   "Damage"   : 4,
   "Range"    : 6,
-  "Target_enemies": true
+  "Target_enemies": true,
+  "Sounds"   : {
+    "grasp": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/Ectoplasmic Discharge"
+  }
 }

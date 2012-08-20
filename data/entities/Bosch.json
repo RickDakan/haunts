@@ -1,5 +1,5 @@
 {
-  "Name": "Bosch",
+  "Name": "Bosch's Ghost",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/master",
@@ -10,9 +10,7 @@
     "Move Test", 
     "Interact",
     "Arc of Decay",
-    "Visions of Despair",
-    "Summon Lost Soul",
-    "Summon Angry Shade"
+    "Visions of Despair"
   ],
   "HauntEnt": {
     "Cost":    15,
