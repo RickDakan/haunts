@@ -1,18 +1,18 @@
 package game
 
 import (
-  "image"
-  "path/filepath"
   "encoding/gob"
-  "regexp"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
-  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/sound"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
+  "image"
+  "path/filepath"
+  "regexp"
 )
 
 type Ai interface {
@@ -644,7 +644,9 @@ func (e *Entity) SetGear(gear_name string) bool {
   }
   e.ExplorerEnt.Gear = &g
   e.Actions = append(e.Actions, MakeAction(g.Action))
-  e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
+  if g.Condition != "" {
+    e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
+  }
   return true
 }
 
