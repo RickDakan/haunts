@@ -1,0 +1,41 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The intruders have the orb of spirits. Now they need only the ectoplasmic prism.",
+		  "Image":{
+            "Path": "ui/dialog/lvl1/intruders.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Combine the three objects, and Bosch and all his ghosts will be dispatched back to the netherworld.",
+		  "Image":{
+            "Path": "ui/dialog/lvl1/master.png"
+          }       
+        }   
+     ] 
+    }
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

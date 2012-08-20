@@ -21,9 +21,9 @@
       "Sections":[
         {
           "Paragraph":{
-            "X": 50,
-            "Y": 290,
-            "Dx": 754,
+            "X": 150,
+            "Y": 400,
+            "Dx": 800,
             "Size": 15,
             "Halign": "left",
             "Valign": "center"
@@ -34,12 +34,12 @@
     "NoOptionsLeftImage":{
       "Sections":[
         {
-          "X": 150,
-          "Y": 192,
+          "X": 200,
+          "Y": 400,
           "Paragraph":{
-            "X": 280,
-            "Y": 290,
-            "Dx": 525,
+            "X": 300,
+            "Y": 400,
+            "Dx": 600,
             "Size": 15,
             "Halign": "left",
             "Valign": "center"
@@ -50,12 +50,12 @@
     "NoOptionsRightImage":{
       "Sections":[
         {
-          "X": 704,
-          "Y": 192,
+          "X": 850,
+          "Y": 400,
           "Paragraph":{
-            "X": 49,
-            "Y": 290,
-            "Dx": 525,
+            "X": 150,
+            "Y": 400,
+            "Dx": 600,
             "Size": 15,
             "Halign": "left",
             "Valign": "center"
@@ -66,12 +66,12 @@
     "NoOptionsCenterImage": {
       "Sections":[
         {
-          "X": 427,
-          "Y": 230,
+          "X": 500,
+          "Y": 500,
           "Paragraph":{
-            "X": 427,
-            "Y": 135,
-            "Dx": 854,
+            "X": 500,
+            "Y": 250,
+            "Dx": 800,
             "Size": 15,
             "Halign": "center",
             "Valign": "center"

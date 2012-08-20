@@ -8,10 +8,9 @@
   },
   "Action_names": [
     "Move Test",
+    "Interact",
     "Arc of Decay",
-    "Visions of Despair",
-    "Summon Lost Soul",
-    "Summon Angry Shade"
+    "Visions of Despair"
   ],
   "HauntEnt": {
     "Cost":    15,

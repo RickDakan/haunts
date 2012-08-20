@@ -6,12 +6,11 @@
     "Path": "actions/icons/chill_touch.png"
   },
   "Target_enemies": true,
+  "Sounds"   : {
+    "grasp": "Haunts/SFX/Denizens/Ghosts/Angry Shade/Chill Touch"
+  },
   "Ap"       : 3,
   "Strength" : 4,
   "Damage"   : 2,
-  "Range"    : 1,
-  "Conditions": 
-  [
-    "Lethargy"
-  ]  
+  "Range"    : 1
 }

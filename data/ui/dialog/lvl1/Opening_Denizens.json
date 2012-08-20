@@ -1,0 +1,123 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Bosch Manor, April 30, 1895",
+    		  "Image":
+          {
+            "Path": "ui/dialog/lvl1/1922b.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Cornelius Bosch has finally completed his new home, a remote haven where he can carry out his research in private, away from ignorant society scolds and envious rivals.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/lvl1/1922b.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Decades spent plundering the darkest corners of existence have left Bosch close to death, even as he is on the threshold of unlocking the secrets of immortality.",
+		      "Image":
+          {
+            "Path": "ui/dialog/lvl1/master.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "The restless spirits of the dead already serve at his beck and call, but Bosch seeks something greater than a ghostly eternity.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/Tyree_Ghost.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "But his work has not gone unnoticed by the covetous Tyrees, petty dillettente dabblers in the occult who think their money can win them any prize.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/occultist3.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Bosch has refused Tyree thrice in the past. Now the fiend is at his door, hoping to steal the secrets of Bosch's undying labors.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/master.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "Spirits of the dead! Rise up and defend my secrets from the Tyrees! Even death shall not stop me from defending what is mine.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/Master.png"
+          }
+        }
+      ]
+    }                           
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

@@ -1,0 +1,80 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Bosch manor's master is finally at rest, along with the spirits he'd enslaved",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/1922b.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Although the Tyree's paid a terrible price, the day is there's, along with the monstrous old man's many secrets.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/occultist3.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Bosch foresaw his own demise, and had already begun preparations for his immoratality. In the basement below he'd started to construct an artificial body, something wholly unnatural and terrifying.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/master.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "But the Tyrees did not come to this house seeking such dark secrets. Today they have rid the world of evil, and that should be enough.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/occultist3.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "That should be enough. It really should. But sometimes its hard to resist the temptations of buried secrets, no matter how terrible they might be.",
+          "Image":
+          {
+            "Path": "ui/dialog/lvl1/1922b.png"
+          }
+        }
+      ]
+    }
+  }
+}
