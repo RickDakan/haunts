@@ -2,12 +2,12 @@ package game
 
 import (
   "fmt"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
+  "path/filepath"
 )
 
 type Center struct {
@@ -110,8 +110,8 @@ type MainBar struct {
   state  mainBarState
   region gui.Region
 
-  // List of all buttons, just to make it easy to iterate through them.
-  buttons []*Button
+  all_buttons        []*Button
+  no_actions_buttons []*Button
 
   ent *Entity
 
@@ -191,12 +191,17 @@ func MakeMainBar(game *Game) (*MainBar, error) {
   if err != nil {
     return nil, err
   }
-  mb.buttons = []*Button{
+  mb.all_buttons = []*Button{
     &mb.layout.EndTurn,
     &mb.layout.UnitLeft,
     &mb.layout.UnitRight,
     &mb.layout.ActionLeft,
     &mb.layout.ActionRight,
+  }
+  mb.no_actions_buttons = []*Button{
+    &mb.layout.EndTurn,
+    &mb.layout.UnitLeft,
+    &mb.layout.UnitRight,
   }
   mb.layout.EndTurn.f = buttonFuncEndTurn
   mb.layout.UnitRight.f = buttonFuncUnitRight
@@ -326,7 +331,11 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
     }
   }
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     button.Think(m.region.X, m.region.Y, m.mx, m.my, t)
   }
 }
@@ -364,14 +373,18 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     if button.Respond(group, m) {
       return true
     }
   }
 
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    for _, button := range m.buttons {
+    for _, button := range buttons {
       if button.handleClick(m.mx, m.my, m) {
         return true
       }
@@ -416,7 +429,11 @@ func (m *MainBar) Draw(region gui.Region) {
   gl.Vertex2i(region.X+region.Dx, region.Y)
   gl.End()
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     button.RenderAt(region.X, region.Y)
   }
 
