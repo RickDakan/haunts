@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
   "reflect"
+  "regexp"
 )
 
 type Purpose int
@@ -106,6 +107,10 @@ type gameDataPrivate struct {
   // any kind of modal dialog box is up.
   modal bool
 }
+type spawnLos struct {
+  Pattern string
+  r       *regexp.Regexp
+}
 type gameDataGobbable struct {
   // TODO: No idea if this thing can be loaded from the registry - should
   // probably figure that out at some point
@@ -117,6 +122,12 @@ type gameDataGobbable struct {
   // preventing them from getting GCed.
   all_ents_in_game   map[*Entity]bool
   all_ents_in_memory map[*Entity]bool
+
+  // Regexps.  Any spawn points with names matching this pattern will grant
+  // los to the appropriate side.
+  Los_spawns struct {
+    Denizens, Intruders spawnLos
+  }
 
   // Next unique EntityId to be assigned
   Entity_id EntityId
@@ -1008,6 +1019,50 @@ func (g *Game) Think(dt int64) {
   }
   if g.los.intruders.mode == LosModeEntities {
     g.mergeLos(SideExplorers)
+  }
+
+  // Do spawn points los stuff
+  for _, los := range []*spawnLos{&g.Los_spawns.Denizens, &g.Los_spawns.Intruders} {
+    if los.r == nil || los.r.String() != los.Pattern {
+      if los.Pattern == "" {
+        los.r = nil
+      } else {
+        var err error
+        los.r, err = regexp.Compile(los.Pattern)
+        if err != nil {
+          base.Warn().Printf("Unable to compile regexp: `%s`", los.Pattern)
+          los.Pattern = ""
+        }
+      }
+    }
+  }
+  for i := 0; i < 2; i++ {
+    var los *spawnLos
+    var pix [][]byte
+    if i == 0 {
+      los = &g.Los_spawns.Denizens
+      pix = g.los.denizens.tex.Pix()
+    } else {
+      los = &g.Los_spawns.Intruders
+      pix = g.los.intruders.tex.Pix()
+    }
+    if los.r == nil {
+      continue
+    }
+    for _, spawn := range g.House.Floors[0].Spawns {
+      if !los.r.MatchString(spawn.Name) {
+        continue
+      }
+      sx, sy := spawn.Pos()
+      dx, dy := spawn.Dims()
+      for x := sx; x < sx+dx; x++ {
+        for y := sy; y < sy+dy; y++ {
+          if pix[x][y] < house.LosVisibilityThreshold {
+            pix[x][y] = house.LosVisibilityThreshold
+          }
+        }
+      }
+    }
   }
 
   for _, tex := range []*house.LosTexture{g.los.denizens.tex, g.los.intruders.tex} {
