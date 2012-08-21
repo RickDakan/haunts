@@ -1,12 +1,12 @@
 package game
 
 import (
-  "math/rand"
-  "sort"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
+  "math/rand"
+  "sort"
 )
 
 type GamePanel struct {
@@ -136,10 +136,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
   if !gp.Active() {
-    return false
-  }
-  if gp.game.winner != SideNone {
-    // This is lame - but works for now
     return false
   }
 

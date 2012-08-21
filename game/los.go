@@ -132,15 +132,6 @@ type gameDataGobbable struct {
   // else so that replays work properly.
   Rand *cmwc.Cmwc
 
-  // The active cleanse points - when interacted with they will be removed
-  // from this list, so in a Cleanse scenario the mission is accomplished
-  // when this list is empty.  In other scenarios this list is always empty.
-  Active_cleanses []*Entity
-
-  // The active relics - when interacted it will be nilified
-  // If the scenario is not a Relic mission this is always nil
-  Active_relic *Entity
-
   // Transient data - none of the following are exported
 
   player_inactive bool
@@ -168,11 +159,6 @@ type gameDataGobbable struct {
 
   current_exec   ActionExec
   current_action Action
-
-  // Goals ******************************************************
-
-  // Defaults to the zero value which is NoSide
-  winner Side
 }
 
 type Game struct {
@@ -334,19 +320,6 @@ func (g *Game) checkWinConditions() {
   }
   if haunts_win {
     base.Log().Printf("Haunts won - kaboom")
-  }
-
-  if g.winner == SideNone {
-    if explorer_win && !haunts_win {
-      g.winner = SideExplorers
-    }
-    if haunts_win && !explorer_win {
-      g.winner = SideHaunt
-    }
-    if explorer_win && haunts_win {
-      // Let's just hope this is far beyond impossible
-      base.Error().Printf("Both sides won at the same time omg!")
-    }
   }
 }
 
