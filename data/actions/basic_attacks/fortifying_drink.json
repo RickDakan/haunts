@@ -1,0 +1,19 @@
+{
+  "Name"     : "Fortifying Drink",
+  "Kind"     : "Terror",
+  "Animation": "fortify",
+  "Texture"   : {
+    "Path": "actions/icons/shroud.png"
+  },
+  "Ap"       : 1,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true,
+  "Sounds"   : {
+    "soothe": "Haunts//SFX/Intruders/Detective/Fortifying Drink"
+  },
+  "Conditions": [
+     "Psychic Shroud"
+   ]
+}

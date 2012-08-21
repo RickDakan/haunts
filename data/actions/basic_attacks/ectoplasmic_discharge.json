@@ -11,6 +11,6 @@
   "Range"    : 6,
   "Target_enemies": true,
   "Sounds"   : {
-    "grasp": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/Ectoplasmic Discharge"
+    "discharge": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/Ectoplasmic Discharge"
   }
 }

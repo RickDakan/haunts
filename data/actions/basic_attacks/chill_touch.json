@@ -7,7 +7,7 @@
   },
   "Target_enemies": true,
   "Sounds"   : {
-    "grasp": "Haunts/SFX/Denizens/Ghosts/Angry Shade/Chill Touch"
+    "touch": "Haunts/SFX/Denizens/Ghosts/Angry Shade/Chill Touch"
   },
   "Ap"       : 3,
   "Strength" : 4,

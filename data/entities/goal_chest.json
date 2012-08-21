@@ -1,0 +1,18 @@
+{
+  "Name": "Chest",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/goal_chest",
+  "Still": {
+    "Path": "entities/goal_chest_still.png"
+  },
+  "ExplorerEnt": {
+  },
+  "Base": {
+    "Ap_max": 0,
+    "Hp_max": 1000,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 1
+  }
+}

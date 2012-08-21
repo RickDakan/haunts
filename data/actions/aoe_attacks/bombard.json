@@ -1,0 +1,18 @@
+{
+  "Name"      : "Blessed Bombard",
+  "Kind"      : "Fire",
+  "Ap"        : 4,
+  "Strength"  : 5,
+  "Damage"    : 5,
+  "Range"     : 10,
+  "Diameter"  : 5,
+  "Ammo"      : 2,
+  "Animation" : "cast",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "blast": "Haunts/SFX/Intruders/Detective/Dragonfire"
+  },
+  "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  }
+}

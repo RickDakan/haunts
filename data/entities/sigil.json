@@ -20,5 +20,6 @@
     "Ego": 7,
     "Sight": 15
   },
+  "Dissolve": false,
   "Ai_path": "ais/basic.xgml"
 }

@@ -1,0 +1,16 @@
+{
+  "Name"     : "Silver Buckshot",
+  "Kind"     : "Fire",
+  "Animation": "ranged",
+  "Texture"   : {
+    "Path": "actions/icons/pistol.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 5,
+  "Damage"   : 4,
+  "Range"    : 6,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "ranged": "Haunts/SFX/Intruders/Detective/Silver Buckshot"
+  }
+}

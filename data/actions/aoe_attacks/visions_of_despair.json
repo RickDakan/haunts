@@ -9,7 +9,7 @@
   "Animation" : "cast",
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Visions of Despair"
+    "visions": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Visions of Despair"
   },  
   "Texture"   : {
     "Path": "actions/icons/visions.png"

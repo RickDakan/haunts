@@ -18,10 +18,14 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 10,
-    "Hp_max": 15,
+    "Ap_max": 100,
+    "Hp_max": 100,
     "Corpus": 12,
     "Ego": 11,
     "Sight": 30
+  },
+  "Dissolve": false,
+  "Sounds": {
+    "death": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/UNNAMED ATTACK"
   }
 }
