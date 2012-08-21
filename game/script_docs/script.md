@@ -113,13 +113,18 @@ _choices_: Array of choices that the user made.  The values in the array will co
 
 ------
 
+###_ps_ = Script.__GetLos__(_ent_)
+_ent_: An entity.  
+
+_ps_: Array of positions that _ent_ has los to.  
+
+------
+
 ###_choices_ = Script.__PickFromN__(_min_, _max_, _options_)
 Pops up windows that allows the user to select one or more things from a list.  
 _min_: Minimum options that the user must select.  
 _max_: Maximum options that the user must select.  
 _options_: Array of paths to icons to show the user.  
-
-_choices_: Array of indices of options that the user chose.  
 
 ------
 

@@ -82,6 +82,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "BindAi":                            func() { gp.script.L.PushGoFunctionAsCFunction(bindAi(gp)) },
     "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
+    "GetLos":                            func() { gp.script.L.PushGoFunctionAsCFunction(getLos(gp)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
@@ -1021,6 +1022,36 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
       base.Warn().Printf("Unable to save player: %v", err)
     }
     return 0
+  }
+}
+
+func getLos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "GetLos", LuaEntity) {
+      return 0
+    }
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Error().Printf("Tried to GetLos on an invalid entity.")
+      return 0
+    }
+    if ent.los == nil || ent.los.grid == nil {
+      base.Error().Printf("Tried to GetLos on an entity without vision.")
+      return 0
+    }
+    L.NewTable()
+    count := 0
+    for x := range ent.los.grid {
+      for y := range ent.los.grid[x] {
+        if ent.los.grid[x][y] {
+          count++
+          L.PushInteger(count)
+          LuaPushPoint(L, x, y)
+          L.SetTable(-3)
+        }
+      }
+    }
+    return 1
   }
 }
 
