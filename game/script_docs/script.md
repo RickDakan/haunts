@@ -50,17 +50,6 @@ _pos_: Any point.
 
 ------
 
-###_dsts_ = Utils.__AllPathablePoints__(_src_, _dst_, _min_, _max_)
-Finds all positions that a 1x1 unit could walk to from one position to nearby another.  
-_src_: Where the path starts.  
-_dst_: A point near where the path ends.  
-_min_: Minimum distance from _dst_ that the path should end.  
-_max_: Maximum distance from _dst_ that the path should end.  
-
-_dsts_: An array of all points that can be reached by walking from _src_ to within _min_ and _max_ *ranged* distance of _dst_.  Assumes that a 1x1 unit is doing the walking.
-
-------
-
 ###Script.__ShowMainBar__(_show_)
 Shows/hides the main ui bar.  
 _show_: Boolean indicating whether the main bar should be showing or not.  
@@ -172,11 +161,12 @@ Plays through one or more of _ent_'s animations.
 _ent_: The entity to animate.  
 _anims_: An array of animations to issue.  
 Waits until _ent_ is in a ready state and then issues the animations one at a time.  If the _ent_ has been killed it will never be in a ready state and so this function does nothing.  
+
 ------
 
-###Script.__PlayMusic__(_music_name_)
+###Script.__PlayMusic__(_musicname_)
 Plays a music track.  
-_music_name_: Name of the music track, as specified in Haunts.txt, and prefixed by "Haunts/".  
+_musicname_: Name of the music track, as specified in Haunts.txt, and prefixed by "Haunts/".  
 
 ------
 
