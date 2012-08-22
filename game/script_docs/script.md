@@ -120,6 +120,14 @@ _ps_: Array of positions that _ent_ has los to.
 
 ------
 
+###_ps_ = Script.__SetVisibleSpawnPoints__(_side_, _pattern_)
+_side_: Either "denizens" or "intruders".  
+_pattern_: A regular expression.  
+
+Gives the specified side vision of any spawn points whose name matches _pattern_.  _pattern_ must match the entire name, not just part of it, i.e. it is prefixed with "^" and suffixed with "$".  
+
+------
+
 ###_choices_ = Script.__PickFromN__(_min_, _max_, _options_)
 Pops up windows that allows the user to select one or more things from a list.  
 _min_: Minimum options that the user must select.  
