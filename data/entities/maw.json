@@ -20,5 +20,6 @@
     "Ego": 9,
     "Sight": 10
   },
+  "Dissolve": true,
   "Ai_path": "ais/maw.lua"
 }

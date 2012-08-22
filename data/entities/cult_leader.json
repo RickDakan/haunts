@@ -24,6 +24,7 @@
     "Ego": 11,
     "Sight": 30
   },
+  "Dissolve": false,
   "Sounds": {
     "death": "Haunts/SFX/Denizens/Ghosts/Lost Soul Orb/UNNAMED ATTACK"
   }

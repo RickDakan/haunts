@@ -21,5 +21,6 @@
     "Ego": 7,
     "Sight": 20
   },
+  "Dissolve": true,
   "Ai_path": "ais/wisp_new.lua"
 }

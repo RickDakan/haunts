@@ -23,5 +23,6 @@
     "Corpus": 10,
     "Ego": 10,
     "Sight": 30
-  }
+  },
+  "Dissolve": true,
 }

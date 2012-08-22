@@ -22,5 +22,6 @@
     "Ego": 7,
     "Sight": 15
   },
+  "Dissolve": true,
   "Ai_path": "ais/shade.lua"
 }

@@ -22,5 +22,6 @@
     "Ego": 6,
     "Sight": 20
   },
+  "Dissolve": false,
   "Ai_path": "ais/corpse.lua"
 }

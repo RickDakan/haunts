@@ -27,5 +27,6 @@
     "Corpus": 8,
     "Ego": 12,
     "Sight": 15
-  }
+  },
+  "Dissolve": false
 }

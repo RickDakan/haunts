@@ -22,5 +22,6 @@
     "Ego": 9,
     "Sight": 10
   },
+  "Dissolve": false,
   "ai_path": "ais/eidolon.lua"
 }

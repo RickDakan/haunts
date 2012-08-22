@@ -23,5 +23,6 @@
     "Ego": 9,
     "Sight": 15
   },
+  "Dissolve": true,
   "ai_path": "ais/wraith_new.lua"
 }
