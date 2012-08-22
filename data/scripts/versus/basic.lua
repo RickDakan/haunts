@@ -41,10 +41,10 @@ function Init(data)
   end
 
   waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
-  Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Waypoint", waypoint_spawn)
+  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Waypoint", waypoint_spawn)
 
-  nFirstWaypointDown = false
-  nSecondWaypointDown = false
+  store.nFirstWaypointDown = false
+  store.nSecondWaypointDown = false
 end
 
 function intrudersSetup()
@@ -142,7 +142,7 @@ function RoundStart(intruders, round)
     return
   end
 
-  if nFirstWaypointDown and not bSetup2Done then
+  if store.nFirstWaypointDown and not bSetup2Done then
     bSetup2Done = true
     --denizensSetup()
     Script.SetVisibility("denizens")
@@ -152,7 +152,7 @@ function RoundStart(intruders, round)
     Script.SetLosMode("denizens", "blind")    
   end
 
-  if nSecondWaypointDown and not bSetup3Done then
+  if store.nSecondWaypointDown and not bSetup3Done then
     bSetup3Done = true
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
@@ -184,7 +184,15 @@ function RoundStart(intruders, round)
 end
 
 function GetDistanceBetweenEnts(ent1, ent2)
-  return (math.abs(ent1.Pos.X - ent2.Pos.X) + math.abs(ent1.Pos.Y - ent2.Pos.Y))
+  v1 = ent1.Pos.X - ent2.Pos.X
+  if v1 < 0 then
+    v1 = 0-v1
+  end
+  v2 = ent1.Pos.Y - ent2.Pos.Y
+  if v2 < 0 then
+    v2 = 0-v2
+  end
+  return v1 + v2
 end
 
 function ValueForReinforce()
@@ -201,7 +209,7 @@ function ValueForReinforce()
   --     end 
   --   end
   -- end
-  -- return ((6 - nTotalValueOnBoard) + nFirstWaypointDown + nSecondWaypointDown)
+  -- return ((6 - nTotalValueOnBoard) + store.nFirstWaypointDown + store.nSecondWaypointDown)
 end
 
 function OnMove(ent, path)
@@ -217,26 +225,25 @@ function OnAction(intruders, round, exec)
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
-
-  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint1) <= 3 and not nFirstWaypointDown then
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
-    nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
-    Script.SetHp(Waypoint1, 0)
+    store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
+    Script.SetHp(store.Waypoint1, 0)
     waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint2")
-    Waypoint2 = Script.SpawnEntitySomewhereInSpawnPoints("Waypoint", waypoint_spawn)
+    store.Waypoint2 = Script.SpawnEntitySomewhereInSpawnPoints("Waypoint", waypoint_spawn)
     Script.DialogBox("ui/dialog/lvl1/First_Waypoint_Down_Intruders.json") 
   end 
-
-  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint2) <= 3 and not nSecondWaypointDown then
+  
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
     --The intruders got to the second waypoint.
-    nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
-    Script.SetHp(Waypoint2, 0)
+    store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
+    Script.SetHp(store.Waypoint2, 0)
     waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint3")
     Waypoint3 = Script.SpawnEntitySomewhereInSpawnPoints("Waypoint", waypoint_spawn)
     Script.DialogBox("ui/dialog/lvl1/Second_Waypoint_Down_Intruders.json")    
   end  
 
-  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint3) <= 3 then
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint3) <= 3 then
     --The intruders got to the third waypoint.  Game over, man.  Game over.
     Script.DialogBox("ui/dialog/lvl1/Victory_Intruders.json")
   end   
@@ -267,12 +274,12 @@ function RoundEnd(intruders, round)
 
     if intruders then
       Script.DialogBox("ui/dialog/lvl1/pass_to_denizens.json")
-      if nFirstWaypointDown and not bShowedFirstWaypointMessage then
+      if store.nFirstWaypointDown and not bShowedFirstWaypointMessage then
         bShowedFirstWaypointMessage = true
         Script.DialogBox("ui/dialog/lvl1/First_Waypoint_Down_Denizens.json")
       end
 
-      if nSecondWaypointDown and not bShowedSecondWaypointMessage then
+      if store.nSecondWaypointDown and not bShowedSecondWaypointMessage then
         bShowedSecondWaypointMessage = true
         Script.DialogBox("ui/dialog/lvl1/Second_Waypoint_Down_Denizens.json")
       end
