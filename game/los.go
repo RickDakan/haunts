@@ -1031,7 +1031,7 @@ func (g *Game) Think(dt int64) {
         los.r = nil
       } else {
         var err error
-        los.r, err = regexp.Compile(los.Pattern)
+        los.r, err = regexp.Compile("^" + los.Pattern + "$")
         if err != nil {
           base.Warn().Printf("Unable to compile regexp: `%s`", los.Pattern)
           los.Pattern = ""
@@ -1043,9 +1043,15 @@ func (g *Game) Think(dt int64) {
     var los *spawnLos
     var pix [][]byte
     if i == 0 {
+      if g.los.denizens.mode == LosModeBlind {
+        continue
+      }
       los = &g.Los_spawns.Denizens
       pix = g.los.denizens.tex.Pix()
     } else {
+      if g.los.intruders.mode == LosModeBlind {
+        continue
+      }
       los = &g.Los_spawns.Intruders
       pix = g.los.intruders.tex.Pix()
     }

@@ -23,6 +23,11 @@ function Init(data)
   Script.LoadHouse("Lvl_01_Haunted_House")  
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
+  -- This gives intruders vision of the Waypoint spawn points.  Probably
+  -- you'll want to change this to only give vision of Waypoint1 at the
+  -- start, and then update it appropriately as the game progresses.
+  Script.SetVisibleSpawnPoints("intruders", ".*[Ww]ay.*")
+
   store.side = side_choices[1]
   if store.side == "Humans" then
     Script.BindAi("denizen", "human")

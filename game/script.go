@@ -83,6 +83,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
     "GetLos":                            func() { gp.script.L.PushGoFunctionAsCFunction(getLos(gp)) },
+    "SetVisibleSpawnPoints":             func() { gp.script.L.PushGoFunctionAsCFunction(setVisibleSpawnPoints(gp)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
@@ -1050,6 +1051,24 @@ func getLos(gp *GamePanel) lua.GoFunction {
           L.SetTable(-3)
         }
       }
+    }
+    return 1
+  }
+}
+
+func setVisibleSpawnPoints(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetVisibleSpawnPoints", LuaString, LuaString) {
+      return 0
+    }
+    switch L.ToString(-2) {
+    case "denizens":
+      gp.game.Los_spawns.Denizens.Pattern = L.ToString(-1)
+    case "intruders":
+      gp.game.Los_spawns.Intruders.Pattern = L.ToString(-1)
+    default:
+      base.Error().Printf("First parameter to SetVisibleSpawnPoints must be either 'denizens' or 'intruders'.")
+      return 0
     }
     return 1
   }
