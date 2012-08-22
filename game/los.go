@@ -859,7 +859,10 @@ func (g *Game) Think(dt int64) {
         if !furn.Blocks_los {
           continue
         }
+        rx, ry := room.Pos()
         x, y2 := furn.Pos()
+        x += rx
+        y2 += ry
         dx, dy := furn.Dims()
         x2 := x + dx
         y := y2 + dy
