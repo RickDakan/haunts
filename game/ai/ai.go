@@ -188,9 +188,6 @@ func (a *Ai) masterRoutine() {
       return
 
     case a.active = <-a.active_set:
-      if a.active {
-        <-a.active_set
-      }
       if a.active == false {
         if a.ent == nil {
           base.Log().Printf("Evaluating = false")
@@ -225,13 +222,11 @@ func (a *Ai) masterRoutine() {
           // DoString will panic, and we can catch that, calling it manually
           // will exit() if it fails, which we cannot catch
           a.L.DoString("Think()")
-
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {
             base.Log().Printf("Completed ent: %p", a.ent)
           }
-          a.active_set <- false
           a.active_set <- false
           a.execs <- nil
           base.Log().Printf("Sent nil value")
@@ -260,7 +255,6 @@ no_more_events:
     a.setupLuaState()
     base.Log().Printf("Reloaded lua state for '%p'", a)
   }
-  a.active_set <- true
   a.active_set <- true
 }
 
