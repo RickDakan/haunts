@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "It is the Denizens' turn to play.  There are X turns remaining.",
+          "Text": "It is the Denizens' turn to play.  There are {turns} turns remaining.",
           "Image":{
-            "Path": "ui/dialog/Relic_Dash/denizens.png"
+            "Path": "ui/dialog/Lvl02/denizens.png"
           }
         }
       ]

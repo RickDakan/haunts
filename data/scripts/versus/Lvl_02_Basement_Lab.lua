@@ -40,10 +40,24 @@ function Init(data)
   end
 
   relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Relic", relic_spawn)
-  Script.SelectEnt(Relic)
+  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn)
+
+  --Need to find which highlight spawn we're using.
+  possible_highlights = Script.GetSpawnPointsMatching("Highlight.*")
+  for _, highlightToCheck in pairs(possible_highlights) do
+    if (highlightToCheck.Pos.X == Relic.Pos.X and highlightToCheck.Pos.Y == Relic.Pos.Y) then 
+      HighlightSpawn = highlightToCheck
+      break
+    end
+  end 
+  --In this board, the denizens can see the objective all the time.
+  Script.SetVisibleSpawnPoints("denizens", HighlightSpawn.Name) 
+
+
+
+--  Script.SelectEnt(Relic)
   --Sets the length of time the intruders have to get the master to the relic after the relic has been triggered.
-  nCountdown = 5
+  store.nCountdown = 5
 end
 
 function intrudersSetup()
@@ -143,12 +157,8 @@ function RoundStart(intruders, round)
   end
 
   store.game = Script.SaveGameState()
-  for _, ent in pairs(Script.GetAllEnts()) do
-    if ent.Side.Intruder == intruders then
-      Script.SelectEnt(ent)
-      break
-    end
-  end
+  side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
+  SelectCharAtTurnStart(side)
   if store.side == "Humans" then
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
@@ -192,17 +202,36 @@ function OnAction(intruders, round, exec)
     end
   end
 
-  if  exec.Ent.Side == "Intruder" and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not bCountdownTriggered then
+  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not store.bCountdownTriggered then
     --The intruders got to the relic before the master.  They win.
     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Intruders.json")
   end 
 
-  if exec.Ent.Name == MasterName and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not bCountdownTriggered then
-     bCountdownTriggered = true
-     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Denizens.json")
-  end  
+  if exec.Ent.Name == MasterName and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not store.bCountdownTriggered then
+     store.bCountdownTriggered = true
+     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Denizens.json", {turns=store.nCountdown})
+  end 
+
+  --the intruders can only see the objective in LoS
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Side.Intruder then   
+      --can this intruder see the objective?
+      for _, place in pairs(Script.GetLos(ent)) do
+        if pointIsInSpawn(place, HighlightSpawn) then
+          Script.SetVisibleSpawnPoints("intruders", HighlightSpawn.Name) 
+        end
+      end
+    end
+  end 
+
+  --after any action, if this ent's Ap is 0, we can select the next ent for them
+  if exec.Ent.ApCur == 0 then
+    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+    if nextEnt.ApCur > 0 then
+      Script.SelectEnt(nextEnt)
+    end
+  end   
 end
- 
 
 function RoundEnd(intruders, round)
   if round == 1 then
@@ -211,7 +240,7 @@ function RoundEnd(intruders, round)
 
   bSkipOtherChecks = false  --Resets this every round
 
-  if nCountdown == 0 then
+  if store.nCountdown == 0 then
     --game over, the denizens win.
     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Denizens.json")
   end
@@ -227,8 +256,8 @@ function RoundEnd(intruders, round)
     end
 
     if intruders then
-      if bCountdownTriggered then
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Denizens.json")
+      if store.bCountdownTriggered then
+        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Denizens.json", {turns=store.nCountdown})
       else
         Script.DialogBox("ui/dialog/Lvl02/pass_to_denizens.json")
       end
@@ -240,14 +269,14 @@ function RoundEnd(intruders, round)
         bSkipOtherChecks = true
       end
 
-      if bCountdownTriggered and not bShowedIntruderTimerMessage and not bSkipOtherChecks then
+      if store.bCountdownTriggered and not bShowedIntruderTimerMessage and not bSkipOtherChecks then
         bShowedIntruderTimerMessage = true
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Intruder.json")
+        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Intruder.json", {turns=store.nCountdown})
         bSkipOtherChecks = true
       end
 
-      if bCountdownTriggered and not bSkipOtherChecks then  --timer is triggered and we've already intro'd it
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Intruders.json")
+      if store.bCountdownTriggered and not bSkipOtherChecks then  --timer is triggered and we've already intro'd it
+        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Intruders.json", {turns=store.nCountdown})
         bSkipOtherChecks = true
       end
 
@@ -255,17 +284,101 @@ function RoundEnd(intruders, round)
         Script.DialogBox("ui/dialog/Lvl02/pass_to_intruders.json")
       end
 
-      if bCountdownTriggered then
-        nCountdown = nCountdown - 1
+      if store.bCountdownTriggered then
+        store.nCountdown = store.nCountdown - 1
       end
     end
+
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
     for _, exec in pairs(store.execs) do
-      Script.DoExec(exec)
+      bDone = false
+      if exec.script_spawn then
+        doSpawn(exec)
+        bDone = true
+      end
+      if exec.script_despawn then
+        deSpawn(exec)
+        bDone = true
+      end    
+      if not bDone then
+        Script.DoExec(exec)
+
+        --will be used at turn start to try to reselect the last thing they acted with.
+        if exec.Ent.Side == "intruders" then
+          store.LastIntruderEnt = exec.Ent
+        end 
+        if exec.Ent.Side == "denizens" then
+          store.LastDenizenEnt = exec.Ent
+        end 
+      end
     end
     store.execs = {}
   end
 end
 
+function pointIsInSpawn(pos, sp)
+  return pos.X >= sp.Pos.X and pos.X < sp.Pos.X + sp.Dims.Dx and pos.Y >= sp.Pos.Y and pos.Y < sp.Pos.Y + sp.Dims.Dy
+end
+
+function StoreSpawn(name, spawnPos)
+  spawn_exec = {script_spawn=true, name=name, pos=spawnPos}
+  store.execs[table.getn(store.execs) + 1] = spawn_exec
+end
+
+function doSpawn(spawnExec)
+  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+end
+
+function StoreDespawn(ent)
+  despawn_exec = {script_despawn=true, entity=ent}
+  store.execs[table.getn(store.execs) + 1] = despawn_exec
+end
+
+function deSpawn(despawnExec)
+  if despawnExec.entity.HpMax then  --can only kill things that have hp
+    Script.PlayAnimations(despawnExec.entity, {"defend", "killed"})
+    Script.SetHp(despawnExec.entity, 0)
+  end
+  DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
+  Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
+end
+
+function SelectCharAtTurnStart(side)
+  bDone = false
+  if store.LastIntruderEnt then
+    if side.Intruder then
+      Script.SelectEnt(store.LastIntruderEnt)
+      bDone = true
+    end
+  end  
+  if store.LastDenizenEnt and not bDone then
+    if side.Denizen then    
+      Script.SelectEnt(store.LastDenizenEnt)
+      bDone = true
+    end  
+  end   
+
+  if not bDone then
+    --select the dood with the most AP
+    Script.SelectEnt(GetEntityWithMostAP(side))
+  end  
+end
+
+function GetEntityWithMostAP(side)
+  entToSelect = nil
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if (ent.Side.Intruder and side.Intruder) or (ent.Side.Denizen and side.Denizen) then   
+      if entToSelect then    
+        if entToSelect.ApCur < ent.ApCur then      
+          entToSelect = ent
+        end 
+      else
+        --first pass.  select this one.
+        entToSelect = ent
+      end
+    end
+  end
+  return entToSelect
+end
