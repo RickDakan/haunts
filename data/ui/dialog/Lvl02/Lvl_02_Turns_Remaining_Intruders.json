@@ -5,9 +5,9 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "It is the Intruders' turn to play.  There are X turns remaining.",
+          "Text": "It is the Intruders' turn to play.  There are {turns} turns remaining.",
           "Image":{
-            "Path": "ui/dialog/Relic_Dash/intruders2.png"
+            "Path": "ui/dialog/Lvl02/intruders2.png"
           }
         }
       ]

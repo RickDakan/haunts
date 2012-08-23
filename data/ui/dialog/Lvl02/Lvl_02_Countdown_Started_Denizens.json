@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The arcane rift fills my clay veins with unholy life.",
 		  "Image":{
-            "Path": "ui/dialog/Relic_Dash/golem.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }
         }
       ]
@@ -17,13 +17,26 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "To me, spirits and cadavers! Protect your master as fulfill my destiny!",
+          "Next": "Start3",
+          "Text": "To me, spirits and cadavers! Protect your master as I fulfill my destiny!",
 		  "Image":{
-            "Path": "ui/dialog/Relic_Dash/golem.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }       
         }   
-     ] 
-    }
+      ] 
+    },
+    "Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "The Denizens will be victorious in {turns} turns.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/denizens.png"
+          }       
+        }   
+      ] 
+    }    
   }
 }
 	
