@@ -1,0 +1,106 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Dr. Tyree's panic subsides as order returns to his Sanitorium.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Whatever foolhardy dreams of escape Sax once had, they're ended now. Another corpse to feed to the things in the catacombs.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "The genius doctor continues his research in secret, with none outside wise to his wondrous discoveries.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Controlling the otherworldly creatures grows more challenging of course, but nothing Dr. Tyree can't handle, he's sure.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/eidolon.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "The house itself can be as much of an challenge as an asset. The walls between nightmare and reality seem thinner here, but there are other secrets hidden within its walls.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "While below the Sanitorium's unused storage area something still stirs in the old catacombs, some creature out of nightmare left laughing quietly to itself..",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsNoImage",
+      "Sections":
+      [
+        {
+          "Text": "All alone in the darkness.",
+        }
+      ]
+    }
+  }
+}

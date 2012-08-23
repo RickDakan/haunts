@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Tyree has begun to panic and triggeres the alarm. Reinforcements are now flooding into the sanitorium to stop the escape.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    }
+  }
+}

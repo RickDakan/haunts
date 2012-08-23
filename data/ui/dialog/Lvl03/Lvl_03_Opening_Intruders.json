@@ -1,0 +1,125 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Tyree Sanitorium, Dr. Elias Tyree, Director. December 11, 1918",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The Great War unleashed unprecedented horror in Europe, and spawned uncountable nightmares in the minds of the soldiers who fought in its trenches.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Dr. Elias Tyree has converted his family estate into a sanitorium for shell-shocked soldiers, luring them in with promises of a peaceful recovery.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Lt. Sax won much praise from the War Department for his inventions and innovations, but testing them on the battlefield left his mind in a chaos.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Unfortunately, Dr. Tyree's sanitorium has proven to be a cure that's worse than the disease. The Doctor is experimenting on the patients, using some sort of serum to make their dreams worse, not better.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Using stolen equipment and his own ingenuity, Sax has fashioned a weapon and engineered his escape. He aims to free his fellow veterans and expose Tyree's crimes to the world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start 8",
+          "Text": "Sax is determined to find the formula for the drug Tyree is injecting his patients with. Once he secures that, he can escape out the front door.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "And anyone or anything that bars his way will get the same treatment Sax gave the Hun during the war.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }
+        }
+      ]
+    }
+  }
+}

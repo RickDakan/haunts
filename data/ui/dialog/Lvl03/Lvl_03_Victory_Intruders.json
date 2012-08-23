@@ -1,0 +1,106 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Tyree's own worst nightmare has come true - one of his patients has revealed his secrets to the world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Whatever bizzare and dangerous discoveries he was trying to make, Tyree has been stopped.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/Scientist.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "The disgraced doctor takes his own life as the authorities arrive at his door.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "The creatures that used to be patients are put out of their misery, the attendants who helped create them hung as murderers.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/eidolon.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "The Sanitorium itself is sealed up and turned over to the courts to handle the morass of claims from rival heirs and angry creditors.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "While below the Sanitorium's unused storage area something still stirs in the old catacombs, some creature out of nightmare left laughing quietly to itself..",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsNoImage",
+      "Sections":
+      [
+        {
+          "Text": "All alone in the darkness.",
+        }
+      ]
+    }
+  }
+}

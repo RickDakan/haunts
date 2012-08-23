@@ -1,0 +1,125 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Tyree Sanitorium, Dr. Elias Tyree, Director. December 11, 1918",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The Great War unleashed unprecedented horror in Europe, and spawned uncountable nightmares in the minds of the soldiers who fought in its trenches.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/1912c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Dr. Elias Tyree has converted his family estate into a sanitorium for shell-shocked soldiers, luring them in with promises of a peaceful recovery.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Tyree has discovered that the worst nightmares can open up connections to other realms, and the drugs he gives his patients strengthen that connection, bringing the nightmares into this world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "This discovery is a world-shaking scientific breakthrough! And if a few broken soldiers are sacrificed in order to make contact with other worlds, well...",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/eidolon.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Unfortunately, one of the patients doesn't share Tyree's love of science. He has broken free and seeks not just escape from the sanitorium, but is trying to steal the formula for Tyree's discovery.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start 8",
+          "Text": "He'll no doubt try to free some fellow patients, although many of them are no longer what they appear to be.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "If Tyree's attendants can kill the patient with the formula before he escapes out the front door, the research can continue and prizes infitely more desirable than any petty Nobel await.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    }
+  }
+}
