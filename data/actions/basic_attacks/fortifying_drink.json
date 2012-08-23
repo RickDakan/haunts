@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "fortify",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/flask.png"
   },
   "Ap"       : 1,
   "Strength" : 10,

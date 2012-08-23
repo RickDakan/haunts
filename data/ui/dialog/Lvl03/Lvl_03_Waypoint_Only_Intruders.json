@@ -1,0 +1,20 @@
+{
+  "Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "The escapees have stolen Dr. Tyree's formula.  The character carrying the formula must now escape the sanitorium.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/intruders2a.png"
+          }
+        }
+      ]
+    }
+  }
+}

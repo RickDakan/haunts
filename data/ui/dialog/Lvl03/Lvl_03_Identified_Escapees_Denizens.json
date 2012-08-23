@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Tyree knows how dangerous this particular prisoner is. He decides to flee the sanitorium to sound an alarm and summon additional sanitorium staff.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/hunter.png"
+          }
+        }
+      ]
+    }
+  }
+}
