@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "The escapees have found the formula. The intruder carrying it must be killed before they escape and tell the world.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/intruders2a.png"
+          }
+        }
+      ]
+    }
+  }
+}

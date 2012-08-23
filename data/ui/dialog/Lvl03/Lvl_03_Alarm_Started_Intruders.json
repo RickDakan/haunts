@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Tyree triggered the alarm! Sanitorium staff are now swarming the complex trying to stop your escape.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    }
+  }
+}

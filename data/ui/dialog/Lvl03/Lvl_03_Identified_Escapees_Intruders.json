@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Tyree is panicked and trying to escape. If he does, the entire sanitorium will be alereted and reinforcements will surely flood the area.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }
+        }
+      ]
+    }
+  }
+}

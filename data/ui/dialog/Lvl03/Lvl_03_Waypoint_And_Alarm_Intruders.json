@@ -1,0 +1,49 @@
+{
+  "Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "The escaping patients have found the formula for Tyree's serum. Whoever is carrying the it must now escape the sanitorium.",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/intruders2a.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "If the intruder carrying the formula is killed, Tyree will recover it and there will be no stopping his insane experimentation.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }       
+        }   
+      ] 
+    },    
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "Stealing the forumla has triggered an alarm, bringing more sanitorium staff into the area, making it harder to escape as time ticks by.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/scientist.png"
+          }       
+        }   
+      ] 
+    }
+  }
+}

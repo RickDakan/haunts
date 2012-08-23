@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Another patient transformed into a monster by Tyree's serum!",
+          "Image":{
+            "Path": "ui/dialog/Lvl03/eidolon.png"
+          }
+        }
+      ]
+    }
+  }
+}
