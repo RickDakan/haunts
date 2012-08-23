@@ -459,7 +459,7 @@ func (e *Entity) HasLos(x, y, dx, dy int) bool {
   return false
 }
 func (e *Entity) HasTeamLos(x, y, dx, dy int) bool {
-  return e.game.TeamLos(e.Side(), int(e.X), int(e.Y), e.Dx, e.Dy)
+  return e.game.TeamLos(e.Side(), x, y, dx, dy)
 }
 func DiscretizePoint32(x, y float32) (int, int) {
   return DiscretizePoint64(float64(x), float64(y))

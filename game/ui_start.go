@@ -3,8 +3,8 @@ package game
 import (
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
   "path/filepath"
 )
@@ -45,11 +45,7 @@ func InsertStartMenu(ui gui.WidgetParent) error {
   sm.layout.Menu.Continue.f = func(interface{}) {}
   sm.layout.Menu.Versus.f = func(interface{}) {
     ui.RemoveChild(&sm)
-    err := InsertVersusMenu(ui, InsertStartMenu)
-    if err != nil {
-      base.Error().Printf("Unable to make Versus Menu: %v", err)
-      return
-    }
+    ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
   }
   sm.layout.Menu.Settings.f = func(interface{}) {}
   sm.layout.Menu.Story.f = func(interface{}) {

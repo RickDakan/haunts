@@ -36,7 +36,7 @@ func (a *Ai) addEntityContext() {
     "NearestNEntities":           func() { a.L.PushGoFunctionAsCFunction(NearestNEntitiesFunc(a.ent)) },
     "Exists":                     func() { a.L.PushGoFunctionAsCFunction(ExistsFunc(a)) },
     "BestAoeAttackPos":           func() { a.L.PushGoFunctionAsCFunction(BestAoeAttackPosFunc(a)) },
-    "NearbyUnexploredRoom":       func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomFunc(a)) },
+    "NearbyUnexploredRooms":      func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomsFunc(a)) },
     "RoomPath":                   func() { a.L.PushGoFunctionAsCFunction(RoomPathFunc(a)) },
     "RoomContaining":             func() { a.L.PushGoFunctionAsCFunction(RoomContainingFunc(a)) },
     "AllDoorsBetween":            func() { a.L.PushGoFunctionAsCFunction(AllDoorsBetween(a)) },
@@ -118,14 +118,26 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
         if x > x2-min && x < x2+min && y > y2-min && y < y2+min {
           continue
         }
+        if !grid[x][y] {
+          continue
+        }
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
+    vis := 0
+    for i := range grid {
+      for j := range grid[i] {
+        if grid[i][j] {
+          vis++
+        }
+      }
+    }
+    base.Log().Printf("Visible: %d", vis)
     graph := a.ent.Game().Graph(a.ent.Side(), true, nil)
     src := []int{a.ent.Game().ToVertex(x1, y1)}
     reachable := algorithm.ReachableDestinations(graph, src, dst)
     L.NewTable()
-    base.Log().Printf("%d reachable from (%d, %d) -> (%d, %d)", len(reachable), x1, y1, x2, y2)
+    base.Log().Printf("%d/%d reachable from (%d, %d) -> (%d, %d)", len(reachable), len(dst), x1, y1, x2, y2)
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
       L.PushInteger(i + 1)
@@ -489,7 +501,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     max := L.ToInteger(-2)
     kind := L.ToString(-1)
     if !valid_kinds[kind] {
-      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
+      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion'], got %s.", kind)
       base.Warn().Printf(err_str)
       L.PushString(err_str)
       L.Error()
@@ -528,7 +540,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
       }
       x, y := ent.Pos()
       dx, dy := ent.Dims()
-      if !me.HasLos(x, y, dx, dy) {
+      if !me.HasTeamLos(x, y, dx, dy) {
         continue
       }
       eds = append(eds, entityDist{rangedDistBetween(me, ent), ent})
@@ -578,46 +590,33 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
   return true
 }
 
-// Returns one room that this entity has not explored that can be reached by
-// going through only explored rooms.  It will return one of the closest such
-// rooms.
-//    Format
-//    r = NearbyUnexploredRoom()
-//
-//    Input:
-//    none
-//
-//    Output:
-//    r - room - An unexplored room, or nil if no such room exists.
-func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
+func NearbyUnexploredRoomsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !game.LuaCheckParamsOk(L, "NearbyUnexploredRoom") {
+    if !game.LuaCheckParamsOk(L, "NearbyUnexploredRooms") {
       return 0
     }
 
     me := a.ent
     g := me.Game()
     graph := g.RoomGraph()
-    current_room_num := me.CurrentRoom()
     var unexplored []int
     for room_num, _ := range g.House.Floors[0].Rooms {
       if !me.Info.RoomsExplored[room_num] {
-        unexplored = append(unexplored, room_num)
+        adj, _ := graph.Adjacent(room_num)
+        for i := range adj {
+          if me.Info.RoomsExplored[adj[i]] || adj[i] == me.CurrentRoom() {
+            unexplored = append(unexplored, room_num)
+            break
+          }
+        }
       }
     }
-    if len(unexplored) == 0 {
-      base.Error().Printf("NO UNEXPLORED ROOMS!")
-      L.PushNil()
-      return 1
+    L.NewTable()
+    for i := range unexplored {
+      L.PushInteger(i + 1)
+      game.LuaPushRoom(L, a.game, a.game.House.Floors[0].Rooms[unexplored[i]])
+      L.SetTable(-3)
     }
-    cost, path := algorithm.Dijkstra(graph, []int{current_room_num}, unexplored)
-    if cost == -1 {
-      base.Error().Printf("NO PATHABLE UNEXPLORED ROOMS!")
-      L.PushNil()
-      return 1
-    }
-
-    game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[path[len(path)-1]])
     return 1
   }
 }

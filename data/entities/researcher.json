@@ -2,9 +2,9 @@
   "Name": "Researcher",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/robed_cultist",
+  "Sprite_path" : "entities/detective",
   "Still": {
-    "Path": "entities/occultist_still.png"
+    "Path": "entities/detective_still.png"
   },
   "Action_names": 
   [

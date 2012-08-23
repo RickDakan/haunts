@@ -6,7 +6,7 @@
   "Still": {
     "Path": "entities/sigil_still.png"
   },
-  "ExplorerEnt": {
+  "ObjectEnt": {
   },
   "Base": {
     "Ap_max": 0,

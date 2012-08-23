@@ -345,6 +345,16 @@ func LuaPushPoint(L *lua.State, x, y int) {
   L.SetTable(-3)
 }
 
+func LuaPushDims(L *lua.State, dx, dy int) {
+  L.NewTable()
+  L.PushString("Dx")
+  L.PushInteger(dx)
+  L.SetTable(-3)
+  L.PushString("Dy")
+  L.PushInteger(dy)
+  L.SetTable(-3)
+}
+
 func LuaToPoint(L *lua.State, pos int) (x, y int) {
   L.PushString("X")
   L.GetTable(pos - 1)
@@ -370,6 +380,12 @@ func LuaPushRoom(L *lua.State, game *Game, room *house.Room) {
         L.SetTable(-3)
         L.PushString("room")
         L.PushInteger(ri)
+        L.SetTable(-3)
+        L.PushString("Pos")
+        LuaPushPoint(L, room.X, room.Y)
+        L.SetTable(-3)
+        L.PushString("Dims")
+        LuaPushDims(L, room.Size.Dx, room.Size.Dy)
         L.SetTable(-3)
         return
       }
@@ -485,15 +501,7 @@ func LuaPushSpawnPoint(L *lua.State, game *Game, sp *house.SpawnPoint) {
   LuaPushPoint(L, x, y)
   L.SetTable(-3)
   L.PushString("Dims")
-  L.NewTable()
-  {
-    L.PushString("Dx")
-    L.PushInteger(dx)
-    L.SetTable(-3)
-    L.PushString("Dy")
-    L.PushInteger(dy)
-    L.SetTable(-3)
-  }
+  LuaPushDims(L, dx, dy)
   L.SetTable(-3)
 }
 
