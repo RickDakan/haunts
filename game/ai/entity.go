@@ -710,7 +710,10 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
       return 0
     }
     ent := game.LuaToEntity(L, a.ent.Game(), -1)
-    if ent == nil || (ent.Side() != a.ent.Side() && !a.ent.Game().TeamLos(ent.Pos())) {
+    side := a.ent.Side()
+    x, y := a.ent.Pos()
+    dx, dy := a.ent.Dims()
+    if ent == nil || (ent.Side() != side && !a.ent.Game().TeamLos(side, x, y, dx, dy)) {
       L.PushNil()
     } else {
       game.LuaPushRoom(L, ent.Game(), ent.Game().House.Floors[0].Rooms[ent.CurrentRoom()])

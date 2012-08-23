@@ -872,14 +872,14 @@ func (g *Game) Think(dt int64) {
         v2 := y2 - x2
         hit := false
         for _, ent := range g.Ents {
-          if ent.Side() != g.Side {
-            continue
-          }
           ex, ey2 := ent.Pos()
           edx, edy := ent.Dims()
           ex2 := ex + edx
           ey := ey2 + edy
           if ex+ey2 < x+y2 || ex+ey2 > x+y2+tex_dy {
+            continue
+          }
+          if ent.Side() != g.Side && !g.TeamLos(g.Side, ex, ey2, edx, edy) {
             continue
           }
 
@@ -1221,11 +1221,30 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
   }
 }
 
-func (g *Game) TeamLos(x, y int) bool {
-  if x < 0 || y < 0 || x >= len(g.los.merger) || y >= len(g.los.merger[x]) {
+func (g *Game) TeamLos(side Side, x, y, dx, dy int) bool {
+  var team_los [][]byte
+  if side == SideExplorers {
+    team_los = g.los.intruders.tex.Pix()
+  } else if side == SideHaunt {
+    team_los = g.los.denizens.tex.Pix()
+  } else {
+    base.Warn().Printf("Can only ask for TeamLos for the intruders and denizens.")
     return false
   }
-  return g.los.merger[x][y]
+  if team_los == nil {
+    return false
+  }
+  for i := x; i < x+dx; i++ {
+    for j := y; j < y+dy; j++ {
+      if i < 0 || j < 0 || i >= len(team_los) || j >= len(team_los[0]) {
+        continue
+      }
+      if team_los[i][j] >= house.LosVisibilityThreshold {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 func (g *Game) mergeLos(side Side) {
