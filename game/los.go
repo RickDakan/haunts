@@ -1214,7 +1214,7 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
       return
     }
     dist -= 1 // or whatever
-    if dist <= 0 {
+    if dist < 0 {
       return
     }
     los[x][y] = true
