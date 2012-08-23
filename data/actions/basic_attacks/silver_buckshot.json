@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "ranged",
   "Texture"   : {
-    "Path": "actions/icons/pistol.png"
+    "Path": "actions/icons/silver.png"
   },
   "Ap"       : 3,
   "Strength" : 5,
