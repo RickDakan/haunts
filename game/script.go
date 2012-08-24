@@ -876,12 +876,9 @@ func setGear(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     gear_name := L.ToString(-1)
-    L.PushString("id")
-    L.GetTable(-3)
-    id := EntityId(L.ToInteger(-1))
-    ent := gp.game.EntityById(id)
+    ent := LuaToEntity(L, gp.game, -2)
     if ent == nil {
-      base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", id)
+      base.Error().Printf("Called SetGear on an invalid entity.")
       return 0
     }
     L.PushBoolean(ent.SetGear(gear_name))
