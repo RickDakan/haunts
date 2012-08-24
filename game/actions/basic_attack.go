@@ -2,16 +2,16 @@ package actions
 
 import (
   "encoding/gob"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
-  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
   lua "github.com/xenith-studios/golua"
+  "path/filepath"
 )
 
 func registerBasicAttacks() map[string]func() game.Action {
@@ -106,6 +106,9 @@ func (a *BasicAttack) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")
   L.PushString("Basic Attack")
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(a.Name)
   L.SetTable(-3)
   L.PushString("Ap")
   L.PushInteger(a.Ap)
