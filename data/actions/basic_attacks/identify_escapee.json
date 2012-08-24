@@ -1,0 +1,14 @@
+{
+  "Name"     : "Identify Escapee",
+  "Kind"     : "Fire",
+  "Animation": "ranged",
+  "Texture"   : 
+  {
+    "Path": "actions/icons/pistol.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 10,
+  "Target_enemies": true
+}
