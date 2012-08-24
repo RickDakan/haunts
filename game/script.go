@@ -88,6 +88,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
     "SetAp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setAp(gp)) },
+    "RemoveEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(removeEnt(gp)) },
     "PlayAnimations":                    func() { gp.script.L.PushGoFunctionAsCFunction(playAnimations(gp)) },
     "PlayMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(playMusic(gp)) },
     "StopMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(stopMusic(gp)) },
@@ -1086,6 +1087,10 @@ func setCondition(gp *GamePanel) lua.GoFunction {
       base.Warn().Printf("Tried to SetCondition on an entity that doesn't exist.")
       return 0
     }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetCondition on an entity that doesn't have stats.")
+      return 0
+    }
     name := L.ToString(-2)
     if L.ToBoolean(-1) {
       ent.Stats.ApplyCondition(status.MakeCondition(name))
@@ -1127,6 +1132,10 @@ func setHp(gp *GamePanel) lua.GoFunction {
       base.Warn().Printf("Tried to SetHp on an entity that doesn't exist.")
       return 0
     }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetHp on an entity that doesn't have stats.")
+      return 0
+    }
     ent.Stats.SetHp(L.ToInteger(-1))
     return 0
   }
@@ -1144,7 +1153,38 @@ func setAp(gp *GamePanel) lua.GoFunction {
       base.Warn().Printf("Tried to SetAp on an entity that doesn't exist.")
       return 0
     }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetAp on an entity that doesn't have stats.")
+      return 0
+    }
     ent.Stats.SetAp(L.ToInteger(-1))
+    return 0
+  }
+}
+
+func removeEnt(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "RemoveEnt", LuaEntity) {
+      return 0
+    }
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Warn().Printf("Tried to RemoveEnt on an entity that doesn't exist.")
+      return 0
+    }
+    removed := false
+    for i := range gp.game.Ents {
+      if gp.game.Ents[i] == ent {
+        gp.game.Ents[i] = gp.game.Ents[len(gp.game.Ents)-1]
+        gp.game.Ents = gp.game.Ents[0 : len(gp.game.Ents)-1]
+        gp.game.viewer.RemoveDrawable(ent)
+        removed = true
+        break
+      }
+    }
+    if !removed {
+      base.Warn().Printf("Tried to RemoveEnt an entity that wasn't in the game.")
+    }
     return 0
   }
 }

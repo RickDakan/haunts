@@ -1,0 +1,16 @@
+{
+  "Name"     : "Codex",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+  "Texture"   : {
+    "Path": "actions/icons/white_codex.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 5,
+  "Damage"   : 5,
+  "Range"    : 10,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "fire": "Haunts/SFX/Intruders/Collector/Knowledge"
+  }
+}

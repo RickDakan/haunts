@@ -451,10 +451,15 @@ func (e *Entity) HasLos(x, y, dx, dy int) bool {
       if i < 0 || j < 0 || i >= len(e.los.grid) || j >= len(e.los.grid[0]) {
         continue
       }
-      return e.los.grid[i][j]
+      if e.los.grid[i][j] {
+        return true
+      }
     }
   }
   return false
+}
+func (e *Entity) HasTeamLos(x, y, dx, dy int) bool {
+  return e.game.TeamLos(e.Side(), x, y, dx, dy)
 }
 func DiscretizePoint32(x, y float32) (int, int) {
   return DiscretizePoint64(float64(x), float64(y))

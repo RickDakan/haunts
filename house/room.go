@@ -426,6 +426,7 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   }
 
   for _, wt := range room.WallTextures {
+    break
     if room.wall_texture_gl_map == nil {
       room.wall_texture_gl_map = make(map[*WallTexture]wallTextureGlIds)
       room.wall_texture_state_map = make(map[*WallTexture]wallTextureState)

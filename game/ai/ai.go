@@ -1,16 +1,16 @@
 package ai
 
 import (
-  "math/rand"
   "encoding/gob"
-  "io/ioutil"
-  "os"
-  "strings"
-  "path/filepath"
+  "github.com/howeyc/fsnotify"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
-  "github.com/howeyc/fsnotify"
   lua "github.com/xenith-studios/golua"
+  "io/ioutil"
+  "math/rand"
+  "os"
+  "path/filepath"
+  "strings"
 )
 
 // The Ai struct contains a glop.AiGraph object as well as a few channels for
@@ -101,6 +101,7 @@ func (a *Ai) setupLuaState() {
   switch a.kind {
   case game.EntityAi:
     a.addEntityContext()
+    a.loadUtils("entity")
     if a.ent.Side() == game.SideHaunt {
       a.loadUtils("denizen_entity")
     }
@@ -151,7 +152,7 @@ func (a *Ai) setupLuaState() {
 }
 
 func (a *Ai) loadUtils(dir string) {
-  root := filepath.Join(base.GetDataDir(), "ais", "utils", dir)
+  root := filepath.Join(filepath.Join(filepath.Dir(a.path), "utils", dir))
   a.watcher.Watch(root)
   filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
     if err != nil || info.IsDir() {
@@ -167,7 +168,7 @@ func (a *Ai) loadUtils(dir string) {
       if err != nil {
         return nil
       }
-      base.Log().Printf("Loaded lua utils file '%s': \n%s", path, data)
+      base.Log().Printf("Loaded lua utils file '%s'", path)
       a.L.DoString(string(data))
     }
     return nil
@@ -187,9 +188,6 @@ func (a *Ai) masterRoutine() {
       return
 
     case a.active = <-a.active_set:
-      if a.active {
-        <-a.active_set
-      }
       if a.active == false {
         if a.ent == nil {
           base.Log().Printf("Evaluating = false")
@@ -219,18 +217,16 @@ func (a *Ai) masterRoutine() {
           base.Log().Printf("Evaluating lua script: %s", a.Prog)
           // Reset the execution limit in case it was set to 0 due to a
           // previous error
-          a.L.SetExecutionLimit(2500)
+          a.L.SetExecutionLimit(250000)
 
           // DoString will panic, and we can catch that, calling it manually
           // will exit() if it fails, which we cannot catch
           a.L.DoString("Think()")
-
           if a.ent == nil {
             base.Log().Printf("Completed master")
           } else {
             base.Log().Printf("Completed ent: %p", a.ent)
           }
-          a.active_set <- false
           a.active_set <- false
           a.execs <- nil
           base.Log().Printf("Sent nil value")
@@ -259,7 +255,6 @@ no_more_events:
     a.setupLuaState()
     base.Log().Printf("Reloaded lua state for '%p'", a)
   }
-  a.active_set <- true
   a.active_set <- true
 }
 

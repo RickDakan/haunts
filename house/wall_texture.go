@@ -1,11 +1,11 @@
 package house
 
 import (
-  "unsafe"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
+  "unsafe"
 )
 
 func MakeWallTexture(name string) *WallTexture {
