@@ -24,6 +24,9 @@ Basic Attacks
     act.Type
     -- "Basic Attack"
 
+    act.Name
+    -- The name of this specific action.
+
     act.Ap
     act.Damage
     act.Strength
@@ -38,6 +41,9 @@ Aoe Attacks
 
     act.Type
     -- "Aoe Attack"
+
+    act.Name
+    -- The name of this specific action.
 
     act.Ap
     act.Damage
@@ -57,6 +63,9 @@ Summons
     act.Type
     -- "Summon"
 
+    act.Name
+    -- The name of this specific action.
+
     act.Ap
     act.Range
     -- Typical stats
@@ -64,7 +73,7 @@ Summons
     act.Ammo
     -- For actions with unlimited ammo this will be a large number (1000)
 
-    act.Name
+    act.Entity
     -- Name of the entity that this ability summons
 
     act.Los
