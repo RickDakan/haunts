@@ -84,7 +84,7 @@
       [
         {
           "Next": "Start7",
-          "Text": "While below the Sanitorium's unused storage area something still stirs in the old catacombs, some creature out of nightmare left laughing quietly to itself..",
+          "Text": "While below the Sanitorium's unused storage area something still stirs in the old catacombs, some creature out of nightmare left laughing quietly to itself.",
           "Image":
           {
             "Path": "ui/dialog/Lvl03/1912c.png"
@@ -98,7 +98,7 @@
       "Sections":
       [
         {
-          "Text": "All alone in the darkness.",
+          "Text": "All alone in the darkness."
         }
       ]
     }
