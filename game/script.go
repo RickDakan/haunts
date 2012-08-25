@@ -94,6 +94,8 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "StopMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(stopMusic(gp)) },
     "SetMusicParam":                     func() { gp.script.L.PushGoFunctionAsCFunction(setMusicParam(gp)) },
     "PlaySound":                         func() { gp.script.L.PushGoFunctionAsCFunction(playSound(gp)) },
+    "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
+    "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -354,7 +356,14 @@ func loadGameStateRaw(gp *GamePanel, state string) {
     return
   }
   gp.AnchorBox.RemoveChild(viewer)
+  for _, child := range gp.AnchorBox.GetChildren() {
+    if o, ok := child.(*Overlay); ok {
+      gp.AnchorBox.RemoveChild(o)
+      break
+    }
+  }
   gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  gp.AnchorBox.AddChild(MakeOverlay(gp.game), gui.Anchor{0.5, 0.5, 0.5, 0.5})
 }
 
 func loadGameState(gp *GamePanel) lua.GoFunction {
@@ -492,6 +501,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
 
     gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
     gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    gp.AnchorBox.AddChild(MakeOverlay(gp.game), gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
     base.Log().Printf("Done making stuff")
     return 0
@@ -1247,6 +1257,54 @@ func playSound(gp *GamePanel) lua.GoFunction {
       return 0
     }
     sound.PlaySound(L.ToString(-1))
+    return 0
+  }
+}
+
+func removeWaypoint(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "RemoveWaypoint", LuaString) {
+      return 0
+    }
+    hit := false
+    name := L.ToString(-1)
+    for i := range gp.game.Waypoints {
+      if gp.game.Waypoints[i].Name == name {
+        hit = true
+        l := len(gp.game.Waypoints)
+        gp.game.Waypoints[i] = gp.game.Waypoints[l-1]
+        gp.game.Waypoints = gp.game.Waypoints[0 : l-1]
+      }
+    }
+    if !hit {
+      base.Error().Printf("RemoveWaypoint on waypoint '%s' which doesn't exist.", name)
+      return 0
+    }
+    return 0
+  }
+}
+
+func setWaypoint(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaFloat, LuaFloat, LuaFloat) {
+      return 0
+    }
+    side_str := L.ToString(-4)
+    var wp waypoint
+    switch side_str {
+    case "intruders":
+      wp.Side = SideExplorers
+    case "denizens":
+      wp.Side = SideHaunt
+    default:
+      base.Error().Printf("Specified '%s' for the side parameter in SetWaypoint, must be 'intruders' or 'denizens'.", side_str)
+      return 0
+    }
+    wp.Name = L.ToString(-5)
+    wp.X = L.ToNumber(-3)
+    wp.Y = L.ToNumber(-2)
+    wp.Radius = L.ToNumber(-1)
+    gp.game.Waypoints = append(gp.game.Waypoints, wp)
     return 0
   }
 }
