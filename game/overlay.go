@@ -3,6 +3,7 @@ package game
 import (
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/haunts/base"
 )
 
 type Overlay struct {
@@ -54,13 +55,22 @@ func (o *Overlay) Draw(region gui.Region) {
     cx3, cy3 := o.game.viewer.BoardToWindow(cx+r, cy+r)
     cx4, cy4 := o.game.viewer.BoardToWindow(cx+r, cy-r)
     gl.Color4ub(200, 0, 0, 128)
-    gl.Disable(gl.TEXTURE_2D)
+
+    base.EnableShader("waypoint")
+    base.SetUniformF("waypoint", "radius", float32(way.Radius))
+
     gl.Begin(gl.QUADS)
+    gl.TexCoord2i(0, 1)
     gl.Vertex2i(int32(cx1), int32(cy1))
+    gl.TexCoord2i(0, 0)
     gl.Vertex2i(int32(cx2), int32(cy2))
+    gl.TexCoord2i(1, 0)
     gl.Vertex2i(int32(cx3), int32(cy3))
+    gl.TexCoord2i(1, 1)
     gl.Vertex2i(int32(cx4), int32(cy4))
     gl.End()
+
+    base.EnableShader("")
   }
 }
 func (o *Overlay) DrawFocused(region gui.Region) {
