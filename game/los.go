@@ -4,6 +4,7 @@ import (
   "bytes"
   "encoding/gob"
   "errors"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/cmwc"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/util/algorithm"
@@ -65,6 +66,32 @@ type waypoint struct {
   X, Y   float64
   Radius float64
   // Color, maybe?
+}
+
+func (wp *waypoint) Dims() (int, int) {
+  return int(2 * wp.Radius), int(2 * wp.Radius)
+}
+func (wp *waypoint) Pos() (int, int) {
+  return int(wp.X), int(wp.Y)
+}
+func (wp *waypoint) RenderOnFloor() {
+  gl.Color4ub(200, 0, 0, 128)
+
+  base.EnableShader("waypoint")
+  base.SetUniformF("waypoint", "radius", float32(wp.Radius))
+
+  gl.Begin(gl.QUADS)
+  gl.TexCoord2i(0, 1)
+  gl.Vertex2i(int32(wp.X-wp.Radius), int32(wp.Y-wp.Radius))
+  gl.TexCoord2i(0, 0)
+  gl.Vertex2i(int32(wp.X-wp.Radius), int32(wp.Y+wp.Radius))
+  gl.TexCoord2i(1, 0)
+  gl.Vertex2i(int32(wp.X+wp.Radius), int32(wp.Y+wp.Radius))
+  gl.TexCoord2i(1, 1)
+  gl.Vertex2i(int32(wp.X+wp.Radius), int32(wp.Y-wp.Radius))
+  gl.End()
+
+  base.EnableShader("")
 }
 
 type gameDataTransient struct {
@@ -952,7 +979,9 @@ func (g *Game) Think(dt int64) {
         g.current_exec = exec.(ActionExec)
         g.Action_state = doingAction
         ent := g.EntityById(g.current_exec.EntityId())
+        g.viewer.RemoveFloorDrawable(g.current_action)
         g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+        g.viewer.AddFloorDrawable(g.current_action)
         ent.current_action = g.current_action
       } else {
         g.Turn_state = turnStateEnd
@@ -974,7 +1003,9 @@ func (g *Game) Think(dt int64) {
 
   if g.current_exec != nil && g.Action_state != verifyingAction && g.Turn_state != turnStateMainPhaseOver {
     ent := g.EntityById(g.current_exec.EntityId())
+    g.viewer.RemoveFloorDrawable(g.current_action)
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+    g.viewer.AddFloorDrawable(g.current_action)
     ent.current_action = g.current_action
     g.Action_state = verifyingAction
     base.Log().Printf("ScriptComm: request exec verification")
@@ -1000,6 +1031,7 @@ func (g *Game) Think(dt int64) {
     switch res {
     case Complete:
       g.current_action.Cancel()
+      g.viewer.RemoveFloorDrawable(g.current_action)
       g.current_action = nil
       g.Action_state = noAction
       if g.Turn_state != turnStateMainPhaseOver {
@@ -1014,11 +1046,11 @@ func (g *Game) Think(dt int64) {
     }
   }
 
-  g.viewer.Floor_drawer = g.current_action
   for _, ent := range g.Ents {
     ent.Think(dt)
     s := ent.Sprite()
     if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
+      g.viewer.RemoveFloorDrawable(g.current_action)
       ent.current_action = nil
     }
   }

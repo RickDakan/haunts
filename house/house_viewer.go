@@ -1,10 +1,10 @@
 package house
 
 import (
-  "math"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/mathgl"
+  "math"
 )
 
 // This structure is used for temporary doors (that are being dragged around in
@@ -33,11 +33,10 @@ type HouseViewer struct {
   // Need to keep track of time so we can measure time between thinks
   last_timestamp int64
 
-  drawables     []Drawable
-  Los_tex       *LosTexture
-  Floor_drawer  FloorDrawer
-  Floor_drawers []FloorDrawer
-  Edit_mode     bool
+  drawables          []Drawable
+  Los_tex            *LosTexture
+  temp_floor_drawers []FloorDrawer
+  Edit_mode          bool
 
   bounds struct {
     on  bool
@@ -107,6 +106,15 @@ func (hv *HouseViewer) AddDrawable(d Drawable) {
 func (hv *HouseViewer) RemoveDrawable(d Drawable) {
   algorithm.Choose2(&hv.drawables, func(t Drawable) bool {
     return t != d
+  })
+}
+
+func (hv *HouseViewer) AddFloorDrawable(fd FloorDrawer) {
+  hv.floor_drawers = append(hv.floor_drawers, fd)
+}
+func (hv *HouseViewer) RemoveFloorDrawable(fd FloorDrawer) {
+  algorithm.Choose2(&hv.floor_drawers, func(t FloorDrawer) bool {
+    return t != fd
   })
 }
 
@@ -312,14 +320,14 @@ func (hv *HouseViewer) Draw(region gui.Region) {
 
   hv.Render_region = region
 
-  hv.Floor_drawers = hv.Floor_drawers[0:0]
+  hv.temp_floor_drawers = hv.temp_floor_drawers[0:0]
   if hv.Edit_mode {
     for _, spawn := range hv.house.Floors[0].Spawns {
-      hv.Floor_drawers = append(hv.Floor_drawers, spawn)
+      hv.temp_floor_drawers = append(hv.temp_floor_drawers, spawn)
     }
   }
-  if hv.Floor_drawer != nil {
-    hv.Floor_drawers = append(hv.Floor_drawers, hv.Floor_drawer)
+  for _, fd := range hv.floor_drawers {
+    hv.temp_floor_drawers = append(hv.floor_drawers, fd)
   }
-  hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.Floor_drawers)
+  hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.temp_floor_drawers)
 }

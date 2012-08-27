@@ -24,10 +24,10 @@ func (o *Overlay) Expandable() (bool, bool) {
 func (o *Overlay) Rendered() gui.Region {
   return o.region
 }
-func (o *Overlay) Think(g *gui.Gui, t int64) {
-}
 func (o *Overlay) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return false
+}
+func (o *Overlay) Think(g *gui.Gui, dt int64) {
 }
 func (o *Overlay) Draw(region gui.Region) {
   o.region = region
@@ -47,6 +47,7 @@ func (o *Overlay) Draw(region gui.Region) {
     if way.Side != o.game.Side {
       continue
     }
+
     cx := float32(way.X)
     cy := float32(way.Y)
     r := float32(way.Radius)
