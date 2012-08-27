@@ -99,7 +99,6 @@ function doIntrudersSetup()
   --   print("This time picked: ", i, name)
   -- end
   -- store.mode = r[1]
-  -- Script.SaveStore()
   -- -- Find the "Intruders-FrontDoor" spawn point and spawn a Teen, Occultist,
   -- -- and Ghost Hunter there.  Additionally we will mind the
   -- -- sample_aoe_occultist.lua ai to the occultist.

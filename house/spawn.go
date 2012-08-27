@@ -1,11 +1,11 @@
 package house
 
 import (
-  "hash/fnv"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
+  "hash/fnv"
   "regexp"
 )
 

@@ -2,6 +2,7 @@ package base
 
 import (
   "encoding/gob"
+  "encoding/base64"
   "encoding/json"
   "image/color"
   "io"
@@ -222,6 +223,25 @@ func SaveJson(path string, source interface{}) error {
   defer f.Close()
   _, err = f.Write(data)
   return err
+}
+
+func ToGobToBase64(src interface{}) (string, error) {
+  buf := bytes.NewBuffer(nil)
+  enc := gob.NewEncoder(buf)
+  err := enc.Encode(src)
+  if err != nil {
+    return "", err
+  }
+  return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+}
+
+func FromBase64FromGob(dst interface{}, str string) error {
+  data, err := base64.StdEncoding.DecodeString(str)
+  if err != nil {
+    return err
+  }
+  dec := gob.NewDecoder(bytes.NewBuffer(data))
+  return dec.Decode(dst)
 }
 
 // Opens the file named by path, reads it all, decodes it as gob into target,

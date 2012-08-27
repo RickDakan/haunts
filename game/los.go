@@ -1,11 +1,16 @@
 package game
 
 import (
-  // "path/filepath"
-  "github.com/runningwild/glop/gui"
+  "bytes"
+  "encoding/gob"
+  "errors"
+  "github.com/runningwild/cmwc"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/base"
+  "github.com/runningwild/haunts/house"
+  "reflect"
+  "regexp"
 )
 
 type Purpose int
@@ -21,6 +26,7 @@ type LosMode int
 
 const (
   LosModeNone LosMode = iota
+  LosModeBlind
   LosModeAll
   LosModeEntities
   LosModeRooms
@@ -41,6 +47,9 @@ const (
   // Waiting for the script to finish OnAction()
   turnStateScriptOnAction
 
+  // Humans and Ai are done, now the script can run some actions if it wants
+  turnStateMainPhaseOver
+
   // Waiting for the script to finish OnEnd()
   turnStateEnd
 )
@@ -50,54 +59,7 @@ type sideLosData struct {
   tex  *house.LosTexture
 }
 
-type Game struct {
-  // TODO: No idea if this thing can be loaded from the registry - should
-  // probably figure that out at some point
-  House *house.HouseDef
-  Ents  []*Entity `registry:"loadfrom-entities"`
-
-  // Next unique EntityId to be assigned
-  Entity_id EntityId
-
-  // The side of the human player in the case that this is a one player game,
-  // this is so that if we load a saved game we know which side to put ais on.
-  // TODO: IN a game with two humans we'll need something more complicated
-  // here.
-  Human Side
-
-  // Current player
-  Side Side
-
-  // Current turn number - incremented on each OnRound() so every two
-  // indicates that a complete round has happened.
-  Turn int
-
-  // The purpose that the explorers have for entering the house, chosen at the
-  // beginning of the game.
-  Purpose Purpose
-
-  // The active cleanse points - when interacted with they will be removed
-  // from this list, so in a Cleanse scenario the mission is accomplished
-  // when this list is empty.  In other scenarios this list is always empty.
-  Active_cleanses []*Entity
-
-  // The active relics - when interacted it will be nilified
-  // If the scenario is not a Relic mission this is always nil
-  Active_relic *Entity
-
-  // Transient data - none of the following are exported
-
-  player_active bool
-
-  viewer *house.HouseViewer
-
-  selection_tab      *gui.TabFrame
-  haunts_selection   *gui.VerticalTable
-  explorer_selection *gui.VerticalTable
-
-  // If the user is dragging around a new Entity to place, this is it
-  new_ent *Entity
-
+type gameDataTransient struct {
   los struct {
     denizens, intruders sideLosData
 
@@ -107,29 +69,6 @@ type Game struct {
     merger      [][]bool
   }
 
-  selected_ent *Entity
-  hovered_ent  *Entity
-
-  // Stores the current acting entity - if it is an Ai controlled entity
-  ai_ent *Entity
-
-  // This controls the minions on the haunting side, regardless of whether a
-  // human or ai is controlling the rest of that side.
-  minion_ai Ai
-
-  haunts_ai    Ai
-  explorers_ai Ai
-
-  // If an Ai is executing currently it is referenced here
-  active_ai Ai
-
-  action_state   actionState
-  current_exec   ActionExec
-  current_action Action
-
-  // Indicates if we're waiting for a script to run or something
-  turn_state turnState
-
   // Used to sync up with the script, the value passed is usually nil, but
   // whenever an action happens it will get passed along this channel too.
   comm struct {
@@ -137,12 +76,190 @@ type Game struct {
     game_to_script chan interface{}
   }
 
-  // Goals ******************************************************
-
-  // Defaults to the zero value which is NoSide
-  winner Side
-
   script *gameScript
+
+  // Indicates if we're waiting for a script to run or something
+  Turn_state   turnState
+  Action_state actionState
+}
+
+func (gdt *gameDataTransient) alloc() {
+  if gdt.los.denizens.tex != nil {
+    return
+  }
+  gdt.los.denizens.tex = house.MakeLosTexture()
+  gdt.los.intruders.tex = house.MakeLosTexture()
+  gdt.los.full_merger = make([]bool, house.LosTextureSizeSquared)
+  gdt.los.merger = make([][]bool, house.LosTextureSize)
+  for i := range gdt.los.merger {
+    gdt.los.merger[i] = gdt.los.full_merger[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
+  }
+
+  gdt.comm.script_to_game = make(chan interface{}, 1)
+  gdt.comm.game_to_script = make(chan interface{}, 1)
+
+  gdt.script = &gameScript{}
+  base.Log().Printf("script = %p", gdt.script)
+}
+
+type gameDataPrivate struct {
+  // Hacky - but gives us a way to prevent selecting ents and whatnot while
+  // any kind of modal dialog box is up.
+  modal bool
+}
+type spawnLos struct {
+  Pattern string
+  r       *regexp.Regexp
+}
+type gameDataGobbable struct {
+  // TODO: No idea if this thing can be loaded from the registry - should
+  // probably figure that out at some point
+  House *house.HouseDef
+  Ents  []*Entity
+
+  // Set of all Entities that are still resident.  This is so we can safely
+  // clean things up since they will all have ais running in the background
+  // preventing them from getting GCed.
+  all_ents_in_game   map[*Entity]bool
+  all_ents_in_memory map[*Entity]bool
+
+  // Regexps.  Any spawn points with names matching this pattern will grant
+  // los to the appropriate side.
+  Los_spawns struct {
+    Denizens, Intruders spawnLos
+  }
+
+  // Next unique EntityId to be assigned
+  Entity_id EntityId
+
+  // Current player
+  Side Side
+
+  // Current turn number - incremented on each OnRound() so every two
+  // indicates that a complete round has happened.
+  Turn int
+
+  // PRNG, need it here so that we serialize it along with everything
+  // else so that replays work properly.
+  Rand *cmwc.Cmwc
+
+  // Transient data - none of the following are exported
+
+  player_inactive bool
+
+  viewer *house.HouseViewer
+
+  // If the user is dragging around a new Entity to place, this is it
+  new_ent *Entity
+
+  selected_ent *Entity
+  hovered_ent  *Entity
+
+  // Stores the current acting entity - if it is an Ai controlled entity
+  ai_ent *Entity
+
+  Ai struct {
+    Path struct {
+      Minions, Denizens, Intruders string
+    }
+    minions, denizens, intruders Ai
+  }
+
+  // If an Ai is executing currently it is referenced here
+  active_ai Ai
+
+  current_exec   ActionExec
+  current_action Action
+}
+
+type Game struct {
+  gameDataTransient
+  gameDataPrivate
+  gameDataGobbable
+}
+
+func (g *Game) GobDecode(data []byte) error {
+  g.gameDataPrivate = gameDataPrivate{}
+  for ent := range g.all_ents_in_memory {
+    ent.Release()
+  }
+  if g.Ai.intruders != nil {
+    g.Ai.intruders.Terminate()
+  }
+  if g.Ai.minions != nil {
+    g.Ai.minions.Terminate()
+  }
+  if g.Ai.denizens != nil {
+    g.Ai.denizens.Terminate()
+  }
+
+  g.gameDataGobbable = gameDataGobbable{}
+
+  dec := gob.NewDecoder(bytes.NewBuffer(data))
+  if err := dec.Decode(&g.gameDataGobbable); err != nil {
+    return err
+  }
+
+  base.ProcessObject(reflect.ValueOf(g.House), "")
+  g.House.Normalize()
+  g.viewer = house.MakeHouseViewer(g.House, 62)
+  g.viewer.Edit_mode = true
+  for _, ent := range g.Ents {
+    base.GetObject("entities", ent)
+  }
+  g.setup()
+  for _, ent := range g.Ents {
+    ent.Load(g)
+  }
+  var sss []sprite.SpriteState
+  if err := dec.Decode(&sss); err != nil {
+    return err
+  }
+  if len(sss) != len(g.Ents) {
+    return errors.New("SpriteStates were not recorded properly.")
+  }
+  for i := range sss {
+    g.Ents[i].Sprite().SetSpriteState(sss[i])
+  }
+
+  // If Ais were bound then their paths will be listed here and we have to
+  // reload them
+  if g.Ai.Path.Denizens != "" {
+    ai_maker(g.Ai.Path.Denizens, g, nil, &g.Ai.denizens, DenizensAi)
+  }
+  if g.Ai.denizens == nil {
+    g.Ai.denizens = inactiveAi{}
+  }
+  if g.Ai.Path.Intruders != "" {
+    ai_maker(g.Ai.Path.Intruders, g, nil, &g.Ai.intruders, IntrudersAi)
+  }
+  if g.Ai.intruders == nil {
+    g.Ai.intruders = inactiveAi{}
+  }
+  if g.Ai.Path.Minions != "" {
+    ai_maker(g.Ai.Path.Minions, g, nil, &g.Ai.minions, MinionsAi)
+  }
+  if g.Ai.minions == nil {
+    g.Ai.minions = inactiveAi{}
+  }
+
+  return nil
+}
+
+func (g *Game) GobEncode() ([]byte, error) {
+  buf := bytes.NewBuffer(nil)
+  enc := gob.NewEncoder(buf)
+  if err := enc.Encode(g.gameDataGobbable); err != nil {
+    return nil, err
+  }
+  var sss []sprite.SpriteState
+  for i := range g.Ents {
+    sss = append(sss, g.Ents[i].Sprite().GetSpriteState())
+  }
+  if err := enc.Encode(sss); err != nil {
+    return nil, err
+  }
+  return buf.Bytes(), nil
 }
 
 func (g *Game) EntityById(id EntityId) *Entity {
@@ -159,7 +276,7 @@ func (g *Game) HoveredEnt() *Entity {
 }
 
 func (g *Game) SelectEnt(ent *Entity) bool {
-  if g.action_state != noAction {
+  if g.Action_state != noAction {
     return false
   }
   found := false
@@ -215,19 +332,6 @@ func (g *Game) checkWinConditions() {
   if haunts_win {
     base.Log().Printf("Haunts won - kaboom")
   }
-
-  if g.winner == SideNone {
-    if explorer_win && !haunts_win {
-      g.winner = SideExplorers
-    }
-    if haunts_win && !explorer_win {
-      g.winner = SideHaunt
-    }
-    if explorer_win && haunts_win {
-      // Let's just hope this is far beyond impossible
-      base.Error().Printf("Both sides won at the same time omg!")
-    }
-  }
 }
 
 func (g *Game) SetVisibility(side Side) {
@@ -250,11 +354,11 @@ func (g *Game) SetVisibility(side Side) {
 func (g *Game) OnRound() {
   // Don't end the round if any of the following are true
   // An action is currently executing
-  if g.action_state != noAction {
+  if g.Action_state != noAction {
     return
   }
   // Any master ai is still active
-  if g.Side == SideHaunt && (g.minion_ai.Active() || g.haunts_ai.Active()) {
+  if g.Side == SideHaunt && (g.Ai.minions.Active() || g.Ai.denizens.Active()) {
     return
   }
 
@@ -281,13 +385,12 @@ func (g *Game) OnRound() {
   }
 
   if g.Side == SideHaunt {
-    g.minion_ai.Activate()
-    base.Log().Printf("minion ai: %t", g.minion_ai.Active())
-    g.haunts_ai.Activate()
-    g.player_active = !g.haunts_ai.Active()
+    g.Ai.minions.Activate()
+    g.Ai.denizens.Activate()
+    g.player_inactive = g.Ai.denizens.Active()
   } else {
-    g.explorers_ai.Activate()
-    g.player_active = !g.explorers_ai.Active()
+    g.Ai.intruders.Activate()
+    g.player_inactive = g.Ai.intruders.Active()
   }
 
   for i := range g.Ents {
@@ -309,7 +412,6 @@ func (g *Game) OnRound() {
     g.hovered_ent.hovered = false
     g.hovered_ent.selected = false
   }
-  g.selected_ent = nil
   g.hovered_ent = nil
 }
 
@@ -431,7 +533,7 @@ func connected(r, r2 *house.Room, x, y, x2, y2 int) bool {
       pos = x
     }
     if pos >= door.Pos && pos < door.Pos+door.Width {
-      return door.Opened
+      return door.IsOpened()
     }
   }
   return false
@@ -457,12 +559,13 @@ func (g *Game) IsCellOccupied(x, y int) bool {
 
 type exclusionGraph struct {
   side Side
+  los  bool
   ex   map[*Entity]bool
   g    *Game
 }
 
 func (eg *exclusionGraph) Adjacent(v int) ([]int, []float64) {
-  return eg.g.adjacent(v, eg.side, eg.ex)
+  return eg.g.adjacent(v, eg.los, eg.side, eg.ex)
 }
 func (eg *exclusionGraph) NumVertex() int {
   return eg.g.numVertex()
@@ -507,15 +610,15 @@ func (rg *roomGraph) Adjacent(n int) ([]int, []float64) {
   return adj, cost
 }
 
-func (g *Game) Graph(side Side, exclude []*Entity) algorithm.Graph {
+func (g *Game) Graph(side Side, los bool, exclude []*Entity) algorithm.Graph {
   ex := make(map[*Entity]bool, len(exclude))
   for i := range exclude {
     ex[exclude[i]] = true
   }
-  return &exclusionGraph{side, ex, g}
+  return &exclusionGraph{side, los, ex, g}
 }
 
-func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64) {
+func (g *Game) adjacent(v int, los bool, side Side, ex map[*Entity]bool) ([]int, []float64) {
   room, x, y := g.FromVertex(v)
   var adj []int
   var weight []float64
@@ -534,14 +637,16 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
     }
   }
   var data *sideLosData
-  switch side {
-  case SideHaunt:
-    data = &g.los.denizens
-  case SideExplorers:
-    data = &g.los.intruders
-  default:
-    base.Error().Printf("Unable to SetLosMode for side == %d.", side)
-    return nil, nil
+  if los {
+    switch side {
+    case SideHaunt:
+      data = &g.los.denizens
+    case SideExplorers:
+      data = &g.los.intruders
+    default:
+      base.Error().Printf("Unable to SetLosMode for side == %d.", side)
+      return nil, nil
+    }
   }
   for dx := -1; dx <= 1; dx++ {
     for dy := -1; dy <= 1; dy++ {
@@ -554,7 +659,7 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
       if ent_occupied[[2]int{tx, ty}] {
         continue
       }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+      if data != nil && data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
         continue
       }
       // TODO: This is obviously inefficient
@@ -584,7 +689,7 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
       if ent_occupied[[2]int{tx, ty}] {
         continue
       }
-      if data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
+      if data != nil && data.tex.Pix()[tx][ty] < house.LosVisibilityThreshold {
         continue
       }
       // TODO: This is obviously inefficient
@@ -614,46 +719,43 @@ func (g *Game) adjacent(v int, side Side, ex map[*Entity]bool) ([]int, []float64
 }
 
 func (g *Game) setup() {
-  g.los.denizens.tex = house.MakeLosTexture()
-  g.los.intruders.tex = house.MakeLosTexture()
-  g.los.full_merger = make([]bool, house.LosTextureSizeSquared)
-  g.los.merger = make([][]bool, house.LosTextureSize)
-  for i := range g.los.merger {
-    g.los.merger[i] = g.los.full_merger[i*house.LosTextureSize : (i+1)*house.LosTextureSize]
-  }
+  g.gameDataTransient.alloc()
+  g.all_ents_in_game = make(map[*Entity]bool)
+  g.all_ents_in_memory = make(map[*Entity]bool)
   for i := range g.Ents {
+    base.Log().Printf("Ungob, ent: %p", g.Ents[i])
     if g.Ents[i].Side() == g.Side {
+      base.Log().Printf("Ungob, ent: %p", g.Ents[i])
       g.UpdateEntLos(g.Ents[i], true)
     }
   }
-  g.viewer.Los_tex = g.los.denizens.tex
+  if g.Side == SideHaunt {
+    g.viewer.Los_tex = g.los.intruders.tex
+  } else {
+    g.viewer.Los_tex = g.los.denizens.tex
+  }
 
-  g.minion_ai = inactiveAi{}
-  g.haunts_ai = inactiveAi{}
-  g.explorers_ai = inactiveAi{}
+  g.Ai.minions = inactiveAi{}
+  g.Ai.denizens = inactiveAi{}
+  g.Ai.intruders = inactiveAi{}
 }
 
-func makeGame(h *house.HouseDef, viewer *house.HouseViewer, side Side) *Game {
+func makeGame(h *house.HouseDef) *Game {
   var g Game
-  g.Human = side
   g.Side = SideExplorers
   g.House = h
   g.House.Normalize()
-  g.viewer = viewer
+  g.viewer = house.MakeHouseViewer(g.House, 62)
+  g.Rand = cmwc.MakeCmwc(4285415527, 3)
+  g.Rand.SeedWithDevRand()
 
   // This way an unset id will be invalid
   g.Entity_id = 1
 
+  g.Turn = 1
+  g.Side = SideHaunt
+
   g.setup()
-
-  g.explorer_selection = gui.MakeVerticalTable()
-  g.explorer_selection.AddChild(gui.MakeTextLine("standard", "foo", 300, 1, 1, 1, 1))
-  g.haunts_selection = gui.MakeVerticalTable()
-  g.haunts_selection.AddChild(gui.MakeTextLine("standard", "bar", 300, 1, 1, 1, 1))
-  g.selection_tab = gui.MakeTabFrame([]gui.Widget{g.explorer_selection, g.haunts_selection})
-
-  g.comm.script_to_game = make(chan interface{}, 1)
-  g.comm.game_to_script = make(chan interface{}, 1)
 
   return &g
 }
@@ -678,6 +780,15 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
       for j := range pix[i] {
         if pix[i][j] >= house.LosVisibilityThreshold {
           pix[i][j] = house.LosVisibilityThreshold - 1
+        }
+      }
+    }
+
+  case LosModeBlind:
+    for i := range pix {
+      for j := range pix[i] {
+        if pix[i][j] >= house.LosVisibilityThreshold {
+          pix[i][j] = 0
         }
       }
     }
@@ -722,20 +833,89 @@ func (g *Game) SetLosMode(side Side, mode LosMode, rooms []*house.Room) {
 }
 
 func (g *Game) Think(dt int64) {
-  switch g.turn_state {
+  for _, ent := range g.Ents {
+    if !g.all_ents_in_game[ent] {
+      g.all_ents_in_game[ent] = true
+      g.all_ents_in_memory[ent] = true
+    }
+  }
+  var mark []*Entity
+  for ent := range g.all_ents_in_memory {
+    if !g.all_ents_in_game[ent] && ent != g.new_ent {
+      mark = append(mark, ent)
+    }
+  }
+  for _, ent := range mark {
+    delete(g.all_ents_in_game, ent)
+    delete(g.all_ents_in_memory, ent)
+    ent.Release()
+  }
+
+  // Figure out if there are any entities that might be occluded be any
+  // furniture, if so we'll want to make that furniture a little transparent.
+  for _, floor := range g.House.Floors {
+    for _, room := range floor.Rooms {
+      for _, furn := range room.Furniture {
+        if !furn.Blocks_los {
+          continue
+        }
+        rx, ry := room.Pos()
+        x, y2 := furn.Pos()
+        x += rx
+        y2 += ry
+        dx, dy := furn.Dims()
+        x2 := x + dx
+        y := y2 + dy
+        tex := furn.Orientations[furn.Rotation].Texture.Data()
+        tex_dy := 2 * (tex.Dy() * ((x2 - y2) - (x - y))) / tex.Dx()
+        v1 := y - x
+        v2 := y2 - x2
+        hit := false
+        for _, ent := range g.Ents {
+          ex, ey2 := ent.Pos()
+          edx, edy := ent.Dims()
+          ex2 := ex + edx
+          ey := ey2 + edy
+          if ex+ey2 < x+y2 || ex+ey2 > x+y2+tex_dy {
+            continue
+          }
+          if ent.Side() != g.Side && !g.TeamLos(g.Side, ex, ey2, edx, edy) {
+            continue
+          }
+
+          ev1 := ey - ex
+          ev2 := ey2 - ex2
+          if ev2 >= v1 || ev1 <= v2 {
+            continue
+          }
+          hit = true
+          break
+        }
+        alpha := furn.Alpha()
+        if hit {
+          furn.SetAlpha(doApproach(alpha, 0.3, dt))
+        } else {
+          furn.SetAlpha(doApproach(alpha, 1.0, dt))
+        }
+      }
+    }
+  }
+
+  switch g.Turn_state {
   case turnStateInit:
     select {
     case <-g.comm.script_to_game:
       base.Log().Printf("ScriptComm: change to turnStateStart")
-      g.turn_state = turnStateStart
-      g.OnRound()
+      g.Turn_state = turnStateStart
+      g.script.OnRound(g)
+      // g.OnRound()
     default:
     }
   case turnStateStart:
     select {
     case <-g.comm.script_to_game:
       base.Log().Printf("ScriptComm: change to turnStateAiAction")
-      g.turn_state = turnStateAiAction
+      g.Turn_state = turnStateAiAction
     default:
     }
   case turnStateScriptOnAction:
@@ -748,40 +928,59 @@ func (g *Game) Think(dt int64) {
           g.current_exec = exec.(ActionExec)
         } else {
           base.Log().Printf("ScriptComm: change to turnStateAiAction")
-          g.turn_state = turnStateAiAction
+          g.Turn_state = turnStateAiAction
         }
       }
     default:
     }
+  case turnStateMainPhaseOver:
+    select {
+    case exec := <-g.comm.script_to_game:
+      if exec != nil {
+        base.Log().Printf("ScriptComm: Got an exec: %v", exec)
+        g.current_exec = exec.(ActionExec)
+        g.Action_state = doingAction
+        ent := g.EntityById(g.current_exec.EntityId())
+        g.current_action = ent.Actions[g.current_exec.ActionIndex()]
+        ent.current_action = g.current_action
+      } else {
+        g.Turn_state = turnStateEnd
+        base.Log().Printf("ScriptComm: change to turnStateEnd for realzes")
+      }
+    default:
+      base.Log().Printf("ScriptComm: turnStateMainPhaseOver default")
+    }
+
   case turnStateEnd:
     select {
     case <-g.comm.script_to_game:
-      g.turn_state = turnStateStart
+      g.Turn_state = turnStateStart
       base.Log().Printf("ScriptComm: change to turnStateStart")
       g.OnRound()
     default:
     }
   }
 
-  if g.current_exec != nil && g.action_state != verifyingAction {
+  if g.current_exec != nil && g.Action_state != verifyingAction && g.Turn_state != turnStateMainPhaseOver {
     ent := g.EntityById(g.current_exec.EntityId())
     g.current_action = ent.Actions[g.current_exec.ActionIndex()]
-    g.action_state = verifyingAction
+    ent.current_action = g.current_action
+    g.Action_state = verifyingAction
     base.Log().Printf("ScriptComm: request exec verification")
     g.comm.game_to_script <- g.current_exec
   }
 
-  if g.action_state == verifyingAction {
+  if g.Action_state == verifyingAction {
     select {
     case <-g.comm.script_to_game:
-      g.action_state = doingAction
+      g.Action_state = doingAction
     default:
     }
   }
 
   // If there is an action that is currently executing we need to advance that
   // action.
-  if g.action_state == doingAction {
+  if g.Action_state == doingAction {
     res := g.current_action.Maintain(dt, g, g.current_exec)
     if g.current_exec != nil {
       base.Log().Printf("ScriptComm: sent action")
@@ -791,8 +990,10 @@ func (g *Game) Think(dt int64) {
     case Complete:
       g.current_action.Cancel()
       g.current_action = nil
-      g.action_state = noAction
-      g.turn_state = turnStateScriptOnAction
+      g.Action_state = noAction
+      if g.Turn_state != turnStateMainPhaseOver {
+        g.Turn_state = turnStateScriptOnAction
+      }
       base.Log().Printf("ScriptComm: Action complete")
       g.comm.game_to_script <- nil
       g.checkWinConditions()
@@ -803,13 +1004,16 @@ func (g *Game) Think(dt int64) {
   }
 
   g.viewer.Floor_drawer = g.current_action
-  for i := range g.Ents {
-    g.Ents[i].Think(dt)
+  for _, ent := range g.Ents {
+    ent.Think(dt)
+    s := ent.Sprite()
+    if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
+      ent.current_action = nil
+    }
   }
   if g.new_ent != nil {
     g.new_ent.Think(dt)
   }
-
   for i := range g.Ents {
     g.UpdateEntLos(g.Ents[i], false)
   }
@@ -818,6 +1022,56 @@ func (g *Game) Think(dt int64) {
   }
   if g.los.intruders.mode == LosModeEntities {
     g.mergeLos(SideExplorers)
+  }
+
+  // Do spawn points los stuff
+  for _, los := range []*spawnLos{&g.Los_spawns.Denizens, &g.Los_spawns.Intruders} {
+    if los.r == nil || los.r.String() != los.Pattern {
+      if los.Pattern == "" {
+        los.r = nil
+      } else {
+        var err error
+        los.r, err = regexp.Compile("^" + los.Pattern + "$")
+        if err != nil {
+          base.Warn().Printf("Unable to compile regexp: `%s`", los.Pattern)
+          los.Pattern = ""
+        }
+      }
+    }
+  }
+  for i := 0; i < 2; i++ {
+    var los *spawnLos
+    var pix [][]byte
+    if i == 0 {
+      if g.los.denizens.mode == LosModeBlind {
+        continue
+      }
+      los = &g.Los_spawns.Denizens
+      pix = g.los.denizens.tex.Pix()
+    } else {
+      if g.los.intruders.mode == LosModeBlind {
+        continue
+      }
+      los = &g.Los_spawns.Intruders
+      pix = g.los.intruders.tex.Pix()
+    }
+    if los.r == nil {
+      continue
+    }
+    for _, spawn := range g.House.Floors[0].Spawns {
+      if !los.r.MatchString(spawn.Name) {
+        continue
+      }
+      sx, sy := spawn.Pos()
+      dx, dy := spawn.Dims()
+      for x := sx; x < sx+dx; x++ {
+        for y := sy; y < sy+dy; y++ {
+          if pix[x][y] < house.LosVisibilityThreshold {
+            pix[x][y] = house.LosVisibilityThreshold
+          }
+        }
+      }
+    }
   }
 
   for _, tex := range []*house.LosTexture{g.los.denizens.tex, g.los.intruders.tex} {
@@ -856,7 +1110,7 @@ func (g *Game) Think(dt int64) {
   }
 
   // Also don't do an ai stuff if this isn't the appropriate state
-  if g.turn_state != turnStateAiAction {
+  if g.Turn_state != turnStateAiAction {
     return
   }
 
@@ -872,45 +1126,45 @@ func (g *Game) Think(dt int64) {
     if state != "ready" && state != "killed" {
       return
     }
-    if ent.sprite.Sprite().NumPendingCmds() > 0 {
+    if !ent.sprite.Sprite().Idle() {
       return
     }
   }
-
   // Do Ai - if there is any to do
   if g.Side == SideHaunt {
-    if g.minion_ai.Active() {
-      g.active_ai = g.minion_ai
-      g.action_state = waitingAction
+    if g.Ai.minions.Active() {
+      g.active_ai = g.Ai.minions
+      g.Action_state = waitingAction
     } else {
-      if g.haunts_ai.Active() {
-        g.active_ai = g.haunts_ai
-        g.action_state = waitingAction
+      if g.Ai.denizens.Active() {
+        g.active_ai = g.Ai.denizens
+        g.Action_state = waitingAction
       }
     }
   } else {
-    if g.explorers_ai.Active() {
-      g.active_ai = g.explorers_ai
-      g.action_state = waitingAction
+    if g.Ai.intruders.Active() {
+      g.active_ai = g.Ai.intruders
+      g.Action_state = waitingAction
     }
   }
-  if g.action_state == waitingAction {
+  if g.Action_state == waitingAction {
     select {
     case exec := <-g.active_ai.ActionExecs():
       if exec != nil {
         g.current_exec = exec
       } else {
-        g.action_state = noAction
+        g.Action_state = noAction
         // TODO: indicate that the master ai can go now
       }
 
     default:
     }
   }
-  if !g.player_active && g.action_state == noAction && !g.explorers_ai.Active() && !g.haunts_ai.Active() && !g.minion_ai.Active() {
-    g.turn_state = turnStateEnd
-    base.Log().Printf("ScriptComm: change to turnStateEnd")
+  if g.player_inactive && g.Action_state == noAction && !g.Ai.intruders.Active() && !g.Ai.denizens.Active() && !g.Ai.minions.Active() {
+    g.Turn_state = turnStateMainPhaseOver
+    base.Log().Printf("ScriptComm: change to turnStateMainPhaseOver")
     g.comm.game_to_script <- nil
+    base.Log().Printf("ScriptComm: sent nil")
   }
 }
 
@@ -960,18 +1214,37 @@ func (g *Game) doLos(dist int, line [][2]int, los [][]bool) {
       return
     }
     dist -= 1 // or whatever
-    if dist <= 0 {
+    if dist < 0 {
       return
     }
     los[x][y] = true
   }
 }
 
-func (g *Game) TeamLos(x, y int) bool {
-  if x < 0 || y < 0 || x >= len(g.los.merger) || y >= len(g.los.merger[x]) {
+func (g *Game) TeamLos(side Side, x, y, dx, dy int) bool {
+  var team_los [][]byte
+  if side == SideExplorers {
+    team_los = g.los.intruders.tex.Pix()
+  } else if side == SideHaunt {
+    team_los = g.los.denizens.tex.Pix()
+  } else {
+    base.Warn().Printf("Can only ask for TeamLos for the intruders and denizens.")
     return false
   }
-  return g.los.merger[x][y]
+  if team_los == nil {
+    return false
+  }
+  for i := x; i < x+dx; i++ {
+    for j := y; j < y+dy; j++ {
+      if i < 0 || j < 0 || i >= len(team_los) || j >= len(team_los[0]) {
+        continue
+      }
+      if team_los[i][j] >= house.LosVisibilityThreshold {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 func (g *Game) mergeLos(side Side) {

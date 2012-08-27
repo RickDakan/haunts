@@ -2,12 +2,12 @@ package game
 
 import (
   "fmt"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
+  "path/filepath"
 )
 
 type Center struct {
@@ -110,8 +110,8 @@ type MainBar struct {
   state  mainBarState
   region gui.Region
 
-  // List of all buttons, just to make it easy to iterate through them.
-  buttons []*Button
+  all_buttons        []*Button
+  no_actions_buttons []*Button
 
   ent *Entity
 
@@ -123,8 +123,7 @@ type MainBar struct {
 
 func buttonFuncEndTurn(mbi interface{}) {
   mb := mbi.(*MainBar)
-  mb.game.player_active = false
-  base.Log().Printf("player_active set to false")
+  mb.game.player_inactive = true
 }
 func buttonFuncActionLeft(mbi interface{}) {
   mb := mbi.(*MainBar)
@@ -192,12 +191,17 @@ func MakeMainBar(game *Game) (*MainBar, error) {
   if err != nil {
     return nil, err
   }
-  mb.buttons = []*Button{
+  mb.all_buttons = []*Button{
     &mb.layout.EndTurn,
     &mb.layout.UnitLeft,
     &mb.layout.UnitRight,
     &mb.layout.ActionLeft,
     &mb.layout.ActionRight,
+  }
+  mb.no_actions_buttons = []*Button{
+    &mb.layout.EndTurn,
+    &mb.layout.UnitLeft,
+    &mb.layout.UnitRight,
   }
   mb.layout.EndTurn.f = buttonFuncEndTurn
   mb.layout.UnitRight.f = buttonFuncUnitRight
@@ -241,6 +245,9 @@ func pointInsideRect(px, py, x, y, dx, dy int) bool {
 }
 
 func (m *MainBar) Think(g *gui.Gui, t int64) {
+  if g.FocusWidget() != nil {
+    return
+  }
   if m.ent != nil {
     // If an action is selected and we can't see it then we scroll just enough
     // so that we can.
@@ -324,7 +331,11 @@ func (m *MainBar) Think(g *gui.Gui, t int64) {
     }
   }
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     button.Think(m.region.X, m.region.Y, m.mx, m.my, t)
   }
 }
@@ -351,6 +362,9 @@ func (m *MainBar) pointInsideAction(px, py int) int {
 }
 
 func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
+  if g.FocusWidget() != nil {
+    return false
+  }
   cursor := group.Events[0].Key.Cursor()
   if cursor != nil {
     m.mx, m.my = cursor.Point()
@@ -359,14 +373,18 @@ func (m *MainBar) Respond(g *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     if button.Respond(group, m) {
       return true
     }
   }
 
   if found, event := group.FindEvent(gin.MouseLButton); found && event.Type == gin.Press {
-    for _, button := range m.buttons {
+    for _, button := range buttons {
       if button.handleClick(m.mx, m.my, m) {
         return true
       }
@@ -411,15 +429,23 @@ func (m *MainBar) Draw(region gui.Region) {
   gl.Vertex2i(region.X+region.Dx, region.Y)
   gl.End()
 
-  for _, button := range m.buttons {
+  buttons := m.no_actions_buttons
+  if m.ent != nil && len(m.ent.Actions) > m.layout.Actions.Count {
+    buttons = m.all_buttons
+  }
+  for _, button := range buttons {
     button.RenderAt(region.X, region.Y)
   }
 
-  if m.ent != nil && m.ent.Stats != nil {
+  ent := m.game.HoveredEnt()
+  if ent == nil {
+    ent = m.ent
+  }
+  if ent != nil && ent.Stats != nil {
     gl.Color4d(1, 1, 1, 1)
-    m.ent.Still.Data().Bind()
-    tdx := m.ent.Still.Data().Dx()
-    tdy := m.ent.Still.Data().Dy()
+    ent.Still.Data().Bind()
+    tdx := ent.Still.Data().Dx()
+    tdy := ent.Still.Data().Dy()
     cx := region.X + m.layout.CenterStillFrame.X
     cy := region.Y + m.layout.CenterStillFrame.Y
     gl.Begin(gl.QUADS)
@@ -436,11 +462,11 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.Vertex2i(cx+tdx/2, cy-tdy/2)
     gl.End()
 
-    m.layout.Name.RenderString(m.ent.Name)
-    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", m.ent.Stats.ApCur()))
-    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", m.ent.Stats.HpCur()))
-    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", m.ent.Stats.Corpus()))
-    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", m.ent.Stats.Ego()))
+    m.layout.Name.RenderString(ent.Name)
+    m.layout.Ap.RenderString(fmt.Sprintf("Ap:%d", ent.Stats.ApCur()))
+    m.layout.Hp.RenderString(fmt.Sprintf("Hp:%d", ent.Stats.HpCur()))
+    m.layout.Corpus.RenderString(fmt.Sprintf("Corpus:%d", ent.Stats.Corpus()))
+    m.layout.Ego.RenderString(fmt.Sprintf("Ego:%d", ent.Stats.Ego()))
 
     gl.Color4d(1, 1, 1, 1)
     m.layout.Divider.Data().Bind()
@@ -461,7 +487,8 @@ func (m *MainBar) Draw(region gui.Region) {
     gl.TexCoord2d(1, 0)
     gl.Vertex2i(cx+(tdx+1)/2, cy-tdy/2)
     gl.End()
-
+  }
+  if m.ent != nil && m.ent.Stats != nil {
     // Actions
     {
       spacing := m.layout.Actions.Icon_size * float64(m.layout.Actions.Count)

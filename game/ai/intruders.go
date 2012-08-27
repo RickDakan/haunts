@@ -2,65 +2,97 @@ package ai
 
 import (
   "fmt"
-  // "github.com/runningwild/haunts/game/actions"
-  "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
-  // "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
 )
 
 func (a *Ai) addIntrudersContext() {
-  a.L.Register("activeIntruders", activeIntrudersFunc(a))
-  a.L.Register("execIntruder", execIntruderFunc(a))
+  a.L.Register("IsActive", isActive(a))
+  a.L.Register("ExecIntruder", execIntruder(a))
+  a.L.Register("SetEntityMasterInfo", setEntityMasterInfo(a))
+  a.L.Register("AllIntruders", allIntruders(a))
 }
 
-// Input:
-//   None
-// Output:
-// 1 - Table - Contains a mapping from index to entity Id of all active
-//     intruders.
-func activeIntrudersFunc(a *Ai) lua.GoFunction {
+func isActive(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !game.LuaNumParamsOk(L, 0, "activeIntruders") {
+    if !game.LuaCheckParamsOk(L, "IsActive", game.LuaEntity) {
+      return 0
+    }
+    ent := game.LuaToEntity(L, a.game, -1)
+    if ent == nil {
+      game.LuaDoError(L, "Tried to IsActive on an invalid entity.")
+      return 0
+    }
+    if ent.ExplorerEnt == nil {
+      game.LuaDoError(L, "Tried to IsActive on a non-intruder.")
+      return 0
+    }
+    L.PushBoolean(ent.Ai.Active())
+    return 1
+  }
+}
+
+func allIntruders(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "AllIntruders") {
       return 0
     }
     L.NewTable()
     count := 0
     for _, ent := range a.game.Ents {
-      if ent.ExplorerEnt == nil {
-        continue
+      if ent.ExplorerEnt != nil {
+        count++
+        L.PushInteger(count)
+        game.LuaPushEntity(L, ent)
+        L.SetTable(-3)
       }
-      if !ent.Ai.Active() {
-        continue
-      }
-      count++
-      L.PushInteger(count)
-      L.PushInteger(int(ent.Id))
-      L.SetTable(-3)
     }
-    base.Log().Printf("%d active intruders", count)
     return 1
   }
 }
 
-func execIntruderFunc(a *Ai) lua.GoFunction {
+func setEntityMasterInfo(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    base.Log().Printf("Exec intruder")
-    if !game.LuaNumParamsOk(L, 1, "execIntruder") {
+    if !game.LuaCheckParamsOk(L, "SetEntityMasterInfo", game.LuaEntity, game.LuaString, game.LuaAnything) {
       return 0
     }
-    id := game.EntityId(L.ToInteger(0))
-    ent := a.game.EntityById(id)
+    ent := game.LuaToEntity(L, a.game, -3)
     if ent == nil {
-      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which doesn't exist.", id))
+      game.LuaDoError(L, "Tried to ExecIntruder on an invalid entity.")
       return 0
     }
     if ent.ExplorerEnt == nil {
-      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not an intruder.", id))
+      game.LuaDoError(L, "Tried to ExecIntruder on a non-intruder.")
+      return 0
+    }
+    if ent.Ai_data == nil {
+      ent.Ai_data = make(map[string]string)
+    }
+    if L.IsNil(-1) {
+      delete(ent.Ai_data, L.ToString(-2))
+    } else {
+      ent.Ai_data[L.ToString(-2)] = L.ToString(-1)
+    }
+    return 0
+  }
+}
+
+func execIntruder(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaNumParamsOk(L, 1, "ExecIntruder") {
+      return 0
+    }
+    ent := game.LuaToEntity(L, a.game, -1)
+    if ent == nil {
+      game.LuaDoError(L, "Tried to ExecIntruder on an invalid entity.")
+      return 0
+    }
+    if ent.ExplorerEnt == nil {
+      game.LuaDoError(L, "Tried to ExecIntruder on a non-intruder.")
       return 0
     }
     if !ent.Ai.Active() {
-      game.LuaDoError(L, fmt.Sprintf("Tried to execIntruder entity with Id=%d, which is not active.", id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to ExecIntruder '%s', who is not active.", ent.Name))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

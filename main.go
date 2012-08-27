@@ -39,6 +39,7 @@ var (
   anchor                    *gui.AnchorBox
   chooser                   *gui.FileChooser
   wdx, wdy                  int
+  game_box                  *lowerLeftTable
   game_panel                *game.GamePanel
   zooming, dragging, hiding bool
 )
@@ -90,11 +91,11 @@ func draggingAndZooming(dz draggerZoomer) {
     return
   }
 
-  zooming = key_map["zoom"].IsDown()
-  if zooming {
-    zoom := gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
-    dz.Zoom(zoom / 100)
+  var zoom float64
+  if gin.In().GetKey(gin.Space).FramePressAmt() > 0 {
+    zoom = gin.In().GetKey(gin.MouseWheelVertical).FramePressAmt()
   }
+  dz.Zoom(zoom / 100)
 
   dz.Zoom(key_map["zoom in"].FramePressAmt() / 20)
   dz.Zoom(-key_map["zoom out"].FramePressAmt() / 20)
@@ -117,38 +118,11 @@ func draggingAndZooming(dz draggerZoomer) {
 }
 
 func gameMode() {
+  if game_panel == nil {
+    return
+  }
   if game_panel.Active() {
     draggingAndZooming(game_panel.GetViewer())
-  }
-  if key_map["load game"].FramePressCount() > 0 && chooser == nil {
-    callback := func(path string, err error) {
-      ui.DropFocus()
-      ui.RemoveChild(anchor)
-      chooser = nil
-      anchor = nil
-      game_panel.LoadGame(path)
-      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
-    }
-    chooser = gui.MakeFileChooser(filepath.Join(datadir, "games"), callback, gui.MakeFileFilter(fmt.Sprintf(".game")))
-    anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
-    anchor.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    ui.AddChild(anchor)
-    ui.TakeFocus(chooser)
-  }
-
-  if key_map["save game"].FramePressCount() > 0 && chooser == nil {
-    callback := func(filename string) {
-      ui.DropFocus()
-      ui.RemoveChild(anchor)
-      anchor = nil
-      game_panel.SaveGame(filename)
-      // base.SetStoreVal("last game path", base.TryRelative(datadir, path))
-    }
-    save_widget := MakeSaveWidget(callback)
-    anchor = gui.MakeAnchorBox(gui.Dims{wdx, wdy})
-    anchor.AddChild(save_widget, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-    ui.AddChild(anchor)
-    ui.TakeFocus(save_widget)
   }
 }
 
@@ -214,6 +188,14 @@ func editMode() {
   }
 }
 
+type lowerLeftTable struct {
+  *gui.AnchorBox
+}
+
+func (llt *lowerLeftTable) AddChild(w gui.Widget) {
+  llt.AnchorBox.AddChild(w, gui.Anchor{0, 0, 0, 0})
+}
+
 func main() {
   defer func() {
     if r := recover(); r != nil {
@@ -232,15 +214,14 @@ func main() {
   }
 
   sound.Init()
-  // sound.SetBackgroundMusic("macabre.ogg")
   render.Init()
   render.Queue(func() {
     sys.CreateWindow(10, 10, wdx, wdy)
     sys.EnableVSync(true)
-    err := gl.Init()
-    if err != nil {
-      panic(err)
-    }
+    // err := gl.Init()
+    // if err != nil {
+    //   panic(err)
+    // }
     gl.Enable(gl.BLEND)
     gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
   })
@@ -271,19 +252,24 @@ func main() {
   }
   editor_name = "room"
   editor = editors[editor_name]
-  game_panel = game.MakeGamePanel()
-  if base.GetStoreVal("last game path") != "" {
-    game_panel.LoadHouseFromPath(filepath.Join(datadir, base.GetStoreVal("last game path")))
-  }
 
   edit_mode := false
-  if edit_mode {
-    ui.AddChild(editor)
-  } else {
-    ui.AddChild(game_panel)
+  game.Restart = func() {
+    base.Log().Printf("Restarting...")
+    ui.RemoveChild(game_box)
+    game_box = &lowerLeftTable{gui.MakeAnchorBox(gui.Dims{1024, 768})}
+    err = game.InsertStartMenu(game_box)
+    if err != nil {
+      panic(err)
+    }
+    ui.AddChild(game_box)
+    base.Log().Printf("Restarted")
   }
+  game.Restart()
 
-  ui.AddChild(base.MakeConsole())
+  if base.IsDevel() {
+    ui.AddChild(base.MakeConsole())
+  }
   sys.Think()
   // Wait until now to create the dictionary because the render thread needs
   // to be running in advance.
@@ -303,84 +289,92 @@ func main() {
     })
     render.Purge()
 
-    if key_map["cpu profile"].FramePressCount() > 0 {
-      if profile_output == nil {
-        profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
-        if err == nil {
-          err = pprof.StartCPUProfile(profile_output)
-          if err != nil {
+    for _, child := range game_box.GetChildren() {
+      if gp, ok := child.(*game.GamePanel); ok {
+        game_panel = gp
+      }
+    }
+
+    if base.IsDevel() {
+      if key_map["cpu profile"].FramePressCount() > 0 {
+        if profile_output == nil {
+          profile_output, err = os.Create(filepath.Join(datadir, "cpu.prof"))
+          if err == nil {
+            err = pprof.StartCPUProfile(profile_output)
+            if err != nil {
+              base.Log().Printf("Unable to start CPU profile: %v\n", err)
+              profile_output.Close()
+              profile_output = nil
+            }
+            base.Log().Printf("profout: %v\n", profile_output)
+          } else {
             base.Log().Printf("Unable to start CPU profile: %v\n", err)
-            profile_output.Close()
-            profile_output = nil
           }
-          base.Log().Printf("profout: %v\n", profile_output)
         } else {
-          base.Log().Printf("Unable to start CPU profile: %v\n", err)
+          pprof.StopCPUProfile()
+          profile_output.Close()
+          profile_output = nil
         }
-      } else {
-        pprof.StopCPUProfile()
-        profile_output.Close()
-        profile_output = nil
       }
-    }
 
-    if key_map["heap profile"].FramePressCount() > 0 {
-      out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
-      heap_prof_count++
-      if err == nil {
-        err = pprof.WriteHeapProfile(out)
-        out.Close()
-        if err != nil {
-          base.Warn().Printf("Unable to write heap profile: %v", err)
+      if key_map["heap profile"].FramePressCount() > 0 {
+        out, err := os.Create(filepath.Join(datadir, fmt.Sprintf("heap-%d.prof", heap_prof_count)))
+        heap_prof_count++
+        if err == nil {
+          err = pprof.WriteHeapProfile(out)
+          out.Close()
+          if err != nil {
+            base.Warn().Printf("Unable to write heap profile: %v", err)
+          }
+        } else {
+          base.Warn().Printf("Unable to create heap profile: %v", err)
         }
-      } else {
-        base.Warn().Printf("Unable to create heap profile: %v", err)
       }
-    }
 
-    if key_map["manual mem"].FramePressCount() > 0 {
-      base.Log().Printf(memory.TotalAllocations())
-    }
+      if key_map["manual mem"].FramePressCount() > 0 {
+        base.Log().Printf(memory.TotalAllocations())
+      }
 
-    if key_map["game mode"].FramePressCount()%2 == 1 {
+      if key_map["game mode"].FramePressCount()%2 == 1 {
+        base.Log().Printf("Game mode change: %t", edit_mode)
+        if edit_mode {
+          ui.RemoveChild(editor)
+          ui.AddChild(game_box)
+        } else {
+          ui.RemoveChild(game_box)
+          ui.AddChild(editor)
+        }
+        edit_mode = !edit_mode
+
+        if key_map["row up"].FramePressCount() > 0 {
+          house.Num_rows += 25
+        }
+        if key_map["row down"].FramePressCount() > 0 {
+          house.Num_rows -= 25
+        }
+        if key_map["steps up"].FramePressCount() > 0 {
+          house.Num_steps++
+        }
+        if key_map["steps down"].FramePressCount() > 0 {
+          house.Num_steps--
+        }
+        if key_map["noise up"].FramePressCount() > 0 {
+          house.Noise_rate += 10
+        }
+        if key_map["noise down"].FramePressCount() > 0 {
+          house.Noise_rate -= 10
+        }
+        if key_map["foo"].FramePressCount() > 0 {
+          house.Foo = (house.Foo + 1) % 2
+        }
+      }
+
       if edit_mode {
-        ui.RemoveChild(editor)
-        ui.AddChild(game_panel)
+        editMode()
       } else {
-        ui.RemoveChild(game_panel)
-        ui.AddChild(editor)
+        gameMode()
       }
-      edit_mode = !edit_mode
     }
-
-    if key_map["row up"].FramePressCount() > 0 {
-      house.Num_rows += 25
-    }
-    if key_map["row down"].FramePressCount() > 0 {
-      house.Num_rows -= 25
-    }
-    if key_map["steps up"].FramePressCount() > 0 {
-      house.Num_steps++
-    }
-    if key_map["steps down"].FramePressCount() > 0 {
-      house.Num_steps--
-    }
-    if key_map["noise up"].FramePressCount() > 0 {
-      house.Noise_rate += 10
-    }
-    if key_map["noise down"].FramePressCount() > 0 {
-      house.Noise_rate -= 10
-    }
-    if key_map["foo"].FramePressCount() > 0 {
-      house.Foo = (house.Foo + 1) % 2
-    }
-
-    if edit_mode {
-      editMode()
-    } else {
-      gameMode()
-    }
-
     // Draw a cursor at the cursor - for testing an osx bug in glop.
     // zx, zy := gin.In().GetCursor("Mouse").Point()
     // render.Queue(func() {

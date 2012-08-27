@@ -42,6 +42,18 @@ func getKeysFromString(str string) []gin.KeyId {
     case part == "gui":
       kid = gin.EitherGui
 
+    case part == "space":
+      kid = gin.Space
+
+    case part == "rmouse":
+      kid = gin.MouseRButton
+
+    case part == "lmouse":
+      kid = gin.MouseLButton
+
+    case part == "vwheel":
+      kid = gin.MouseWheelVertical
+
     case part == "up":
       kid = gin.Up
 
@@ -63,19 +75,32 @@ func getKeysFromString(str string) []gin.KeyId {
 func (kb KeyBinds) MakeKeyMap() KeyMap {
   key_map := make(KeyMap)
   for key, val := range kb {
-    kids := getKeysFromString(val)
+    parts := strings.Split(val, ",")
+    var binds []gin.Key
+    for i, part := range parts {
+      kids := getKeysFromString(part)
 
-    if len(kids) == 1 {
-      key_map[key] = gin.In().GetKey(kids[0])
-    } else {
-      // The last kid is the main kid and the rest are modifiers
-      main := kids[len(kids)-1]
-      kids = kids[0 : len(kids)-1]
-      var down []bool
-      for _ = range kids {
-        down = append(down, true)
+      if len(kids) == 1 {
+        binds = append(binds, gin.In().GetKey(kids[0]))
+      } else {
+        // The last kid is the main kid and the rest are modifiers
+        main := kids[len(kids)-1]
+        kids = kids[0 : len(kids)-1]
+        var down []bool
+        for _ = range kids {
+          down = append(down, true)
+        }
+        binds = append(binds, gin.In().BindDerivedKey(fmt.Sprintf("%s:%d", key, i), gin.In().MakeBinding(main, kids, down)))
       }
-      key_map[key] = gin.In().BindDerivedKey(key, gin.In().MakeBinding(main, kids, down))
+    }
+    if len(binds) == 1 {
+      key_map[key] = binds[0]
+    } else {
+      var actual_binds []gin.Binding
+      for i := range binds {
+        actual_binds = append(actual_binds, gin.In().MakeBinding(binds[i].Id(), nil, nil))
+      }
+      key_map[key] = gin.In().BindDerivedKey("name", actual_binds...)
     }
   }
   return key_map

@@ -1,106 +1,189 @@
+//
+
 // +build !nosound
 package sound
 
 import (
-  "path/filepath"
-  "github.com/runningwild/glop/sprite"
+  fmod "github.com/runningwild/fmod/event"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/fmod"
+  "math"
+  "path/filepath"
+  "time"
 )
 
 var (
-  system *fmod.System
-  music  *fmod.Channel
-  names  map[string]string // 'load' -> 'load_gun.ogg', stuff like that
+  system        *fmod.System
+  music_volume  chan float64
+  music         *fmod.Event
+  music_start   chan string
+  music_name    string
+  music_stop    chan bool
+  param_control chan paramRequest
+
+  // used to define how fast things fade in and out
+  freq     time.Duration
+  approach float64
 )
 
 func Init() {
   var err error
-  system, err = fmod.CreateSystem()
+  system, err = fmod.EventSystemCreate()
   if err != nil {
     base.Error().Printf("Unable to create sound system: %v", err)
     return
   }
-  err = system.Init(32, fmod.INIT_NORMAL, nil)
+
+  err = system.Init(32, fmod.INIT_NORMAL, nil, fmod.EVENT_INIT_NORMAL)
   if err != nil {
     base.Error().Printf("Unable to initialize sound system: %v", err)
     return
   }
   version, _ := system.GetVersion()
-  err = base.LoadJson(filepath.Join(base.GetDataDir(), "sound", "names.json"), &names)
-  if err != nil {
-    base.Error().Printf("Unable to load names.json: %v", err)
-    return
-  }
   base.Log().Printf("Fmod version %x", version)
-  sprite.SetTriggerFunc(trigger)
+
+  err = system.SetMediaPath(filepath.Join(base.GetDataDir(), "sound") + "/")
+  if err != nil {
+    base.Error().Printf("Unable to set media path: %v\n", err)
+    return
+  }
+
+  err = system.LoadPath("Haunts.fev", nil)
+  if err != nil {
+    base.Error().Printf("Unable to load fev: %v\n", err)
+    return
+  }
+
+  freq = time.Millisecond * 3
+  approach = 0.01
+  music_volume = make(chan float64, 1)
+  music_start = make(chan string, 1)
+  param_control = make(chan paramRequest, 1)
+  music_stop = make(chan bool, 1)
+  go musicControl()
 }
 
-func MapSounds(m map[string]string) {
-  for k, v := range m {
-    names[k] = v
+type musicState struct {
+  name  string
+  event *fmod.Event
+  stop  bool
+  vol   struct {
+    cur, target float64
   }
+  params map[string]paramState
 }
 
-func trigger(s *sprite.Sprite, name string) {
-  base.Log().Printf("trigger: %p - %s", s, name)
-  file, ok := names[name]
-  if !ok {
-    base.Error().Printf("Attempted to play unknown sound '%s'", name)
-    return
-  }
-  path := filepath.Join(base.GetDataDir(), "sound", file)
-  sound, err := system.CreateSound_FromFilename(path, fmod.MODE_LOOP_OFF)
-  if err != nil {
-    base.Error().Printf("Unable to load %s: %v", file, err)
-    return
-  }
-
-  music, err = system.PlaySound(fmod.CHANNEL_FREE, sound, false)
-  if err != nil {
-    base.Error().Printf("Unable to play %s: %v", file, err)
-    return
-  }
-  base.Log().Printf("Played sound: %s\n", file)
+type paramState struct {
+  param       *fmod.Param
+  cur, target float64
 }
 
-func PlaySound(p base.Path) {
-  sound, err := system.CreateSound_FromFilename(p.String(), fmod.MODE_LOOP_OFF)
-  if err != nil {
-    base.Error().Printf("Unable to load %v: %v", p, err)
-    return
-  }
-  _, err = system.PlaySound(fmod.CHANNEL_FREE, sound, false)
-  if err != nil {
-    base.Error().Printf("Unable to play %v: %v", p, err)
-    return
-  }
-  base.Log().Printf("Played sound: %v\n", p)
+type paramRequest struct {
+  name string
+  val  float64
 }
 
-func SetBackgroundMusic(file string) {
-  if file == "" {
-    if music != nil {
-      music.Stop()
-      music = nil
+// Manages anything that might happen with one music event.
+func musicControl() {
+  musics := make(map[string]*musicState)
+  var current *musicState
+  tick := time.NewTicker(freq)
+  for {
+    select {
+    case <-tick.C:
+      for _, music := range musics {
+        music.vol.cur = music.vol.target*approach + music.vol.cur*(1-approach)
+        if math.Abs(music.vol.cur-music.vol.target) > 1e-5 {
+          music.event.SetVolume(music.vol.cur)
+        }
+        for name, param := range music.params {
+          param.cur = param.target*approach + param.cur*(1-approach)
+          music.params[name] = param
+          if math.Abs(param.cur-param.target) > 1e-5 {
+            param.param.SetValue(param.cur)
+          }
+        }
+      }
+
+    case name := <-music_start:
+      if current != nil && name == current.name {
+        current.vol.target = 1.0
+      } else {
+        if current != nil {
+          current.vol.target = 0.0
+          current.stop = true
+        }
+        event, err := system.GetEvent(name, fmod.MODE_DEFAULT)
+        if err != nil {
+          base.Error().Printf("Unable to play music '%s': %v", name, err)
+          continue
+        }
+        err = event.Start()
+        var next musicState
+        next.name = name
+        next.event = event
+        next.vol.cur, err = event.GetVolume()
+        next.vol.target = 1.0
+        next.params = make(map[string]paramState)
+        musics[name] = &next
+        current = &next
+      }
+
+    case target := <-music_volume:
+      if current != nil {
+        current.vol.target = target
+      }
+
+    case <-music_stop:
+      if current != nil {
+        current.vol.target = 0.0
+        current.stop = true
+      }
+
+    case req := <-param_control:
+      if current != nil {
+        if _, ok := current.params[req.name]; !ok {
+          param, err := current.event.GetParameter(req.name)
+          if err != nil {
+            base.Error().Printf("Can't get parameter '%s': %v", req.name, err)
+            break
+          }
+          current.params[req.name] = paramState{param: param}
+        }
+        state := current.params[req.name]
+        state.cur, _ = state.param.GetValue()
+        state.target = req.val
+        current.params[req.name] = state
+      }
     }
-    return
   }
-  path := filepath.Join(base.GetDataDir(), "sound", "music", file)
-  sound, err := system.CreateSound_FromFilename(path, fmod.MODE_LOOP_NORMAL)
-  if err != nil {
-    base.Error().Printf("Unable to load %s: %v", file, err)
-    return
-  }
+}
 
-  music, err = system.PlaySound(fmod.CHANNEL_FREE, sound, false)
-  if err != nil {
-    base.Error().Printf("Unable to play %s: %v", file, err)
+func PlayMusic(name string) {
+  if system == nil {
     return
   }
-  // _, err := system.GetMasterChannelGroup()
-  // if err != nil {
-  //   base.Error().Printf("Unable to set volume: %v", err)
-  //   return
-  // }
+  music_start <- name
+}
+
+func StopMusic() {
+  music_stop <- true
+}
+
+func SetMusicParam(name string, val float64) {
+  if system == nil {
+    return
+  }
+  param_control <- paramRequest{name: name, val: val}
+}
+
+func PlaySound(name string) {
+  if system == nil {
+    return
+  }
+  sound, err := system.GetEvent(name, fmod.MODE_DEFAULT)
+  if err != nil {
+    base.Error().Printf("Unable to get event '%s': %v", name, err)
+    return
+  }
+  sound.Start()
 }

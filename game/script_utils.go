@@ -1,14 +1,14 @@
 package game
 
 import (
-  "fmt"
-  "io"
   "encoding/binary"
   "errors"
-  "sort"
+  "fmt"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
+  "io"
+  "sort"
 )
 
 type luaEncodable int32
@@ -19,6 +19,7 @@ const (
   luaEncNil
   luaEncTable
   luaEncString
+  luaEncEntity
 )
 
 // Encodes a lua value, only bool, number, nil, table, and string can be
@@ -39,6 +40,12 @@ func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
     err2 = binary.Write(w, binary.LittleEndian, L.ToNumber(index))
   case L.IsNil(index):
     err1 = binary.Write(w, binary.LittleEndian, luaEncNil)
+  case LuaIsEntity(L, index):
+    err1 = binary.Write(w, binary.LittleEndian, luaEncEntity)
+    L.PushString("id")
+    L.GetTable(index - 1)
+    err2 = binary.Write(w, binary.LittleEndian, uint64(L.ToInteger(-1)))
+    L.Pop(1)
   case L.IsTable(index):
     err1 = binary.Write(w, binary.LittleEndian, luaEncTable)
     err2 = LuaEncodeTable(w, L, index)
@@ -62,7 +69,7 @@ func LuaEncodeValue(w io.Writer, L *lua.State, index int) error {
 }
 
 // Decodes a value from the reader and pushes it onto the stack
-func LuaDecodeValue(r io.Reader, L *lua.State) error {
+func LuaDecodeValue(r io.Reader, L *lua.State, g *Game) error {
   var le luaEncodable
   err := binary.Read(r, binary.LittleEndian, &le)
   if err != nil {
@@ -79,8 +86,12 @@ func LuaDecodeValue(r io.Reader, L *lua.State) error {
     L.PushNumber(f)
   case luaEncNil:
     L.PushNil()
+  case luaEncEntity:
+    var id uint64
+    err = binary.Read(r, binary.LittleEndian, &id)
+    LuaPushEntity(L, g.EntityById(EntityId(id)))
   case luaEncTable:
-    err = LuaDecodeTable(r, L)
+    err = LuaDecodeTable(r, L, g)
   case luaEncString:
     var length uint32
     err = binary.Read(r, binary.LittleEndian, &length)
@@ -117,23 +128,40 @@ func LuaEncodeTable(w io.Writer, L *lua.State, index int) error {
 }
 
 // decodes a lua table and pushes it onto the stack
-func LuaDecodeTable(r io.Reader, L *lua.State) error {
+func LuaDecodeTable(r io.Reader, L *lua.State, g *Game) error {
   L.NewTable()
   var cont byte
   err := binary.Read(r, binary.LittleEndian, &cont)
   for cont != 0 && err == nil {
     for i := 0; i < 2 && err == nil; i++ {
-      err = LuaDecodeValue(r, L)
+      err = LuaDecodeValue(r, L, g)
     }
     if err == nil {
       err = binary.Read(r, binary.LittleEndian, &cont)
     }
+
     L.SetTable(-3)
   }
   if err != nil {
     return err
   }
+
   return nil
+}
+
+func LuaIsEntity(L *lua.State, index int) bool {
+  L.PushString("type")
+  L.GetTable(index - 1)
+  if L.IsNil(-1) {
+    L.Pop(1)
+    return false
+  }
+  if L.ToString(-1) == "Entity" {
+    L.Pop(1)
+    return true
+  }
+  L.Pop(1)
+  return false
 }
 
 // Gets the id out of the table at the specified index and returns the
@@ -225,11 +253,22 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
         "Denizen":  SideHaunt,
         "Intruder": SideExplorers,
         "Npc":      SideNpc,
-        "Objects":  SideObject,
+        "Object":   SideObject,
       }
       for str, side := range sides {
         L.PushString(str)
         L.PushBoolean(ent.Side() == side)
+        L.SetTable(-3)
+      }
+    },
+    "State": func() {
+      L.PushString(ent.Sprite().State())
+    },
+    "Master": func() {
+      L.NewTable()
+      for key, val := range ent.Ai_data {
+        L.PushString(key)
+        L.PushString(val)
         L.SetTable(-3)
       }
     },
@@ -306,6 +345,16 @@ func LuaPushPoint(L *lua.State, x, y int) {
   L.SetTable(-3)
 }
 
+func LuaPushDims(L *lua.State, dx, dy int) {
+  L.NewTable()
+  L.PushString("Dx")
+  L.PushInteger(dx)
+  L.SetTable(-3)
+  L.PushString("Dy")
+  L.PushInteger(dy)
+  L.SetTable(-3)
+}
+
 func LuaToPoint(L *lua.State, pos int) (x, y int) {
   L.PushString("X")
   L.GetTable(pos - 1)
@@ -331,6 +380,12 @@ func LuaPushRoom(L *lua.State, game *Game, room *house.Room) {
         L.SetTable(-3)
         L.PushString("room")
         L.PushInteger(ri)
+        L.SetTable(-3)
+        L.PushString("Pos")
+        LuaPushPoint(L, room.X, room.Y)
+        L.SetTable(-3)
+        L.PushString("Dims")
+        LuaPushDims(L, room.Size.Dx, room.Size.Dy)
         L.SetTable(-3)
         return
       }
@@ -446,15 +501,7 @@ func LuaPushSpawnPoint(L *lua.State, game *Game, sp *house.SpawnPoint) {
   LuaPushPoint(L, x, y)
   L.SetTable(-3)
   L.PushString("Dims")
-  L.NewTable()
-  {
-    L.PushString("Dx")
-    L.PushInteger(dx)
-    L.SetTable(-3)
-    L.PushString("Dy")
-    L.PushInteger(dy)
-    L.SetTable(-3)
-  }
+  LuaPushDims(L, dx, dy)
   L.SetTable(-3)
 }
 
@@ -473,6 +520,7 @@ type LuaType int
 
 const (
   LuaInteger LuaType = iota
+  LuaFloat
   LuaBoolean
   LuaString
   LuaEntity
@@ -491,6 +539,8 @@ func luaMakeSigniature(name string, params []LuaType) string {
     switch params[i] {
     case LuaInteger:
       sig += "integer"
+    case LuaFloat:
+      sig += "float"
     case LuaBoolean:
       sig += "boolean"
     case LuaString:
@@ -533,6 +583,8 @@ func LuaCheckParamsOk(L *lua.State, name string, params ...LuaType) bool {
     ok := false
     switch params[i+n] {
     case LuaInteger:
+      ok = L.IsNumber(i)
+    case LuaFloat:
       ok = L.IsNumber(i)
     case LuaBoolean:
       ok = L.IsBoolean(i)

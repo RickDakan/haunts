@@ -39,6 +39,12 @@ type HouseViewer struct {
   Floor_drawers []FloorDrawer
   Edit_mode     bool
 
+  bounds struct {
+    on  bool
+    min struct{ x, y float32 }
+    max struct{ x, y float32 }
+  }
+
   Temp struct {
     Room *Room
 
@@ -67,6 +73,9 @@ func MakeHouseViewer(house *HouseDef, angle float32) *HouseViewer {
   hv.house = house
   hv.angle = angle
   hv.Zoom(1)
+
+  hv.SetBounds()
+
   return &hv
 }
 
@@ -135,8 +144,37 @@ func (hv *HouseViewer) Zoom(dz float64) {
     return
   }
   exp := math.Log(float64(hv.zoom)) + dz
-  exp = float64(clamp(float32(exp), 2.5, 5.0))
+  // This effectively clamps the 100x150 sprites to a width in the range
+  // [25,100]
+  exp = float64(clamp(float32(exp), 2.87130468509059, 4.25759904621048))
   hv.zoom = float32(math.Exp(exp))
+}
+
+func (hv *HouseViewer) SetBounds() {
+  if hv.house == nil || len(hv.house.Floors[0].Rooms) == 0 {
+    return
+  }
+  hv.bounds.on = true
+  hv.bounds.min.x = float32(hv.house.Floors[0].Rooms[0].X)
+  hv.bounds.max.x = hv.bounds.min.x
+  hv.bounds.min.y = float32(hv.house.Floors[0].Rooms[0].Y)
+  hv.bounds.max.y = hv.bounds.min.y
+  for _, floor := range hv.house.Floors {
+    for _, room := range floor.Rooms {
+      if float32(room.X) < hv.bounds.min.x {
+        hv.bounds.min.x = float32(room.X)
+      }
+      if float32(room.Y) < hv.bounds.min.y {
+        hv.bounds.min.y = float32(room.Y)
+      }
+      if float32(room.X+room.Size.Dx) > hv.bounds.max.x {
+        hv.bounds.max.x = float32(room.X + room.Size.Dx)
+      }
+      if float32(room.Y+room.Size.Dy) > hv.bounds.max.y {
+        hv.bounds.max.y = float32(room.Y + room.Size.Dy)
+      }
+    }
+  }
 }
 
 func (hv *HouseViewer) Drag(dx, dy float64) {
@@ -149,7 +187,12 @@ func (hv *HouseViewer) Drag(dx, dy float64) {
   vy.Scale(float32(dy) / hv.zoom * 2)
   v.Add(&vx)
   v.Add(&vy)
-  hv.fx, hv.fy = v.X, v.Y
+  if hv.bounds.on {
+    hv.fx = clamp(v.X, hv.bounds.min.x, hv.bounds.max.x)
+    hv.fy = clamp(v.Y, hv.bounds.min.y, hv.bounds.max.y)
+  } else {
+    hv.fx, hv.fy = v.X, v.Y
+  }
   hv.target_on = false
 }
 
@@ -266,6 +309,7 @@ func (o offsetDrawable) Pos() (int, int) {
 func (hv *HouseViewer) Draw(region gui.Region) {
   region.PushClipPlanes()
   defer region.PopClipPlanes()
+
   hv.Render_region = region
 
   hv.Floor_drawers = hv.Floor_drawers[0:0]

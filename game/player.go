@@ -25,13 +25,18 @@ type Player struct {
   // This data persists for the lifetime of the player.
   Lua_store []byte
 
-  // This is the value of the global table named 'level' in the lua scripts.
-  // This data persists for the duration of a single level.
-  Lua_level []byte
-
   // Game data - if the player is in the middle of a game then the state is
   // stored here.
-  // Game *game
+  Game_state string
+
+  // Also if the player is in the middle of a game the script that should be
+  // running is stored here.
+  Script_path string
+
+  // If the script indicated by Script_path has already been inited by the
+  // time this player was saved then this will be set to true so that the
+  // init function is not run again.
+  No_init bool
 }
 
 // Returns a map from player name to the path of that player's file.
@@ -39,7 +44,7 @@ func GetAllPlayers() map[string]string {
   root := filepath.Join(base.GetDataDir(), "players")
   players := make(map[string]string)
   filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-    if err != nil || info.IsDir() {
+    if info.IsDir() {
       return nil
     }
     f, err := os.Open(path)
@@ -55,9 +60,7 @@ func GetAllPlayers() map[string]string {
       base.Warn().Printf("Unable to read player file: %s.", path)
       return nil
     }
-    if err != nil {
-      players[name] = path
-    }
+    players[name] = path
     return nil
   })
   return players
@@ -66,7 +69,10 @@ func GetAllPlayers() map[string]string {
 func UpdatePlayer(p *Player, L *lua.State) {
   buffer := bytes.NewBuffer(nil)
   L.GetGlobal("store")
-  LuaEncodeTable(buffer, L, -1)
+  err := LuaEncodeTable(buffer, L, -1)
+  if err != nil {
+    base.Warn().Printf("Error encoding lua state: %v", err)
+  }
   L.Pop(1)
   p.Lua_store = buffer.Bytes()
 }

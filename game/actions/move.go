@@ -1,19 +1,19 @@
 package actions
 
 import (
-  "math"
   "encoding/gob"
-  "path/filepath"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
-  gl "github.com/chsc/gogl/gl21"
   lua "github.com/xenith-studios/golua"
+  "math"
+  "path/filepath"
 )
 
 func registerMoves() map[string]func() game.Action {
@@ -38,6 +38,7 @@ var path_tex *house.LosTexture
 func init() {
   game.RegisterActionMakers(registerMoves)
   gob.Register(&Move{})
+  gob.Register(&moveExec{})
 }
 
 type Move struct {
@@ -72,13 +73,24 @@ type moveExec struct {
 }
 
 func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
-  graph := g.Graph(ent.Side(), nil)
+  if len(exec.Path) == 0 {
+    base.Error().Printf("Zero length path")
+    return -1
+  }
+  if g.ToVertex(ent.Pos()) != exec.Path[0] {
+    base.Error().Printf("Path doesn't begin at ent's position, %d != %d", g.ToVertex(ent.Pos()), exec.Path[0])
+    return -1
+  }
+  graph := g.Graph(ent.Side(), true, nil)
   v := g.ToVertex(ent.Pos())
   cost := 0
   for _, step := range exec.Path[1:] {
     dsts, costs := graph.Adjacent(v)
     ok := false
+    prev := v
+    base.Log().Printf("Adj(%d):", v)
     for j := range dsts {
+      base.Log().Printf("Node %d", dsts[j])
       if dsts[j] == step {
         cost += int(costs[j])
         v = dsts[j]
@@ -86,6 +98,7 @@ func (exec *moveExec) measureCost(ent *game.Entity, g *game.Game) int {
         break
       }
     }
+    base.Log().Printf("%d -> %d: %t", prev, v, ok)
     if !ok {
       return -1
     }
@@ -114,8 +127,8 @@ func (exec *moveExec) TruncatePath(length int) {
   exec.Path = exec.Path[0 : length+1]
 }
 
-func init() {
-  gob.Register(moveExec{})
+func (a *Move) SoundMap() map[string]string {
+  return nil
 }
 
 func (a *Move) Push(L *lua.State) {
@@ -146,34 +159,47 @@ func (a *Move) Readyable() bool {
 
 func limitPath(ent *game.Entity, start int, path []int, max int) []int {
   total := 0
-  graph := ent.Game().Graph(ent.Side(), nil)
+  graph := ent.Game().Graph(ent.Side(), true, nil)
   for last := 1; last < len(path); last++ {
     adj, cost := graph.Adjacent(start)
+    found := false
     for index := range adj {
       if adj[index] == path[last] {
         total += int(cost[index])
-        if total >= max && last < len(path)-1 {
-          return path[0 : last+1]
+        if total > max {
+          return path[0:last]
         }
         start = adj[index]
+        found = true
         break
       }
+    }
+    if !found {
+      base.Log().Printf("PATH: DIdn't find, %d / %d", last+1, len(path))
+      return path[0:last]
     }
   }
   return path
 }
 
 func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(ent.Side(), nil)
+  base.Log().Printf("PATH: Request move to %v", dst)
+  graph := ent.Game().Graph(ent.Side(), false, nil)
   src := []int{ent.Game().ToVertex(ent.Pos())}
   _, path := algorithm.Dijkstra(graph, src, dst)
+  base.Log().Printf("PATH: Found path of length %d", len(path))
+  ppx, ppy := ent.Pos()
   if path == nil {
     return nil
   }
+  _, xx, yy := ent.Game().FromVertex(path[len(path)-1])
+  base.Log().Printf("PATH: %d,%d -> %d,%d", ppx, ppy, xx, yy)
   if ent.Stats.ApCur() < max_ap {
     max_ap = ent.Stats.ApCur()
   }
   path = limitPath(ent, src[0], path, max_ap)
+  _, xx, yy = ent.Game().FromVertex(path[len(path)-1])
+  base.Log().Printf("PATH: (limited) %d,%d -> %d,%d", ppx, ppy, xx, yy)
   if len(path) <= 1 {
     return nil
   }
@@ -181,57 +207,6 @@ func (a *Move) AiMoveToPos(ent *game.Entity, dst []int, max_ap int) game.ActionE
   exec.SetBasicData(ent, a)
   exec.Path = path
   return &exec
-}
-
-// Attempts to move such that the shortest path from any location
-// (txs[i], tys[i]) is between min_dist and max_dist.  Will not spend more
-// than max_ap Ap doing this.
-func (a *Move) AiMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist, max_ap int) game.ActionExec {
-  graph := ent.Game().Graph(ent.Side(), targets)
-  var src []int
-  for i := range targets {
-    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
-  }
-  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
-  if len(dst) == 0 {
-    return nil
-  }
-
-  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  _, path := algorithm.Dijkstra(graph, source_cell, dst)
-  if path == nil {
-    return nil
-  }
-  if ent.Stats.ApCur() > max_ap {
-    max_ap = ent.Stats.ApCur()
-  }
-  path = limitPath(ent, source_cell[0], path, max_ap)
-  if len(path) <= 1 {
-    return nil
-  }
-  var exec moveExec
-  exec.SetBasicData(ent, a)
-  exec.Path = path
-  return &exec
-}
-
-func (a *Move) AiCostToMoveInRange(ent *game.Entity, targets []*game.Entity, min_dist, max_dist int) int {
-  graph := ent.Game().Graph(ent.Side(), targets)
-  var src []int
-  for i := range targets {
-    src = append(src, ent.Game().ToVertex(targets[i].Pos()))
-  }
-  dst := algorithm.ReachableWithinBounds(graph, src, float64(min_dist), float64(max_dist))
-  if len(dst) == 0 {
-    return 0
-  }
-
-  source_cell := []int{ent.Game().ToVertex(ent.Pos())}
-  cost, path := algorithm.Dijkstra(graph, source_cell, dst)
-  if path == nil {
-    return -1
-  }
-  return int(cost)
 }
 
 func (a *Move) findPath(ent *game.Entity, x, y int) {
@@ -241,7 +216,7 @@ func (a *Move) findPath(ent *game.Entity, x, y int) {
     a.dst = dst
     a.calculated = true
     src := g.ToVertex(a.ent.Pos())
-    graph := g.Graph(ent.Side(), nil)
+    graph := g.Graph(ent.Side(), true, nil)
     cost, path := algorithm.Dijkstra(graph, []int{src}, []int{dst})
     if len(path) <= 1 {
       return
@@ -348,12 +323,20 @@ func (a *Move) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mainten
     if a.cost == -1 {
       base.Error().Printf("Got a move that followed an invalid path: %v", exec)
       base.Error().Printf("Path: %v", exec.Path)
+      if a.ent == nil {
+        base.Error().Printf("ENT was Nil!")
+      } else {
+        x, y := a.ent.Pos()
+        v := g.ToVertex(x, y)
+        base.Error().Printf("Ent pos: (%d, %d) -> (%d)", x, y, v)
+      }
       return game.Complete
     }
     algorithm.Map2(exec.Path, &a.path, func(v int) [2]int {
       _, x, y := g.FromVertex(v)
       return [2]int{x, y}
     })
+    base.Log().Printf("Path Validated: %v", exec)
     a.ent.Stats.ApplyDamage(-a.cost, 0, status.Unspecified)
   }
   // Do stuff

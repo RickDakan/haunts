@@ -5,12 +5,10 @@ import (
   "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/house"
   "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game/status"
   lua "github.com/xenith-studios/golua"
 )
@@ -35,6 +33,7 @@ func registerInteracts() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerInteracts)
   gob.Register(&Interact{})
+  gob.Register(&interactExec{})
 }
 
 type Interact struct {
@@ -105,7 +104,11 @@ func (exec interactExec) getDoor(g *game.Game) *house.Door {
   return room.Doors[exec.Door]
 }
 
-func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interactExec {
+func (a *Interact) SoundMap() map[string]string {
+  return nil
+}
+
+func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) *interactExec {
   var exec interactExec
   exec.id = exec_id
   exec_id++
@@ -114,10 +117,7 @@ func (a *Interact) makeDoorExec(ent *game.Entity, floor, room, door int) interac
   exec.Room = room
   exec.Door = door
   exec.Toggle_door = true
-  return exec
-}
-func init() {
-  gob.Register(interactExec{})
+  return &exec
 }
 
 func (a *Interact) Push(L *lua.State) {
@@ -242,7 +242,28 @@ func makeRectForDoor(room *house.Room, door *house.Door) frect {
   return dr
 }
 
+func (a *Interact) AiInteractWithObject(ent, object *game.Entity) game.ActionExec {
+  if ent.Stats.ApCur() < a.Ap {
+    return nil
+  }
+  if distBetweenEnts(ent, object) > a.Range {
+    return nil
+  }
+  x, y := object.Pos()
+  dx, dy := object.Dims()
+  if !ent.HasLos(x, y, dx, dy) {
+    return nil
+  }
+  var exec interactExec
+  exec.SetBasicData(ent, a)
+  exec.Target = object.Id
+  return &exec
+}
+
 func (a *Interact) AiToggleDoor(ent *game.Entity, door *house.Door) game.ActionExec {
+  if door.AlwaysOpen() {
+    return nil
+  }
   for fi, f := range ent.Game().House.Floors {
     for ri, r := range f.Rooms {
       for di, d := range r.Doors {
@@ -263,6 +284,9 @@ func (a *Interact) findDoors(ent *game.Entity, g *game.Game) []*house.Door {
   ent_rect := makeIntFrect(x, y, x+dx, y+dy)
   var valid []*house.Door
   for _, door := range room.Doors {
+    if door.AlwaysOpen() {
+      continue
+    }
     if ent_rect.Overlaps(makeRectForDoor(room, door)) {
       valid = append(valid, door)
     }
@@ -280,7 +304,7 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
     if e.ObjectEnt == nil {
       continue
     }
-    if e.ObjectEnt.Goal != game.ObjectGoal(a.Name) {
+    if e.Sprite().State() != "ready" {
       continue
     }
     if distBetweenEnts(e, ent) > a.Range {
@@ -292,20 +316,7 @@ func (a *Interact) findTargets(ent *game.Entity, g *game.Game) []*game.Entity {
 
     // Make sure it's still active:
     active := false
-    switch a.Name {
-    case string(game.GoalCleanse):
-      for i := range g.Active_cleanses {
-        if g.Active_cleanses[i] == e {
-          active = true
-          break
-        }
-      }
-
-    case string(game.GoalRelic):
-      active = (e == g.Active_relic)
-
-    case string(game.GoalMystery):
-    }
+    active = true
     if !active {
       continue
     }
@@ -350,11 +361,10 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
         exec.SetBasicData(a.ent, a)
         exec.Room = room_num
         exec.Door = door_num
-        return true, exec
+        return true, &exec
       }
     }
   }
-
   target := g.HoveredEnt()
   if target == nil {
     return false, nil
@@ -365,7 +375,7 @@ func (a *Interact) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.A
         var exec interactExec
         exec.SetBasicData(a.ent, a)
         exec.Target = target.Id
-        return true, exec
+        return true, &exec
       }
     }
     return true, nil
@@ -390,9 +400,8 @@ func (a *Interact) Cancel() {
 }
 func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(interactExec)
+    exec := ae.(*interactExec)
     a.ent = g.EntityById(ae.EntityId())
-    g := a.ent.Game()
     if (exec.Target != 0) == (exec.Toggle_door) {
       base.Error().Printf("Got an interact that tried to target a door and an entity: %v", exec)
       return game.Complete
@@ -403,33 +412,27 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
         base.Error().Printf("Tried to interact with an entity that doesn't exist: %v", exec)
         return game.Complete
       }
-      switch a.Name {
-      case string(game.GoalCleanse):
-        found := false
-        for i := range g.Active_cleanses {
-          if g.Active_cleanses[i] == target {
-            found = true
-          }
-        }
-        if !found {
-          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
-          return game.Complete
-        }
-        g.Active_cleanses = algorithm.Choose(g.Active_cleanses, func(a interface{}) bool {
-          return a.(*game.Entity) != target
-        }).([]*game.Entity)
-
-      case string(game.GoalRelic):
-        if g.Active_relic != target {
-          base.Error().Printf("Tried to interact with the wrong entity: %v", exec)
-          return game.Complete
-        }
-        g.Active_relic = nil
-
-      case string(game.GoalMystery):
+      if target.ObjectEnt == nil {
+        base.Error().Printf("Tried to interact with an entity that wasn't an object: %v", exec)
+        return game.Complete
+      }
+      if target.Sprite().State() != "ready" {
+        base.Error().Printf("Tried to interact with an object that wasn't in its ready state: %v", exec)
+        return game.Complete
+      }
+      if distBetweenEnts(a.ent, target) > a.Range {
+        base.Error().Printf("Tried to interact with an object that was out of range: %v", exec)
+        return game.Complete
+      }
+      x, y := target.Pos()
+      dx, dy := target.Dims()
+      if !a.ent.HasLos(x, y, dx, dy) {
+        base.Error().Printf("Tried to interact with an object without having los: %v", exec)
+        return game.Complete
       }
       a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       target.Sprite().Command("inspect")
+      return game.Complete
     } else {
       // We're interacting with a door here
       if exec.Floor < 0 || exec.Floor >= len(g.House.Floors) {
@@ -458,13 +461,13 @@ func (a *Interact) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Mai
 
       _, other_door := floor.FindMatchingDoor(room, door)
       if other_door != nil {
-        door.Opened = !door.Opened
-        other_door.Opened = door.Opened
-        if door.Opened {
-          sound.PlaySound(door.Open_sound)
-        } else {
-          sound.PlaySound(door.Shut_sound)
-        }
+        door.SetOpened(!door.IsOpened())
+        other_door.SetOpened(door.IsOpened())
+        // if door.IsOpened() {
+        //   sound.PlaySound(door.Open_sound)
+        // } else {
+        //   sound.PlaySound(door.Shut_sound)
+        // }
         g.RecalcLos()
         a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
       } else {

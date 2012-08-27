@@ -7,7 +7,7 @@
         {
           "Text": "The Golem is victorious.",
           "Image":{
-            "Path": "ui/dialog/Relic_Dash/golem.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }
         }
       ]

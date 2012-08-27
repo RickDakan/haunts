@@ -1,30 +1,17 @@
 package game
 
 import (
-  "reflect"
-  "math/rand"
-  "sort"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
-  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
+  "math/rand"
+  "sort"
 )
 
 type GamePanel struct {
   *gui.AnchorBox
 
-  house  *house.HouseDef
-  viewer *house.HouseViewer
-
-  // Only active on turn == 0
-  explorer_setup *explorerSetup
-
-  // Only active on turn == 1
-  haunt_setup *hauntSetup
-
-  // Only active for turns >= 2
   main_bar *MainBar
 
   // Keep track of this so we know how much time has passed between
@@ -33,83 +20,28 @@ type GamePanel struct {
 
   complete gui.Widget
 
-  game *Game
-
   script *gameScript
+  game   *Game
 }
 
-func MakeGamePanel() *GamePanel {
+func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel {
   var gp GamePanel
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  p, err := LoadPlayer(filepath.Join(base.GetDataDir(), "players", base.GetStoreVal("last player")))
-  if err != nil {
-    base.Warn().Printf("Couldn't load player '%s': %v", base.GetStoreVal("last player"), err)
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
+  if p == nil {
     p = &Player{}
   }
-  startGameScript(&gp, "foo.lua", p)
+  base.Log().Printf("Script path: %s / %s", script, p.Script_path)
+  if script == "" {
+    script = p.Script_path
+  }
+  startGameScript(&gp, script, p, data)
   return &gp
-
-  // // the logic after this should be done by a lua script
-  // gp.house = house.MakeHouseDef()
-  // gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  // gp.viewer.Edit_mode = true
-
-  // start_menu, err := MakeUiStart(&gp)
-  // if err != nil {
-  //   base.Error().Printf("%v\n", err)
-  //   panic(err)
-  // }
-  // gp.AnchorBox.AddChild(start_menu, gui.Anchor{0,0,0,0})
-
-  // return &gp
-}
-
-func (gp *GamePanel) SaveGame(filename string) {
-  err := base.SaveGob(filepath.Join(base.GetDataDir(), "games", filename+".game"), *gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to save: %v", err)
-  }
-}
-
-func (gp *GamePanel) LoadGame(path string) {
-  var err error
-  gp.game = &Game{}
-
-  err = base.LoadGob(filepath.Join(path), gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to load: %v", err)
-    return
-  }
-  base.ProcessObject(reflect.ValueOf(gp.game.House), "")
-  base.ProcessObject(reflect.ValueOf(gp.game.Ents), "loadfrom-entities")
-  base.ProcessObject(reflect.ValueOf(gp.game.Active_cleanses), "loadfrom-entities")
-
-  gp.house = gp.game.House
-  gp.game.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.viewer.Edit_mode = true
-  gp.viewer = gp.game.viewer
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-  gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-
-  for i := range gp.game.Ents {
-    gp.game.Ents[i].Load(gp.game)
-    gp.viewer.AddDrawable(gp.game.Ents[i])
-  }
-
-  gp.game.setup()
-  gp.game.viewer.Los_tex = gp.game.los.denizens.tex
-  gp.main_bar, err = MakeMainBar(gp.game)
-  if err != nil {
-    base.Warn().Printf("Failed to make main bar: %v", err)
-    return
-  }
-  gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
 }
 
 // Returns  true iff the game panel has an active game with a viewer already
 // installed.
 func (gp *GamePanel) Active() bool {
-  return gp.house != nil && gp.viewer != nil && gp.game != nil
+  return gp.game != nil && gp.game.House != nil && gp.game.viewer != nil
 }
 
 func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
@@ -117,6 +49,9 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
   gp.AnchorBox.Think(ui, t)
   if !gp.Active() {
     return
+  }
+  if gp.game != nil {
+    gp.game.modal = (ui.FocusWidget() != nil)
   }
 
   if gp.last_think == 0 {
@@ -132,47 +67,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
     } else {
       gp.main_bar.SelectEnt(gp.game.hovered_ent)
     }
-  }
-
-  return
-  // The logic after this should go into a lua script
-  switch gp.game.Turn {
-  case 0:
-  case 1:
-    if gp.explorer_setup != nil {
-      gp.AnchorBox.RemoveChild(gp.explorer_setup)
-      gp.explorer_setup = nil
-
-      gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-      var err error
-      gp.haunt_setup, err = MakeHauntSetupBar(gp.game)
-      if err == nil {
-        gp.AnchorBox.AddChild(gp.haunt_setup, gui.Anchor{0, 0.5, 0, 0.5})
-      } else {
-        base.Error().Printf("Unable to create haunt setup bar: %v", err)
-      }
-      // gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5,0,0.5,0})
-    }
-
-  case 2:
-    if gp.haunt_setup != nil {
-      gp.AnchorBox.RemoveChild(gp.haunt_setup)
-      gp.haunt_setup = nil
-      gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
-      gp.viewer.Edit_mode = false
-    }
-  default:
-  }
-  gp.main_bar.SelectEnt(gp.game.selected_ent)
-  if gp.game.winner != SideNone {
-    var name string
-    if gp.game.winner == SideExplorers {
-      name = "A Winner is an Intruder"
-    } else {
-      name = "A Winner is a Denizen"
-    }
-    gp.complete = gui.MakeTextLine("standard", name, 300, 1, 1, 1, 1)
-    gp.AnchorBox.AddChild(gp.complete, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   }
 }
 
@@ -193,28 +87,9 @@ func (g *Game) SpawnEntity(spawn *Entity, x, y int) bool {
   }
   spawn.X = float64(x)
   spawn.Y = float64(y)
-  g.viewer.AddDrawable(spawn)
+  spawn.Info.RoomsExplored[spawn.CurrentRoom()] = true
   g.Ents = append(g.Ents, spawn)
   return true
-}
-
-func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
-  if group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
-    if group.Events[0].Type == gin.Press {
-      index := int(group.Events[0].Key.Id() - '1')
-      names := base.GetAllNamesInRegistry("entities")
-      ents := algorithm.Map(names, []*Entity{}, func(a interface{}) interface{} {
-        return MakeEntity(a.(string), g)
-      }).([]*Entity)
-      algorithm.Choose2(&ents, func(ent *Entity) bool { return ent.Side() != g.Side })
-      if index >= 0 && index < len(ents) {
-        g.viewer.RemoveDrawable(g.new_ent)
-        g.new_ent = ents[index]
-        g.viewer.AddDrawable(g.new_ent)
-      }
-    }
-  }
-  return false
 }
 
 // Returns true iff the action was set
@@ -222,7 +97,7 @@ func (g *Game) setupRespond(ui *gui.Gui, group gui.EventGroup) bool {
 // action cannot be selected (because it is invalid or the entity has
 // insufficient Ap), or if there is an action currently executing.
 func (g *Game) SetCurrentAction(action Action) bool {
-  if g.action_state != noAction && g.action_state != preppingAction {
+  if g.Action_state != noAction && g.Action_state != preppingAction {
     return false
   }
   // the action should be one that belongs to the current entity, if not then
@@ -248,9 +123,9 @@ func (g *Game) SetCurrentAction(action Action) bool {
     g.current_action.Cancel()
   }
   if action == nil {
-    g.action_state = noAction
+    g.Action_state = noAction
   } else {
-    g.action_state = preppingAction
+    g.Action_state = preppingAction
   }
   g.current_action = action
   return true
@@ -261,10 +136,6 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     return true
   }
   if !gp.Active() {
-    return false
-  }
-  if gp.game.winner != SideNone {
-    // This is lame - but works for now
     return false
   }
 
@@ -281,7 +152,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     mx, my := cursor.Point()
     for i := range gp.game.Ents {
       fx, fy := gp.game.Ents[i].FPos()
-      wx, wy := gp.viewer.BoardToWindow(float32(fx), float32(fy))
+      wx, wy := gp.game.viewer.BoardToWindow(float32(fx), float32(fy))
       if gp.game.Ents[i].Stats != nil && gp.game.Ents[i].Stats.HpCur() <= 0 {
         continue // Don't bother showing dead units
       }
@@ -301,7 +172,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
 
   if found, event := group.FindEvent(gin.Escape); found && event.Type == gin.Press {
     if gp.game.selected_ent != nil {
-      switch gp.game.action_state {
+      switch gp.game.Action_state {
       case noAction:
         gp.game.selected_ent.selected = false
         gp.game.selected_ent.hovered = false
@@ -318,7 +189,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if gp.game.action_state == noAction {
+  if gp.game.Action_state == noAction {
     if found, _ := group.FindEvent(gin.MouseLButton); found {
       if gp.game.hovered_ent != nil && gp.game.hovered_ent.Side() == gp.game.Side {
         if gp.game.selected_ent != nil {
@@ -331,7 +202,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
     }
   }
 
-  if gp.game.action_state == preppingAction {
+  if gp.game.Action_state == preppingAction {
     consumed, exec := gp.game.current_action.HandleInput(group, gp.game)
     if consumed {
       if exec != nil {
@@ -347,7 +218,7 @@ func (gp *GamePanel) Respond(ui *gui.Gui, group gui.EventGroup) bool {
   if gp.game.selected_ent == nil {
     return false
   }
-  if gp.game.action_state == noAction || gp.game.action_state == preppingAction {
+  if gp.game.Action_state == noAction || gp.game.Action_state == preppingAction {
     if len(group.Events) == 1 && group.Events[0].Key.Id() >= '1' && group.Events[0].Key.Id() <= '9' {
       index := int(group.Events[0].Key.Id() - '1')
       if index >= 0 && index < len(gp.game.selected_ent.Actions) {
@@ -443,82 +314,6 @@ func spawnEnts(g *Game, ents []*Entity, spawns []*house.SpawnPoint) {
   }
 }
 
-// TODO: DEPRECATED
-func spawnAllRelics(g *Game) {
-  // relic_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-  //   return a.(*house.SpawnPoint).Type() == house.SpawnRelic
-  // }).([]*house.SpawnPoint)
-
-  // ent_names := base.GetAllNamesInRegistry("entities")
-  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-  //   return MakeEntity(a.(string), g)
-  // }).([]*Entity)
-  // relic_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-  //   e := a.(*Entity)
-  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalRelic
-  // }).([]*Entity)
-
-  // spawnEnts(g, relic_ents, relic_spawns)
-}
-
-// TODO: DEPRECATED
-func spawnAllCleanses(g *Game) {
-  // cleanse_spawns := algorithm.Choose(g.House.Floors[0].Spawns, func(a interface{}) bool {
-  //   return a.(*house.SpawnPoint).Type() == house.SpawnCleanse
-  // }).([]*house.SpawnPoint)
-
-  // ent_names := base.GetAllNamesInRegistry("entities")
-  // all_ents := algorithm.Map(ent_names, []*Entity{}, func(a interface{}) interface{} {
-  //   return MakeEntity(a.(string), g)
-  // }).([]*Entity)
-  // cleanse_ents := algorithm.Choose(all_ents, func(a interface{}) bool {
-  //   e := a.(*Entity)
-  //   return e.ObjectEnt != nil && e.ObjectEnt.Goal == GoalCleanse
-  // }).([]*Entity)
-
-  // spawnEnts(g, cleanse_ents, cleanse_spawns)
-}
-
-func (gp *GamePanel) LoadHouse(def *house.HouseDef, side Side) {
-  gp.house = def
-  if len(gp.house.Floors) == 0 {
-    gp.house = house.MakeHouseDef()
-  }
-  gp.viewer = house.MakeHouseViewer(gp.house, 62)
-  gp.viewer.Edit_mode = true
-  gp.game = makeGame(gp.house, gp.viewer, side)
-  return
-
-  spawnAllRelics(gp.game)
-  spawnAllCleanses(gp.game)
-
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
-
-  var err error
-  gp.main_bar, err = MakeMainBar(gp.game)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
-  }
-
-  gp.explorer_setup, err = MakeExplorerSetupBar(gp.game)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    panic(err)
-  }
-
-  gp.AnchorBox.AddChild(gp.explorer_setup, gui.Anchor{0.5, 0.5, 0.5, 0.5})
-}
-
-func (gp *GamePanel) LoadHouseFromPath(path string) {
-  def, err := house.MakeHouseFromPath(path)
-  if err != nil {
-    base.Error().Printf("%v", err)
-    return
-  }
-  gp.LoadHouse(def, SideExplorers)
-}
-
 func (gp *GamePanel) GetViewer() house.Viewer {
-  return gp.viewer
+  return gp.game.viewer
 }

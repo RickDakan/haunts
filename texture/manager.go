@@ -6,7 +6,7 @@ import (
   _ "image/jpeg"
   _ "image/png"
   "os"
-  "runtime"
+  "time"
   "sync"
   "github.com/runningwild/glop/render"
   "github.com/runningwild/memory"
@@ -26,16 +26,18 @@ type Object struct {
 }
 
 func (o *Object) Data() *Data {
-  if o.data == nil || o.path != o.Path {
+  if o.data == nil || o.path != o.Path || o.data.texture == 0 {
     o.data = LoadFromPath(string(o.Path))
     o.path = o.Path
   }
+  o.data.accessed = time.Now()
   return o.data
 }
 
 type Data struct {
-  dx, dy  int
-  texture gl.Texture
+  dx, dy   int
+  texture  gl.Texture
+  accessed time.Time
 }
 
 func (d *Data) Dx() int {
@@ -135,16 +137,7 @@ func RenderAdvanced(x, y, dx, dy, rot float64, flip bool) {
 func (d *Data) Bind() {
   if d.texture == 0 {
     if error_texture == 0 {
-      gl.Enable(gl.TEXTURE_2D)
-      error_texture = gl.GenTexture()
-      error_texture.Bind(gl.TEXTURE_2D)
-      gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-      gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-      pink := []byte{255, 0, 255, 255}
-      glu.Build2DMipmaps(gl.TEXTURE_2D, 4, 1, 1, gl.RGBA, pink)
+      makeErrorTexture()
     }
     error_texture.Bind(gl.TEXTURE_2D)
   } else {
@@ -153,32 +146,65 @@ func (d *Data) Bind() {
 }
 
 var (
-  manager       Manager
-  error_texture gl.Texture
+  manager Manager
 )
 
 func init() {
   manager.registry = make(map[string]*Data)
+  manager.deleted = make(map[string]*Data)
+  go manager.Scavenger()
 }
 
 type Manager struct {
+  // Currently loaded/loading textures are in the registry
   registry map[string]*Data
+
+  // If a texture has been deleted it is moved here so that if it gets
+  // reloaded it will be loaded into the same texture object it was in
+  // before.
+  deleted map[string]*Data
+
+  mutex sync.RWMutex
 }
 
-func Reload() {
-  manager.Reload()
-}
-func (m *Manager) Reload() {
+// Launch this in its own go-routine if you want to occassionally
+// delete textures that haven't been used in a while.
+func (m *Manager) Scavenger() {
+  var unused []string
+  for {
+    time.Sleep(time.Minute)
+    unused = unused[0:0]
+    m.mutex.RLock()
+    now := time.Now()
+    for s, d := range m.registry {
+      if now.Sub(d.accessed).Minutes() >= 1 {
+        unused = append(unused, s)
+      }
+    }
+    m.mutex.RUnlock()
+    if len(unused) == 0 {
+      continue
+    }
+    m.mutex.Lock()
+
+    var unused_data []*Data
+    for _, s := range unused {
+      unused_data = append(unused_data, m.registry[s])
+      m.deleted[s] = m.registry[s]
+      delete(m.registry, s)
+    }
+    render.Queue(func() {
+      for _, d := range unused_data {
+        d.texture.Delete()
+        d.texture = 0
+      }
+    })
+    m.mutex.Unlock()
+  }
 }
 
 func LoadFromPath(path string) *Data {
   return manager.LoadFromPath(path)
-}
-
-func finalizeData(d *Data) {
-  render.Queue(func() {
-    d.texture.Delete()
-  })
 }
 
 type loadRequest struct {
@@ -303,28 +329,39 @@ func handleLoadRequest(req loadRequest) {
       load_count = 0
       load_mutex.Unlock()
     }
-    runtime.SetFinalizer(req.data, finalizeData)
   })
 }
 
 func (m *Manager) LoadFromPath(path string) *Data {
   setupTextureList()
-  if data, ok := m.registry[path]; ok {
+  m.mutex.RLock()
+  var data *Data
+  var ok bool
+  if data, ok = m.registry[path]; ok {
+    m.mutex.RUnlock()
     return data
   }
-  var data Data
-  m.registry[path] = &data
+  m.mutex.RUnlock()
+  m.mutex.Lock()
+  if data, ok = m.deleted[path]; ok {
+    delete(m.deleted, path)
+  } else {
+    data = &Data{}
+  }
+  data.accessed = time.Now()
+  m.registry[path] = data
+  m.mutex.Unlock()
 
   f, err := os.Open(path)
   if err != nil {
     base.Warn().Printf("Unable to load texture '%s': %v", path, err)
-    return &data
+    return data
   }
   config, _, err := image.DecodeConfig(f)
   f.Close()
   data.dx = config.Width
   data.dy = config.Height
 
-  load_requests <- loadRequest{path, &data}
-  return &data
+  load_requests <- loadRequest{path, data}
+  return data
 }

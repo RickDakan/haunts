@@ -1,6 +1,7 @@
 package house
 
 import (
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -9,7 +10,6 @@ import (
   "image"
   "math"
   "path/filepath"
-  gl "github.com/chsc/gogl/gl21"
   "unsafe"
 )
 
@@ -104,6 +104,10 @@ type doorDef struct {
   // Number of cells wide the door is
   Width int
 
+  // If true then this door is always open, cannot be interacted with, and
+  // never draws a threshold.
+  Always_open bool
+
   Opened_texture texture.Object
   Closed_texture texture.Object
 
@@ -132,6 +136,18 @@ type Door struct {
   threshold_glids doorGlIds
   door_glids      doorGlIds
   state           doorState
+}
+
+func (d *Door) AlwaysOpen() bool {
+  return d.doorDef.Always_open
+}
+
+func (d *Door) IsOpened() bool {
+  return d.doorDef.Always_open || d.Opened
+}
+
+func (d *Door) SetOpened(opened bool) {
+  d.Opened = opened
 }
 
 func (d *Door) HighlightThreshold(v bool) {
@@ -191,7 +207,7 @@ func (d *Door) setupGlStuff(room *Room) {
   if d.Facing == FarLeft || d.Facing == NearRight {
     x1 := float32(d.Pos)
     x2 := float32(d.Pos + d.Width)
-    var y1 float32 = 0
+    var y1 float32 = -0.25
     var y2 float32 = 0.25
     if d.Facing == FarLeft {
       y1 = float32(room.roomDef.Size.Dy)
@@ -210,7 +226,7 @@ func (d *Door) setupGlStuff(room *Room) {
   if d.Facing == FarRight || d.Facing == NearLeft {
     y1 := float32(d.Pos)
     y2 := float32(d.Pos + d.Width)
-    var x1 float32 = 0
+    var x1 float32 = -0.25
     var x2 float32 = 0.25
     if d.Facing == FarRight {
       x1 = float32(room.roomDef.Size.Dx)
@@ -312,7 +328,7 @@ func (d *Door) setupGlStuff(room *Room) {
 }
 
 func (d *Door) TextureData() *texture.Data {
-  if d.Opened {
+  if d.IsOpened() {
     return d.Opened_texture.Data()
   }
   return d.Closed_texture.Data()
@@ -528,6 +544,7 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     ros = append(ros, placed[i])
   }
   alpha_map := make(map[*Room]byte)
+  los_map := make(map[*Room]byte)
 
   // First pass over the rooms - this will determine at what alpha the rooms
   // should be draw.  We will use this data later to determine the alpha for
@@ -555,6 +572,7 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     }
     bv := 255 - byte(v)
     alpha_map[room] = byte((int(bv) * int(los_alpha)) >> 8)
+    los_map[room] = los_alpha
     // room.render(floor, left, right, , 255)
   }
 
@@ -603,7 +621,9 @@ func (f *Floor) render(region gui.Region, focusx, focusy, angle, zoom float32, d
     fy := focusy - float32(room.Y)
     floor, _, left, _, right, _ := makeRoomMats(room.roomDef, region, fx, fy, angle, zoom)
     v := alpha_map[room]
-    room.render(floor, left, right, zoom, v, drawables, los_tex, floor_drawers)
+    if los_map[room] > 5 {
+      room.render(floor, left, right, zoom, v, drawables, los_tex, floor_drawers)
+    }
   }
 }
 
@@ -807,6 +827,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
       })
       hdt.temp_room = nil
       hdt.prev_room = nil
+      hdt.viewer.SetBounds()
     }
     return true
   }
@@ -819,6 +840,7 @@ func (hdt *houseDataTab) Respond(ui *gui.Gui, group gui.EventGroup) bool {
         floor.removeInvalidDoors()
         hdt.temp_room = nil
         hdt.prev_room = nil
+        hdt.viewer.SetBounds()
       }
     } else {
       cx, cy := event.Key.Cursor().Point()
@@ -1070,11 +1092,11 @@ func (hdt *houseRelicsTab) markTempSpawnValidity() {
   x, y := hdt.temp_relic.Pos()
   for ix := 0; ix < hdt.temp_relic.Dx; ix++ {
     for iy := 0; iy < hdt.temp_relic.Dy; iy++ {
-      room_at, furn_at, spawn_at := floor.RoomFurnSpawnAtPos(x+ix, y+iy)
+      room_at, furn_at, _ := floor.RoomFurnSpawnAtPos(x+ix, y+iy)
       if room == nil {
         room = room_at
       }
-      if room_at == nil || room_at != room || furn_at != nil || spawn_at != nil {
+      if room_at == nil || room_at != room || furn_at != nil {
         hdt.temp_relic.invalid = true
         return
       }
@@ -1228,6 +1250,7 @@ func MakeHouseFromPath(path string) (*HouseDef, error) {
   if err != nil {
     return nil, err
   }
+  house.Normalize()
   house.setDoorsOpened(false)
   return &house, nil
 }
@@ -1265,7 +1288,10 @@ func (he *HouseEditor) Load(path string) error {
   if err != nil {
     return err
   }
+  base.Log().Printf("Loaded %s\n", path)
+  house.Normalize()
   he.house = *house
+  he.viewer.SetBounds()
   for _, tab := range he.widgets {
     tab.Reload()
   }

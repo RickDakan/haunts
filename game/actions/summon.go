@@ -2,15 +2,15 @@ package actions
 
 import (
   "encoding/gob"
-  "path/filepath"
-  "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/gin"
+  "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
   lua "github.com/xenith-studios/golua"
+  "path/filepath"
 )
 
 func registerSummonActions() map[string]func() game.Action {
@@ -38,6 +38,7 @@ func registerSummonActions() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerSummonActions)
   gob.Register(&SummonAction{})
+  gob.Register(&summonExec{})
 }
 
 // Summon Actions target a single cell, are instant, and unreadyable.
@@ -81,15 +82,22 @@ func (exec summonExec) Push(L *lua.State, g *game.Game) {
   L.SetTable(-3)
 }
 
+func (a *SummonAction) SoundMap() map[string]string {
+  return nil
+}
+
 func (a *SummonAction) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")
   L.PushString("Summon")
   L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(a.Name)
+  L.SetTable(-3)
   L.PushString("Ap")
   L.PushInteger(a.Ap)
   L.SetTable(-3)
-  L.PushString("Name")
+  L.PushString("Entity")
   L.PushString(a.Ent_name)
   L.SetTable(-3)
   L.PushString("Los")
@@ -163,7 +171,7 @@ func (a *SummonAction) HandleInput(group gui.EventGroup, g *game.Game) (bool, ga
       var exec summonExec
       exec.SetBasicData(a.ent, a)
       exec.Pos = a.ent.Game().ToVertex(a.cx, a.cy)
-      return true, exec
+      return true, &exec
     }
     return true, nil
   }
@@ -191,7 +199,13 @@ func (a *SummonAction) Cancel() {
 }
 func (a *SummonAction) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    exec := ae.(summonExec)
+    exec := ae.(*summonExec)
+    ent := g.EntityById(exec.Ent)
+    if ent == nil {
+      base.Error().Printf("Got a summon action without a valid entity.")
+      return game.Complete
+    }
+    a.ent = ent
     _, a.cx, a.cy = a.ent.Game().FromVertex(exec.Pos)
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     a.spawn = game.MakeEntity(a.Ent_name, a.ent.Game())

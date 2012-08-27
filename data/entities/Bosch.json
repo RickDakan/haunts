@@ -3,10 +3,12 @@
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/master",
-  "Still": {
+  "Still": 
+  {
     "Path": "entities/master_still.png"
   },
-  "Action_names": [
+  "Action_names": 
+  [
     "Move Test", 
     "Interact",
     "Arc of Decay",
@@ -24,5 +26,5 @@
     "Ego": 10,
     "Sight": 30
   },
-  "Dissolve": true,
+  "Dissolve": true
 }

@@ -43,6 +43,9 @@ function Init(data)
   waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
   Waypoint = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn)
 
+  -- Script.SetVisibleSpawnPoints("intruders", "Highlight3")
+  -- Script.SetVisibleSpawnPoints("denizens", "Highlight3")
+
   --Spawn the patients
   patient_spawn = Script.GetSpawnPointsMatching("Patient_Start")
   for i = 1, 10, 1 do  
@@ -55,10 +58,10 @@ function Init(data)
   math.randomseed(os.time())
 
   --set these modular variables.
-  nIntrudersFound = 0
-  nMonstersFound = 0
-  bWaypointDown = false
-  bFloodStarted = false
+  store.nIntrudersFound = 0
+  store.nMonstersFound = 0
+  store.bWaypointDown = false
+  store.bFloodStarted = false
 end
 
 function intrudersSetup()
@@ -72,10 +75,6 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
-    
-  --Don't understand gear yet...halp!?
-    Script.SetGear(ent, "Pre-loaded Playlist")
-    -- PRETEND!
   end
 
   -- Choose entry point here.
@@ -158,7 +157,7 @@ function RoundStart(intruders, round)
     return
   end
 
-  if bFloodStarted then
+  if store.bFloodStarted then
     --At the start of each denizen turn, we're going to randomly spawn attendants at 
     --the flood points.  Also need to prevent spawning within LoS of an intruder.
 
@@ -243,22 +242,24 @@ function OnAction(intruders, round, exec)
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
-  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint) <= 3 and not bWaypointDown then
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint) <= 3 and not store.bWaypointDown then
     --The intruders got to the first waypoint.
-    bWaypointDown = true
+    store.bWaypointDown = true
     --!!!! need a way to despawn objects
     -- StoreDespawn(Waypoint)
     -- deSpawn(despawn_exec)
 
-    Script.SetCondition(exec.Ent, "Carrying Antidote", true)
---    Script.SetGear(exec.Ent, "Antidote")
-    --exec.Ent.Actions[table.getn(exec.Ent.Actions) + 1] = "Hand Antidote"
+    StoreCondition("Carrying Antidote", exec.Ent, true)
+    doCondition(condition_exec)
 
-    if not bFloodStarted then    
+    StoreGear("Antidote", exec.Ent, true)
+    doGear(gear_exec)
+
+    if not store.bFloodStarted then    
       --The denizens have not yet activated the alarm.
-      bFloodStarted = true
+      store.bFloodStarted = true
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_And_Alarm_Intruders.json")
-      bToldIntrudersAboutAlarm = true
+      store.bToldIntrudersAboutAlarm = true
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_Only_Intruders.json")
@@ -266,14 +267,16 @@ function OnAction(intruders, round, exec)
   end 
 
   if exec.Action.Name == "Hand Antidote" then
---    Script.SetGear(exec.Target, "Antidote")
+    StoreGear("Antidote", exec.Target, true)
+    doGear(gear_exec)    
     --remove the carrying condition from the exec ent.  The target will get the
     --condition b/c of the ability.
-    Script.SetCondition(exec.Ent, "Carrying Antidote", false)
+    StoreCondition("Carrying Antidote", exec.Ent, false)
+    doCondition(condition_exec)
   end
 
   --The big check: Have the intruders won.
-  if bWaypointDown then
+  if store.bWaypointDown then
     if  exec.Ent.Side.Intruder then
       if pointIsInSpawns(exec.Ent.Pos, "Escape") then
         if exec.Ent.Conditions["Carrying Antidote"] then
@@ -304,7 +307,7 @@ function OnAction(intruders, round, exec)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start")
     placed = Script.PlaceEntities("Servitors_Start", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")   
+    Script.SetLosMode("denizens", "blind")
 
     Script.EndPlayerInteraction()
   end  
@@ -321,9 +324,9 @@ function OnAction(intruders, round, exec)
   if bInstrudersSpotted then
     if exec.Ent.Name == MasterName then
       if pointIsInSpawns(exec.Ent.Pos, "Escape") then
-        bFloodStarted = true
+        store.bFloodStarted = true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
-        bToldDenizensAboutFloodStart = true
+        store.bToldDenizensAboutFloodStart = true
       end
     end
   end
@@ -358,25 +361,30 @@ function RoundEnd(intruders, round)
     if intruders then
       Script.DialogBox("ui/dialog/Lvl03/pass_to_denizens.json")
 
-      if bFloodStarted and not bToldDenizensAboutFloodStart then
+      if store.bFloodStarted and not store.bToldDenizensAboutFloodStart then
         --if we haven't told the denizens about flood start then the intruders must have
         --got to the waypoint.  Tell deni's about both the waypoint and the alarm.
-        bToldDenizensAboutFloodStart = true
+        store.bToldDenizensAboutFloodStart = true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Intruders_Got_To_Waypoint_Denizens.json")
       end
     else
       Script.DialogBox("ui/dialog/Lvl03/pass_to_intruders.json")
-      if bIntrudersSpotted and not bTalkedAboutIntruderSpot then
+      if not store.bDoneIntruderIntro then
+        store.bDoneIntruderIntro = true
+        Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Opening_Intruders.json")
+      end
+
+      if bIntrudersSpotted and not store.bTalkedAboutIntruderSpot then
         --The master saw an intruder last turn. Need to let the truds know that the
         --master can now set off the alarm.
-        bTalkedAboutIntruderSpot = true
+        store.bTalkedAboutIntruderSpot = true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Identified_Escapees_Intruders.json")
       end
 
-      if bFloodStarted and not bToldIntrudersAboutAlarm then
+      if store.bFloodStarted and not store.bToldIntrudersAboutAlarm then
         --If the intruders don't know about the alarm, then the master triggered it this turn.
         --Tell the intruders that the alarm has sounded.
-        bToldIntrudersAboutAlarm =  true
+        store.bToldIntrudersAboutAlarm =  true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Intruders.json")
       end
     end
@@ -394,6 +402,14 @@ function RoundEnd(intruders, round)
         deSpawn(exec)
         bDone = true
       end
+      if exec.script_gear then
+        doGear(exec)
+        bDone = true
+      end
+      if exec.script_condition then
+        doCondition(exec)
+        bDone = true
+      end               
       if not bDone then
         Script.DoExec(exec)
 
@@ -417,6 +433,24 @@ end
 
 function doSpawn(spawnExec)
   Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+end
+
+function StoreGear(name, ent, addGear)
+  gear_exec = {script_gear=true, name=name, entity=ent, add=addGear}
+  store.execs[table.getn(store.execs) + 1] = gear_exec
+end
+
+function doGear(gearExec)
+  Script.SetGear(gearExec.entity, gearExec.name)
+end
+
+function StoreCondition(name, ent, addCondition)
+  condition_exec = {script_condition=true, name=name, entity=ent, add=addCondition}
+  store.execs[table.getn(store.execs) + 1] = condition_exec
+end
+
+function doCondition(conditionExec)
+  Script.SetCondition(conditionExec.entity, conditionExec.name, conditionExec.add)
 end
 
 function StoreDespawn(ent)
@@ -527,31 +561,31 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
 
   thingToSpawn = ""
 
-  if nIntrudersFound == 0 then
-    nIntrudersFound = nIntrudersFound + 1
-    if nIntrudersFound == 1 then
+  if store.nIntrudersFound == 0 then
+    store.nIntrudersFound = store.nIntrudersFound + 1
+    if store.nIntrudersFound == 1 then
       thingToSpawn = "Ghost Hunter"
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder1.json")
     end
   else
-    if (math.random(1, 5) > 2 and nIntrudersFound <= 3) then
+    if (math.random(1, 5) > 2 and store.nIntrudersFound <= 3) then
       --Spawn intruder
-      nIntrudersFound = nIntrudersFound + 1
-      if nIntrudersFound == 2 then
+      store.nIntrudersFound = store.nIntrudersFound + 1
+      if store.nIntrudersFound == 2 then
         thingToSpawn = "Researcher"
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder2.json")
       end
-      if nIntrudersFound == 3 then
+      if store.nIntrudersFound == 3 then
         thingToSpawn = "Cordelia"
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder3.json")    
       end
     else
       --Spawn monster
-      nMonstersFound = nMonstersFound + 1
-      if nMonstersFound == 1 then
+      store.nMonstersFound = store.nMonstersFound + 1
+      if store.nMonstersFound == 1 then
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Spawned_Infected1.json") 
       end
-      if nMonstersFound > 1 then
+      if store.nMonstersFound > 1 then
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Spawned_Addl_Infected.json") 
       end    
       thingToSpawn = "Infected"
@@ -559,6 +593,6 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   end
 
   StoreSpawn(thingToSpawn, SpawnPos)
-  doSpawn(store.execs[table.getn(store.execs)])
+  doSpawn(spawn_exec)
 
 end

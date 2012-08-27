@@ -1,0 +1,37 @@
+{
+  "Main": {
+    "Texture": {
+      "Path": "ui/system/main.png"
+    }
+  },
+  "Sub": {
+    "Background": {
+      "Path": "ui/dialog/medium.png"
+    },
+    "Return": {
+      "X": 60,
+      "Y": 260,
+      "Text": {
+        "String": "Return to Main Menu",
+        "Size": 15,
+        "Justification": "left"
+      }
+    },
+    "Save": {
+      "Button": {
+        "X": 75,
+        "Y": 105,
+        "Text": {
+          "String": "Save Game",
+          "Size": 15,
+          "Justification": "left"
+        }
+      },
+      "Entry": {
+        "Default": "ThundeR",
+        "X": 250,
+        "Dx": 300
+      }
+    }
+  }
+}

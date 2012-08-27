@@ -3,9 +3,9 @@ package ai
 import (
   "fmt"
   "github.com/runningwild/glop/util/algorithm"
-  "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
+  "github.com/runningwild/haunts/game/actions"
   "github.com/runningwild/haunts/house"
   lua "github.com/xenith-studios/golua"
   "sort"
@@ -19,10 +19,11 @@ func (a *Ai) addEntityContext() {
 
   a.L.NewTable()
   game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
-    "BasicAttack": func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
-    "AoeAttack":   func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
-    "Move":        func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
-    "DoorToggle":  func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
+    "BasicAttack":        func() { a.L.PushGoFunctionAsCFunction(DoBasicAttackFunc(a)) },
+    "AoeAttack":          func() { a.L.PushGoFunctionAsCFunction(DoAoeAttackFunc(a)) },
+    "Move":               func() { a.L.PushGoFunctionAsCFunction(DoMoveFunc(a)) },
+    "DoorToggle":         func() { a.L.PushGoFunctionAsCFunction(DoDoorToggleFunc(a)) },
+    "InteractWithObject": func() { a.L.PushGoFunctionAsCFunction(DoInteractWithObjectFunc(a)) },
   })
   a.L.SetMetaTable(-2)
   a.L.SetGlobal("Do")
@@ -35,7 +36,7 @@ func (a *Ai) addEntityContext() {
     "NearestNEntities":           func() { a.L.PushGoFunctionAsCFunction(NearestNEntitiesFunc(a.ent)) },
     "Exists":                     func() { a.L.PushGoFunctionAsCFunction(ExistsFunc(a)) },
     "BestAoeAttackPos":           func() { a.L.PushGoFunctionAsCFunction(BestAoeAttackPosFunc(a)) },
-    "NearbyUnexploredRoom":       func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomFunc(a)) },
+    "NearbyUnexploredRooms":      func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomsFunc(a)) },
     "RoomPath":                   func() { a.L.PushGoFunctionAsCFunction(RoomPathFunc(a)) },
     "RoomContaining":             func() { a.L.PushGoFunctionAsCFunction(RoomContainingFunc(a)) },
     "AllDoorsBetween":            func() { a.L.PushGoFunctionAsCFunction(AllDoorsBetween(a)) },
@@ -117,14 +118,26 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
         if x > x2-min && x < x2+min && y > y2-min && y < y2+min {
           continue
         }
+        if !grid[x][y] {
+          continue
+        }
         dst = append(dst, a.ent.Game().ToVertex(x, y))
       }
     }
-    graph := a.ent.Game().Graph(a.ent.Side(), nil)
+    vis := 0
+    for i := range grid {
+      for j := range grid[i] {
+        if grid[i][j] {
+          vis++
+        }
+      }
+    }
+    base.Log().Printf("Visible: %d", vis)
+    graph := a.ent.Game().Graph(a.ent.Side(), true, nil)
     src := []int{a.ent.Game().ToVertex(x1, y1)}
     reachable := algorithm.ReachableDestinations(graph, src, dst)
     L.NewTable()
-    base.Log().Printf("%d reachable from (%d, %d) -> (%d, %d)", len(reachable), x1, y1, x2, y2)
+    base.Log().Printf("%d/%d reachable from (%d, %d) -> (%d, %d)", len(reachable), len(dst), x1, y1, x2, y2)
     for i, v := range reachable {
       _, x, y := a.ent.Game().FromVertex(v)
       L.PushInteger(i + 1)
@@ -286,7 +299,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 // points.  The movement can be restricted to not spend more than a certain
 // amount of ap.
 //    Format:
-//    p = DoMove(dsts, max_ap)
+//    success, p = DoMove(dsts, max_ap)
 //
 //    Input:
 //    dsts  - array[table[x,y]] - Array of all points that are acceptable
@@ -296,6 +309,7 @@ func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
 //                       as far as possible towards a destination.
 //
 //    Output:
+//    success = bool - True iff the move made it to a position in dsts.
 //    p - table[x,y] - New position of this entity, or nil if the move failed.
 func DoMoveFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
@@ -329,7 +343,8 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
     if !ok {
       // TODO: what to do here?  This poor guy didn't have a move action :(
       L.PushNil()
-      return 1
+      L.PushNil()
+      return 2
     }
     exec := move.AiMoveToPos(me, dsts, max_ap)
     if exec != nil {
@@ -337,13 +352,23 @@ func DoMoveFunc(a *Ai) lua.GoFunction {
       <-a.pause
       // TODO: Need to get a resolution
       x, y := me.Pos()
+      v := me.Game().ToVertex(x, y)
+      complete := false
+      for i := range dsts {
+        if v == dsts[i] {
+          complete = true
+          break
+        }
+      }
+      L.PushBoolean(complete)
       game.LuaPushPoint(L, x, y)
       base.Log().Printf("Finished move")
     } else {
       base.Log().Printf("Didn't bother moving")
+      L.PushBoolean(true)
       L.PushNil()
     }
-    return 1
+    return 2
   }
 }
 
@@ -461,15 +486,12 @@ func ExistsFunc(a *Ai) lua.GoFunction {
 //    ents - array[integer] - Array of entity ids.
 func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
   valid_kinds := map[string]bool{
-    "intruder":     true,
-    "denizen":      true,
-    "minion":       true,
-    "servitor":     true,
-    "master":       true,
-    "non-minion":   true,
-    "non-servitor": true,
-    "non-master":   true,
-    "all":          true,
+    "intruder": true,
+    "denizen":  true,
+    "minion":   true,
+    "servitor": true,
+    "master":   true,
+    "object":   true,
   }
   return func(L *lua.State) int {
     if !game.LuaCheckParamsOk(L, "NearestNEntities", game.LuaInteger, game.LuaString) {
@@ -479,7 +501,7 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     max := L.ToInteger(-2)
     kind := L.ToString(-1)
     if !valid_kinds[kind] {
-      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion' 'non-servitor' 'non-master' 'non-minion'], got %s.", kind)
+      err_str := fmt.Sprintf("NearestNEntities expects kind in the set ['intruder' 'denizen' 'servitor' 'master' 'minion'], got %s.", kind)
       base.Warn().Printf(err_str)
       L.PushString(err_str)
       L.Error()
@@ -487,14 +509,10 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     }
     var eds entityDistSlice
     for _, ent := range g.Ents {
-      if ent.Stats == nil {
-        continue
-      }
-      if ent.Stats.HpCur() <= 0 {
+      if ent.Stats != nil && ent.Stats.HpCur() <= 0 {
         continue
       }
       switch kind {
-      case "all":
       case "intruder":
         if ent.Side() != game.SideExplorers {
           continue
@@ -515,22 +533,14 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
         if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMaster {
           continue
         }
-      case "non-minion":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMinion {
-          continue
-        }
-      case "non-servitor":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelServitor {
-          continue
-        }
-      case "non-master":
-        if ent.HauntEnt == nil || ent.HauntEnt.Level == game.LevelMaster {
+      case "object":
+        if ent.ObjectEnt == nil {
           continue
         }
       }
       x, y := ent.Pos()
       dx, dy := ent.Dims()
-      if !me.HasLos(x, y, dx, dy) {
+      if !me.HasTeamLos(x, y, dx, dy) {
         continue
       }
       eds = append(eds, entityDist{rangedDistBetween(me, ent), ent})
@@ -580,46 +590,33 @@ func checkFloorRoomDoor(h *house.HouseDef, floor, room, door int) bool {
   return true
 }
 
-// Returns one room that this entity has not explored that can be reached by
-// going through only explored rooms.  It will return one of the closest such
-// rooms.
-//    Format
-//    r = NearbyUnexploredRoom()
-//
-//    Input:
-//    none
-//
-//    Output:
-//    r - room - An unexplored room, or nil if no such room exists.
-func NearbyUnexploredRoomFunc(a *Ai) lua.GoFunction {
+func NearbyUnexploredRoomsFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !game.LuaCheckParamsOk(L, "NearbyUnexploredRoom") {
+    if !game.LuaCheckParamsOk(L, "NearbyUnexploredRooms") {
       return 0
     }
 
     me := a.ent
     g := me.Game()
     graph := g.RoomGraph()
-    current_room_num := me.CurrentRoom()
     var unexplored []int
     for room_num, _ := range g.House.Floors[0].Rooms {
       if !me.Info.RoomsExplored[room_num] {
-        unexplored = append(unexplored, room_num)
+        adj, _ := graph.Adjacent(room_num)
+        for i := range adj {
+          if me.Info.RoomsExplored[adj[i]] || adj[i] == me.CurrentRoom() {
+            unexplored = append(unexplored, room_num)
+            break
+          }
+        }
       }
     }
-    if len(unexplored) == 0 {
-      base.Error().Printf("NO UNEXPLORED ROOMS!")
-      L.PushNil()
-      return 1
+    L.NewTable()
+    for i := range unexplored {
+      L.PushInteger(i + 1)
+      game.LuaPushRoom(L, a.game, a.game.House.Floors[0].Rooms[unexplored[i]])
+      L.SetTable(-3)
     }
-    cost, path := algorithm.Dijkstra(graph, []int{current_room_num}, unexplored)
-    if cost == -1 {
-      base.Error().Printf("NO PATHABLE UNEXPLORED ROOMS!")
-      L.PushNil()
-      return 1
-    }
-
-    game.LuaPushRoom(L, g, g.House.Floors[0].Rooms[path[len(path)-1]])
     return 1
   }
 }
@@ -712,7 +709,10 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
       return 0
     }
     ent := game.LuaToEntity(L, a.ent.Game(), -1)
-    if ent == nil || (ent.Side() != a.ent.Side() && !a.ent.Game().TeamLos(ent.Pos())) {
+    side := a.ent.Side()
+    x, y := a.ent.Pos()
+    dx, dy := a.ent.Dims()
+    if ent == nil || (ent.Side() != side && !a.ent.Game().TeamLos(side, x, y, dx, dy)) {
       L.PushNil()
     } else {
       game.LuaPushRoom(L, ent.Game(), ent.Game().House.Floors[0].Rooms[ent.CurrentRoom()])
@@ -825,10 +825,10 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     switch door.Facing {
     case house.FarLeft:
       x = door.Pos
-      y = room.Size.Dy
+      y = room.Size.Dy - 1
       dx = 1
     case house.FarRight:
-      x = room.Size.Dy
+      x = room.Size.Dx - 1
       y = door.Pos
       dy = 1
     case house.NearLeft:
@@ -844,11 +844,14 @@ func DoorPositionsFunc(a *Ai) lua.GoFunction {
     }
     L.NewTable()
     count := 1
-    for i := -1; i < door.Width+1; i++ {
-      L.PushInteger(count)
-      count++
+    for i := 0; i < door.Width; i++ {
+      L.PushInteger(count*2 - 1)
       game.LuaPushPoint(L, room.X+x+dx*i, room.Y+y+dy*i)
       L.SetTable(-3)
+      L.PushInteger(count * 2)
+      game.LuaPushPoint(L, room.X+x+dx*i+dy, room.Y+y+dy*i+dx)
+      L.SetTable(-3)
+      count++
     }
     return 1
   }
@@ -873,7 +876,7 @@ func DoorIsOpenFunc(a *Ai) lua.GoFunction {
       game.LuaDoError(L, "DoorIsOpen: Specified an invalid door.")
       return 0
     }
-    L.PushBoolean(door.Opened)
+    L.PushBoolean(door.IsOpened())
     return 1
   }
 }
@@ -916,7 +919,38 @@ func DoDoorToggleFunc(a *Ai) lua.GoFunction {
     if exec != nil {
       a.execs <- exec
       <-a.pause
-      L.PushBoolean(door.Opened)
+      L.PushBoolean(door.IsOpened())
+    } else {
+      L.PushNil()
+    }
+    return 1
+  }
+}
+
+func DoInteractWithObjectFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "DoInteractWithObject", game.LuaEntity) {
+      return 0
+    }
+    object := game.LuaToEntity(L, a.ent.Game(), -1)
+    var interact *actions.Interact
+    for _, action := range a.ent.Actions {
+      var ok bool
+      interact, ok = action.(*actions.Interact)
+      if ok {
+        break
+      }
+    }
+    if interact == nil {
+      game.LuaDoError(L, "Tried to interact with an object, but don't have an interact action.")
+      L.PushNil()
+      return 1
+    }
+    exec := interact.AiInteractWithObject(a.ent, object)
+    if exec != nil {
+      a.execs <- exec
+      <-a.pause
+      L.PushBoolean(true)
     } else {
       L.PushNil()
     }

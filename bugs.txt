@@ -1,0 +1,3 @@
+Can get locked up by repeatedly opening/closing the same door.
+Can have a door not connected to a room.
+

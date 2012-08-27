@@ -8,6 +8,13 @@ import (
   "github.com/runningwild/opengl/gl"
 )
 
+type ButtonLike interface {
+  handleClick(x, y int, data interface{}) bool
+  Respond(group gui.EventGroup, data interface{}) bool
+  Think(x, y, mx, my int, dt int64)
+  RenderAt(x, y int)
+}
+
 type Button struct {
   X, Y    int
   Texture texture.Object
@@ -23,6 +30,11 @@ type Button struct {
   // Function to run whenever the button is clicked
   f func(interface{})
 
+  // If not nil this function can return false to indicate that it cannot
+  // be clicked.  Will only be called during Think.
+  valid_func func() bool
+  valid      bool
+
   // Key that can be bound to have the same effect as clicking this button
   key gin.KeyId
 
@@ -34,43 +46,49 @@ type Button struct {
 // If x,y is inside the button's region then it will run its function and
 // return true, otherwise it does nothing and returns false.
 func (b *Button) handleClick(x, y int, data interface{}) bool {
-  d := b.Texture.Data()
-  if x < b.X || y < b.Y || x >= b.X+d.Dx() || y >= b.Y+d.Dy() {
-    return false
+  in := pointInsideRect(x, y, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
+  if in && b.valid {
+    b.f(data)
   }
-  b.f(data)
-  return true
+  return in
+}
+
+func (b *Button) Over(mx, my int) bool {
+  return pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
 }
 
 func (b *Button) Respond(group gui.EventGroup, data interface{}) bool {
+  if b.valid_func != nil {
+    b.valid = b.valid_func()
+  } else {
+    b.valid = true
+  }
   if group.Events[0].Key.Id() == b.key && group.Events[0].Type == gin.Press {
-    b.f(data)
+    if b.valid {
+      b.f(data)
+    }
     return true
   }
   return false
 }
 
 func doShading(current float64, in bool, dt int64) float64 {
+  var target float64
   if in {
-    return current*0.9 + 0.1
+    target = 1.0
+  } else {
+    target = 0.6
   }
-  if current < 0.40 {
-    return 0.40
-  }
-  return current*0.9 + 0.04
+  return doApproach(current, target, dt)
 }
 
 func (b *Button) Think(x, y, mx, my int, dt int64) {
-  // var tdx, tdy int
-  // if b.Texture.Data() != nil {
-  //   tdx = b.Texture.Data().Dx()
-  //   tdy = b.Texture.Data().Dy()
-  // } else {
-  // }
-  base.Log().Printf("Mouse(%d %d)", mx, my)
-  base.Log().Printf("Bounds: (%d %d), (%d %d)", b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
-  in := pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
-  base.Log().Printf("IN: %t", in)
+  if b.valid_func != nil {
+    b.valid = b.valid_func()
+  } else {
+    b.valid = true
+  }
+  in := b.valid && pointInsideRect(mx, my, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
   b.shade = doShading(b.shade, in, dt)
 }
 

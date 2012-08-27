@@ -22,14 +22,31 @@ _housename_: Name of the house to load.  This will get rid of everything in the 
 
 ------
 
-###_dsts_ = Utils.AllPathablePoints(_src_, _dst_, _min_, _max_)
-Finds all positions that a 1x1 unit could walk to from one position to nearby another.  
-_src_: Where the path starts.  
-_dst_: A point near where the path ends.  
-_min_: Minimum distance from _dst_ that the path should end.  
-_max_: Maximum distance from _dst_ that the path should end.  
+###_state_ = Script.__SaveGameState__()
+_state_ : An object representing the entire state of the game.  This object can be used in a call to _LoadGameState_() to restore the game to the state it was in when _SaveGameState_() was called.  
 
-_dsts_: An array of all points that can be reached by walking from _src_ to within _min_ and _max_ *ranged* distance of _dst_.  Assumes that a 1x1 unit is doing the walking.
+------
+
+###Script.__LoadGameState__(_state_)
+_state_ : An object obtained from calling _SaveGameState_().  This will restore the game to a previous state.  
+
+------
+
+###Script.__DoExec__(_exec_)
+Executes the action speified by _exec_.  The action must be legal.  
+_exec_ : An exec object like that obtained during a call to _OnExec_().  
+
+------
+
+###Script.__SelectEnt__(_ent_)
+Selects _ent_ and focuses the camera on it.  
+_exec_ : Any entity that belongs to the active side.  
+
+------
+
+###Script.__FocusPos__(_pos_)
+Focuses the camera on _pos_.  
+_pos_: Any point.  
 
 ------
 
@@ -65,11 +82,12 @@ _ent_: The entity that was spawned, or nil if it could not be spawned.
 
 ------
 
-###_placed_ = Script.__PlaceEntities__(_regexp_, _points_, _ents_)
+###_placed_ = Script.__PlaceEntities__(_regexp_, _ents_, _min_, _max_)
 Provides an ui to the user to place entities in the house.  
 _regexp_: A string describing a regular expression.  The spawn points whose names match _regexp_ will be available to the user to place the entities.  
-_points_: The number of points available to the user to spend when placing these entities.  
 _ents_: A table mapping entity name to point cost of that entity.  
+_min_: The minimum number of points worth of entities the user must place.  
+_max_: The maximum number of points worth of entities the user may place.  
 
 ------
 
@@ -95,13 +113,26 @@ _choices_: Array of choices that the user made.  The values in the array will co
 
 ------
 
+###_ps_ = Script.__GetLos__(_ent_)
+_ent_: An entity.  
+
+_ps_: Array of positions that _ent_ has los to.  
+
+------
+
+###_ps_ = Script.__SetVisibleSpawnPoints__(_side_, _pattern_)
+_side_: Either "denizens" or "intruders".  
+_pattern_: A regular expression.  
+
+Gives the specified side vision of any spawn points whose name matches _pattern_.  _pattern_ must match the entire name, not just part of it, i.e. it is prefixed with "^" and suffixed with "$".  
+
+------
+
 ###_choices_ = Script.__PickFromN__(_min_, _max_, _options_)
 Pops up windows that allows the user to select one or more things from a list.  
 _min_: Minimum options that the user must select.  
 _max_: Maximum options that the user must select.  
 _options_: Array of paths to icons to show the user.  
-
-_choices_: Array of indices of options that the user chose.  
 
 ------
 
@@ -146,6 +177,29 @@ Waits until _ent_ is in a ready state and then issues the animations one at a ti
 
 ------
 
+###Script.__PlayMusic__(_musicname_)
+Plays a music track.  
+_musicname_: Name of the music track, as specified in Haunts.txt, and prefixed by "Haunts/".  
+
+------
+
+###Script.__StopMusic__()
+Stops playing whatever music track is currently playing.  
+
+------
+
+###Script.__SetMusicParam__(_param_, _val_)
+_param_: Name of the parameter as specified in the Haunts.txt file.  
+_val_: The value to set the parameter to, the range of acceptable value is parameter-specified.  
+_param_ is adjusted to _val_ quickly, but not immediately, so there shouldn't be any problem changing values significantly.  
+
+------
+
+###Script.__PlaySound__(_sound_name_)
+Plays a sound effect.  
+_sound_name_: Name of the sound effect to play, as specified in Haunts.txt, and prefixed by "Haunts/".  
+
+------
 ###Script.__BindAi__(_target_, _source_)
 Binds an ai to something.  
 _target_: The thing to bind the ai to.  This can be an entity, or it can be one of the following strings: "denizen" "intruder" "minions".  
@@ -162,16 +216,11 @@ _side_: Either "denizens" or "intruders".
 ###Script.__SetLosMode__(_side_, _mode_)
 Sets what is visible to a given side.  
 _side_: One of "denizens" or "intruders".  
-_mode_: One of "none", "all", or "entities", or an array of rooms.  "none" will make everything dark, "all" makes everything visible, "entities" indicates that visibility will be determined by whatever entities are on that side (standard for gameplay).  If _mode_ is an array of rooms then visibility will be exactly those rooms.
+_mode_: One of "none", "blind", "all", or "entities", or an array of rooms.  "none" will fade everything to black, "blind" will make everything black immediately, "all" makes everything visible, "entities" indicates that visibility will be determined by whatever entities are on that side (standard for gameplay).  If _mode_ is an array of rooms then visibility will be exactly those rooms.
 
 ------
 
 ###Script.__EndPlayerInteraction__()
 Indicates that the current human player is done.  Ais will continue to perform their actions and then the turn will end.  
-
-------
-
-###Script.__SaveStore__()
-Saves any values written to the store table.  This should be called any time data is written to those files to ensure that it is available later.  
 
 

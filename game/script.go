@@ -1,19 +1,21 @@
 package game
 
 import (
-  "fmt"
   "bytes"
-  "math/rand"
-  "path/filepath"
-  "io/ioutil"
-  "regexp"
+  "fmt"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/texture"
-  "github.com/runningwild/haunts/house"
-  "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/game/hui"
+  "github.com/runningwild/haunts/game/status"
+  "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/sound"
+  "github.com/runningwild/haunts/texture"
   lua "github.com/xenith-studios/golua"
+  "io/ioutil"
+  "math/rand"
+  "path/filepath"
+  "regexp"
 )
 
 type gameScript struct {
@@ -31,12 +33,13 @@ func (gs *gameScript) syncEnd() {
   gs.sync <- struct{}{}
 }
 
-func startGameScript(gp *GamePanel, path string, player *Player) {
+func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string) {
   // Clear out the panel, now the script can do whatever it wants
-  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+  player.Script_path = path
+  gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   base.Log().Printf("startGameScript")
   if !filepath.IsAbs(path) {
-    path = filepath.Join(base.GetDataDir(), "scripts", path)
+    path = filepath.Join(base.GetDataDir(), "scripts", filepath.FromSlash(path))
   }
 
   // The game script runs in a separate go routine and functions that need to
@@ -48,15 +51,24 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     return
   }
   gp.script = &gameScript{}
+  base.Log().Printf("script = %p", gp.script)
+
   gp.script.L = lua.NewState()
   gp.script.L.OpenLibs()
   gp.script.L.SetExecutionLimit(25000)
   gp.script.L.NewTable()
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
+    "ChooserFromFile":                   func() { gp.script.L.PushGoFunctionAsCFunction(chooserFromFile(gp)) },
     "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
+    "SaveGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(saveGameState(gp)) },
+    "LoadGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(loadGameState(gp)) },
+    "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
+    "SelectEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(selectEnt(gp)) },
+    "FocusPos":                          func() { gp.script.L.PushGoFunctionAsCFunction(focusPos(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
-    "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp)) },
+    "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
+    "ShowMainBar":                       func() { gp.script.L.PushGoFunctionAsCFunction(showMainBar(gp, player)) },
     "SpawnEntityAtPosition":             func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntityAtPosition(gp)) },
     "GetSpawnPointsMatching":            func() { gp.script.L.PushGoFunctionAsCFunction(getSpawnPointsMatching(gp)) },
     "SpawnEntitySomewhereInSpawnPoints": func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntitySomewhereInSpawnPoints(gp)) },
@@ -70,32 +82,67 @@ func startGameScript(gp *GamePanel, path string, player *Player) {
     "BindAi":                            func() { gp.script.L.PushGoFunctionAsCFunction(bindAi(gp)) },
     "SetVisibility":                     func() { gp.script.L.PushGoFunctionAsCFunction(setVisibility(gp)) },
     "EndPlayerInteraction":              func() { gp.script.L.PushGoFunctionAsCFunction(endPlayerInteraction(gp)) },
-    "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
+    "GetLos":                            func() { gp.script.L.PushGoFunctionAsCFunction(getLos(gp)) },
+    "SetVisibleSpawnPoints":             func() { gp.script.L.PushGoFunctionAsCFunction(setVisibleSpawnPoints(gp)) },
     "SetCondition":                      func() { gp.script.L.PushGoFunctionAsCFunction(setCondition(gp)) },
     "SetPosition":                       func() { gp.script.L.PushGoFunctionAsCFunction(setPosition(gp)) },
     "SetHp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setHp(gp)) },
     "SetAp":                             func() { gp.script.L.PushGoFunctionAsCFunction(setAp(gp)) },
+    "RemoveEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(removeEnt(gp)) },
     "PlayAnimations":                    func() { gp.script.L.PushGoFunctionAsCFunction(playAnimations(gp)) },
+    "PlayMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(playMusic(gp)) },
+    "StopMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(stopMusic(gp)) },
+    "SetMusicParam":                     func() { gp.script.L.PushGoFunctionAsCFunction(setMusicParam(gp)) },
+    "PlaySound":                         func() { gp.script.L.PushGoFunctionAsCFunction(playSound(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
 
   registerUtilityFunctions(gp.script.L)
   if player.Lua_store != nil {
-    LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L)
+    loadGameStateRaw(gp, player.Game_state)
+    err := LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L, gp.game)
+    if err != nil {
+      base.Warn().Printf("Error decoding lua state: %v", err)
+    }
     gp.script.L.SetGlobal("store")
   } else {
     gp.script.L.NewTable()
     gp.script.L.SetGlobal("store")
   }
   gp.script.sync = make(chan struct{})
+  base.Log().Printf("Sync: %p", gp.script.sync)
   res := gp.script.L.DoString(string(prog))
   if !res {
     base.Error().Printf("There was an error running script %s:\n%s", path, prog)
   } else {
+    base.Log().Printf("No_init: %v\n", player.No_init)
     go func() {
+      gp.script.L.NewTable()
+      for k, v := range data {
+        gp.script.L.PushString(k)
+        gp.script.L.PushString(v)
+        gp.script.L.SetTable(-3)
+      }
+      gp.script.L.SetGlobal("__data")
       gp.script.L.SetExecutionLimit(250000)
-      gp.script.L.DoString("Init()")
+      if player.No_init {
+        gp.script.syncStart()
+        loadGameStateRaw(gp, player.Game_state)
+        gp.game.script = gp.script
+        gp.script.syncEnd()
+      } else {
+        gp.script.L.DoString("Init(__data)")
+        if gp.game.Side == SideHaunt {
+          gp.game.Ai.minions.Activate()
+          gp.game.Ai.denizens.Activate()
+          gp.game.player_inactive = gp.game.Ai.denizens.Active()
+        } else {
+          gp.game.Ai.intruders.Activate()
+          gp.game.player_inactive = gp.game.Ai.intruders.Active()
+        }
+
+      }
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
       } else {
@@ -117,6 +164,8 @@ func (gs *gameScript) OnRound(g *Game) {
     //   <-action stuff
     // <- round end
     // <- round end done
+    base.Log().Printf("Game script: %p", gs)
+    base.Log().Printf("Lua state: %p", gs.L)
     gs.L.SetExecutionLimit(250000)
     cmd := fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
     base.Log().Printf("cmd: '%s'", cmd)
@@ -178,6 +227,15 @@ func (gs *gameScript) OnRound(g *Game) {
       // Run OnAction here
       gs.L.SetExecutionLimit(250000)
       exec.Push(gs.L, g)
+      str, err := base.ToGobToBase64([]ActionExec{exec})
+      if err != nil {
+        base.Error().Printf("Unable to encode exec: %v", err)
+      } else {
+        gs.L.PushString("__encoded")
+        gs.L.PushString(str)
+        gs.L.SetTable(-3)
+      }
+
       //      base.Log().Printf("exec: ", LuaStringifyParam(gs.L, -1))
       gs.L.SetGlobal("__exec")
       cmd = fmt.Sprintf("OnAction(%t, %d, %s)", g.Side == SideExplorers, (g.Turn+1)/2, "__exec")
@@ -190,9 +248,14 @@ func (gs *gameScript) OnRound(g *Game) {
     gs.L.SetExecutionLimit(250000)
     gs.L.DoString(fmt.Sprintf("RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
 
-    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase out")
     g.comm.script_to_game <- nil
-    base.Log().Printf("ScriptComm: Done with RoundEnd")
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase in")
+
+    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase in")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase out")
   }()
 }
 
@@ -217,24 +280,6 @@ func (gp *GamePanel) scriptThinkOnce() {
   }
 }
 
-// Thinks continually until a value is passed along done
-func (gp *GamePanel) scriptSitAndThink() (done chan<- struct{}) {
-  done_chan := make(chan struct{})
-
-  go func() {
-    for {
-      select {
-      case <-gp.script.sync:
-        <-gp.script.sync
-      case <-done_chan:
-        return
-      }
-    }
-  }()
-
-  return done_chan
-}
-
 func startScript(gp *GamePanel, player *Player) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "StartScript", LuaString) {
@@ -243,7 +288,15 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     script := L.ToString(-1)
-    startGameScript(gp, script, player)
+    player.Script_path = script
+    player.No_init = false
+    gp.script.syncEnd()
+    res := gp.script.L.DoString("Script.SaveStore()")
+    gp.script.syncStart()
+    if !res {
+      base.Error().Printf("Unable to properly autosave.")
+    }
+    startGameScript(gp, script, player, nil)
     return 0
   }
 }
@@ -273,6 +326,151 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func saveGameState(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SaveGameState") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    str, err := base.ToGobToBase64(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return 0
+    }
+    L.PushString(str)
+    return 1
+  }
+}
+
+func loadGameStateRaw(gp *GamePanel, state string) {
+  var viewer gui.Widget
+  if gp.game != nil {
+    viewer = gp.game.viewer
+  }
+  err := base.FromBase64FromGob(&gp.game, state)
+  if err != nil {
+    base.Error().Printf("Error decoding game state: %v", err)
+    return
+  }
+  gp.AnchorBox.RemoveChild(viewer)
+  gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+}
+
+func loadGameState(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "LoadGameState", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    loadGameStateRaw(gp, L.ToString(-1))
+    return 0
+  }
+}
+
+func doExec(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "DoExec", LuaTable) {
+      return 0
+    }
+    L.PushString("__encoded")
+    L.GetTable(-2)
+    str := L.ToString(-1)
+    L.Pop(1)
+    var execs []ActionExec
+    base.Log().Printf("Decoding from: '%s'", str)
+    err := base.FromBase64FromGob(&execs, str)
+    if err != nil {
+      base.Error().Printf("Error decoding exec: %v", err)
+      return 0
+    }
+    if len(execs) != 1 {
+      base.Error().Printf("Error decoding exec: Found %d execs instead of exactly 1.", len(execs))
+      return 0
+    }
+    base.Log().Printf("ScriptComm: Exec: %v", execs[0])
+    gp.game.comm.script_to_game <- execs[0]
+    base.Log().Printf("ScriptComm: Sent exec")
+    <-gp.game.comm.game_to_script
+    base.Log().Printf("ScriptComm: exec done")
+    done := make(chan bool)
+    gp.script.syncStart()
+    go func() {
+      for i := range gp.game.Ents {
+        gp.game.Ents[i].Sprite().Wait([]string{"ready", "killed"})
+      }
+      done <- true
+    }()
+    gp.script.syncEnd()
+    <-done
+    return 0
+  }
+}
+
+func selectEnt(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SelectEnt", LuaEntity) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Error().Printf("Tried to SelectEnt on a non-existent entity.")
+      return 0
+    }
+    if ent.Side() != gp.game.Side {
+      base.Error().Printf("Tried to SelectEnt on an entity that's not on the current side.")
+      return 0
+    }
+    gp.game.SelectEnt(ent)
+    return 0
+  }
+}
+
+func focusPos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "FocusPos", LuaPoint) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    x, y := LuaToPoint(L, -1)
+    gp.game.viewer.Focus(float64(x), float64(y))
+    return 0
+  }
+}
+
+func chooserFromFile(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "ChooserFromFile", LuaString) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    path := filepath.Join(base.GetDataDir(), L.ToString(-1))
+    chooser, done, err := makeChooserFromOptionBasicsFile(path)
+    if err != nil {
+      base.Error().Printf("Error making chooser: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(chooser, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    gp.script.syncEnd()
+
+    res := <-done
+    L.NewTable()
+    for i, s := range res {
+      L.PushInteger(i + 1)
+      L.PushString(s)
+      L.SetTable(-3)
+    }
+    gp.script.syncStart()
+    gp.AnchorBox.RemoveChild(chooser)
+    return 1
+  }
+}
+
 func loadHouse(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "LoadHouse", LuaString) {
@@ -287,21 +485,20 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("No house exists with the name '%s'.", name)
       return 0
     }
-    gp.house = def
-    gp.viewer = house.MakeHouseViewer(gp.house, 62)
-    gp.viewer.Edit_mode = true
-    gp.game = makeGame(gp.house, gp.viewer, SideExplorers)
+    gp.game = makeGame(def)
+    gp.game.viewer.Edit_mode = true
     gp.game.script = gp.script
+    base.Log().Printf("script = %p", gp.game.script)
 
-    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 700})
+    gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
+    gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
-    gp.AnchorBox.AddChild(gp.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
     base.Log().Printf("Done making stuff")
     return 0
   }
 }
 
-func showMainBar(gp *GamePanel) lua.GoFunction {
+func showMainBar(gp *GamePanel, player *Player) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "ShowMainBar", LuaBoolean) {
       return 0
@@ -326,8 +523,13 @@ func showMainBar(gp *GamePanel) lua.GoFunction {
         return 0
       }
       gp.AnchorBox.AddChild(gp.main_bar, gui.Anchor{0.5, 0, 0.5, 0})
+      system, err := MakeSystemMenu(gp, player)
+      if err != nil {
+        LuaDoError(L, err.Error())
+        return 0
+      }
+      gp.AnchorBox.AddChild(system, gui.Anchor{1, 1, 1, 1})
     }
-    base.Log().Printf("Num kids: %d", len(gp.AnchorBox.GetChildren()))
     return 0
   }
 }
@@ -434,17 +636,15 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
 
 func placeEntities(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "PlaceEntities", LuaString, LuaInteger, LuaTable) {
+    if !LuaCheckParamsOk(L, "PlaceEntities", LuaString, LuaTable, LuaInteger, LuaInteger) {
       return 0
     }
     gp.script.syncStart()
-    pattern := L.ToString(-3)
-    points := L.ToInteger(-2)
-
+    defer gp.script.syncEnd()
+    L.PushNil()
     var names []string
     var costs []int
-    L.PushNil()
-    for L.Next(-2) != 0 {
+    for L.Next(-4) != 0 {
       L.PushInteger(1)
       L.GetTable(-2)
       names = append(names, L.ToString(-1))
@@ -452,25 +652,27 @@ func placeEntities(gp *GamePanel) lua.GoFunction {
       L.PushInteger(2)
       L.GetTable(-2)
       costs = append(costs, L.ToInteger(-1))
-      L.Pop(1)
-      L.Pop(1)
+      L.Pop(2)
     }
-
-    ep, placed_chan := MakeEntityPlacer(gp.game, pattern, points, names, costs)
-    gp.AnchorBox.AddChild(ep, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    ep, done, err := MakeEntityPlacer(gp.game, names, costs, L.ToInteger(-2), L.ToInteger(-1), L.ToString(-4))
+    if err != nil {
+      base.Error().Printf("Unable to make entity placer: %v", err)
+      return 0
+    }
+    gp.AnchorBox.AddChild(ep, gui.Anchor{0, 0, 0, 0})
+    for i, kid := range gp.AnchorBox.GetChildren() {
+      base.Log().Printf("Kid[%d] = %s", i, kid.String())
+    }
     gp.script.syncEnd()
-
-    placed := <-placed_chan
+    ents := <-done
     L.NewTable()
-    for i := range placed {
+    for i := range ents {
       L.PushInteger(i + 1)
-      LuaPushEntity(L, placed[i])
+      LuaPushEntity(L, ents[i])
       L.SetTable(-3)
     }
-
     gp.script.syncStart()
     gp.AnchorBox.RemoveChild(ep)
-    gp.script.syncEnd()
     return 1
   }
 }
@@ -514,13 +716,30 @@ func getAllEnts(gp *GamePanel) lua.GoFunction {
 
 func dialogBox(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "DialogBox", LuaString) {
-      return 0
+    if L.GetTop() == 1 {
+      if !LuaCheckParamsOk(L, "DialogBox", LuaString) {
+        return 0
+      }
+    } else {
+      if !LuaCheckParamsOk(L, "DialogBox", LuaString, LuaTable) {
+        return 0
+      }
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    path := L.ToString(-1)
-    box, output, err := MakeDialogBox(filepath.ToSlash(path))
+    path := L.ToString(1)
+    var args map[string]string
+    if L.GetTop() > 1 {
+      args = make(map[string]string)
+      L.PushValue(2)
+      L.PushNil()
+      for L.Next(-2) != 0 {
+        args[L.ToString(-2)] = L.ToString(-1)
+        L.Pop(1)
+      }
+      L.Pop(1)
+    }
+    box, output, err := MakeDialogBox(filepath.ToSlash(path), args)
     if err != nil {
       base.Error().Printf("Error making dialog: %v", err)
       return 0
@@ -544,6 +763,54 @@ func dialogBox(gp *GamePanel) lua.GoFunction {
     }
     return 1
   }
+}
+
+type iconWithText struct {
+  Name string
+  Icon texture.Object
+  Data interface{}
+}
+
+func (c *iconWithText) Draw(hovered, selected, selectable bool, region gui.Region) {
+  var f float64
+  switch {
+  case selected:
+    f = 1.0
+  case hovered || selectable:
+    f = 0.6
+  default:
+    f = 0.4
+  }
+  gl.Color4d(f, f, f, 1)
+  c.Icon.Data().RenderNatural(region.X, region.Y)
+  if hovered && selectable {
+    if selected {
+      gl.Color4d(1, 0, 0, 0.3)
+    } else {
+      gl.Color4d(1, 0, 0, 1)
+    }
+    gl.Disable(gl.TEXTURE_2D)
+    gl.Begin(gl.LINES)
+    x := int32(region.X + 1)
+    y := int32(region.Y + 1)
+    x2 := int32(region.X + region.Dx - 1)
+    y2 := int32(region.Y + region.Dy - 1)
+
+    gl.Vertex2i(x, y)
+    gl.Vertex2i(x, y2)
+
+    gl.Vertex2i(x, y2)
+    gl.Vertex2i(x2, y2)
+
+    gl.Vertex2i(x2, y2)
+    gl.Vertex2i(x2, y)
+
+    gl.Vertex2i(x2, y)
+    gl.Vertex2i(x, y)
+    gl.End()
+  }
+}
+func (c *iconWithText) Think(dt int64) {
 }
 
 func pickFromN(gp *GamePanel) lua.GoFunction {
@@ -656,36 +923,42 @@ func bindAi(gp *GamePanel) lua.GoFunction {
     case "denizen":
       switch source {
       case "human":
-        gp.game.haunts_ai = inactiveAi{}
+        gp.game.Ai.denizens = inactiveAi{}
       case "net":
         base.Error().Printf("bindAi('denizen', 'net') is not implemented.")
         return 0
       default:
-        gp.game.haunts_ai = nil
-        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.haunts_ai, DenizensAi)
-        if gp.game.haunts_ai == nil {
-          gp.game.haunts_ai = inactiveAi{}
+        gp.game.Ai.denizens = nil
+        path := filepath.Join(base.GetDataDir(), "ais", source)
+        gp.game.Ai.Path.Denizens = path
+        ai_maker(path, gp.game, nil, &gp.game.Ai.denizens, DenizensAi)
+        if gp.game.Ai.denizens == nil {
+          gp.game.Ai.denizens = inactiveAi{}
         }
       }
     case "intruder":
       switch source {
       case "human":
-        gp.game.explorers_ai = inactiveAi{}
+        gp.game.Ai.intruders = inactiveAi{}
       case "net":
         base.Error().Printf("bindAi('intruder', 'net') is not implemented.")
         return 0
       default:
-        gp.game.explorers_ai = nil
-        ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.explorers_ai, IntrudersAi)
-        if gp.game.explorers_ai == nil {
-          gp.game.explorers_ai = inactiveAi{}
+        gp.game.Ai.intruders = nil
+        path := filepath.Join(base.GetDataDir(), "ais", source)
+        gp.game.Ai.Path.Intruders = path
+        ai_maker(path, gp.game, nil, &gp.game.Ai.intruders, IntrudersAi)
+        if gp.game.Ai.intruders == nil {
+          gp.game.Ai.intruders = inactiveAi{}
         }
       }
     case "minions":
-      gp.game.minion_ai = nil
-      ai_maker(filepath.Join(base.GetDataDir(), "ais", source), gp.game, nil, &gp.game.minion_ai, MinionsAi)
-      if gp.game.minion_ai == nil {
-        gp.game.minion_ai = inactiveAi{}
+      gp.game.Ai.minions = nil
+      path := filepath.Join(base.GetDataDir(), "ais", source)
+      gp.game.Ai.Path.Minions = path
+      ai_maker(path, gp.game, nil, &gp.game.Ai.minions, MinionsAi)
+      if gp.game.Ai.minions == nil {
+        gp.game.Ai.minions = inactiveAi{}
       }
     default:
       base.Error().Printf("Specified unknown Ai target '%s'", target)
@@ -726,7 +999,7 @@ func endPlayerInteraction(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    gp.game.player_active = false
+    gp.game.player_inactive = true
     return 0
   }
 }
@@ -739,11 +1012,66 @@ func saveStore(gp *GamePanel, player *Player) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     UpdatePlayer(player, gp.script.L)
-    err := SavePlayer(player)
+    str, err := base.ToGobToBase64(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return 0
+    }
+    player.Game_state = str
+    player.Name = "autosave"
+    err = SavePlayer(player)
     if err != nil {
       base.Warn().Printf("Unable to save player: %v", err)
     }
     return 0
+  }
+}
+
+func getLos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "GetLos", LuaEntity) {
+      return 0
+    }
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Error().Printf("Tried to GetLos on an invalid entity.")
+      return 0
+    }
+    if ent.los == nil || ent.los.grid == nil {
+      base.Error().Printf("Tried to GetLos on an entity without vision.")
+      return 0
+    }
+    L.NewTable()
+    count := 0
+    for x := range ent.los.grid {
+      for y := range ent.los.grid[x] {
+        if ent.los.grid[x][y] {
+          count++
+          L.PushInteger(count)
+          LuaPushPoint(L, x, y)
+          L.SetTable(-3)
+        }
+      }
+    }
+    return 1
+  }
+}
+
+func setVisibleSpawnPoints(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetVisibleSpawnPoints", LuaString, LuaString) {
+      return 0
+    }
+    switch L.ToString(-2) {
+    case "denizens":
+      gp.game.Los_spawns.Denizens.Pattern = L.ToString(-1)
+    case "intruders":
+      gp.game.Los_spawns.Intruders.Pattern = L.ToString(-1)
+    default:
+      base.Error().Printf("First parameter to SetVisibleSpawnPoints must be either 'denizens' or 'intruders'.")
+      return 0
+    }
+    return 1
   }
 }
 
@@ -757,6 +1085,10 @@ func setCondition(gp *GamePanel) lua.GoFunction {
     ent := LuaToEntity(L, gp.game, -3)
     if ent == nil {
       base.Warn().Printf("Tried to SetCondition on an entity that doesn't exist.")
+      return 0
+    }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetCondition on an entity that doesn't have stats.")
       return 0
     }
     name := L.ToString(-2)
@@ -800,6 +1132,10 @@ func setHp(gp *GamePanel) lua.GoFunction {
       base.Warn().Printf("Tried to SetHp on an entity that doesn't exist.")
       return 0
     }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetHp on an entity that doesn't have stats.")
+      return 0
+    }
     ent.Stats.SetHp(L.ToInteger(-1))
     return 0
   }
@@ -817,7 +1153,38 @@ func setAp(gp *GamePanel) lua.GoFunction {
       base.Warn().Printf("Tried to SetAp on an entity that doesn't exist.")
       return 0
     }
+    if ent.Stats == nil {
+      base.Warn().Printf("Tried to SetAp on an entity that doesn't have stats.")
+      return 0
+    }
     ent.Stats.SetAp(L.ToInteger(-1))
+    return 0
+  }
+}
+
+func removeEnt(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "RemoveEnt", LuaEntity) {
+      return 0
+    }
+    ent := LuaToEntity(L, gp.game, -1)
+    if ent == nil {
+      base.Warn().Printf("Tried to RemoveEnt on an entity that doesn't exist.")
+      return 0
+    }
+    removed := false
+    for i := range gp.game.Ents {
+      if gp.game.Ents[i] == ent {
+        gp.game.Ents[i] = gp.game.Ents[len(gp.game.Ents)-1]
+        gp.game.Ents = gp.game.Ents[0 : len(gp.game.Ents)-1]
+        gp.game.viewer.RemoveDrawable(ent)
+        removed = true
+        break
+      }
+    }
+    if !removed {
+      base.Warn().Printf("Tried to RemoveEnt an entity that wasn't in the game.")
+    }
     return 0
   }
 }
@@ -843,6 +1210,46 @@ func playAnimations(gp *GamePanel) lua.GoFunction {
       }
       ent.Sprite().Wait([]string{"ready", "killed"})
     }
+    return 0
+  }
+}
+
+func playMusic(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlayMusic", LuaString) {
+      return 0
+    }
+    sound.PlayMusic(L.ToString(-1))
+    return 0
+  }
+}
+
+func stopMusic(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "StopMusic", LuaString) {
+      return 0
+    }
+    sound.StopMusic()
+    return 0
+  }
+}
+
+func setMusicParam(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetMusicParam", LuaString, LuaFloat) {
+      return 0
+    }
+    sound.SetMusicParam(L.ToString(-2), L.ToNumber(-1))
+    return 0
+  }
+}
+
+func playSound(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "PlaySound", LuaString) {
+      return 0
+    }
+    sound.PlaySound(L.ToString(-1))
     return 0
   }
 }
@@ -874,6 +1281,8 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
     switch mode_str {
     case "none":
       gp.game.SetLosMode(side, LosModeNone, nil)
+    case "blind":
+      gp.game.SetLosMode(side, LosModeBlind, nil)
     case "all":
       gp.game.SetLosMode(side, LosModeAll, nil)
     case "entities":

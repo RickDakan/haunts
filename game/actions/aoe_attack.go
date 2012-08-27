@@ -2,7 +2,6 @@ package actions
 
 import (
   "encoding/gob"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/glop/util/algorithm"
@@ -13,6 +12,7 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
   lua "github.com/xenith-studios/golua"
+  "path/filepath"
 )
 
 func registerAoeAttacks() map[string]func() game.Action {
@@ -40,6 +40,7 @@ func registerAoeAttacks() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerAoeAttacks)
   gob.Register(&AoeAttack{})
+  gob.Register(&aoeExec{})
 }
 
 // Aoe Attacks are untargeted and instant, they are also readyable
@@ -73,7 +74,7 @@ type aoeAttackTempData struct {
   // All entities in the blast radius - could include the acting entity
   targets []*game.Entity
 
-  exec aoeExec
+  exec *aoeExec
 }
 type aoeExec struct {
   game.BasicActionExec
@@ -90,14 +91,17 @@ func (exec aoeExec) Push(L *lua.State, g *game.Game) {
   L.SetTable(-3)
 }
 
-func init() {
-  gob.Register(aoeExec{})
+func (a *AoeAttack) SoundMap() map[string]string {
+  return nil
 }
 
 func (a *AoeAttack) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")
   L.PushString("Aoe Attack")
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(a.Name)
   L.SetTable(-3)
   L.PushString("Ap")
   L.PushInteger(a.Ap)
@@ -167,7 +171,7 @@ func (a *AoeAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.
       var exec aoeExec
       exec.SetBasicData(a.ent, a)
       exec.X, exec.Y = a.tx, a.ty
-      return true, exec
+      return true, &exec
     } else {
       return true, nil
     }
@@ -270,7 +274,7 @@ func (a *AoeAttack) AiAttackPosition(ent *game.Entity, x, y int) game.ActionExec
   var exec aoeExec
   exec.SetBasicData(ent, a)
   exec.X, exec.Y = x, y
-  return exec
+  return &exec
 }
 
 // Used for doing los computation on aoe attacks, so we don't have to allocate
@@ -331,7 +335,7 @@ func (a *AoeAttack) getTargetsAt(g *game.Game, tx, ty int) []*game.Entity {
 
 func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
   if ae != nil {
-    a.exec = ae.(aoeExec)
+    a.exec = ae.(*aoeExec)
     a.targets = a.getTargetsAt(g, a.exec.X, a.exec.Y)
     if a.Current_ammo > 0 {
       a.Current_ammo--
@@ -370,7 +374,7 @@ func (a *AoeAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.Ma
   }
   a.ent.Sprite().Command(a.Animation)
   for _, target := range a.targets {
-    if game.DoAttack(a.ent, target, a.Strength, a.Kind) {
+    if g.DoAttack(a.ent, target, a.Strength, a.Kind) {
       for _, name := range a.Conditions {
         target.Stats.ApplyCondition(status.MakeCondition(name))
       }

@@ -2,17 +2,16 @@ package actions
 
 import (
   "encoding/gob"
-  "path/filepath"
   "github.com/runningwild/glop/gin"
-  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
-  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/game"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/opengl/gl"
   lua "github.com/xenith-studios/golua"
+  "path/filepath"
 )
 
 func registerBasicAttacks() map[string]func() game.Action {
@@ -43,6 +42,7 @@ func registerBasicAttacks() map[string]func() game.Action {
 func init() {
   game.RegisterActionMakers(registerBasicAttacks)
   gob.Register(&BasicAttack{})
+  gob.Register(&basicAttackExec{})
 }
 
 // Basic Attacks are single target and instant, they are also readyable
@@ -78,7 +78,7 @@ type basicAttackTempData struct {
   target *game.Entity
 
   // exec that we're currently executing
-  exec basicAttackExec
+  exec *basicAttackExec
 }
 
 type basicAttackExec struct {
@@ -98,14 +98,17 @@ func (exec basicAttackExec) Push(L *lua.State, g *game.Game) {
   L.SetTable(-3)
 }
 
-func init() {
-  gob.Register(basicAttackExec{})
+func (a *BasicAttack) SoundMap() map[string]string {
+  return a.Sounds
 }
 
 func (a *BasicAttack) Push(L *lua.State) {
   L.NewTable()
   L.PushString("Type")
   L.PushString("Basic Attack")
+  L.SetTable(-3)
+  L.PushString("Name")
+  L.PushString(a.Name)
   L.SetTable(-3)
   L.PushString("Ap")
   L.PushInteger(a.Ap)
@@ -144,7 +147,7 @@ func init() {
   results = make(map[int]BasicAttackResult)
 }
 func GetBasicAttackResult(e game.ActionExec) *BasicAttackResult {
-  res, ok := results[e.(basicAttackExec).id]
+  res, ok := results[e.(*basicAttackExec).id]
   if !ok {
     return nil
   }
@@ -224,9 +227,6 @@ func (a *BasicAttack) Prep(ent *game.Entity, g *game.Game) bool {
   }
   a.ent = ent
   a.targets = a.findTargets(ent, g)
-  if a.Sounds != nil {
-    sound.MapSounds(a.Sounds)
-  }
   return true
 }
 func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game.ActionExec {
@@ -235,13 +235,13 @@ func (a *BasicAttack) AiAttackTarget(ent *game.Entity, target *game.Entity) game
   }
   return a.makeExec(ent, target)
 }
-func (a *BasicAttack) makeExec(ent, target *game.Entity) basicAttackExec {
+func (a *BasicAttack) makeExec(ent, target *game.Entity) *basicAttackExec {
   var exec basicAttackExec
   exec.id = exec_id
   exec_id++
   exec.SetBasicData(ent, a)
   exec.Target = target.Id
-  return exec
+  return &exec
 }
 func (a *BasicAttack) HandleInput(group gui.EventGroup, g *game.Game) (bool, game.ActionExec) {
   target := g.HoveredEnt()
@@ -272,9 +272,8 @@ func (a *BasicAttack) Cancel() {
   a.basicAttackTempData = basicAttackTempData{}
 }
 func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.MaintenanceStatus {
-  base.Log().Printf("Maintain: %v", ae)
   if ae != nil {
-    a.exec = ae.(basicAttackExec)
+    a.exec = ae.(*basicAttackExec)
     a.ent = g.EntityById(ae.EntityId())
     a.target = a.ent.Game().EntityById(a.exec.Target)
 
@@ -286,6 +285,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
 
     if a.Ap > a.ent.Stats.ApCur() {
       base.Error().Printf("Got a basic attack that required more ap than available: %v", a.exec)
+      base.Error().Printf("Ent: %s, Ap: %d", a.ent.Name, a.ent.Stats.ApCur())
       return game.Complete
     }
 
@@ -302,7 +302,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     }
     a.ent.Stats.ApplyDamage(-a.Ap, 0, status.Unspecified)
     var defender_cmds []string
-    if game.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
+    if g.DoAttack(a.ent, a.target, a.Strength, a.Kind) {
       for _, name := range a.Conditions {
         a.target.Stats.ApplyCondition(status.MakeCondition(name))
       }
@@ -319,10 +319,7 @@ func (a *BasicAttack) Maintain(dt int64, g *game.Game, ae game.ActionExec) game.
     }
     sprites := []*sprite.Sprite{a.ent.Sprite(), a.target.Sprite()}
     sprite.CommandSync(sprites, [][]string{[]string{a.Animation}, defender_cmds}, "hit")
-    base.Log().Printf("Finished basic attack")
     return game.Complete
-  } else {
-    base.Log().Printf("Waiting: %s %s", a.ent.Sprite().State(), a.target.Sprite().State())
   }
   return game.InProgress
 }

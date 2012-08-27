@@ -1,6 +1,7 @@
 package house
 
 import (
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
@@ -40,6 +41,19 @@ type Furniture struct {
 
   // Used to determine how this is drawn as it is being moved in the editor
   invalid bool
+
+  // If someone is walking behind this, and it blocks los, then we'll want to
+  // make it transparent.
+  alpha         float64
+  alpha_enabled bool
+}
+
+func (f *Furniture) SetAlpha(a float64) {
+  f.alpha = a
+  f.alpha_enabled = true
+}
+func (f *Furniture) Alpha() float64 {
+  return f.alpha
 }
 
 // Changes the position of this object such that it fits within the specified
@@ -109,8 +123,16 @@ func (f *Furniture) Color() (r, g, b, a byte) {
 }
 
 func (f *Furniture) Render(pos mathgl.Vec2, width float32) {
+  var rgba [4]float64
+  gl.GetDoublev(gl.CURRENT_COLOR, &rgba[0])
+  gl.PushAttrib(gl.CURRENT_BIT)
+  if !f.Blocks_los || !f.alpha_enabled {
+    f.alpha = 1
+  }
+  gl.Color4ub(byte(255*rgba[0]), byte(255*rgba[1]), byte(255*rgba[2]), byte(255*rgba[3]*f.alpha))
   orientation := f.Orientations[f.Rotation]
   dy := width * float32(orientation.Texture.Data().Dy()) / float32(orientation.Texture.Data().Dx())
   // orientation.Texture.Data().Render(float64(pos.X), float64(pos.Y), float64(width), float64(dy))
   orientation.Texture.Data().RenderAdvanced(float64(pos.X), float64(pos.Y), float64(width), float64(dy), 0, !f.Flip)
+  gl.PopAttrib()
 }

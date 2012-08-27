@@ -1,16 +1,17 @@
 package game
 
 import (
-  "image"
-  "path/filepath"
   "encoding/gob"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/sprite"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
-  gl "github.com/chsc/gogl/gl21"
+  "image"
+  "path/filepath"
   "regexp"
 )
 
@@ -130,6 +131,20 @@ func (e *Entity) LoadAi() {
 // loading one from a saved game.
 func (e *Entity) Load(g *Game) {
   e.sprite.Load(e.Sprite_path.String())
+  e.Sprite().SetTriggerFunc(func(s *sprite.Sprite, name string) {
+    if e.current_action != nil {
+      if sound_name, ok := e.current_action.SoundMap()[name]; ok {
+        sound.PlaySound(sound_name)
+        return
+      }
+    }
+    if e.Sounds != nil {
+      if sound_name, ok := e.Sounds[name]; ok {
+        sound.PlaySound(sound_name)
+      }
+    }
+  })
+
   e.Ai_file_override = e.Ai_path
   e.LoadAi()
 
@@ -142,7 +157,15 @@ func (e *Entity) Load(g *Game) {
     }
   }
 
+  g.all_ents_in_memory[e] = true
+  g.viewer.RemoveDrawable(e)
+  g.viewer.AddDrawable(e)
+
   e.game = g
+}
+
+func (e *Entity) Release() {
+  e.Ai.Terminate()
 }
 
 func MakeEntity(name string, g *Game) *Entity {
@@ -165,6 +188,7 @@ func MakeEntity(name string, g *Game) *Entity {
   g.Entity_id++
 
   ent.Load(g)
+  g.all_ents_in_memory[&ent] = true
 
   return &ent
 }
@@ -212,6 +236,9 @@ type entityDef struct {
 
   // List of actions that this entity defaults to having
   Action_names []string
+
+  // Mapping from trigger name to sound name.
+  Sounds map[string]string
 
   // Path to the Ai that this entity should use if not player-controlled
   Ai_path base.Path
@@ -359,12 +386,18 @@ type EntityInst struct {
   // may not be a bijection of Actions mentioned in entityDef.Action_names.
   Actions []Action
 
+  // If this entity is currently executing an Action it will be stored here
+  // until the Action is complete.
+  current_action Action
+
   Stats *status.Inst
 
   // Ai stuff - the channels cannot be gobbed, so they need to be remade when
   // loading an ent from a file
   Ai               Ai
   Ai_file_override base.Path
+
+  Ai_data map[string]string
 
   // Info that may be of use to the Ai
   Info Info
@@ -418,10 +451,15 @@ func (e *Entity) HasLos(x, y, dx, dy int) bool {
       if i < 0 || j < 0 || i >= len(e.los.grid) || j >= len(e.los.grid[0]) {
         continue
       }
-      return e.los.grid[i][j]
+      if e.los.grid[i][j] {
+        return true
+      }
     }
   }
   return false
+}
+func (e *Entity) HasTeamLos(x, y, dx, dy int) bool {
+  return e.game.TeamLos(e.Side(), x, y, dx, dy)
 }
 func DiscretizePoint32(x, y float32) (int, int) {
   return DiscretizePoint64(float64(x), float64(y))
@@ -541,7 +579,7 @@ func (e *Entity) TurnToFace(x, y int) {
   seg.Assign(&target)
   seg.Subtract(&source)
   target_facing := facing(seg)
-  f_diff := target_facing - e.sprite.sp.Facing()
+  f_diff := target_facing - e.sprite.sp.StateFacing()
   if f_diff != 0 {
     f_diff = (f_diff + 6) % 6
     if f_diff > 3 {
@@ -611,7 +649,9 @@ func (e *Entity) SetGear(gear_name string) bool {
   }
   e.ExplorerEnt.Gear = &g
   e.Actions = append(e.Actions, MakeAction(g.Action))
-  e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
+  if g.Condition != "" {
+    e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
+  }
   return true
 }
 

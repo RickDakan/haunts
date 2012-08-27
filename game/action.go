@@ -189,4 +189,8 @@ type Action interface {
 
   // Pushes a table containing information about the action onto the stack.
   Push(L *lua.State)
+
+  // Returns a mapping from trigger to the sound that should play for that
+  // trigger.
+  SoundMap() map[string]string
 }

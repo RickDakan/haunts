@@ -12,13 +12,14 @@
           "Text": "That Thing is absorbing otherworldly energy from the rift.",
 		      "Image":
           {
-            "Path": "ui/dialog/Relic_Dash/golem.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }
         }
       ]
     },
     "Start2": 
     {
+      "Next": "Start3",
       "Format": "NoOptionsRightImage",
       "Sections":
       [
@@ -26,11 +27,23 @@
           "Text": "It MUST be destroyed before it becomes unstoppable!",
   		    "Image":
           {
-            "Path": "ui/dialog/Relic_Dash/golem.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }       
         }   
-     ] 
-    }
+      ] 
+    },
+    "Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "The Denizens will be victorious in {turns} turns.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/intruders2.png"
+          }       
+        }   
+      ] 
+    }       
   }
 }
 	
