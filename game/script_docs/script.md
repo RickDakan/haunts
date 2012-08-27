@@ -120,6 +120,23 @@ _ps_: Array of positions that _ent_ has los to.
 
 ------
 
+###_ps_ = Script.__SetWaypoint__(_name_, _side_, _x_, _y_, _radius_)
+_name_: Any name, so you can remove it later with __RemoveSpawnpoint__.  
+_side_: Either "denizens" or "intruders".  
+_x_, _y_: Position of waypoint THIS WILL CHANGE.  
+_radius_: Radius of the waypoint.  
+
+Marks a region on the house that is visible only to the specified side and that is always visible, regardless of los and regardless of any walls or furniture, etc...
+
+------
+
+###_ps_ = Script.__RemoveWaypoint__(_name_)
+_name_: Name of the waypoint as specified in __SetWaypoint__.  
+
+Removes this waypoint from the map.  
+
+------
+
 ###_ps_ = Script.__SetVisibleSpawnPoints__(_side_, _pattern_)
 _side_: Either "denizens" or "intruders".  
 _pattern_: A regular expression.  
@@ -139,7 +156,7 @@ _options_: Array of paths to icons to show the user.
 ###_successful_ = Script.__SetGear__(_ent_, _gear_)
 Sets the gear that _ent_ is using to _gear_.  
 _ent_: An intruder entity, if _ent_ is not an intruder this function will do nothing.  
-_gear_: The name of the gear for _ent_ to use.  
+_gear_: The name of the gear for _ent_ to use.  Specifying "" will remove any gear _ent_ currently has equipped.  
 _successful_: True iff _ent_'s gear was set to _gear_.  
 
 ------
