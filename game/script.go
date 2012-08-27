@@ -13,7 +13,6 @@ import (
   "github.com/runningwild/haunts/texture"
   lua "github.com/xenith-studios/golua"
   "io/ioutil"
-  "math/rand"
   "path/filepath"
   "regexp"
 )
@@ -601,7 +600,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
     name := L.ToString(-2)
 
     var tx, ty int
-    count := 0
+    var count int64 = 0
     L.PushNil()
     for L.Next(-2) != 0 {
       sp := LuaToSpawnPoint(L, gp.game, -1)
@@ -619,7 +618,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
           // This will choose a random position from all positions and giving
           // all positions an equal chance of being chosen.
           count++
-          if rand.Intn(count) == 0 {
+          if gp.game.Rand.Int63()%count == 0 {
             tx = x
             ty = y
           }
