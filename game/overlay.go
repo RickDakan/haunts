@@ -28,9 +28,19 @@ func (o *Overlay) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (o *Overlay) Think(g *gui.Gui, dt int64) {
+  var side Side
+  if o.game.viewer.Los_tex == o.game.los.intruders.tex {
+    side = SideExplorers
+  } else if o.game.viewer.Los_tex == o.game.los.denizens.tex {
+    side = SideHaunt
+  } else {
+    side = SideNone
+  }
+
   for i := range o.game.Waypoints {
     o.game.viewer.RemoveFloorDrawable(&o.game.Waypoints[i])
     o.game.viewer.AddFloorDrawable(&o.game.Waypoints[i])
+    o.game.Waypoints[i].active = o.game.Waypoints[i].Side == side
   }
 }
 func (o *Overlay) Draw(region gui.Region) {
