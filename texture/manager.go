@@ -263,6 +263,7 @@ func loadTextureRoutine(pipe chan loadRequest) {
 }
 
 func handleLoadRequest(req loadRequest) {
+  base.CheckPathCasing(req.path)
   f, _ := os.Open(req.path)
   im, _, err := image.Decode(f)
   f.Close()
