@@ -127,7 +127,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup()     
     else
-      Script.DialogBox("ui/dialog/lvl1/Opening_Denizens.json")
+      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -241,7 +241,7 @@ function OnAction(intruders, round, exec)
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     StoreSpawn("Rift",  store.waypoint_spawn.Pos)
     store.Waypoint2 = doSpawn(spawn_exec)   
-    Script.DialogBox("ui/dialog/lvl1/First_Waypoint_Down_Intruders.json") 
+    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json") 
   end 
 
   if store.nFirstWaypointDown then
@@ -252,19 +252,19 @@ function OnAction(intruders, round, exec)
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
       StoreSpawn("Rift", store.waypoint_spawn.Pos)
       store.Waypoint3 = doSpawn(spawn_exec)       
-      Script.DialogBox("ui/dialog/lvl1/Second_Waypoint_Down_Intruders.json")    
+      Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
     end  
   end
 
   if store.nSecondWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
-      Script.DialogBox("ui/dialog/lvl1/Victory_Intruders.json")
+      Script.DialogBox("ui/dialog/Lvl01/Victory_Intruders.json")
     end   
   end
 
   if not AnyIntrudersAlive() then
-    Script.DialogBox("ui/dialog/lvl1/Victory_Denizens.json")
+    Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
@@ -296,26 +296,26 @@ function RoundEnd(intruders, round)
     end
 
     if intruders then
-      Script.DialogBox("ui/dialog/lvl1/pass_to_denizens.json")
+      Script.DialogBox("ui/dialog/Lvl01/pass_to_denizens.json")
       if store.nFirstWaypointDown and not store.bShowedFirstWaypointMessage then
         store.bShowedFirstWaypointMessage = true
-        Script.DialogBox("ui/dialog/lvl1/First_Waypoint_Down_Denizens.json")
+        Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Denizens.json")
       end
 
       if store.nSecondWaypointDown and not store.bShowedSecondWaypointMessage then
         store.bShowedSecondWaypointMessage = true
-        Script.DialogBox("ui/dialog/lvl1/Second_Waypoint_Down_Denizens.json")
+        Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Denizens.json")
       end
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
-        Script.DialogBox("ui/dialog/lvl1/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/lvl1/Opening_Intruders.json")
+        Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
+        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
-        Script.DialogBox("ui/dialog/lvl1/pass_to_intruders.json")
+        Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
       end
     end
 
@@ -356,14 +356,14 @@ function RoundEnd(intruders, round)
       if store.MasterName == "Bosch" then
         store.MasterName = "Bosch's Ghost"
         store.bUsingGhostBosch = true 
-        Script.DialogBox("ui/dialog/lvl1/Bosch_Rises_Denizens.json")
+        Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
         store.bBoschRespawnedTellIntruders = true
       end
       Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn)    
     end
   else
     if store.bBoschRespawnedTellIntruders then
-      Script.DialogBox("ui/dialog/lvl1/Bosch_Rises_Intruders.json")
+      Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Intruders.json")
       store.bBoschRespawnedTellIntruders = false --keep this dialogue from getting triggered ever again
     end
   end

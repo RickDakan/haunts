@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "Bosch has returned.",
 		  "Image":{
-            "Path": "ui/dialog/lvl1/intruders.png"
+            "Path": "ui/dialog/lvl01/intruders.png"
           }
         }
       ]
@@ -19,7 +19,7 @@
         {
           "Text": "Well...most of him.",
 		  "Image":{
-            "Path": "ui/dialog/Simple_Waypoint/master.png"
+            "Path": "ui/dialog/lvl01/master.png"
           }       
         }   
      ] 
