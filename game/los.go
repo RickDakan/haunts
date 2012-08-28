@@ -67,6 +67,7 @@ type waypoint struct {
   X, Y   float64
   Radius float64
   active bool
+  drawn  bool
   // Color, maybe?
 }
 
@@ -80,6 +81,7 @@ func (wp *waypoint) RenderOnFloor() {
   if !wp.active {
     return
   }
+  wp.drawn = true
   gl.Color4ub(200, 0, 0, 128)
   base.EnableShader("waypoint")
   base.SetUniformF("waypoint", "radius", float32(wp.Radius))
