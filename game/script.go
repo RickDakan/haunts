@@ -1285,10 +1285,10 @@ func removeWaypoint(gp *GamePanel) lua.GoFunction {
 
 func setWaypoint(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaFloat, LuaFloat, LuaFloat) {
+    if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaPoint, LuaFloat) {
       return 0
     }
-    side_str := L.ToString(-4)
+    side_str := L.ToString(-3)
     var wp waypoint
     switch side_str {
     case "intruders":
@@ -1299,9 +1299,10 @@ func setWaypoint(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Specified '%s' for the side parameter in SetWaypoint, must be 'intruders' or 'denizens'.", side_str)
       return 0
     }
-    wp.Name = L.ToString(-5)
-    wp.X = L.ToNumber(-3)
-    wp.Y = L.ToNumber(-2)
+    wp.Name = L.ToString(-4)
+    px, py := LuaToPoint(L, -2)
+    wp.X = float64(px)
+    wp.Y = float64(py)
     wp.Radius = L.ToNumber(-1)
     gp.game.Waypoints = append(gp.game.Waypoints, wp)
     return 0

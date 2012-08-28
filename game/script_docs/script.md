@@ -120,10 +120,10 @@ _ps_: Array of positions that _ent_ has los to.
 
 ------
 
-###_ps_ = Script.__SetWaypoint__(_name_, _side_, _x_, _y_, _radius_)
+###_ps_ = Script.__SetWaypoint__(_name_, _side_, _pos_, _radius_)
 _name_: Any name, so you can remove it later with __RemoveSpawnpoint__.  
 _side_: Either "denizens" or "intruders".  
-_x_, _y_: Position of waypoint THIS WILL CHANGE.  
+_pos_: Position of waypoint as an {x,y} table.  
 _radius_: Radius of the waypoint.  
 
 Marks a region on the house that is visible only to the specified side and that is always visible, regardless of los and regardless of any walls or furniture, etc...
