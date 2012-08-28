@@ -5,6 +5,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/mathgl"
   "math"
+  "reflect"
 )
 
 // This structure is used for temporary doors (that are being dragged around in
@@ -110,6 +111,9 @@ func (hv *HouseViewer) RemoveDrawable(d Drawable) {
 }
 
 func (hv *HouseViewer) AddFloorDrawable(fd FloorDrawer) {
+  if fd == nil || reflect.ValueOf(fd).IsNil() {
+    panic("WTF")
+  }
   hv.floor_drawers = append(hv.floor_drawers, fd)
 }
 func (hv *HouseViewer) RemoveFloorDrawable(fd FloorDrawer) {
@@ -327,7 +331,8 @@ func (hv *HouseViewer) Draw(region gui.Region) {
     }
   }
   for _, fd := range hv.floor_drawers {
-    hv.temp_floor_drawers = append(hv.floor_drawers, fd)
+    hv.temp_floor_drawers = append(hv.temp_floor_drawers, fd)
   }
+
   hv.house.Floors[0].render(region, hv.fx, hv.fy, hv.angle, hv.zoom, hv.drawables, hv.Los_tex, hv.temp_floor_drawers)
 }

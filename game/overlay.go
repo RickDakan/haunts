@@ -28,8 +28,13 @@ func (o *Overlay) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return false
 }
 func (o *Overlay) Think(g *gui.Gui, dt int64) {
+  for i := range o.game.Waypoints {
+    o.game.viewer.RemoveFloorDrawable(&o.game.Waypoints[i])
+    o.game.viewer.AddFloorDrawable(&o.game.Waypoints[i])
+  }
 }
 func (o *Overlay) Draw(region gui.Region) {
+  return
   o.region = region
   switch o.game.Side {
   case SideHaunt:

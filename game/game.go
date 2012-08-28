@@ -128,7 +128,9 @@ func (g *Game) SetCurrentAction(action Action) bool {
   }
   g.viewer.RemoveFloorDrawable(g.current_action)
   g.current_action = action
-  g.viewer.AddFloorDrawable(g.current_action)
+  if g.current_action != nil {
+    g.viewer.AddFloorDrawable(g.current_action)
+  }
   return true
 }
 

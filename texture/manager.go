@@ -1,19 +1,19 @@
 package texture
 
 import (
+  "github.com/runningwild/glop/render"
+  "github.com/runningwild/haunts/base"
+  "github.com/runningwild/mathgl"
+  "github.com/runningwild/memory"
+  "github.com/runningwild/opengl/gl"
+  "github.com/runningwild/opengl/glu"
   "image"
   "image/draw"
   _ "image/jpeg"
   _ "image/png"
   "os"
-  "time"
   "sync"
-  "github.com/runningwild/glop/render"
-  "github.com/runningwild/memory"
-  "github.com/runningwild/haunts/base"
-  "github.com/runningwild/opengl/gl"
-  "github.com/runningwild/opengl/glu"
-  "github.com/runningwild/mathgl"
+  "time"
 )
 
 type Object struct {

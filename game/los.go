@@ -12,6 +12,7 @@ import (
   "github.com/runningwild/haunts/house"
   "reflect"
   "regexp"
+  "time"
 )
 
 type Purpose int
@@ -76,10 +77,11 @@ func (wp *waypoint) Pos() (int, int) {
 }
 func (wp *waypoint) RenderOnFloor() {
   gl.Color4ub(200, 0, 0, 128)
-
   base.EnableShader("waypoint")
   base.SetUniformF("waypoint", "radius", float32(wp.Radius))
 
+  t := float32(time.Now().UnixNano()%1e15) / 1.0e9
+  base.SetUniformF("waypoint", "time", t)
   gl.Begin(gl.QUADS)
   gl.TexCoord2i(0, 1)
   gl.Vertex2i(int32(wp.X-wp.Radius), int32(wp.Y-wp.Radius))
@@ -92,6 +94,8 @@ func (wp *waypoint) RenderOnFloor() {
   gl.End()
 
   base.EnableShader("")
+
+  // base.EnableShader("")
 }
 
 type gameDataTransient struct {
