@@ -59,6 +59,14 @@ type sideLosData struct {
   tex  *house.LosTexture
 }
 
+type waypoint struct {
+  Name   string
+  Side   Side
+  X, Y   float64
+  Radius float64
+  // Color, maybe?
+}
+
 type gameDataTransient struct {
   los struct {
     denizens, intruders sideLosData
@@ -142,6 +150,9 @@ type gameDataGobbable struct {
   // PRNG, need it here so that we serialize it along with everything
   // else so that replays work properly.
   Rand *cmwc.Cmwc
+
+  // Waypoints, used for signaling things to the player on the map
+  Waypoints []waypoint
 
   // Transient data - none of the following are exported
 

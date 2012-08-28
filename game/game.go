@@ -72,7 +72,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 
 func (gp *GamePanel) Draw(region gui.Region) {
   gp.AnchorBox.Draw(region)
-
   region.PushClipPlanes()
   defer region.PopClipPlanes()
 }

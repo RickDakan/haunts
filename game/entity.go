@@ -4,6 +4,7 @@ import (
   "encoding/gob"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/sprite"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
@@ -636,9 +637,23 @@ func (e *Entity) SetGear(gear_name string) bool {
     base.Error().Printf("Tried to set gear on a non-explorer entity.")
     return false
   }
-  if e.ExplorerEnt.Gear != nil {
+  if e.ExplorerEnt.Gear != nil && gear_name != "" {
     base.Error().Printf("Tried to set gear on an explorer that already had gear.")
     return false
+  }
+  if e.ExplorerEnt.Gear == nil && gear_name == "" {
+    base.Error().Printf("Tried to remove gear from an explorer with no gear.")
+    return false
+  }
+  if gear_name == "" {
+    algorithm.Choose2(&e.Actions, func(a Action) bool {
+      return a.String() != e.ExplorerEnt.Gear.Action
+    })
+    if e.ExplorerEnt.Gear.Condition != "" {
+      e.Stats.RemoveCondition(e.ExplorerEnt.Gear.Condition)
+    }
+    e.ExplorerEnt.Gear = nil
+    return true
   }
   var g Gear
   g.Defname = gear_name
@@ -648,7 +663,9 @@ func (e *Entity) SetGear(gear_name string) bool {
     return false
   }
   e.ExplorerEnt.Gear = &g
-  e.Actions = append(e.Actions, MakeAction(g.Action))
+  if g.Action != "" {
+    e.Actions = append(e.Actions, MakeAction(g.Action))
+  }
   if g.Condition != "" {
     e.Stats.ApplyCondition(status.MakeCondition(g.Condition))
   }
