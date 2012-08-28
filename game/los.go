@@ -1315,7 +1315,7 @@ func (g *Game) mergeLos(side Side) {
     g.los.full_merger[i] = false
   }
   for _, ent := range g.Ents {
-    if ent.Side() != side {
+    if ent.Side() != side && !ent.Enemy_los {
       continue
     }
     if ent.los == nil {

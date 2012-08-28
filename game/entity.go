@@ -244,6 +244,9 @@ type entityDef struct {
   // Path to the Ai that this entity should use if not player-controlled
   Ai_path base.Path
 
+  // If true, grants los to the opposing side as well as its own.
+  Enemy_los bool
+
   Base status.Base
 
   ExplorerEnt *ExplorerEnt
