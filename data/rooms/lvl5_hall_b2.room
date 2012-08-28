@@ -1,0 +1,1 @@
+{"Name":"lvl5_hall_b2","Size":{"Name":"Hall_B","Dx":5,"Dy":20},"Furniture":[],"WallTextures":[{"Defname":"Rug Runner 05","X":2.7527142,"Y":10.381417,"Rot":0,"Flip":false}],"Floor":{"Path":"rooms/floors/floor_02.png"},"Wall":{"Path":"rooms/walls/wall_hatch_pattern.png"},"Themes":null,"Sizes":null,"Decor":null}
