@@ -12,7 +12,7 @@
           "Text": "Bosch Manor, April 30, 1895",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/1922b.png"
+            "Path": "ui/dialog/Lvl01/1922b.png"
           }
         }
       ]
@@ -27,7 +27,7 @@
           "Text": "The famed and feared occultist, Cornelius Bosch has finally completed his new home, a remote haven where he can carry out his necromantic research away from the watchful eyes of civil society.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/1922b.png"
+            "Path": "ui/dialog/Lvl01/1922b.png"
           }       
         }   
      ] 
@@ -42,7 +42,7 @@
           "Text": "Elias Tyree, one of the world's foremost authorities on dark cults and witchcraft, has taken up the burden of stopping the mad Bosch and recovering his research before it falls into the wrong hands.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/occultist3.png"
+            "Path": "ui/dialog/Lvl01/occultist3.png"
           }
         }
       ]
@@ -57,7 +57,7 @@
           "Text": "Bosch has enslaved the souls of his victims, giving him a ghostly household guard that kills at his command.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }
         }
       ]
@@ -72,7 +72,7 @@
           "Text": "But if Tyree and his companions can recover the three parts of Bosch's research, his book of rituals, his orb of spirits, and his ectoplasmic prism, they can end Bosch's evil forever.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/occultist3.png"
+            "Path": "ui/dialog/Lvl01/occultist3.png"
           }
         }
       ]
@@ -87,7 +87,7 @@
           "Text": "With each part seized, Bosch's resistance will stiffen, and he'll no doubt release more of his enslaved spirits to wreak his revenge.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }
         }
       ]
@@ -101,7 +101,7 @@
           "Text": "Even killing Bosch himself might not stop the evil man - his enraged ghost will no doubt return. Only recovering all three pieces will end him and assure the Tyree name is remembered forever.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/occultist3.png"
+            "Path": "ui/dialog/Lvl01/occultist3.png"
           }
         }
       ]

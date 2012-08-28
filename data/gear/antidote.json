@@ -1,0 +1,10 @@
+{
+  "Name": "Antidote",
+  "Large_icon": {
+    "Path": "gear/icons/painkillers_large.png"
+  },
+  "Small_icon": {
+    "Path": "gear/icons/painkillers.png"
+  },
+  "Action": "Hand Antidote"
+}

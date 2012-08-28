@@ -12,7 +12,7 @@
           "Text": "A deathly quiet descends on Bosch Manor, as the last of the Intruders slips into the afterlife.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/1922b.png"
+            "Path": "ui/dialog/Lvl01/1922b.png"
           }
         }
       ]
@@ -27,7 +27,7 @@
           "Text": "Cornelius Bosch has survived, if not exactly in the same state in which he used to live. But his important work continues.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }       
         }   
      ] 
@@ -42,7 +42,7 @@
           "Text": "The great work can continue, and even as his old body expires, Bosch has already begun work on a new one - an artificial form more powerful than any living being.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }
         }
       ]
@@ -57,7 +57,7 @@
           "Text": "And Tyree, that wretched man, his soul now serves as fodder for the master's experiments.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/Tyree_ghost.png"
+            "Path": "ui/dialog/Lvl01/Tyree_ghost.png"
           }
         }
       ]
@@ -71,7 +71,7 @@
           "Text": "The history of this house has only begun. And the name Bosch will be tied to it for eternity.",
           "Image":
           {
-            "Path": "ui/dialog/lvl1/1922b.png"
+            "Path": "ui/dialog/Lvl01/1922b.png"
           }
         }
       ]

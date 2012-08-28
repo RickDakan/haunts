@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The intruders have the orb of spirits. Now they need only the ectoplasmic prism.",
 		  "Image":{
-            "Path": "ui/dialog/lvl1/intruders.png"
+            "Path": "ui/dialog/Lvl01/intruders.png"
           }
         }
       ]
@@ -19,7 +19,7 @@
         {
           "Text": "Combine the three objects, and Bosch and all his ghosts will be dispatched back to the netherworld.",
 		  "Image":{
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }       
         }   
      ] 

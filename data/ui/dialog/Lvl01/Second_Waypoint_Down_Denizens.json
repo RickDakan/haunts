@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The Tyrees have taken Bosch's orb of spirits. They no doubt want its power for their own foul ends.",
 		  "Image":{
-            "Path": "ui/dialog/lvl1/intruders.png"
+            "Path": "ui/dialog/Lvl01/intruders.png"
           }
         }
       ]
@@ -19,7 +19,7 @@
         {
           "Text": "Bosch releases every last spirit he has tamed, unleashing death on the Tyrees before it's too late.",
 		  "Image":{
-            "Path": "ui/dialog/lvl1/master.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }       
         }   
      ] 

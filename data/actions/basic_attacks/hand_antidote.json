@@ -1,0 +1,19 @@
+{
+  "Name"     : "Hand Antidote",
+  "Kind"     : "Terror",
+  "Animation": "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/shroud.png"
+  },
+  "Ap"       : 1,
+  "Strength" : 100,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true,
+  "Sounds"   : {
+    "soothe": "Haunts/SFX/Intruders/Teen/Psychic Shroud"
+  },
+  "Conditions": [
+     "Carrying Antidote"
+   ]
+}
