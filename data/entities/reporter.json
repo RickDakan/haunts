@@ -1,0 +1,33 @@
+{
+  "Name": "Reporter",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/reporter",
+  "Still": {
+    "Path": "entities/reporter_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Interact",
+    "Runescribed Cudgel",
+    "Disruption Broadcaster",
+    "Invigorating Incense",
+    "Caustic Concoction"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": {
+    "Gear_names": [
+	"Pick Me Ups",
+	"Experimental Battery",
+	"Spectral Goggles v2"
+    ]
+  },
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 20,
+    "Corpus": 11,
+    "Ego": 9,
+    "Sight": 15
+  },
+  "Dissolve": false
+}

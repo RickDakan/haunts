@@ -1,0 +1,20 @@
+{
+  "Name"      : "Caustic Concoction",
+  "Kind"      : "Fire",
+  "Ap"        : 5,
+  "Strength"  : 6,
+  "Damage"    : 2,
+  "Range"     : 10,
+  "Diameter"  : 4,
+  "Animation" : "ranged",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "vials": "Haunts/SFX/Intruders/Reporter/Vials"
+  },
+  "Texture"   : {
+    "Path": "actions/icons/bombard.png"
+  },
+  "Conditions": [
+    "Dread"
+  ]
+}
