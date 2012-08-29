@@ -1,0 +1,125 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "It's frickin dark.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Good thing we brought these light beacons.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "If we can get active beacons in each of the 5 largest rooms, the denizens here will be routed.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Probably worth mentioning, though, that the denizens are much more powerful in the dark.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "And they'll be trying to kill our beacons and the dude carrying the beacons.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "And placing lots and lots of beacons will probably get them pretty riled up.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "And you don't want to see them when they're riled up.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Actually, you'd probably rather not see them at all.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}

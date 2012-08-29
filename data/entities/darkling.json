@@ -1,0 +1,27 @@
+{
+  "Name": "Darkling",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/shade",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Interact",
+    "Slash"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 18,
+    "Hp_max": 4,
+    "Corpus": 4,
+    "Ego": 4,
+    "Sight": 10
+  },
+  "Dissolve": true,
+  "Ai_path": "ais/shade.lua"
+}

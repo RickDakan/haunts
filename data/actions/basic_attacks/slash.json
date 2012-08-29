@@ -1,0 +1,16 @@
+{
+  "Name"     : "Slash",
+  "Kind"     : "Brutal",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/pummel.png"
+  },
+  "Ap"       : 2,
+  "Strength" : 5,
+  "Damage"   : 1,
+  "Range"    : 1,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
+    }  
+}

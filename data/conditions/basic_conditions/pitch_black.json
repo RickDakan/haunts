@@ -1,0 +1,9 @@
+{
+  "Name": "Pitch Black",
+  "Strength": 20,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Dynamic": {
+    "Sight": -10
+  }
+}

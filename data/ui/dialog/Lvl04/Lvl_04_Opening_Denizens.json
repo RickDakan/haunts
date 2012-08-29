@@ -1,0 +1,125 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "The intruders are bringing light into our totally awesome darkness.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "One of them will be carrying a bag of beacons (Bacon bag!).  We should kill him so we can destroy the bag (and eat the bacon).",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "They're crafty, though.  They can trade the beacon bag.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "And if they light up the 5 big rooms, that'll suck for us.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Our master is very fast, but also emo.  Attacking causes him to teleport back to his bedroom (not that anyone cares).",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Every time they place a beacon, we get to reinforce.  And the more beacons on the board, the more dudes we can throw at them.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Oh, and walking into the area illumated by beacons will weaken our dudes greatly.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "On the plus side, the beacons are easily destroyed.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

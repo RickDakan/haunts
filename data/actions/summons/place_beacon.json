@@ -1,0 +1,12 @@
+{
+  "Name"     : "Place Beacon",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_orb.png"
+  },
+  "Ap"       : 6,
+  "Range"    : 3,
+  "Ent_name" : "Beacon",
+  "Personal_los": true
+}
