@@ -4,6 +4,7 @@ import (
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
+  "time"
 )
 
 type Overlay struct {
@@ -24,10 +25,25 @@ func (o *Overlay) Expandable() (bool, bool) {
 func (o *Overlay) Rendered() gui.Region {
   return o.region
 }
-func (o *Overlay) Think(g *gui.Gui, t int64) {
-}
 func (o *Overlay) Respond(g *gui.Gui, group gui.EventGroup) bool {
   return false
+}
+func (o *Overlay) Think(g *gui.Gui, dt int64) {
+  var side Side
+  if o.game.viewer.Los_tex == o.game.los.intruders.tex {
+    side = SideExplorers
+  } else if o.game.viewer.Los_tex == o.game.los.denizens.tex {
+    side = SideHaunt
+  } else {
+    side = SideNone
+  }
+
+  for i := range o.game.Waypoints {
+    o.game.viewer.RemoveFloorDrawable(&o.game.Waypoints[i])
+    o.game.viewer.AddFloorDrawable(&o.game.Waypoints[i])
+    o.game.Waypoints[i].active = o.game.Waypoints[i].Side == side
+    o.game.Waypoints[i].drawn = false
+  }
 }
 func (o *Overlay) Draw(region gui.Region) {
   o.region = region
@@ -43,13 +59,14 @@ func (o *Overlay) Draw(region gui.Region) {
   default:
     return
   }
-  for _, way := range o.game.Waypoints {
-    if way.Side != o.game.Side {
+  for _, wp := range o.game.Waypoints {
+    if !wp.active || wp.drawn {
       continue
     }
-    cx := float32(way.X)
-    cy := float32(way.Y)
-    r := float32(way.Radius)
+
+    cx := float32(wp.X)
+    cy := float32(wp.Y)
+    r := float32(wp.Radius)
     cx1, cy1 := o.game.viewer.BoardToWindow(cx-r, cy-r)
     cx2, cy2 := o.game.viewer.BoardToWindow(cx-r, cy+r)
     cx3, cy3 := o.game.viewer.BoardToWindow(cx+r, cy+r)
@@ -57,7 +74,10 @@ func (o *Overlay) Draw(region gui.Region) {
     gl.Color4ub(200, 0, 0, 128)
 
     base.EnableShader("waypoint")
-    base.SetUniformF("waypoint", "radius", float32(way.Radius))
+    base.SetUniformF("waypoint", "radius", float32(wp.Radius))
+
+    t := float32(time.Now().UnixNano()%1e15) / 1.0e9
+    base.SetUniformF("waypoint", "time", t)
 
     gl.Begin(gl.QUADS)
     gl.TexCoord2i(0, 1)
