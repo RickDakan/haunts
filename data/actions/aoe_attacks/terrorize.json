@@ -1,0 +1,17 @@
+{
+  "Name"      : "Terrorize",
+  "Kind"      : "Fire",
+  "Ap"        : 6,
+  "Strength"  : 5,
+  "Damage"    : 3,
+  "Range"     : 2,
+  "Diameter"  : 4,
+  "Animation" : "pulse",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "blast": "Haunts/SFX/Intruders/Occultist/Exorcise"
+  },
+  "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  }
+}

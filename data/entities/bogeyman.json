@@ -1,0 +1,27 @@
+{
+  "Name": "Bogeyman",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/eidolon",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Harm",
+	  "Terrorize"
+  ],
+  "HauntEnt": {
+    "Cost":  2,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 13,
+    "Hp_max": 5,
+    "Corpus": 6,
+    "Ego": 6,
+    "Sight": 12
+  },
+  "Dissolve": false,
+  "ai_path": "ais/eidolon.lua"
+}
