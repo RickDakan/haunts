@@ -1,0 +1,5 @@
+{
+  "Name": "waypoint",
+  "Vertex_path": "shaders/vertex/waypoint.vs",
+  "Fragment_path": "shaders/fragment/waypoint.fs"
+}

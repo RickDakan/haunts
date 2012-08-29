@@ -8,9 +8,7 @@ import (
   "github.com/runningwild/haunts/texture"
   "github.com/runningwild/mathgl"
   "image"
-  "io"
   "math"
-  "os"
   "path/filepath"
   "strings"
   "unsafe"
@@ -426,7 +424,6 @@ func (room *Room) render(floor, left, right mathgl.Mat4, zoom float32, base_alph
   }
 
   for _, wt := range room.WallTextures {
-    break
     if room.wall_texture_gl_map == nil {
       room.wall_texture_gl_map = make(map[*WallTexture]wallTextureGlIds)
       room.wall_texture_state_map = make(map[*WallTexture]wallTextureState)
@@ -704,55 +701,6 @@ type roomError struct {
 
 func (re *roomError) Error() string {
   return re.ErrorString
-}
-
-// If prefix is a prefix of image_path, returns image_path relative to prefix
-// Otherwise copies the file at image_path to inside prefix, possibly renaming
-// it in the process by appending the value t to the name, then returns the
-// path of the new file relative to prefix.
-func (room *roomDef) ensureRelative(prefix, image_path string, t int64) (string, error) {
-  if filepath.HasPrefix(image_path, prefix) {
-    image_path = image_path[len(prefix):]
-    if filepath.IsAbs(image_path) {
-      image_path = image_path[1:]
-    }
-    return image_path, nil
-  }
-  target_path := filepath.Join(prefix, filepath.Base(image_path))
-  info, err := os.Stat(target_path)
-  if err == nil {
-    if info.IsDir() {
-      return "", &roomError{fmt.Sprintf("'%s' is a directory, not a file", image_path)}
-    }
-    base_image := filepath.Base(image_path)
-    ext := filepath.Ext(base_image)
-    if len(ext) == 0 {
-      return "", &roomError{fmt.Sprintf("Unexpected filename '%s'", base_image)}
-    }
-    sans_ext := base_image[0 : len(base_image)-len(ext)]
-    target_path = filepath.Join(prefix, fmt.Sprintf("%s.%d%s", sans_ext, t, ext))
-  }
-
-  source, err := os.Open(image_path)
-  if err != nil {
-    return "", err
-  }
-  defer source.Close()
-
-  target, err := os.Create(target_path)
-  if err != nil {
-    return "", err
-  }
-  defer target.Close()
-
-  _, err = io.Copy(target, source)
-  if err != nil {
-    os.Remove(target_path)
-    return "", err
-  }
-
-  target_path = target_path[len(prefix)+1:]
-  return target_path, nil
 }
 
 type tabWidget interface {

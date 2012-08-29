@@ -72,7 +72,6 @@ func (gp *GamePanel) Think(ui *gui.Gui, t int64) {
 
 func (gp *GamePanel) Draw(region gui.Region) {
   gp.AnchorBox.Draw(region)
-
   region.PushClipPlanes()
   defer region.PopClipPlanes()
 }
@@ -127,7 +126,11 @@ func (g *Game) SetCurrentAction(action Action) bool {
   } else {
     g.Action_state = preppingAction
   }
+  g.viewer.RemoveFloorDrawable(g.current_action)
   g.current_action = action
+  if g.current_action != nil {
+    g.viewer.AddFloorDrawable(g.current_action)
+  }
   return true
 }
 

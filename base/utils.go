@@ -1,22 +1,23 @@
 package base
 
 import (
-  "encoding/gob"
+  "bytes"
+  "code.google.com/p/freetype-go/freetype/truetype"
   "encoding/base64"
+  "encoding/gob"
   "encoding/json"
+  "fmt"
+  "github.com/runningwild/glop/gui"
+  "github.com/runningwild/opengl/gl"
   "image/color"
   "io"
   "io/ioutil"
-  "os"
-  "bytes"
-  "path/filepath"
-  "github.com/runningwild/opengl/gl"
-  "github.com/runningwild/glop/gui"
-  "code.google.com/p/freetype-go/freetype/truetype"
   "log"
-  "fmt"
-  "time"
+  "os"
+  "path/filepath"
+  "strings"
   "sync"
+  "time"
 )
 
 var datadir string
@@ -195,9 +196,55 @@ func (p *Path) UnmarshalJSON(data []byte) error {
   return nil
 }
 
+func CheckPathCasing(path string) {
+  if !IsDevel() {
+    return
+  }
+  base := GetDataDir()
+  rel, err := filepath.Rel(base, path)
+  if err != nil {
+    Error().Printf("Unable to CheckPathCasing(%s, %s): %v", base, path, err)
+    return
+  }
+  parts := strings.Split(rel, string(filepath.Separator))
+  running := base
+  for _, part := range parts {
+    f, err := os.Open(running)
+    if err != nil {
+      Error().Printf("Unable to open '%s': %v", running, err)
+      return
+    }
+    names, err := f.Readdirnames(10000)
+    f.Close()
+    if err != nil {
+      Error().Printf("Unable to Readdirnames on '%s': %v", running, err)
+      return
+    }
+    found := false
+    for _, name := range names {
+      if name == part {
+        found = true
+        break
+      }
+    }
+    if !found {
+      final := filepath.Join(running, part)
+      _, err := os.Stat(final)
+      if err != nil {
+        Error().Printf("Unable to stat '%s': %v", final, err)
+        return
+      }
+      Error().Printf("Improper casing: '%s' should end with '%s'", running, part)
+      return
+    }
+    running = filepath.Join(running, part)
+  }
+}
+
 // Opens the file named by path, reads it all, decodes it as json into target,
 // then closes the file.  Returns the first error found while doing this or nil.
 func LoadJson(path string, target interface{}) error {
+  CheckPathCasing(path)
   f, err := os.Open(path)
   if err != nil {
     return err
@@ -247,6 +294,7 @@ func FromBase64FromGob(dst interface{}, str string) error {
 // Opens the file named by path, reads it all, decodes it as gob into target,
 // then closes the file.  Returns the first error found while doing this or nil.
 func LoadGob(path string, target interface{}) error {
+  CheckPathCasing(path)
   f, err := os.Open(path)
   if err != nil {
     return err

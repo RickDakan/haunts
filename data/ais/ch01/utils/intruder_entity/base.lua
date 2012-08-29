@@ -81,33 +81,50 @@ function Leader()
   return nil
 end
 
+-- assumes that Me is not the leader, returns the intruder that is neither
+-- Me or the leader.
+function OtherGuy()
+  intruders = Utils.NearestNEntities(3, "intruder")
+  for _, ent in pairs(intruders) do
+    if ent.Name ~= Me.Name and ent.Name ~= Me.Master.Leader then
+      return ent
+    end
+  end
+  return nil
+end
+
 function LeadOrFollow()
-  print("Think: LeadOrFollow - ", Me.Name)
   if Me.Master.Leader == Me.Name then
     -- Don't go off leading somewhere if there is something nearby that needs
     -- to be dealt with
     ent = Utils.NearestNEntities(1, "denizen")[1]
     if ent then
-      print("Think: Nearest denizen: ", ent.Name)
       dist = Utils.RangedDistBetweenEntities(Me, ent)
-      print("Think: Dist - ", dist)
       if dist < 5 then
         return false
       end
     end
 
-    print("Think: Leading")
     objects = Utils.NearestNEntities(3, "object")
-    print("Think:", table.getn(objects), "objects.")
     if table.getn(objects) == 0 then
       return false
     end
     -- Should only ever be one at a time, so just take the first one
     object = objects[1]
-    print("Think: Object at", object.Pos.X, object.Pos.Y)
     return HeadTowards(object.Pos)
   else
-    return Follow(Leader())
+    leader = Leader()
+    if leader then
+      if Follow(leader, 2) then
+        return false
+      end
+    end
+    other = OtherGuy()
+    if other then
+      Follow(other, 1)
+      return false
+    end
+    return false
   end
 end
 
@@ -131,7 +148,6 @@ end
 
 function FindUnexploredRoomNear(target)
   unexplored = Utils.NearbyUnexploredRooms()
-  print("Think: ", table.getn(unexplored), "unexplored rooms")
   if table.getn(unexplored) == 0 then
     return nil  -- No more rooms to explore
   end
@@ -141,18 +157,11 @@ function FindUnexploredRoomNear(target)
   dist = 0-1
   target_room = nil
   for _, room in pairs(unexplored) do
-    print("Think: Getting distance")
-    print("Think: ", target.X, target.Y)
-    print("Think: ", room.Pos.X, room.Pos.Y)
-    print("Think: ", room.Dims.Dx, room.Dims.Dy)
     c = getCenter(room)
-    print("Think: ", c.X, c.Y)
     d = distance(target, getCenter(room))
-    print("Think: Distance - ", d)
     if dist == 0-1 or d < dist then
       dist = d
       target_room = room
-      print("Think: Room at ", room.Pos.X, room.Pos.Y, "is closer to", target.X, target.Y)
     end
   end
 
@@ -181,19 +190,15 @@ end
 function HeadTowards(target)
   current = Utils.RoomContaining(Me)
   if posIsInRegion(target, current) then
-    print("Think: Already in the room with our target")
     ps = Utils.AllPathablePoints(Me.Pos, target, 1, 1)
-    print("Think: pses", table.getn(ps))
     valid, pos = Do.Move(ps, 1000)
     return valid and pos
   end
 
   target_room = FindUnexploredRoomNear(target)
-  print("Think: Target room - ", target_room)
   if target_room == nil then
     return false
   end
-  print("Think: Heading towards room at", target_room.Pos.X, target_room.Pos.Y)
   path = Utils.RoomPath(current, target_room)
   if table.getn(path) == 0 then
     return false  -- No room path to the unexplored room - shouldn't happen
@@ -201,7 +206,6 @@ function HeadTowards(target)
   target_room = path[1]
 
   doors = Utils.AllDoorsBetween(current, target_room)
-  print("Think: Found", table.getn(doors), "doors")
   if table.getn(doors) == 0 then
     return false   -- No doors to the next room, also shouldn't happen
   end
@@ -210,11 +214,23 @@ function HeadTowards(target)
   -- If the door is closed then go to it and open it.
   if not Utils.DoorIsOpen(doors[1]) then
     ps = Utils.DoorPositions(doors[1])
-    print("Think: Moving to door")
     complete = Do.Move(ps, 1000)
     if not complete then
       return false
     end
+
+    -- Only open it if we have at least half of our max ap and our peeps
+    -- are nearby
+    if Me.ApCur < Me.ApMax / 2 then
+      return false
+    end
+    intruders = Utils.NearestNEntities(3, "intruder")
+    if table.getn(intruders) > 0 then
+      if Utils.RangedDistBetweenEntities(Me, intruders[table.getn(intruders)]) > 5 then
+        return false
+      end
+    end
+
     if not Do.DoorToggle(doors[1]) then
       return false
     end
@@ -226,10 +242,11 @@ function HeadTowards(target)
   return complete
 end
 
-function Follow(leader)
-  ps = Utils.AllPathablePoints(Me.Pos, leader.Pos, 1, 3)
-  valid, pos = Do.Move(ps, 1000)
-  return valid and pos
+function Follow(leader, leash)
+  ps = Utils.AllPathablePoints(Me.Pos, leader.Pos, 1, leash)
+  Do.Move(ps, 1000)
+  dist =  Utils.RangedDistBetweenEntities(Me, leader)
+  return dist and dist <= leash
 end
 
 

@@ -89,6 +89,7 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
 }
 
 func (a *Ai) setupLuaState() {
+  base.CheckPathCasing(a.path)
   prog, err := ioutil.ReadFile(a.path)
   if err != nil {
     base.Error().Printf("Unable to load ai file %s: %v", a.path, err)

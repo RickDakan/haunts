@@ -13,7 +13,6 @@ import (
   "github.com/runningwild/haunts/texture"
   lua "github.com/xenith-studios/golua"
   "io/ioutil"
-  "math/rand"
   "path/filepath"
   "regexp"
 )
@@ -94,6 +93,8 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "StopMusic":                         func() { gp.script.L.PushGoFunctionAsCFunction(stopMusic(gp)) },
     "SetMusicParam":                     func() { gp.script.L.PushGoFunctionAsCFunction(setMusicParam(gp)) },
     "PlaySound":                         func() { gp.script.L.PushGoFunctionAsCFunction(playSound(gp)) },
+    "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
+    "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -354,7 +355,14 @@ func loadGameStateRaw(gp *GamePanel, state string) {
     return
   }
   gp.AnchorBox.RemoveChild(viewer)
+  for _, child := range gp.AnchorBox.GetChildren() {
+    if o, ok := child.(*Overlay); ok {
+      gp.AnchorBox.RemoveChild(o)
+      break
+    }
+  }
   gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+  gp.AnchorBox.AddChild(MakeOverlay(gp.game), gui.Anchor{0.5, 0.5, 0.5, 0.5})
 }
 
 func loadGameState(gp *GamePanel) lua.GoFunction {
@@ -492,6 +500,7 @@ func loadHouse(gp *GamePanel) lua.GoFunction {
 
     gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
     gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
+    gp.AnchorBox.AddChild(MakeOverlay(gp.game), gui.Anchor{0.5, 0.5, 0.5, 0.5})
 
     base.Log().Printf("Done making stuff")
     return 0
@@ -591,7 +600,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
     name := L.ToString(-2)
 
     var tx, ty int
-    count := 0
+    var count int64 = 0
     L.PushNil()
     for L.Next(-2) != 0 {
       sp := LuaToSpawnPoint(L, gp.game, -1)
@@ -609,7 +618,7 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
           // This will choose a random position from all positions and giving
           // all positions an equal chance of being chosen.
           count++
-          if rand.Intn(count) == 0 {
+          if gp.game.Rand.Int63()%count == 0 {
             tx = x
             ty = y
           }
@@ -876,12 +885,9 @@ func setGear(gp *GamePanel) lua.GoFunction {
     gp.script.syncStart()
     defer gp.script.syncEnd()
     gear_name := L.ToString(-1)
-    L.PushString("id")
-    L.GetTable(-3)
-    id := EntityId(L.ToInteger(-1))
-    ent := gp.game.EntityById(id)
+    ent := LuaToEntity(L, gp.game, -2)
     if ent == nil {
-      base.Error().Printf("Referenced an entity with id == %d which doesn't exist.", id)
+      base.Error().Printf("Called SetGear on an invalid entity.")
       return 0
     }
     L.PushBoolean(ent.SetGear(gear_name))
@@ -1250,6 +1256,55 @@ func playSound(gp *GamePanel) lua.GoFunction {
       return 0
     }
     sound.PlaySound(L.ToString(-1))
+    return 0
+  }
+}
+
+func removeWaypoint(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "RemoveWaypoint", LuaString) {
+      return 0
+    }
+    hit := false
+    name := L.ToString(-1)
+    for i := range gp.game.Waypoints {
+      if gp.game.Waypoints[i].Name == name {
+        hit = true
+        l := len(gp.game.Waypoints)
+        gp.game.Waypoints[i] = gp.game.Waypoints[l-1]
+        gp.game.Waypoints = gp.game.Waypoints[0 : l-1]
+      }
+    }
+    if !hit {
+      base.Error().Printf("RemoveWaypoint on waypoint '%s' which doesn't exist.", name)
+      return 0
+    }
+    return 0
+  }
+}
+
+func setWaypoint(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaPoint, LuaFloat) {
+      return 0
+    }
+    side_str := L.ToString(-3)
+    var wp waypoint
+    switch side_str {
+    case "intruders":
+      wp.Side = SideExplorers
+    case "denizens":
+      wp.Side = SideHaunt
+    default:
+      base.Error().Printf("Specified '%s' for the side parameter in SetWaypoint, must be 'intruders' or 'denizens'.", side_str)
+      return 0
+    }
+    wp.Name = L.ToString(-4)
+    px, py := LuaToPoint(L, -2)
+    wp.X = float64(px)
+    wp.Y = float64(py)
+    wp.Radius = L.ToNumber(-1)
+    gp.game.Waypoints = append(gp.game.Waypoints, wp)
     return 0
   }
 }
