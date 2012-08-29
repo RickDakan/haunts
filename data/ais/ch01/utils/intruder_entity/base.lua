@@ -16,7 +16,51 @@ function SupportAllies(buf, cond)
   return false
 end
 
+
+-- This will attempt to move Me one space such that it stays in the same
+-- room, but is no longer standing in a doorway.  If it is not currently
+-- in a doorway right now this function does nothing.
+function TryToClearDoorway()
+  -- Check if we're on a doorway space, if we are then move to a nearby
+  -- space that is in this room but is not a doorway space.
+  all_door_ps = {}
+  rcm = Utils.RoomContaining(Me)
+  ado = Utils.AllDoorsOn(rcm)
+  for i, door in pairs(ado) do
+    ps = Utils.DoorPositions(door)
+    for _, p in pairs(ps) do
+      all_door_ps[p.X .. "," .. p.Y] = true
+    end
+  end
+
+  -- If we're not next to a door then, whatever, don't bother moving.
+  if not all_door_ps[Me.Pos.X .. "," .. Me.Pos.Y] then
+    return
+  end
+
+  -- Make rps a map from position to boolean, true if the position is
+  -- in the room
+  rps = {}
+  for _, p in pairs(Utils.RoomPositions(Utils.RoomContaining(Me))) do
+    rps[p.X .. "," .. p.Y] = true
+  end
+
+  -- Loop over all nearby positions, if there is one we can move to that
+  -- is in this room but is not a door position, then move to it.
+  nearby = Utils.AllPathablePoints(Me.Pos, Me.Pos, 1, 1)
+  for _, p in pairs(nearby) do
+    if rps[p.X .. "," .. p.Y] and not all_door_ps[p.X .. "," .. p.Y] then
+      Do.Move({p}, 10)
+    end
+  end
+end
+
 function CrushEnemies(debuf, cond, melee, ranged)
+  print("SCRIPT: CrushEnemies")
+  -- Don't crush enemies unless we've tried to clear the doorway first
+  TryToClearDoorway()
+  print("SCRIPT: NOW crushing")
+
   enemies = Utils.NearestNEntities(10, "denizen")
   if table.getn(enemies) == 0 then
     return false
