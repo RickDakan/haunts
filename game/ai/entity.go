@@ -34,6 +34,7 @@ func (a *Ai) addEntityContext() {
     "RangedDistBetweenPositions": func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenPositionsFunc(a)) },
     "RangedDistBetweenEntities":  func() { a.L.PushGoFunctionAsCFunction(RangedDistBetweenEntitiesFunc(a)) },
     "NearestNEntities":           func() { a.L.PushGoFunctionAsCFunction(NearestNEntitiesFunc(a.ent)) },
+    "Waypoints":                  func() { a.L.PushGoFunctionAsCFunction(WaypointsFunc(a.ent)) },
     "Exists":                     func() { a.L.PushGoFunctionAsCFunction(ExistsFunc(a)) },
     "BestAoeAttackPos":           func() { a.L.PushGoFunctionAsCFunction(BestAoeAttackPosFunc(a)) },
     "NearbyUnexploredRooms":      func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomsFunc(a)) },
@@ -563,6 +564,36 @@ func NearestNEntitiesFunc(me *game.Entity) lua.GoFunction {
     for i := range eds {
       L.PushInteger(i + 1)
       game.LuaPushEntity(L, eds[i].ent)
+      L.SetTable(-3)
+    }
+    return 1
+  }
+}
+
+func WaypointsFunc(me *game.Entity) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "Waypoints") {
+      return 0
+    }
+    g := me.Game()
+    L.NewTable()
+    count := 0
+    for _, wp := range g.Waypoints {
+      if wp.Side != me.Side() {
+        continue
+      }
+      count++
+      L.PushInteger(count)
+      L.NewTable()
+      L.PushString("Name")
+      L.PushString(wp.Name)
+      L.SetTable(-3)
+      L.PushString("Radius")
+      L.PushNumber(wp.Radius)
+      L.SetTable(-3)
+      L.PushString("Pos")
+      game.LuaPushPoint(L, int(wp.X), int(wp.Y))
+      L.SetTable(-3)
       L.SetTable(-3)
     }
     return 1

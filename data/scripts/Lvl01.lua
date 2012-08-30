@@ -24,6 +24,7 @@ function Init(data)
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
   store.side = side_choices[1]
+  -- store.side = "Humans"
   if store.side == "Humans" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
@@ -32,10 +33,10 @@ function Init(data)
   if store.side == "Denizens" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "intruders.lua")
+    Script.BindAi("intruder", "ch01/intruders.lua")
   end
   if store.side == "Intruders" then
-    Script.BindAi("denizen", "denizens.lua")
+    Script.BindAi("denizen", "ch01/denizens.lua")
     Script.BindAi("minions", "minions.lua")
     Script.BindAi("intruder", "human")
   end
@@ -53,16 +54,21 @@ function Init(data)
 end
 
 function intrudersSetup()
-
   if IsStoryMode() then
     intruder_names = {"Teen", "Occultist", "Researcher"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
-  end 
+  end
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    if store.side == "Denizens" then
+      filename = "ch01/" .. name .. ".lua"
+      print("SCRIPT: Bind ai", filename)
+      Script.BindAi(ent, filename)
+      print("SCRIPT: Bound ", filename)
+    end
   end
 
   -- Choose entry point here.
@@ -118,12 +124,12 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "all")
 
     if IsStoryMode() then
       DoTutorials()
@@ -142,7 +148,7 @@ function RoundStart(intruders, round)
     print("poo ValueForReinforce: ", ValueForReinforce)
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")          
+    Script.SetLosMode("denizens", "all")          
   end
   
 
@@ -152,7 +158,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "all")
   end
 
   store.game = Script.SaveGameState()
@@ -162,7 +168,7 @@ function RoundStart(intruders, round)
 
   if store.side == "Humans" then
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "entities")
+    Script.SetLosMode("denizens", "all")
     if intruders then
       Script.SetVisibility("intruders")
     else
@@ -170,7 +176,16 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
-    Script.ShowMainBar(intruders == (store.side == "Intruders"))
+    print("SCRIPT: Set los mode entities")
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "all")
+    if intruders then
+      Script.SetVisibility("intruders")
+      Script.ShowMainBar(intruders)
+    else
+      Script.SetVisibility("denizens")
+      Script.ShowMainBar(not intruders)
+    end
   end
 end
 
@@ -222,12 +237,14 @@ function SelectSpawn(SpawnName)
 end
 
 function OnAction(intruders, round, exec)
+  print("SCRIPT: OnAction 1")
   -- Check for players being dead here
   if store.execs == nil then
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
+  print("SCRIPT: OnAction 2")
   if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
@@ -240,6 +257,8 @@ function OnAction(intruders, round, exec)
     -- Script.RemoveWaypoint("Waypoint1")
     -- Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
+
+  print("SCRIPT: OnAction 3")
 
   if store.nFirstWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
@@ -256,6 +275,8 @@ function OnAction(intruders, round, exec)
     end  
   end
 
+  print("SCRIPT: OnAction 4")
+
   if store.nSecondWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
@@ -263,9 +284,13 @@ function OnAction(intruders, round, exec)
     end   
   end
 
+  print("SCRIPT: OnAction 5")
+
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
+
+  print("SCRIPT: OnAction 6")
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   if exec.Ent.ApCur == 0 then 
@@ -274,6 +299,8 @@ function OnAction(intruders, round, exec)
       Script.SelectEnt(nextEnt)
     end
   end  
+
+  print("SCRIPT: OnAction 7")
 
 end
  
@@ -288,7 +315,7 @@ function RoundEnd(intruders, round)
   if store.side == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "all")
     if intruders then
       Script.SetVisibility("denizens")
     else
@@ -310,7 +337,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
+        -- Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
@@ -320,7 +347,7 @@ function RoundEnd(intruders, round)
     end
 
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "entities")
+    Script.SetLosMode("denizens", "all")
     Script.LoadGameState(store.game)
 
     --focus the camera on somebody on each team.

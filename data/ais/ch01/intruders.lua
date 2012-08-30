@@ -25,7 +25,9 @@ function Think()
     while IsActive(ent) do
       print("Master: exec", ent.Name)
       ExecIntruder(ent)
+      print("SCRIPT: Execed", ent.Name)
     end
   end
+  print("SCRIPT: Done with everyone")
   return false
 end

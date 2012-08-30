@@ -218,7 +218,7 @@ func (a *Ai) masterRoutine() {
           base.Log().Printf("Evaluating lua script: %s", a.Prog)
           // Reset the execution limit in case it was set to 0 due to a
           // previous error
-          a.L.SetExecutionLimit(250000)
+          a.L.SetExecutionLimit(2500000)
 
           // DoString will panic, and we can catch that, calling it manually
           // will exit() if it fails, which we cannot catch

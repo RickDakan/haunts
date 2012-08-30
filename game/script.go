@@ -5,6 +5,7 @@ import (
   "fmt"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/haunts/game/status"
@@ -1265,6 +1266,8 @@ func removeWaypoint(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "RemoveWaypoint", LuaString) {
       return 0
     }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
     hit := false
     name := L.ToString(-1)
     for i := range gp.game.Waypoints {
@@ -1288,8 +1291,11 @@ func setWaypoint(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaPoint, LuaFloat) {
       return 0
     }
-    side_str := L.ToString(-3)
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+
     var wp waypoint
+    side_str := L.ToString(-3)
     switch side_str {
     case "intruders":
       wp.Side = SideExplorers
@@ -1300,6 +1306,10 @@ func setWaypoint(gp *GamePanel) lua.GoFunction {
       return 0
     }
     wp.Name = L.ToString(-4)
+    // Remove any existing waypoint by the same name
+    algorithm.Choose2(&gp.game.Waypoints, func(w waypoint) bool {
+      return w.Name != wp.Name
+    })
     px, py := LuaToPoint(L, -2)
     wp.X = float64(px)
     wp.Y = float64(py)
