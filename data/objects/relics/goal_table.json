@@ -1,0 +1,11 @@
+{
+  "Name": "Table",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/goal_table",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Table"
+  }
+}

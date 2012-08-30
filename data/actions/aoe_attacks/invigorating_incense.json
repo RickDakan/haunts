@@ -1,0 +1,20 @@
+{
+  "Name"     : "Invigorating Incense",
+  "Kind"     : "Fire",
+  "Animation": "ward",
+  "Texture"   : {
+    "Path": "actions/icons/disrupt.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 20,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Diameter"  : 3,
+  "Target_allies": true,
+  "Sounds"   : {
+    "smoking": "Haunts/SFX/Intruders/Reporter/flask"
+  },  
+  "Conditions": [
+     "Focused"
+   ]
+}

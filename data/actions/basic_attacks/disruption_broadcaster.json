@@ -1,0 +1,19 @@
+{
+  "Name"     : "Disruption Broadcaster",
+  "Kind"     : "Fire",
+  "Animation": "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/shroud.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 8,
+  "Damage"   : 0,
+  "Range"    : 15,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "device": "Haunts/SFX/Intruders/Reporter/Device"
+  },  
+  "Conditions": [
+     "Blindness"
+   ]
+}
