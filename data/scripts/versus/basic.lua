@@ -22,7 +22,8 @@ function Init(data)
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_01_Haunted_House")  
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
-
+  Script.SetWaypoint("Kittens", "denizens", {X=20, Y=20}, 5)
+  Script.SetWaypoint("Kittens", "denizens", {X=25, Y=25}, 3)
   -- This gives intruders vision of the Waypoint spawn points.  Probably
   -- you'll want to change this to only give vision of Waypoint1 at the
   -- start, and then update it appropriately as the game progresses.
