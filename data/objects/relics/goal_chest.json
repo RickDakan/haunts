@@ -1,0 +1,11 @@
+{
+  "Name": "Chest",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/goal_chest",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Chest"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "Name": "Mirror",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/goal_mirror",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Mirror"
+  }
+}

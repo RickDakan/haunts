@@ -40,17 +40,22 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
-  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Rift", store.waypoint_spawn)
-
   store.nFirstWaypointDown = false
   store.nSecondWaypointDown = false
+
+
+  store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
+  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn)
+  Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
+
+  -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
+
 end
 
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Reporter", "Occultist", "Researcher"}
+    intruder_names = {"Teen", "Occultist", "Researcher"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
@@ -58,10 +63,6 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
-    
-  -- --Don't understand hgear yet...halp!?
-  --   Script.SetGear(ent, "Pre-loaded Playlist")
-  --   -- PRETEND!
   end
 
   -- Choose entry point here.
@@ -83,21 +84,11 @@ function denizensSetup()
   Script.SetVisibility("denizens")
   setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
 
-  -- Now we give the user a ui with which to place these entities.  The user
-  -- will have 1 point to spend, and each of the options costs one point, so
-  -- they will only place 1.  We will make sure they place exactly one.
-  -- Also the "Master-.*" indicates that the entity can only be placed in
-  -- spawn points that have a name that matches the regular expression
-  -- "Master-.*", which means anything that begins with "Master-".  So
-  -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
   while table.getn(placed) == 0 do
     placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
   end
 
-  -- placed is an array containing all of the entities placed, in this case
-  -- there will only be one, and we will use that one to determine what
-  -- servitors to make available to the user to place.
   if placed[1].Name == "Chosen One" then
     store.MasterName = "Chosen One"
     ServitorEnts = {
@@ -125,9 +116,10 @@ end
 function RoundStart(intruders, round)
   if round == 1 then
     if intruders then
-      intrudersSetup()     
+      intrudersSetup() 
     else
       Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -150,8 +142,9 @@ function RoundStart(intruders, round)
     print("poo ValueForReinforce: ", ValueForReinforce)
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")    
+    Script.SetLosMode("denizens", "blind")          
   end
+  
 
   if store.nSecondWaypointDown and not store.bSetup3Done then
     store.bSetup3Done = true
@@ -239,20 +232,27 @@ function OnAction(intruders, round, exec)
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
-    StoreSpawn("Rift",  store.waypoint_spawn.Pos)
-    store.Waypoint2 = doSpawn(spawn_exec)   
+    store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
     Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json") 
+
+    StoreWaypoint("Waypoint1", "", "", "", true)
+    StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
+    -- Script.RemoveWaypoint("Waypoint1")
+    -- Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
 
   if store.nFirstWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
       --The intruders got to the second waypoint.
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
-      --Script.SetHp(store.Waypoint2, 0)
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
-      StoreSpawn("Rift", store.waypoint_spawn.Pos)
-      store.Waypoint3 = doSpawn(spawn_exec)       
+      store.Waypoint3 = StoreSpawn("Mirror", store.waypoint_spawn.Pos)
       Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
+
+      StoreWaypoint("Waypoint2", "", "", "", true)
+      StoreWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3, false) 
+      -- Script.RemoveWaypoint("Waypoint2")
+      -- Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
     end  
   end
 
@@ -323,6 +323,10 @@ function RoundEnd(intruders, round)
     Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
 
+    --focus the camera on somebody on each team.
+    side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
+    Script.FocusPos(GetEntityWithMostAP(side2).Pos)
+
     for _, exec in pairs(store.execs) do
       bDone = false
       if exec.script_spawn then
@@ -332,7 +336,11 @@ function RoundEnd(intruders, round)
       if exec.script_despawn then
         deSpawn(exec)
         bDone = true
-      end           
+      end      
+      if exec.script_waypoint then
+        doWaypoint(exec)
+        bDone = true
+      end             
       if not bDone then
         Script.DoExec(exec)
 
@@ -458,6 +466,7 @@ end
 function StoreSpawn(entName, spawnPos)
   spawn_exec = {script_spawn=true, name=entName, pos=spawnPos}
   store.execs[table.getn(store.execs) + 1] = spawn_exec
+  return doSpawn(spawn_exec)
 end
 
 function doSpawn(spawnExec)
@@ -467,6 +476,7 @@ end
 function StoreDespawn(ent)
   despawn_exec = {script_despawn=true, entity=ent}
   store.execs[table.getn(store.execs) + 1] = despawn_exec
+  deSpawn(despawn_exec)
 end
 
 function deSpawn(despawnExec)
@@ -476,4 +486,18 @@ function deSpawn(despawnExec)
   end
   DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
   Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
+end
+
+function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
+  waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
+  store.execs[table.getn(store.execs) + 1] = waypoint_exec
+  doWaypoint(waypoint_exec)
+end
+
+function doWaypoint(waypointExec)
+  if waypointExec.remove then
+    return Script.RemoveWaypoint(waypointExec.name)
+  else
+    return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
+  end
 end
