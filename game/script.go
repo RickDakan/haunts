@@ -206,7 +206,7 @@ func (gs *gameScript) OnRound(g *Game) {
         func() {
           defer func() {
             if r := recover(); r != nil {
-              base.Log().Printf("Error in OnMove(): ", r)
+              base.Error().Printf("OnMove(): %v", r)
             }
           }()
           gs.L.DoString(cmd)

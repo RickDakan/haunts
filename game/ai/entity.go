@@ -39,6 +39,7 @@ func (a *Ai) addEntityContext() {
     "NearbyUnexploredRooms":      func() { a.L.PushGoFunctionAsCFunction(NearbyUnexploredRoomsFunc(a)) },
     "RoomPath":                   func() { a.L.PushGoFunctionAsCFunction(RoomPathFunc(a)) },
     "RoomContaining":             func() { a.L.PushGoFunctionAsCFunction(RoomContainingFunc(a)) },
+    "RoomsAreEqual":              func() { a.L.PushGoFunctionAsCFunction(RoomAreEqualFunc(a)) },
     "AllDoorsBetween":            func() { a.L.PushGoFunctionAsCFunction(AllDoorsBetween(a)) },
     "AllDoorsOn":                 func() { a.L.PushGoFunctionAsCFunction(AllDoorsOn(a)) },
     "DoorPositions":              func() { a.L.PushGoFunctionAsCFunction(DoorPositionsFunc(a)) },
@@ -253,7 +254,8 @@ func DoAoeAttackFunc(a *Ai) lua.GoFunction {
 //                           "allies ok", "minions ok", "enemies only"
 //
 //    Outputs:
-//    pos - table[x,y] - Position to place aoe for maximum results.
+//    pos  - table[x,y] - Position to place aoe for maximum results.
+//    hits - array[ents] - Visible entities that will be in the aoe
 func BestAoeAttackPosFunc(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !game.LuaCheckParamsOk(L, "BestAoeAttackPos", game.LuaString, game.LuaInteger, game.LuaString) {
@@ -717,6 +719,18 @@ func RoomContainingFunc(a *Ai) lua.GoFunction {
     } else {
       game.LuaPushRoom(L, ent.Game(), ent.Game().House.Floors[0].Rooms[ent.CurrentRoom()])
     }
+    return 1
+  }
+}
+
+func RoomAreEqualFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "RoomsAreEqual", game.LuaRoom, game.LuaRoom) {
+      return 0
+    }
+    r1 := game.LuaToRoom(L, a.ent.Game(), -2)
+    r2 := game.LuaToRoom(L, a.ent.Game(), -1)
+    L.PushBoolean(r1 == r2)
     return 1
   }
 }
