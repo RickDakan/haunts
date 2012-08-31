@@ -73,10 +73,11 @@ _spawn_points_: An array of all spawn points whose names match _regexp_.
 
 ------
 
-###_ent_ = Script.__SpawnEntitySomewhereInSpawnPoints__(_name_, _spawn_point_)
+###_ent_ = Script.__SpawnEntitySomewhereInSpawnPoints__(_name_, _spawn_point_, _hidden_)
 Spawns an entity randomly in a set of spawn points.  
 _name_: Name of the entity to spawn.  
 _spawn_points_: An array of spawn points to spawn the entity in.  
+_hidden_: A boolean stating whether or not this entity should not be spawned in the opposing team's los.  
 
 _ent_: The entity that was spawned, or nil if it could not be spawned.
 

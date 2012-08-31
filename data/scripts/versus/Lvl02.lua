@@ -40,7 +40,7 @@ function Init(data)
   end
 
   relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn)
+  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
 
   --Need to find which highlight spawn we're using.
   possible_highlights = Script.GetSpawnPointsMatching("Highlight.*")
@@ -70,7 +70,7 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
     
   --Don't understand hgear yet...halp!?
     Script.SetGear(ent, "Pre-loaded Playlist")

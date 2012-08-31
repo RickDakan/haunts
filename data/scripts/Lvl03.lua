@@ -41,7 +41,7 @@ function Init(data)
 
   --spawn the objective point
   waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Waypoint = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn)
+  Waypoint = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
 
   -- Script.SetVisibleSpawnPoints("intruders", "Highlight3")
   -- Script.SetVisibleSpawnPoints("denizens", "Highlight3")
@@ -51,7 +51,7 @@ function Init(data)
   for i = 1, 10, 1 do  
     --this will cause some "cannot find place to spawn" errors in the log.  
     --But covers us in case we decide to mess with the number of patients.  I'm ok with it.
-    Script.SpawnEntitySomewhereInSpawnPoints("Patient", patient_spawn)
+    Script.SpawnEntitySomewhereInSpawnPoints("Patient", patient_spawn, false)
   end 
 
   --we will incorporate some randomness here.
@@ -74,7 +74,7 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
   end
 
   -- Choose entry point here.
@@ -170,7 +170,7 @@ function RoundStart(intruders, round)
         else
           floodEnt = ServitorEnts[2][1]
         end     
-        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, available_spawns)
+        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, available_spawns, false)
       end
     end  
   end

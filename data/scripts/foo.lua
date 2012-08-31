@@ -19,12 +19,12 @@ function Init()
   denizens_spawn = Script.GetSpawnPointsMatching("Master")
   relics_spawn = Script.GetSpawnPointsMatching("Relics")
   for i=1,5 do
-    Script.SpawnEntitySomewhereInSpawnPoints("Altar01", relics_spawn)
+    Script.SpawnEntitySomewhereInSpawnPoints("Altar01", relics_spawn, false)
   end
-  Script.SpawnEntitySomewhereInSpawnPoints("Chosen One", denizens_spawn)
-  occ = Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruders_spawn)
+  Script.SpawnEntitySomewhereInSpawnPoints("Chosen One", denizens_spawn, false)
+  occ = Script.SpawnEntitySomewhereInSpawnPoints("Occultist", intruders_spawn, false)
   Script.BindAi(occ, "smrt/occultist.lua")
-  teen = Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruders_spawn)
+  teen = Script.SpawnEntitySomewhereInSpawnPoints("Teen", intruders_spawn, false)
   Script.BindAi(teen, "smrt/teen.lua")
 end
  

@@ -155,11 +155,12 @@ function WaypointPos()
 end
 
 function RelicPos()
-  pos = ObjectPos()
-  if not pos then
-    pos = WaypointPos()
-  end
-  return pos
+  return WaypointPos()
+  -- pos = ObjectPos()
+  -- if not pos then
+  --   pos = WaypointPos()
+  -- end
+  -- return pos
 end
 
 function Leader()

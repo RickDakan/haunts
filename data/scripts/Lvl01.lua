@@ -46,7 +46,7 @@ function Init(data)
 
 
   store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
-  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn)
+  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn, false)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
 
   -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
@@ -62,12 +62,10 @@ function intrudersSetup()
   end
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
     if store.side == "Denizens" then
       filename = "ch01/" .. name .. ".lua"
-      print("SCRIPT: Bind ai", filename)
       Script.BindAi(ent, filename)
-      print("SCRIPT: Bound ", filename)
     end
   end
 
@@ -116,7 +114,7 @@ function denizensSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start1")
-  placed = Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0,6)
+  -- placed = Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0,6)
 end
 
 function RoundStart(intruders, round)
@@ -145,7 +143,6 @@ function RoundStart(intruders, round)
     --denizensSetup()
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
-    print("poo ValueForReinforce: ", ValueForReinforce)
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "all")          
@@ -161,6 +158,14 @@ function RoundStart(intruders, round)
     Script.SetLosMode("denizens", "all")
   end
 
+  spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
+  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
   store.game = Script.SaveGameState()
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
@@ -176,7 +181,6 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
-    print("SCRIPT: Set los mode entities")
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "all")
     if intruders then
@@ -190,9 +194,16 @@ function RoundStart(intruders, round)
 end
 
 function GetDistanceBetweenEnts(ent1, ent2)
-  return (math.abs(ent1.Pos.X - ent2.Pos.X) + math.abs(ent1.Pos.Y - ent2.Pos.Y))
+  v1 = ent1.Pos.X - ent2.Pos.X
+  if v1 < 0 then
+    v1 = 0-v1
+  end
+  v2 = ent1.Pos.Y - ent2.Pos.Y
+  if v2 < 0 then
+    v2 = 0-v2
+  end
+  return v1 + v2
 end
-
 
 function ValueForReinforce()
   --The denizens get to reinforce after each waypoint goes down.
@@ -237,14 +248,12 @@ function SelectSpawn(SpawnName)
 end
 
 function OnAction(intruders, round, exec)
-  print("SCRIPT: OnAction 1")
   -- Check for players being dead here
   if store.execs == nil then
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
-  print("SCRIPT: OnAction 2")
   if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
@@ -258,7 +267,6 @@ function OnAction(intruders, round, exec)
     -- Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
 
-  print("SCRIPT: OnAction 3")
 
   if store.nFirstWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
@@ -275,7 +283,6 @@ function OnAction(intruders, round, exec)
     end  
   end
 
-  print("SCRIPT: OnAction 4")
 
   if store.nSecondWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
@@ -284,13 +291,11 @@ function OnAction(intruders, round, exec)
     end   
   end
 
-  print("SCRIPT: OnAction 5")
 
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
 
-  print("SCRIPT: OnAction 6")
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   if exec.Ent.ApCur == 0 then 
@@ -300,7 +305,6 @@ function OnAction(intruders, round, exec)
     end
   end  
 
-  print("SCRIPT: OnAction 7")
 
 end
  
@@ -394,7 +398,7 @@ function RoundEnd(intruders, round)
         Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
         store.bBoschRespawnedTellIntruders = true
       end
-      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn)    
+      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
     end
   else
     if store.bBoschRespawnedTellIntruders then

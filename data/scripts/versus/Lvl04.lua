@@ -56,7 +56,7 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
     Script.SetCondition(ent, "Pitch Black", true)
     Script.SetGear(ent, "Beacons")
   end
