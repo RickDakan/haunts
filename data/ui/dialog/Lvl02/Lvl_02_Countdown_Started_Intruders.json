@@ -19,11 +19,11 @@
     },
     "Start2": 
     {
-      "Next": "Start3",
       "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
+          "Next": "Start3",
           "Text": "It MUST be destroyed before it becomes unstoppable!",
   		    "Image":
           {
@@ -32,9 +32,11 @@
         }   
       ] 
     },
-    "Start3": {
+    "Start3": 
+    {
       "Format": "NoOptionsRightImage",
-      "Sections":[
+      "Sections":
+      [
         {
           "Text": "The Denizens will be victorious in {turns} turns.",
           "Image":

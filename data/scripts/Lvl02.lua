@@ -42,17 +42,8 @@ function Init(data)
   relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
   Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
 
-  --Need to find which highlight spawn we're using.
-  possible_highlights = Script.GetSpawnPointsMatching("Highlight.*")
-  for _, highlightToCheck in pairs(possible_highlights) do
-    if (highlightToCheck.Pos.X == Relic.Pos.X and highlightToCheck.Pos.Y == Relic.Pos.Y) then 
-      HighlightSpawn = highlightToCheck
-      break
-    end
-  end 
-  --In this board, the denizens can see the objective all the time.
-  Script.SetVisibleSpawnPoints("denizens", HighlightSpawn.Name) 
-
+  --Highlight the op point for the deniznes
+  Script.SetWaypoint("Relic" , "denizens", Relic.Pos, 3)
 
 
 --  Script.SelectEnt(Relic)
@@ -71,10 +62,6 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
-    
-  --Don't understand hgear yet...halp!?
-    Script.SetGear(ent, "Pre-loaded Playlist")
-    -- PRETEND!
   end
 
   -- Choose entry point here.
@@ -111,7 +98,7 @@ function denizensSetup()
   -- there will only be one, and we will use that one to determine what
   -- servitors to make available to the user to place.
   if placed[1].Name == "Chosen One" then
-    MasterName = "Chosen One"
+    MasterName = "Chosen One" 
     ents = {
       {"Disciple", 1},
       {"Devotee", 1},
@@ -141,6 +128,7 @@ function RoundStart(intruders, round)
       intrudersSetup()     
     else
       Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Opening_Denizens.json")
+      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -150,10 +138,12 @@ function RoundStart(intruders, round)
       DoTutorials()
     end
 
-    --Script.SetCondition (MasterName, "Lumbering", true)
     Script.EndPlayerInteraction()
-
     return
+  end
+
+  if store.bCountdownTriggered and not intruders then
+    Script.SetAp(MasterEnt(), 5)
   end
 
   store.game = Script.SaveGameState()
@@ -209,6 +199,10 @@ function OnAction(intruders, round, exec)
 
   if exec.Ent.Name == MasterName and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not store.bCountdownTriggered then
      store.bCountdownTriggered = true
+     StoreWaypoint("Relic", "", "", "", true)
+     if exec.Ent.ApCur > 5 then
+      Script.SetAp(exec.Ent, 5)
+     end
      Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Denizens.json", {turns=store.nCountdown})
   end 
 
@@ -269,9 +263,9 @@ function RoundEnd(intruders, round)
         bSkipOtherChecks = true
       end
 
-      if store.bCountdownTriggered and not bShowedIntruderTimerMessage and not bSkipOtherChecks then
-        bShowedIntruderTimerMessage = true
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Intruder.json", {turns=store.nCountdown})
+      if store.bCountdownTriggered and not store.bShowedIntruderTimerMessage and not bSkipOtherChecks then
+        store.bShowedIntruderTimerMessage = true
+        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Intruders.json", {turns=store.nCountdown})
         bSkipOtherChecks = true
       end
 
@@ -292,6 +286,11 @@ function RoundEnd(intruders, round)
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
+
+    --focus the camera on somebody on each team.
+    side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
+    Script.FocusPos(GetEntityWithMostAP(side2).Pos)
+
     for _, exec in pairs(store.execs) do
       bDone = false
       if exec.script_spawn then
@@ -301,7 +300,11 @@ function RoundEnd(intruders, round)
       if exec.script_despawn then
         deSpawn(exec)
         bDone = true
-      end    
+      end  
+      if exec.script_waypoint then
+        doWaypoint(exec)
+        bDone = true
+      end          
       if not bDone then
         Script.DoExec(exec)
 
@@ -315,6 +318,19 @@ function RoundEnd(intruders, round)
       end
     end
     store.execs = {}
+
+    if store.bCountdownTriggered then
+      --always let the intruders know where the deni master is
+      StoreWaypoint("Relic2", "intruders", MasterEnt().Pos, 1, false)
+    end    
+  end
+end
+
+function MasterEnt()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name == MasterName then
+      return ent
+    end
   end
 end
 
@@ -381,4 +397,18 @@ function GetEntityWithMostAP(side)
     end
   end
   return entToSelect
+end
+
+function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
+  waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
+  store.execs[table.getn(store.execs) + 1] = waypoint_exec
+  doWaypoint(waypoint_exec)
+end
+
+function doWaypoint(waypointExec)
+  if waypointExec.remove then
+    return Script.RemoveWaypoint(waypointExec.name)
+  else
+    return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
+  end
 end
