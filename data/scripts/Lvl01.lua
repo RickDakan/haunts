@@ -127,7 +127,7 @@ function RoundStart(intruders, round)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "blind")
 
     if IsStoryMode() then
       DoTutorials()
@@ -145,7 +145,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "all")          
+    Script.SetLosMode("denizens", "blind")          
   end
   
 
@@ -155,17 +155,10 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "blind")
   end
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
-  Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, true)
   store.game = Script.SaveGameState()
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
@@ -173,7 +166,7 @@ function RoundStart(intruders, round)
 
   if store.side == "Humans" then
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
     else
@@ -182,7 +175,7 @@ function RoundStart(intruders, round)
     Script.ShowMainBar(true)
   else
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
       Script.ShowMainBar(intruders)
@@ -319,7 +312,7 @@ function RoundEnd(intruders, round)
   if store.side == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "blind")
     if intruders then
       Script.SetVisibility("denizens")
     else
@@ -351,7 +344,7 @@ function RoundEnd(intruders, round)
     end
 
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "all")
+    Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
 
     --focus the camera on somebody on each team.
