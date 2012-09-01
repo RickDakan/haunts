@@ -65,18 +65,26 @@ _ent_: The entity that was just spawned, or nil if it could not be spawned.
 
 ------
 
-###_spawn_points_ = Script.__GetSpawnPointsMatching__(_regexp_)
+###_spawnpoints_ = Script.__GetSpawnPointsMatching__(_regexp_)
 Finds all spawn points that have a name matching a regexp.  
 _regexp_: A string describing a regular expression.  Regular expressions are very powerful but can also get quite complicated.  For most purposes it is probably enough to know that <pre>".*"</pre> matches anything, so if your regexp is <pre>"Foo-.*"</pre> then you will match all strings that begin with "Foo-".  
 
-_spawn_points_: An array of all spawn points whose names match _regexp_.  
+_spawnpoints_: An array of all spawn points whose names match _regexp_.  
 
 ------
 
-###_ent_ = Script.__SpawnEntitySomewhereInSpawnPoints__(_name_, _spawn_point_)
+###_ent_ = Script.__IsSpawnPointInLos__(_spawnpoint_, _side_)
+Returns true iff the specified side has los to any part of _spawnpoint_).  
+_spawnpoint_: The spawn point to check.  
+_side_: Either "denizens" or "intruders".  
+  
+------
+
+###_ent_ = Script.__SpawnEntitySomewhereInSpawnPoints__(_name_, _spawnpoint_, _hidden_)
 Spawns an entity randomly in a set of spawn points.  
 _name_: Name of the entity to spawn.  
-_spawn_points_: An array of spawn points to spawn the entity in.  
+_spawnpoints_: An array of spawn points to spawn the entity in.  
+_hidden_: A boolean stating whether or not this entity should not be spawned in the opposing team's los.  
 
 _ent_: The entity that was spawned, or nil if it could not be spawned.
 

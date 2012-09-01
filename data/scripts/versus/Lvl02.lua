@@ -40,7 +40,7 @@ function Init(data)
   end
 
   relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn)
+  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
 
   --Highlight the op point for the deniznes
   Script.SetWaypoint("Relic" , "denizens", Relic.Pos, 3)
@@ -61,7 +61,7 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
   end
 
   -- Choose entry point here.

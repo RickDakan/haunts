@@ -30,14 +30,14 @@ func (o *Object) Data() *Data {
     o.data = LoadFromPath(string(o.Path))
     o.path = o.Path
   }
-  o.data.accessed = time.Now()
+  o.data.accessed = generation
   return o.data
 }
 
 type Data struct {
   dx, dy   int
   texture  gl.Texture
-  accessed time.Time
+  accessed int
 }
 
 func (d *Data) Dx() int {
@@ -167,6 +167,12 @@ type Manager struct {
   mutex sync.RWMutex
 }
 
+// Instead of keeping track of access time, we just keep track of how many
+// times the scavenger has seen something without it being accessed.
+// generation is incremented every time the scavenger loop runs, and any
+// time a texture is accessed it is updated with the current generation.
+var generation int
+
 // Launch this in its own go-routine if you want to occassionally
 // delete textures that haven't been used in a while.
 func (m *Manager) Scavenger() {
@@ -175,17 +181,19 @@ func (m *Manager) Scavenger() {
     time.Sleep(time.Minute)
     unused = unused[0:0]
     m.mutex.RLock()
-    now := time.Now()
     for s, d := range m.registry {
-      if now.Sub(d.accessed).Minutes() >= 1 {
+      if generation-d.accessed >= 2 {
         unused = append(unused, s)
       }
     }
     m.mutex.RUnlock()
+
+    m.mutex.Lock()
+    generation++
     if len(unused) == 0 {
+      m.mutex.Unlock()
       continue
     }
-    m.mutex.Lock()
 
     var unused_data []*Data
     for _, s := range unused {
@@ -263,12 +271,10 @@ func loadTextureRoutine(pipe chan loadRequest) {
 }
 
 func handleLoadRequest(req loadRequest) {
-  base.CheckPathCasing(req.path)
   f, _ := os.Open(req.path)
   im, _, err := image.Decode(f)
   f.Close()
   if err != nil {
-    base.Warn().Printf("Unable to decode texture '%s': %v", req.path, err)
     return
   }
   gray := true
@@ -340,6 +346,9 @@ func (m *Manager) LoadFromPath(path string) *Data {
   var ok bool
   if data, ok = m.registry[path]; ok {
     m.mutex.RUnlock()
+    m.mutex.Lock()
+    data.accessed = generation
+    m.mutex.Unlock()
     return data
   }
   m.mutex.RUnlock()
@@ -349,13 +358,12 @@ func (m *Manager) LoadFromPath(path string) *Data {
   } else {
     data = &Data{}
   }
-  data.accessed = time.Now()
+  data.accessed = generation
   m.registry[path] = data
   m.mutex.Unlock()
 
   f, err := os.Open(path)
   if err != nil {
-    base.Warn().Printf("Unable to load texture '%s': %v", path, err)
     return data
   }
   config, _, err := image.DecodeConfig(f)

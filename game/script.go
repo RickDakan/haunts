@@ -5,6 +5,7 @@ import (
   "fmt"
   gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/haunts/game/status"
@@ -71,6 +72,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SpawnEntityAtPosition":             func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntityAtPosition(gp)) },
     "GetSpawnPointsMatching":            func() { gp.script.L.PushGoFunctionAsCFunction(getSpawnPointsMatching(gp)) },
     "SpawnEntitySomewhereInSpawnPoints": func() { gp.script.L.PushGoFunctionAsCFunction(spawnEntitySomewhereInSpawnPoints(gp)) },
+    "IsSpawnPointInLos":                 func() { gp.script.L.PushGoFunctionAsCFunction(isSpawnPointInLos(gp)) },
     "PlaceEntities":                     func() { gp.script.L.PushGoFunctionAsCFunction(placeEntities(gp)) },
     "RoomAtPos":                         func() { gp.script.L.PushGoFunctionAsCFunction(roomAtPos(gp)) },
     "SetLosMode":                        func() { gp.script.L.PushGoFunctionAsCFunction(setLosMode(gp)) },
@@ -206,7 +208,7 @@ func (gs *gameScript) OnRound(g *Game) {
         func() {
           defer func() {
             if r := recover(); r != nil {
-              base.Log().Printf("Error in OnMove(): ", r)
+              base.Error().Printf("OnMove(): %v", r)
             }
           }()
           gs.L.DoString(cmd)
@@ -592,16 +594,26 @@ func getSpawnPointsMatching(gp *GamePanel) lua.GoFunction {
 
 func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "SpawnEntitySomewhereInSpawnPoints", LuaString, LuaArray) {
+    if !LuaCheckParamsOk(L, "SpawnEntitySomewhereInSpawnPoints", LuaString, LuaArray, LuaBoolean) {
       return 0
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    name := L.ToString(-2)
+    name := L.ToString(-3)
+    hidden := L.ToBoolean(-1)
+    L.Pop(1)
 
     var tx, ty int
     var count int64 = 0
     L.PushNil()
+    ent := MakeEntity(name, gp.game)
+    var side Side
+    if ent.Side() == SideExplorers {
+      side = SideHaunt
+    }
+    if ent.Side() == SideHaunt {
+      side = SideExplorers
+    }
     for L.Next(-2) != 0 {
       sp := LuaToSpawnPoint(L, gp.game, -1)
       L.Pop(1)
@@ -613,6 +625,9 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       for x := sx; x < sx+sdx; x++ {
         for y := sy; y < sy+sdy; y++ {
           if gp.game.IsCellOccupied(x, y) {
+            continue
+          }
+          if hidden && ent.game.TeamLos(side, x, y, 1, 1) {
             continue
           }
           // This will choose a random position from all positions and giving
@@ -629,7 +644,6 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Unable to find an available position to spawn")
       return 0
     }
-    ent := MakeEntity(name, gp.game)
     if ent == nil {
       base.Error().Printf("Cannot make an entity named '%s', no such thing.", name)
       return 0
@@ -639,6 +653,28 @@ func spawnEntitySomewhereInSpawnPoints(gp *GamePanel) lua.GoFunction {
     } else {
       L.PushNil()
     }
+    return 1
+  }
+}
+
+func isSpawnPointInLos(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "IsSpawnPointInLos", LuaSpawnPoint, LuaString) {
+      return 0
+    }
+    spawn := LuaToSpawnPoint(L, gp.game, -2)
+    side_str := L.ToString(-1)
+    var in_los bool
+    switch side_str {
+    case "intruders":
+      in_los = gp.game.TeamLos(SideExplorers, spawn.X, spawn.Y, spawn.Dx, spawn.Dy)
+    case "denizens":
+      in_los = gp.game.TeamLos(SideHaunt, spawn.X, spawn.Y, spawn.Dx, spawn.Dy)
+    default:
+      base.Error().Printf("Unexpected side in IsSpawnPointInLos: '%s'", side_str)
+      return 0
+    }
+    L.PushBoolean(in_los)
     return 1
   }
 }
@@ -1265,6 +1301,8 @@ func removeWaypoint(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "RemoveWaypoint", LuaString) {
       return 0
     }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
     hit := false
     name := L.ToString(-1)
     for i := range gp.game.Waypoints {
@@ -1288,8 +1326,11 @@ func setWaypoint(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "SetWaypoint", LuaString, LuaString, LuaPoint, LuaFloat) {
       return 0
     }
-    side_str := L.ToString(-3)
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+
     var wp waypoint
+    side_str := L.ToString(-3)
     switch side_str {
     case "intruders":
       wp.Side = SideExplorers
@@ -1300,6 +1341,10 @@ func setWaypoint(gp *GamePanel) lua.GoFunction {
       return 0
     }
     wp.Name = L.ToString(-4)
+    // Remove any existing waypoint by the same name
+    algorithm.Choose2(&gp.game.Waypoints, func(w waypoint) bool {
+      return w.Name != wp.Name
+    })
     px, py := LuaToPoint(L, -2)
     wp.X = float64(px)
     wp.Y = float64(py)

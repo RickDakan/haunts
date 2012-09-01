@@ -1,5 +1,5 @@
 function Init(data)
-  level_choices = Script.ChooserFromFile("ui/start/versus/map_select.json")
+ level_choices = Script.ChooserFromFile("ui/start/versus/map_select.json")
   Script.LoadHouse("Lvl_01_Haunted_House") 
 end
 

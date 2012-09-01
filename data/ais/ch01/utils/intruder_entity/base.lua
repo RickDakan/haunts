@@ -16,11 +16,92 @@ function SupportAllies(buf, cond)
   return false
 end
 
-function CrushEnemies(debuf, cond, melee, ranged)
+
+-- This will attempt to move Me one space such that it stays in the same
+-- room, but is no longer standing in a doorway.  If it is not currently
+-- in a doorway right now this function does nothing.
+function TryToClearDoorway()
+  print("SCRIPT: TryToClearDoorway - ", Me.Name)
+  -- Check if we're on a doorway space, if we are then move to a nearby
+  -- space that is in this room but is not a doorway space.
+  all_door_ps = {}
+  rcm = Utils.RoomContaining(Me)
+  rcl = Utils.RoomContaining(Leader())
+  if not Utils.RoomsAreEqual(rcm, rcl) then
+    -- Don't try to clear a doorway if we're not in the room with the leader
+    -- yet, because we might be trying to clear a doorway in a room we were
+    -- trying to leave.
+    return
+  end
+  ado = Utils.AllDoorsOn(rcm)
+  for i, door in pairs(ado) do
+    ps = Utils.DoorPositions(door)
+    for _, p in pairs(ps) do
+      all_door_ps[p.X .. "," .. p.Y] = true
+    end
+  end
+
+  -- If we're not next to a door then, whatever, don't bother moving.
+  if not all_door_ps[Me.Pos.X .. "," .. Me.Pos.Y] then
+    return
+  end
+  print("SCRIPT: In The room, must clear - ", Me.Name)
+
+  -- Make rps a map from position to boolean, true if the position is
+  -- in the room
+  rps = {}
+  for _, p in pairs(Utils.RoomPositions(Utils.RoomContaining(Me))) do
+    rps[p.X .. "," .. p.Y] = true
+  end
+
+  -- Loop over all nearby positions, if there is one we can move to that
+  -- is in this room but is not a door position, then move to it.
+  nearby = Utils.AllPathablePoints(Me.Pos, Me.Pos, 1, 3)
+  closest = 100000
+  closest_pos = nil
+  for _, p in pairs(nearby) do
+    if rps[p.X .. "," .. p.Y] and not all_door_ps[p.X .. "," .. p.Y] then
+      dist = Utils.RangedDistBetweenPositions(Me.Pos, p)
+      if dist and dist < closest then
+        closest = dist
+        closest_pos = p
+      end
+    end
+  end
+  Do.Move({closest_pos}, 10)
+end
+
+function CrushEnemies(debuf, cond, melee, ranged, aoe)
+  print("SCRIPT: CrushEnemies - ", Me.Name)
+
   enemies = Utils.NearestNEntities(10, "denizen")
   if table.getn(enemies) == 0 then
     return false
   end
+
+  nearest = enemies[1]
+  rce = Utils.RoomContaining(nearest)  
+  rcm = Utils.RoomContaining(Me)
+  if Utils.RoomsAreEqual(rce, rcm) then
+    -- Don't crush enemies unless we've tried to clear the doorway first
+    TryToClearDoorway()
+  end
+
+  print("SCRIPT: Aoe:", aoe)
+  if aoe and Me.Actions[aoe].Ap > Me.ApCur then
+    aoe_dist = Me.Actions[aoe].Range
+    print("SCRIPT: ", aoe_dist)
+    pos, ents = Utils.BestAoeAttackPos(aoe, 1, "enemies only")
+    print("SCRIPT: Ps:", pos.X, pos.Y)
+    -- We can hit more than one entity so we'll go ahead and use our aoe
+    if table.getn(ents) > 1 then
+      ps = Utils.AllPathablePoints(Me.Pos, pos, 1, aoe_dist)
+      Do.Move(ps, 1000)
+      Do.AoeAttack(aoe, pos)
+    end
+  end
+
+
   max_dist = Me.Actions[ranged].Range
   lowest_hp = 10000
   lowest_ent = nil
@@ -46,29 +127,40 @@ function CrushEnemies(debuf, cond, melee, ranged)
   return Do.BasicAttack(attack, target)
 end
 
-function CheckForRelic()
+function ObjectPos()
+  print("SCRIPT: ObjectPos1")
   objects = Utils.NearestNEntities(3, "object")
   if table.getn(objects) == 0 then
-    return false
+    return nil
   end
+  print("SCRIPT: ObjectPos2")
 
-  object = nil
-  for i,obj in pairs(objects) do
+  for _,obj in pairs(objects) do
     if obj.State == "ready" then
-      object = obj
-      break
+      return obj.Pos
     end
   end
-  if object == nil then
-    return false
-  end
+  print("SCRIPT: ObjectPos3")
+  return nil
+end
 
-  ps = Utils.AllPathablePoints(Me.Pos, object.Pos, 1, Me.Actions.Interact.Range)
-  valid, pos = Do.Move(ps, 1000)
-  if not valid then
-    return false
+function WaypointPos()
+  print("SCRIPT: Waypoint")
+  for _, wp in pairs(Utils.Waypoints()) do
+  print("SCRIPT: Waypoin2")
+    return wp.Pos
   end
-  return Do.InteractWithObject(object)
+  print("SCRIPT: Waypoint3")
+  return nil
+end
+
+function RelicPos()
+  return WaypointPos()
+  -- pos = ObjectPos()
+  -- if not pos then
+  --   pos = WaypointPos()
+  -- end
+  -- return pos
 end
 
 function Leader()
@@ -94,24 +186,25 @@ function OtherGuy()
 end
 
 function LeadOrFollow()
+  print("SCRIPT: me/leader, ", Me.Name, "/", Me.Master.Leader)
   if Me.Master.Leader == Me.Name then
     -- Don't go off leading somewhere if there is something nearby that needs
     -- to be dealt with
     ent = Utils.NearestNEntities(1, "denizen")[1]
     if ent then
       dist = Utils.RangedDistBetweenEntities(Me, ent)
-      if dist < 5 then
+      if dist and dist < 5 then
         return false
       end
     end
 
-    objects = Utils.NearestNEntities(3, "object")
-    if table.getn(objects) == 0 then
-      return false
+    pos = RelicPos()
+    if pos then
+      print("SCRIPT: RelicPos = ", pos.X, pos.Y)
+      return HeadTowards(pos)
     end
-    -- Should only ever be one at a time, so just take the first one
-    object = objects[1]
-    return HeadTowards(object.Pos)
+    print("SCRIPT: NO RelicPos")
+    return false
   else
     leader = Leader()
     if leader then
@@ -189,47 +282,64 @@ end
 
 function HeadTowards(target)
   current = Utils.RoomContaining(Me)
+  print("SCRIPT: Heading towards 2")
+
   if posIsInRegion(target, current) then
     ps = Utils.AllPathablePoints(Me.Pos, target, 1, 1)
     valid, pos = Do.Move(ps, 1000)
+  print("SCRIPT: Heading towards 3")
     return valid and pos
   end
+  print("SCRIPT: Heading towards 4")
 
   target_room = FindUnexploredRoomNear(target)
   if target_room == nil then
     return false
   end
+  print("SCRIPT: Heading towards 5")
   path = Utils.RoomPath(current, target_room)
   if table.getn(path) == 0 then
     return false  -- No room path to the unexplored room - shouldn't happen
   end
+  print("SCRIPT: Heading towards 6")
   target_room = path[1]
 
   doors = Utils.AllDoorsBetween(current, target_room)
   if table.getn(doors) == 0 then
     return false   -- No doors to the next room, also shouldn't happen
   end
+  print("SCRIPT: Heading towards 7")
 
 
   -- If the door is closed then go to it and open it.
   if not Utils.DoorIsOpen(doors[1]) then
+  print("SCRIPT: Heading towards 8")
     ps = Utils.DoorPositions(doors[1])
+  print("SCRIPT: Heading towards 8", table.getn(ps))
+    for i,p in pairs(ps) do
+      print("SCRIPT: Possss ", i, ": ", p.X, p.Y)
+    end
     complete = Do.Move(ps, 1000)
+  print("SCRIPT: Heading towards 8")
     if not complete then
+  print("SCRIPT: Heading towards 8.5")
       return false
     end
 
     -- Only open it if we have at least half of our max ap and our peeps
     -- are nearby
+  print("SCRIPT: Heading towards 9")
     if Me.ApCur < Me.ApMax / 2 then
       return false
     end
     intruders = Utils.NearestNEntities(3, "intruder")
+  print("SCRIPT: Heading towards 10")
     if table.getn(intruders) > 0 then
       if Utils.RangedDistBetweenEntities(Me, intruders[table.getn(intruders)]) > 5 then
         return false
       end
     end
+  print("SCRIPT: Heading towards 11")
 
     if not Do.DoorToggle(doors[1]) then
       return false
@@ -237,8 +347,11 @@ function HeadTowards(target)
   end
 
   -- Now that we know the door is open, step into the next room.
+  print("SCRIPT: Heading towards 12")
   ps = Utils.RoomPositions(target_room)
+  print("SCRIPT: Heading towards 13")
   complete, other = Do.Move(ps, 1000)
+  print("SCRIPT: Heading towards 14")
   return complete
 end
 

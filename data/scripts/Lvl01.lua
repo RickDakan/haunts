@@ -24,6 +24,7 @@ function Init(data)
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
   store.side = side_choices[1]
+  -- store.side = "Humans"
   if store.side == "Humans" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
@@ -32,10 +33,10 @@ function Init(data)
   if store.side == "Denizens" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "intruders.lua")
+    Script.BindAi("intruder", "ch01/intruders.lua")
   end
   if store.side == "Intruders" then
-    Script.BindAi("denizen", "denizens.lua")
+    Script.BindAi("denizen", "ch01/denizens.lua")
     Script.BindAi("minions", "minions.lua")
     Script.BindAi("intruder", "human")
   end
@@ -45,7 +46,7 @@ function Init(data)
 
 
   store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
-  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn)
+  store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn, false)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
 
   -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
@@ -53,16 +54,19 @@ function Init(data)
 end
 
 function intrudersSetup()
-
   if IsStoryMode() then
     intruder_names = {"Teen", "Occultist", "Researcher"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
-  end 
+  end
 
   for _, name in pairs(intruder_names) do
-    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
+    if store.side == "Denizens" then
+      filename = "ch01/" .. name .. ".lua"
+      Script.BindAi(ent, filename)
+    end
   end
 
   -- Choose entry point here.
@@ -110,7 +114,7 @@ function denizensSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start1")
-  placed = Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0,6)
+  -- placed = Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0,6)
 end
 
 function RoundStart(intruders, round)
@@ -118,7 +122,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
@@ -139,7 +143,6 @@ function RoundStart(intruders, round)
     --denizensSetup()
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
-    print("poo ValueForReinforce: ", ValueForReinforce)
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")          
@@ -155,6 +158,7 @@ function RoundStart(intruders, round)
     Script.SetLosMode("denizens", "blind")
   end
 
+  spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
   store.game = Script.SaveGameState()
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
@@ -170,14 +174,29 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
-    Script.ShowMainBar(intruders == (store.side == "Intruders"))
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "entities")
+    if intruders then
+      Script.SetVisibility("intruders")
+      Script.ShowMainBar(intruders)
+    else
+      Script.SetVisibility("denizens")
+      Script.ShowMainBar(not intruders)
+    end
   end
 end
 
 function GetDistanceBetweenEnts(ent1, ent2)
-  return (math.abs(ent1.Pos.X - ent2.Pos.X) + math.abs(ent1.Pos.Y - ent2.Pos.Y))
+  v1 = ent1.Pos.X - ent2.Pos.X
+  if v1 < 0 then
+    v1 = 0-v1
+  end
+  v2 = ent1.Pos.Y - ent2.Pos.Y
+  if v2 < 0 then
+    v2 = 0-v2
+  end
+  return v1 + v2
 end
-
 
 function ValueForReinforce()
   --The denizens get to reinforce after each waypoint goes down.
@@ -241,6 +260,7 @@ function OnAction(intruders, round, exec)
     -- Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
 
+
   if store.nFirstWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
       --The intruders got to the second waypoint.
@@ -256,6 +276,7 @@ function OnAction(intruders, round, exec)
     end  
   end
 
+
   if store.nSecondWaypointDown then
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
@@ -263,9 +284,11 @@ function OnAction(intruders, round, exec)
     end   
   end
 
+
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
+
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   if exec.Ent.ApCur == 0 then 
@@ -274,6 +297,7 @@ function OnAction(intruders, round, exec)
       Script.SelectEnt(nextEnt)
     end
   end  
+
 
 end
  
@@ -310,7 +334,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
+        -- Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
@@ -367,7 +391,7 @@ function RoundEnd(intruders, round)
         Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
         store.bBoschRespawnedTellIntruders = true
       end
-      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn)    
+      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
     end
   else
     if store.bBoschRespawnedTellIntruders then

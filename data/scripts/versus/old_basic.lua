@@ -24,6 +24,7 @@ function Init(data)
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
   store.side = side_choices[1]
+  -- store.side = "Humans"
   if store.side == "Humans" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
@@ -32,10 +33,10 @@ function Init(data)
   if store.side == "Denizens" then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "intruders.lua")
+    Script.BindAi("intruder", "ch01/intruders.lua")
   end
   if store.side == "Intruders" then
-    Script.BindAi("denizen", "denizens.lua")
+    Script.BindAi("denizen", "ch01/denizens.lua")
     Script.BindAi("minions", "minions.lua")
     Script.BindAi("intruder", "human")
   end
@@ -59,10 +60,13 @@ function intrudersSetup()
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
-  end 
+  end
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
+    if store.side == "Denizens" then
+      Utils.BindAi(ent, "ch01/" .. name .. ".lua")
+    end
   end
 
   -- Choose entry point here.
@@ -170,6 +174,16 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "entities")
+    print("SCRIPT: SetLosMode(entities)")
+    if intruders then
+      Script.SetVisibility("intruders")
+      print("SCRIPT: SetVisibility(intruders)")
+    else
+      Script.SetVisibility("denizens")
+      print("SCRIPT: SetVisibility(denizens)")
+    end
     Script.ShowMainBar(intruders == (store.side == "Intruders"))
   end
 end
