@@ -1,0 +1,26 @@
+{
+  "Name": "Infected",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/eidolon",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Feast",
+	  "Cosmic Infection"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 5,
+    "Hp_max": 6,
+    "Corpus": 10,
+    "Ego": 9,
+    "Sight": 10
+  },
+  "ai_path": "ais/eidolon.lua"
+}
