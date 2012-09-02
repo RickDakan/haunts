@@ -7,13 +7,13 @@ import (
 )
 
 func (a *Ai) addIntrudersContext() {
-  a.L.Register("IsActive", isActive(a))
+  a.L.Register("IsActive", isActiveIntruder(a))
   a.L.Register("ExecIntruder", execIntruder(a))
-  a.L.Register("SetEntityMasterInfo", setEntityMasterInfo(a))
+  a.L.Register("SetEntityMasterInfo", setIntruderMasterInfo(a))
   a.L.Register("AllIntruders", allIntruders(a))
 }
 
-func isActive(a *Ai) lua.GoFunction {
+func isActiveIntruder(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !game.LuaCheckParamsOk(L, "IsActive", game.LuaEntity) {
       return 0
@@ -51,7 +51,7 @@ func allIntruders(a *Ai) lua.GoFunction {
   }
 }
 
-func setEntityMasterInfo(a *Ai) lua.GoFunction {
+func setIntruderMasterInfo(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
     if !game.LuaCheckParamsOk(L, "SetEntityMasterInfo", game.LuaEntity, game.LuaString, game.LuaAnything) {
       return 0

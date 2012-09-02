@@ -90,9 +90,7 @@ function denizensSetup()
   -- "Master-.*", which means anything that begins with "Master-".  So
   -- "Master-BackRoom" and "Master-Center" both match, for example.
   placed = {}
-  while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
-  end
+  placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
 
   -- placed is an array containing all of the entities placed, in this case
   -- there will only be one, and we will use that one to determine what

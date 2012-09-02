@@ -242,6 +242,9 @@ func (a *Ai) Terminate() {
 }
 
 func (a *Ai) Activate() {
+  if a.ent != nil {
+    base.Log().Printf("Activated entity: %v", a.ent.Name)
+  }
   reload := false
   for {
     select {

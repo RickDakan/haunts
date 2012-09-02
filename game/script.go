@@ -97,6 +97,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "PlaySound":                         func() { gp.script.L.PushGoFunctionAsCFunction(playSound(gp)) },
     "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
     "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
+    "Rand":                              func() { gp.script.L.PushGoFunctionAsCFunction(randFunc(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -1411,6 +1412,17 @@ func setLosMode(gp *GamePanel) lua.GoFunction {
       return 0
     }
     return 0
+  }
+}
+
+func randFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "Rand", LuaInteger) {
+      return 0
+    }
+    n := L.ToInteger(-1)
+    L.PushInteger(int(gp.game.Rand.Int63()%int64(n)) + 1)
+    return 1
   }
 }
 

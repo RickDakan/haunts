@@ -68,9 +68,6 @@ function intrudersSetup()
       Script.BindAi(ent, filename)
     end
   end
-
-  -- Choose entry point here.
-  Script.SaveStore()
 end
 
 function denizensSetup()
@@ -85,11 +82,14 @@ function denizensSetup()
 
   end
   
-  Script.SetVisibility("denizens")
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
-
-  placed = {}
-  while table.getn(placed) == 0 do
+  if store.side == "Intruders" then
+    master_spawn = Script.GetSpawnPointsMatching("Master_.*")
+    ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
+    placed = {ent}
+    Script.BindAi(ent, "ch01/Bosch.lua")
+  else
+    Script.SetVisibility("denizens")
+    setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
     placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
   end
 
@@ -113,8 +113,21 @@ function denizensSetup()
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start1")
-  -- placed = Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0,6)
+  points = 6
+  if store.side == "Intruders" then
+    servitor_spawn = Script.GetSpawnPointsMatching("Servitors_Start1")
+    while points > 0 do
+      option = ServitorEnts[Script.Rand(table.getn(ServitorEnts))]
+      if option[2] <= points then
+        ent = Script.SpawnEntitySomewhereInSpawnPoints(option[1], servitor_spawn, true)
+        Script.BindAi(ent, "ch01/" .. option[1] .. ".lua")
+        points = points - option[2]
+      end
+    end
+  else
+    setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start1")
+    Script.PlaceEntities("Servitors_Start1", ServitorEnts, 0, points)
+  end
 end
 
 function RoundStart(intruders, round)
@@ -126,7 +139,7 @@ function RoundStart(intruders, round)
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")
 
     if IsStoryMode() then
@@ -134,7 +147,6 @@ function RoundStart(intruders, round)
     end
 
     Script.EndPlayerInteraction()
-
     return
   end
 
@@ -144,7 +156,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")          
   end
   
@@ -154,7 +166,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")
   end
 
@@ -165,7 +177,7 @@ function RoundStart(intruders, round)
   SelectCharAtTurnStart(side)
 
   if store.side == "Humans" then
-    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
@@ -174,7 +186,7 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
-    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
@@ -311,7 +323,7 @@ function RoundEnd(intruders, round)
 
   if store.side == "Humans" then
     Script.ShowMainBar(false)
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")
     if intruders then
       Script.SetVisibility("denizens")
@@ -343,7 +355,7 @@ function RoundEnd(intruders, round)
       end
     end
 
-    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
 

@@ -116,8 +116,10 @@ function CrushEnemies(debuf, cond, melee, ranged, aoe)
     return false
   end
   target = lowest_ent
-  dist = Utils.RangedDistBetweenEntities(Me, target)
-  if cond and not target.Conditions[cond] and dist <= Me.Actions[debuf].Range then
+  if not dist then
+    return false
+  end
+  if debuf and cond and not target.Conditions[cond] and dist <= Me.Actions[debuf].Range then
     return Do.BasicAttack(debuf, target)
   end
   attack = ranged
@@ -219,140 +221,6 @@ function LeadOrFollow()
     end
     return false
   end
-end
-
-function getCenter(thing)
-  x = thing.Pos.X + thing.Dims.Dx / 2
-  y = thing.Pos.Y + thing.Dims.Dy / 2
-  return {X=x, Y=y}
-end
-
-function distance(a, b)
-  v1 = a.X - b.X
-  if v1 < 0 then
-    v1 = 0-v1
-  end
-  v2 = a.Y - b.Y
-  if v2 < 0 then
-    v2 = 0-v2
-  end
-  return v1 + v2
-end
-
-function FindUnexploredRoomNear(target)
-  unexplored = Utils.NearbyUnexploredRooms()
-  if table.getn(unexplored) == 0 then
-    return nil  -- No more rooms to explore
-  end
-
-  -- find the room whose center has the shortest manhattan distance to our
-  -- target.
-  dist = 0-1
-  target_room = nil
-  for _, room in pairs(unexplored) do
-    c = getCenter(room)
-    d = distance(target, getCenter(room))
-    if dist == 0-1 or d < dist then
-      dist = d
-      target_room = room
-    end
-  end
-
-  return target_room
-end
-
--- pos.X and pos.Y are the position in question
--- region.Pos.X, region.Pos.Y, region.Dims.Dx and region.Dims.Dy define
--- the region that we will check for pos in.
-function posIsInRegion(pos, region)
-  if pos.X < region.Pos.X then
-    return false
-  end
-  if pos.Y < region.Pos.Y then
-    return false
-  end
-  if pos.X >= region.Pos.X + region.Dims.Dx then
-    return false
-  end
-  if pos.Y >= region.Pos.Y + region.Dims.Dy then
-    return false
-  end
-  return true
-end
-
-function HeadTowards(target)
-  current = Utils.RoomContaining(Me)
-  print("SCRIPT: Heading towards 2")
-
-  if posIsInRegion(target, current) then
-    ps = Utils.AllPathablePoints(Me.Pos, target, 1, 1)
-    valid, pos = Do.Move(ps, 1000)
-  print("SCRIPT: Heading towards 3")
-    return valid and pos
-  end
-  print("SCRIPT: Heading towards 4")
-
-  target_room = FindUnexploredRoomNear(target)
-  if target_room == nil then
-    return false
-  end
-  print("SCRIPT: Heading towards 5")
-  path = Utils.RoomPath(current, target_room)
-  if table.getn(path) == 0 then
-    return false  -- No room path to the unexplored room - shouldn't happen
-  end
-  print("SCRIPT: Heading towards 6")
-  target_room = path[1]
-
-  doors = Utils.AllDoorsBetween(current, target_room)
-  if table.getn(doors) == 0 then
-    return false   -- No doors to the next room, also shouldn't happen
-  end
-  print("SCRIPT: Heading towards 7")
-
-
-  -- If the door is closed then go to it and open it.
-  if not Utils.DoorIsOpen(doors[1]) then
-  print("SCRIPT: Heading towards 8")
-    ps = Utils.DoorPositions(doors[1])
-  print("SCRIPT: Heading towards 8", table.getn(ps))
-    for i,p in pairs(ps) do
-      print("SCRIPT: Possss ", i, ": ", p.X, p.Y)
-    end
-    complete = Do.Move(ps, 1000)
-  print("SCRIPT: Heading towards 8")
-    if not complete then
-  print("SCRIPT: Heading towards 8.5")
-      return false
-    end
-
-    -- Only open it if we have at least half of our max ap and our peeps
-    -- are nearby
-  print("SCRIPT: Heading towards 9")
-    if Me.ApCur < Me.ApMax / 2 then
-      return false
-    end
-    intruders = Utils.NearestNEntities(3, "intruder")
-  print("SCRIPT: Heading towards 10")
-    if table.getn(intruders) > 0 then
-      if Utils.RangedDistBetweenEntities(Me, intruders[table.getn(intruders)]) > 5 then
-        return false
-      end
-    end
-  print("SCRIPT: Heading towards 11")
-
-    if not Do.DoorToggle(doors[1]) then
-      return false
-    end
-  end
-
-  -- Now that we know the door is open, step into the next room.
-  print("SCRIPT: Heading towards 12")
-  ps = Utils.RoomPositions(target_room)
-  print("SCRIPT: Heading towards 13")
-  complete, other = Do.Move(ps, 1000)
-  print("SCRIPT: Heading towards 14")
-  return complete
 end
 
 function Follow(leader, leash)

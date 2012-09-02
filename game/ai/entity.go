@@ -46,9 +46,17 @@ func (a *Ai) addEntityContext() {
     "DoorPositions":              func() { a.L.PushGoFunctionAsCFunction(DoorPositionsFunc(a)) },
     "DoorIsOpen":                 func() { a.L.PushGoFunctionAsCFunction(DoorIsOpenFunc(a)) },
     "RoomPositions":              func() { a.L.PushGoFunctionAsCFunction(RoomPositionsFunc(a)) },
+    "Rand":                       func() { a.L.PushGoFunctionAsCFunction(randFunc(a)) },
   })
   a.L.SetMetaTable(-2)
   a.L.SetGlobal("Utils")
+
+  a.L.NewTable()
+  game.LuaPushSmartFunctionTable(a.L, game.FunctionTable{
+    "GetEntsByName": func() { a.L.PushGoFunctionAsCFunction(GetEntsByName(a)) },
+  })
+  a.L.SetMetaTable(-2)
+  a.L.SetGlobal("Cheat")
 }
 
 type entityDist struct {
@@ -118,6 +126,9 @@ func AllPathablePointsFunc(a *Ai) lua.GoFunction {
     for x := x2 - max; x <= x2+max; x++ {
       for y := y2 - max; y <= y2+max; y++ {
         if x > x2-min && x < x2+min && y > y2-min && y < y2+min {
+          continue
+        }
+        if x < 0 || y < 0 || x >= len(grid) || y >= len(grid[0]) {
           continue
         }
         if !grid[x][y] {
@@ -1030,6 +1041,37 @@ func RoomPositionsFunc(a *Ai) lua.GoFunction {
         L.PushInteger(count)
         count++
         game.LuaPushPoint(L, x, y)
+        L.SetTable(-3)
+      }
+    }
+    return 1
+  }
+}
+
+func randFunc(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "Rand", game.LuaInteger) {
+      return 0
+    }
+    n := L.ToInteger(-1)
+    L.PushInteger(int(a.game.Rand.Int63()%int64(n)) + 1)
+    return 1
+  }
+}
+
+func GetEntsByName(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "GetEntsByName", game.LuaString) {
+      return 0
+    }
+    name := L.ToString(-1)
+    count := 1
+    L.NewTable()
+    for _, ent := range a.game.Ents {
+      if ent.Name == name {
+        L.PushInteger(count)
+        count++
+        game.LuaPushEntity(L, ent)
         L.SetTable(-3)
       }
     }
