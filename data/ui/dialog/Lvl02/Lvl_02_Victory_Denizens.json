@@ -1,16 +1,108 @@
 {
-  "Size": "medium",
-  "Pages": {
-    "Start": {
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
       "Format": "NoOptionsCenterImage",
-      "Sections":[
+      "Sections":
+      [
         {
-          "Text": "The Golem is victorious.",
-          "Image":{
+          "Next": "Start2",
+          "Text": "The walls of Bosch Manor tremble at the Golem's roar as power from beyond this world fills the construct with terrible power.",
+          "Image":
+          {
+                "Path": "ui/dialog/Lvl02/1902c.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "'Alive! Alive!', the unnatural thing cries out. 'Beware, I AM ALIVE!'",
+          "Image":
+          {
             "Path": "ui/dialog/Lvl02/golem.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Tyree and his comrades lie dead at the creatures clay feet, mute testament to the futility of standing in its way.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/occultist3.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "But this new, faux-life comes at a price. The source of this wondrous power now has a taste for life as well, and it wants to devour more of it.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }
+        }
+      ]
+    },    
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "And the Golem is just another rift in time and space, another doorway for its dark tendrils to reach into our world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Change is coming to Bosch Manor - the Tyree corpse, made animate and servile, and the Tyree fortune put to a new, darker purpose.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/1902c.png"
           }
         }
       ]
     }
   }
 }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

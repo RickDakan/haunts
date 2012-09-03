@@ -98,7 +98,7 @@
       "Sections":
       [
         {
-          "Next": "Start 8",
+          "Next": "Start8",
           "Text": "Sax is determined to find the formula for the drug Tyree is injecting his patients with. Once he secures that, he can escape out the front door.",
           "Image":
           {
@@ -107,7 +107,22 @@
         }
       ]
     },
-    "Start7": 
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Some of Sax's fellow patients might be of assistance. Sax can move next to them to try and help them escape, but not all of them will be friendly...",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl03/patient_still.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
     {
       "Format": "NoOptionsLeftImage",
       "Sections":

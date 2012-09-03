@@ -21,6 +21,7 @@ function Init(data)
 
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_02_Basement_Lab")
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")  
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -54,7 +55,7 @@ end
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Teen", "Occultist", "Researcher"}
+    intruder_names = {"Collector", "Occultist", "Reporter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
@@ -73,7 +74,7 @@ function denizensSetup()
   -- the names are listed in here is the order they will appear to the user.
   if IsStoryMode() then
     ents = {
-      {"Bosch", 1},
+      {"Golem", 1},
     }
   else
     --permit all choices for normal vs play.
@@ -105,8 +106,8 @@ function denizensSetup()
       {"Eidolon", 3},
     }
   end
-  if placed[1].Name == "Bosch" then
-    MasterName = "Bosch"
+  if placed[1].Name == "Golem" then
+    MasterName = "Golem"
     ents = {
       {"Angry Shade", 1},
       {"Lost Soul", 1},
@@ -144,6 +145,7 @@ function RoundStart(intruders, round)
 
   if store.bCountdownTriggered and not intruders then
     Script.SetAp(MasterEnt(), 5)
+    Script.SetMusicParam("tension_level", 0.7)
   end
 
   store.game = Script.SaveGameState()

@@ -2,10 +2,10 @@
   "Size": "medium",
   "Pages": {
     "Start": {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":[
         {
-          "Text": "It is the Denizens' turn to play.  There are {turns} turns remaining.",
+          "Text": "There are {turns} turns remaining.",
           "Image":{
             "Path": "ui/dialog/Lvl02/denizens.png"
           }

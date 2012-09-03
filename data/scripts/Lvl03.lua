@@ -20,7 +20,8 @@ function Init(data)
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
   -- check data.map == "random" or something else
-  Script.LoadHouse("Lvl_03_Sanitorium")  
+  Script.LoadHouse("Lvl_03_Sanitorium")
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")   
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -73,7 +74,7 @@ end
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Teen"}
+    intruder_names = {"Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start1")
   -- else
   --   --permit all choices for normal vs play
@@ -165,6 +166,7 @@ function RoundStart(intruders, round)
   end
 
   if store.bFloodStarted then
+    Script.SetMusicParam("tension_level", 0.7)
     --At the start of each denizen turn, we're going to randomly spawn attendants at 
     --the flood points.  Also need to prevent spawning within LoS of an intruder.
 
@@ -455,7 +457,7 @@ function StoreSpawn(name, spawnPos)
 end
 
 function doSpawn(spawnExec)
-  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos, false)
+  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
 end
 
 function StoreGear(name, ent, addGear)
@@ -580,7 +582,7 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   if store.nIntrudersFound == 0 then
     store.nIntrudersFound = store.nIntrudersFound + 1
     if store.nIntrudersFound == 1 then
-      thingToSpawn = "Ghost Hunter"
+      thingToSpawn = "Collector"
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder1.json")
     end
   else
@@ -588,11 +590,11 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
       --Spawn intruder
       store.nIntrudersFound = store.nIntrudersFound + 1
       if store.nIntrudersFound == 2 then
-        thingToSpawn = "Researcher"
+        thingToSpawn = "Reporter"
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder2.json")
       end
       if store.nIntrudersFound == 3 then
-        thingToSpawn = "Cordelia"
+        thingToSpawn = "Detective"
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder3.json")    
       end
     else

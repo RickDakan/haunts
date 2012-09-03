@@ -1,13 +1,13 @@
 {
-  "Size": "medium",
+  "Size": "large",
   "Pages": {
     "Start": {
       "Format": "NoOptionsCenterImage",
       "Sections":[
         {
-          "Text": "Turn Start",
+          "Text": "",
           "Image":{
-            "Path": "ui/dialog/Lvl01/intruders.png"
+            "Path": "ui/dialog/Lvl02/intruders2.png"
           }
         }
       ]

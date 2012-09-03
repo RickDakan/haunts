@@ -1,6 +1,6 @@
 {
   "Name": "Blindness",
-  "Strength": 5,
+  "Strength": 15,
   "Kind": "Poison",
   "Duration": 3,
   "Dynamic": {

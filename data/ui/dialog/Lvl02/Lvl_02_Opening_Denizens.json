@@ -1,10 +1,10 @@
 {
-  "Size": "medium",
+  "Size": "large",
   "Pages": 
   {
     "Start": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -12,7 +12,7 @@
           "Text": "The Bosch Estate, 1909. Trapped in the halls beneath the manse, Cornelius Bosch's final experiment lies in wait, locked behind mystic wards.",
     		  "Image":
           {
-                "Path": "ui/dialog/Lvl02/house_temp.png"
+                "Path": "ui/dialog/Lvl02/1902c.png"
           }
         }
       ]
@@ -24,7 +24,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "Bosch's killer, Elias Tyree, has come in search of the dead occultist's last secret: You.",
+          "Text": "Bosch's killer, Elias Tyree, has come in search of the dead occultist's last secret: The Golem.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl02/occultist3.png"
@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "As the Golem, you need otherworldly energy to unlock your true power. Until now, you've had no source for such energy.",
+          "Text": "Left unfinished by its creator, the Golem, needs otherworldly energy to unlock its true power. Until now, it has had no source for such energy.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl02/golem.png"
@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "By breaking the wards Bosch left to hold you in place, Tyree has created an arcane rift.",
+          "Text": "By breaking the wards Bosch left to hold the Golem in place, Tyree has created an arcane rift.",
           "Image":
           {
             "Path": "ui/dialog/Lvl02/occultist3.png"
@@ -68,10 +68,55 @@
       "Sections":
       [
         {
-          "Text": "You must control the rift youself, absorbing its energy while preventing Tyree and his intruders from getting there first.",
+          "Next": "Start6",
+          "Text": "The Golem must make its way to the rift youself and absorb its energy while preventing Tyree and his intruders from getting there first.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl02/golem.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "The Angry Shades of Bosch's victims now serve the golem, they need to get close to use their chill touch on enemies.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/shade_still.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Lost Soul Orbs are singularities of psychic agony, capable of deadly ranged attacks but very unstable, dissipating with a single enemy attack.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/wisp_still.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Vengeful Wraiths are the most powerful and hard to destroy spirits, with attacks that frighten and disable intruders but do little direct damage.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/wraith_still.png"
           }
         }
       ]

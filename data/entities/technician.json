@@ -2,15 +2,15 @@
   "Name": "Technician",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/robed_cultist",
+  "Sprite_path" : "entities/male_cultist",
   "Still": {
-    "Path": "entities/technician_still.png"
+    "Path": "entities/male_cultist_still.png"
   },
   "Action_names": [
     "Move Test",
     "Interact",
-    "Abjuration",
-    "Exorcise"
+    "Envenomed Dart",
+    "Inject"
   ],
   "HauntEnt": {
     "Cost":  1,

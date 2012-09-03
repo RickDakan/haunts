@@ -2,9 +2,9 @@
   "Name": "Patient",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/corpse",
+  "Sprite_path" : "entities/patient",
   "Still": {
-    "Path": "entities/corpse_still.png"
+    "Path": "entities/patient_still_ui.png"
   },
   "Action_names": [
     "Move Test"

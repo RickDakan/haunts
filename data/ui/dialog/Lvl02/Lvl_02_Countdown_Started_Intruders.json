@@ -9,7 +9,7 @@
       [
         {
           "Next": "Start2",
-          "Text": "That Thing is absorbing otherworldly energy from the rift.",
+          "Text": "The Golem is absorbing otherworldly energy from the rift.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl02/golem.png"
@@ -38,10 +38,10 @@
       "Sections":
       [
         {
-          "Text": "The Denizens will be victorious in {turns} turns.",
+          "Text": "The Golem will be indestructable and victorious in {turns} turns. The Intruders must destroy it before then to win.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/intruders2.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }       
         }   
       ] 

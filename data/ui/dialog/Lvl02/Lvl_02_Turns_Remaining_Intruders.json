@@ -2,10 +2,10 @@
   "Size": "medium",
   "Pages": {
     "Start": {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":[
         {
-          "Text": "It is the Intruders' turn to play.  There are {turns} turns remaining.",
+          "Text": "There are {turns} turns remaining.",
           "Image":{
             "Path": "ui/dialog/Lvl02/intruders2.png"
           }

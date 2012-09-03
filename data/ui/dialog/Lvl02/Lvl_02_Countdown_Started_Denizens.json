@@ -6,7 +6,7 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "The arcane rift fills my clay veins with unholy life.",
+          "Text": "The arcane rift fills the Golem's clay veins with unholy life.",
 		  "Image":{
             "Path": "ui/dialog/Lvl02/golem.png"
           }
@@ -18,7 +18,7 @@
       "Sections":[
         {
           "Next": "Start3",
-          "Text": "To me, spirits and cadavers! Protect your master as I fulfill my destiny!",
+          "Text": "'To me, spirits and cadavers! Protect your master as I fulfill my destiny!'",
 		  "Image":{
             "Path": "ui/dialog/Lvl02/golem.png"
           }       
@@ -29,10 +29,10 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "The Denizens will be victorious in {turns} turns.",
+          "Text": "The Golem will be indestructable and victorious in {turns} turns.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/denizens.png"
+            "Path": "ui/dialog/Lvl02/golem.png"
           }       
         }   
       ] 

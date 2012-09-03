@@ -98,14 +98,44 @@
       "Sections":
       [
         {
-          "Text": "Spirits of the dead! Rise up and defend my secrets from the Tyrees! Even death shall not stop me from defending what is mine.",
+          "Next": "Start8",
+          "Text": "Bosch call up the spirits of the dead to defend his secrets from the Tyrees!",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/Master.png"
           }
         }
       ]
-    }                           
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "The angry shades of the workers who died building Bosch Manor serve on in death, bringing agony to anything they touch.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/shade_still.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Lost Souls from the beyond crackle with deadly ectoplasmic energy that can strike at the Tyrees from a distance.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/wisp_still.png"
+          }
+        }
+      ]
+    }                                                      
   }
 }
 	

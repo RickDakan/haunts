@@ -39,17 +39,12 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  --spawn the objective point and the fake op points
+  --spawn the objective point
   waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
+  Waypoint = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
 
-  store.Waypoint = objSpawn
-  Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint.Pos, 3)
-
-  --decoys
-  objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)    
-  objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)    
-  objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)    
+  -- Script.SetVisibleSpawnPoints("intruders", "Highlight3")
+  -- Script.SetVisibleSpawnPoints("denizens", "Highlight3")
 
   --Spawn the patients
   patient_spawn = Script.GetSpawnPointsMatching("Patient_Start")
@@ -67,7 +62,6 @@ function Init(data)
   store.nMonstersFound = 0
   store.bWaypointDown = false
   store.bFloodStarted = false
-  store.bShiftChange = false
 end
 
 function intrudersSetup()
@@ -148,7 +142,6 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup()     
     else
-      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Opening_Denizens.json")
       denizensSetup()
     end
@@ -168,7 +161,8 @@ function RoundStart(intruders, round)
     --At the start of each denizen turn, we're going to randomly spawn attendants at 
     --the flood points.  Also need to prevent spawning within LoS of an intruder.
 
-    if TotalDeniCount() < 14 then  --don't want to overdo it
+    if TotalDeniCount() < 12 then  --don't want to overdo it
+      available_spawns = GetSpawnsFromListWhereNoLoS(Script.GetSpawnPointsMatching("Flood_Point"))
       for i = 1, 3, 1 do
         --Pick an entity
         if math.random(4) > 2 then
@@ -176,25 +170,9 @@ function RoundStart(intruders, round)
         else
           floodEnt = ServitorEnts[2][1]
         end     
-        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, Script.GetSpawnPointsMatching("Flood_Point"), true)
+        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, available_spawns, false)
       end
     end  
-  end
-
-  if store.bShiftChange and not intruders then
-    store.bShiftChange = false  
-
-    if ValueForReinforce() > 1 then
-      for i = 1,  math.floor((ValueForReinforce()/2) + .5) , 1 do
-        --Pick an entity
-        if math.random(4) > 2 then
-          floodEnt = ServitorEnts[1][1]
-        else
-          floodEnt = ServitorEnts[2][1]
-        end     
-        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, Script.GetSpawnPointsMatching("Servitors_Start"), true)
-      end
-    end 
   end
 
   store.game = Script.SaveGameState()
@@ -217,12 +195,14 @@ function SelectCharAtTurnStart(side)
   bDone = false
   if LastIntruderEnt then
     if side.Intruder then
+--    if LastIntruderEnt.Side == side then
       Script.SelectEnt(LastIntruderEnt)
       bDone = true
     end
   end  
   if LastDenizenEnt and not bDone then
-    if side.Denizen then     
+    if side.Denizen then
+--    if LastDenizenEnt.Side == side then      
       Script.SelectEnt(LastDenizenEnt)
       bDone = true
     end  
@@ -262,12 +242,12 @@ function OnAction(intruders, round, exec)
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
-  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint) <= 3 and not store.bWaypointDown then
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Waypoint) <= 3 and not store.bWaypointDown then
     --The intruders got to the first waypoint.
     store.bWaypointDown = true
-
-    StoreWaypoint("Waypoint", "", "", "", true)
-    StoreWaypoint("Waypoint", "intruders", Script.GetSpawnPointsMatching("Waypoint2")[1].Pos, 3, false)  
+    --!!!! need a way to despawn objects
+    -- StoreDespawn(Waypoint)
+    -- deSpawn(despawn_exec)
 
     StoreCondition("Carrying Antidote", exec.Ent, true)
     doCondition(condition_exec)
@@ -323,7 +303,13 @@ function OnAction(intruders, round, exec)
 
   --if the deni master used Signal Shift Change, permit spawning and end the turn.
   if exec.Action.Name == "Signal Shift Change" then
-    store.bShiftChange = true
+    Script.SetVisibility("denizens")
+    setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start")
+    placed = Script.PlaceEntities("Servitors_Start", ServitorEnts, 0, ValueForReinforce())
+    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("denizens", "blind")
+
+    Script.EndPlayerInteraction()
   end  
 
   --if the deni master spotted the intruders, show dialogue
@@ -406,11 +392,6 @@ function RoundEnd(intruders, round)
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     Script.LoadGameState(store.game)
-
-    --focus the camera on somebody on each team.
-    side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
-    Script.FocusPos(GetEntityWithMostAP(side2).Pos)
-
     for _, exec in pairs(store.execs) do
       bDone = false
       if exec.script_spawn then
@@ -428,11 +409,7 @@ function RoundEnd(intruders, round)
       if exec.script_condition then
         doCondition(exec)
         bDone = true
-      end     
-      if exec.script_waypoint then
-        doWaypoint(exec)
-        bDone = true
-      end      
+      end               
       if not bDone then
         Script.DoExec(exec)
 
@@ -455,7 +432,7 @@ function StoreSpawn(name, spawnPos)
 end
 
 function doSpawn(spawnExec)
-  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos, false)
+  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
 end
 
 function StoreGear(name, ent, addGear)
@@ -491,15 +468,7 @@ function deSpawn(despawnExec)
 end
 
 function GetDistanceBetweenEnts(ent1, ent2)
-  v1 = ent1.Pos.X - ent2.Pos.X
-  if v1 < 0 then
-    v1 = 0-v1
-  end
-  v2 = ent1.Pos.Y - ent2.Pos.Y
-  if v2 < 0 then
-    v2 = 0-v2
-  end
-  return v1 + v2
+  return (math.abs(ent1.Pos.X - ent2.Pos.X) + math.abs(ent1.Pos.Y - ent2.Pos.Y))
 end
 
 function MasterIsAlive()
@@ -539,6 +508,21 @@ function TotalDeniCount()
     end
   end
   return count
+end
+
+function GetSpawnsFromListWhereNoLoS(spawns)
+  -- for _, possibleSpawn in pairs(spawns) do
+  --   --nasty set of loops here.
+  --   for _, ent in pairs(Script.GetAllEnts()) do
+  --     if ent.Side.Intruder then
+  --       for _, possiblePositions in pairs(Script.)
+
+  --     end
+  --   end
+  -- end
+
+  --!!!!ignore this for now.
+  return spawns
 end
 
 function ValueForReinforce()
@@ -611,18 +595,4 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   StoreSpawn(thingToSpawn, SpawnPos)
   doSpawn(spawn_exec)
 
-end
-
-function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
-  waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
-  store.execs[table.getn(store.execs) + 1] = waypoint_exec
-  doWaypoint(waypoint_exec)
-end
-
-function doWaypoint(waypointExec)
-  if waypointExec.remove then
-    return Script.RemoveWaypoint(waypointExec.name)
-  else
-    return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
-  end
 end

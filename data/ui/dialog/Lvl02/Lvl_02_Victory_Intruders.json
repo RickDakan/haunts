@@ -1,16 +1,109 @@
 {
-  "Size": "medium",
-  "Pages": {
-    "Start": {
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
       "Format": "NoOptionsCenterImage",
-      "Sections":[
+      "Sections":
+      [
         {
-          "Text": "The intruders are victorious.",
-          "Image":{
-            "Path": "ui/dialog/Lvl02/intruders2.png"
+          "Next": "Start2",
+          "Text": "The walls of Bosch Manor tremble as the Golem crumbles and the intruders try to capture the raw power from beyond this world.",
+          "Image":
+          {
+                "Path": "ui/dialog/Lvl02/1902c.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The Golem is destroyed, but the secrets of its creation remain. The Tyrees can build another.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Elias Tyree nearly died, but the lure of Bosch's secrets and power from beyond sustained him and brought victory.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/occultist3.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "But these secrets, this power, they come at a price. The forces beyond the rift have discovered Tyree, and the world he and all humanity inhabit.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/occultist3.png"
+          }
+        }
+      ]
+    },    
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "The Tyree family takes over the Bosch legacy, just as they've dreamed.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/1902c.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Change is coming to Bosch Manor - the spirits made servile, and the Tyree fortune put to a new, darker purpose.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/1902c.png"
           }
         }
       ]
     }
   }
 }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
