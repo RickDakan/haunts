@@ -7,15 +7,11 @@ end
 function GetTarget()
   targets = {"Table", "Mirror", "Chest"}
   for _, target in pairs(targets) do
-    print("SCRIPT: Checking", target)
     ents = Cheat.GetEntsByName(target)
-    print("SCRIPT: Found", table.getn(ents))
     if table.getn(ents) > 0 then
-      print("SCRIPT: Returning", ents[1].Name)
       return ents[1]
     end
   end
-  print("SCRIPT: Returning nil")
   return nil
 end
 
@@ -26,7 +22,6 @@ function CrushIntruder(debuf, cond, melee, ranged, aoe)
   end
 
   nearest = enemies[1]
-
   if aoe and Me.Actions[aoe].Ap > Me.ApCur then
     aoe_dist = Me.Actions[aoe].Range
     pos, ents = Utils.BestAoeAttackPos(aoe, 1, "minions ok")
@@ -39,7 +34,11 @@ function CrushIntruder(debuf, cond, melee, ranged, aoe)
     end
   end
 
-  max_dist = Me.Actions[ranged].Range
+  attack = ranged
+  if not attack then
+    attack = melee
+  end
+  max_dist = Me.Actions[attack].Range
   lowest_hp = 10000
   lowest_ent = nil
   for i, enemy in pairs(enemies) do
@@ -49,8 +48,15 @@ function CrushIntruder(debuf, cond, melee, ranged, aoe)
       lowest_ent = enemy
     end
   end
-  if lowest_ent == nil then
-    return false
+  if lowest_ent == nil and table.getn(enemies) > 0 then
+    min = Me.Actions[attack].Range - 2
+    if min < 1 then
+      min = 1
+    end
+    ps = Utils.AllPathablePoints(Me.Pos, enemies[1].Pos, min, Me.Actions[attack].Range)
+    if table.getn(ps) > 0 then
+      return Do.Move(ps, 1000)
+    end
   end
   target = lowest_ent
   dist = Utils.RangedDistBetweenEntities(Me, target)

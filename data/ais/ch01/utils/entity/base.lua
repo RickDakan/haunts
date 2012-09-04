@@ -114,6 +114,10 @@ function HeadTowards(target)
       end
     end
 
+    if not Me.Actions["Interact"] then
+      print("WISP: CANT OPEN DOORS")
+      return false
+    end
     if not Do.DoorToggle(doors[1]) then
       return false
     end
