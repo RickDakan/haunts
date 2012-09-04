@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "That's one cavern down.  Just need to light up the other 4.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }   
+        }
+      ]
+    }
+  }
+}

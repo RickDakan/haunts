@@ -5,7 +5,7 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "It is the Denizens' turn.",
+          "Text": "It is the Denizens' turn.  The intruders will win if they place beacons in {rooms} more rooms.",
           "Image":{
             "Path": "ui/dialog/Lvl04/denizens.png"
           }

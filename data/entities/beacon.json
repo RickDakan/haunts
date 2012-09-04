@@ -9,6 +9,7 @@
   "Action_names": [
     "Move Test"
   ],
+  "Enemy_los": true,
   "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [

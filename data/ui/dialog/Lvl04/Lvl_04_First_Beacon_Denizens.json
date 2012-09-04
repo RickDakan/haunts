@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "The intruders have placed a beacon in one of our caverns.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }   
+        }
+      ]
+    }
+  }
+}

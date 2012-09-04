@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "That vampire's a crafty lass.  After attacking, she vanished.  I'll bet that will happen every time she attacks.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }   
+        }
+      ]
+    }
+  }
+}

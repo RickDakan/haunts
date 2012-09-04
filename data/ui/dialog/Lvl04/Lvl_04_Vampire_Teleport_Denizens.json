@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Our master inflicted damage and has retreated to the safety of her lair.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/denizens.png"
+          }   
+        }
+      ]
+    }
+  }
+}
