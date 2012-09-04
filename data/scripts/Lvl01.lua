@@ -124,7 +124,6 @@ function RoundStart(intruders, round)
     else
       Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
-      denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")
