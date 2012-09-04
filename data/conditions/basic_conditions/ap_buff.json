@@ -1,0 +1,9 @@
+{
+  "Name": "AP +2",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Dynamic": {
+    "Ap": 2
+  }
+}

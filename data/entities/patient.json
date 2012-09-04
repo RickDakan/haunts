@@ -1,0 +1,24 @@
+{
+  "Name": "Patient",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/patient",
+  "Still": {
+    "Path": "entities/patient_still_ui.png"
+  },
+  "Action_names": [
+    "Move Test"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 0,
+    "Hp_max": 6,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 10
+  },
+    "Ai_path": "ais/robed_cultist_new.lua"
+}

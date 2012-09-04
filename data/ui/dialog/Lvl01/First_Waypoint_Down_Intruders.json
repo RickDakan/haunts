@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The Tyrees have found Bosch's ritual tome, the first of three components.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/intruders.png"
+            "Path": "ui/dialog/Lvl01/book.png"
           }
         }
       ]
@@ -19,7 +19,7 @@
         {
           "Text": "Now they seek the orb of spirits, but must take care. Bosch knows their plan and has summmoned reinforcements.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/Lvl01/orb.png"
           }       
         }   
      ] 

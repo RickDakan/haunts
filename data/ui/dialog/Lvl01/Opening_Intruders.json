@@ -98,10 +98,55 @@
       "Sections":
       [
         {
+          "Next": "Start8",
+          "Text": "Tyree himself can use incantations to smite the foul spirits from afar.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/occultist_still.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "His sister, Codelia, is handy with a pistol or up close, and has psychic defenses to aid all the Tyrees.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/teen_still.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "Alphonso Sax, the infamous inventor of dangerous and some say infernal devices, needs to get close to use his spirit-disrupting weapons.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/hunter_still.png"
+          }
+        }
+      ]
+    },
+    "Start10": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
           "Text": "Even killing Bosch himself might not stop the evil man - his enraged ghost will no doubt return. Only recovering all three pieces will end him and assure the Tyree name is remembered forever.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist3.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }
         }
       ]

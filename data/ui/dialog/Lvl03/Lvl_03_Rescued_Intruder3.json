@@ -5,7 +5,7 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "The patient is snapped out of an infection-induced haze.  He agrees to join you.",
+          "Text": "The patient is snapped out of a serum-induced haze.  She agrees to join you.",
           "Image":{
             "Path": "ui/dialog/Lvl03/bounty-hunter.png"
           }

@@ -1,0 +1,9 @@
+{
+  "Name": "Ego +2",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Base": {
+    "Ego": 2
+  }
+}

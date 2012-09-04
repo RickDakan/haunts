@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The Tyrees have stolen Bosch's ritual notes! They mean to undo all his great work.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/intruders.png"
+            "Path": "ui/dialog/Lvl01/book.png"
           }
         }
       ]

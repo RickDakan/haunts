@@ -4,7 +4,7 @@
   "Dy": 1,
   "Sprite_path" : "entities/male_cultist",
   "Still": {
-    "Path": "entities/corpse_still.png"
+    "Path": "entities/male_cultist_still.png"
   },
   "Action_names": [
     "Move Test",

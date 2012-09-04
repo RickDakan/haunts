@@ -67,7 +67,7 @@ function intrudersSetup()
       filename = "ch01/" .. name .. ".lua"
       Script.BindAi(ent, filename)
     end
-  end
+  end 
 end
 
 function denizensSetup()
@@ -135,9 +135,9 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
-      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
+      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
     end
     Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")
@@ -152,7 +152,6 @@ function RoundStart(intruders, round)
 
   if store.nFirstWaypointDown and not store.bSetup2Done then
     store.bSetup2Done = true
-    --denizensSetup()
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
@@ -234,8 +233,8 @@ function ValueForReinforce()
 end
 
 function OnMove(ent, path)
-  -- for _, ent in pairs(Script.GetAllEnts()) do
-  -- end
+  for _, ent in pairs(Script.GetAllEnts()) do
+  end
 
   return table.getn(path)
 end
@@ -268,8 +267,8 @@ function OnAction(intruders, round, exec)
 
     StoreWaypoint("Waypoint1", "", "", "", true)
     StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
-    -- Script.RemoveWaypoint("Waypoint1")
-    -- Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
+    Script.RemoveWaypoint("Waypoint1")
+    Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
 
 
@@ -283,8 +282,8 @@ function OnAction(intruders, round, exec)
 
       StoreWaypoint("Waypoint2", "", "", "", true)
       StoreWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3, false) 
-      -- Script.RemoveWaypoint("Waypoint2")
-      -- Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
+      Script.RemoveWaypoint("Waypoint2")
+      Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
     end  
   end
 
@@ -346,7 +345,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-        -- Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
+        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
@@ -436,7 +435,7 @@ function SelectCharAtTurnStart(side)
   bDone = false
   if LastIntruderEnt then
     if side.Intruder then
---    if LastIntruderEnt.Side == side then
+   -- if LastIntruderEnt.Side == side then
       Script.SelectEnt(LastIntruderEnt)
       bDone = true
     end

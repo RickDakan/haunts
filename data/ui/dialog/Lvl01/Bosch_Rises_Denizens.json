@@ -6,9 +6,9 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Bosch Has returned.",
+          "Text": "Even death cannot put Bosch's savagery to rest.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/intruders.png"
+            "Path": "ui/dialog/Lvl01/master.png"
           }
         }
       ]
@@ -17,9 +17,9 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "Nifty, huh?",
+          "Text": "His ghost rises up to take his place, more powerful than the frail living form the Tyrees slew.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/Lvl01/bosch_ghost_still.png"
           }       
         }   
      ] 

@@ -6,9 +6,9 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Bosch has returned.",
+          "Text": "Bosch cannot be simply killed in his own domain.",
 		  "Image":{
-            "Path": "ui/dialog/lvl01/intruders.png"
+            "Path": "ui/dialog/lvl01/master.png"
           }
         }
       ]
@@ -17,9 +17,9 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "Well...most of him.",
+          "Text": "His enraged spirit persists, now more powerful than the frail human form it has abandoned.",
 		  "Image":{
-            "Path": "ui/dialog/lvl01/master.png"
+            "Path": "ui/dialog/lvl01/bosch_ghost_still.png"
           }       
         }   
      ] 

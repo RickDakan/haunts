@@ -6,7 +6,7 @@
     "Path": "actions/icons/grasp.png"
   },
   "Ap"       : 4,
-  "Strength" : 5,
+  "Strength" : 6,
   "Damage"   : 0,
   "Range"    : 7,
   "Target_enemies": true,
@@ -14,6 +14,6 @@
     "grasp": "Haunts/SFX/Denizens/Ghosts/Vengeful Wraith/Grave Grasp"
   },
   "Conditions": [
-     "Horrified"
+     "AP -2"
   ]
 }

@@ -8,7 +8,7 @@
           "Next": "Start2",
           "Text": "The Tyrees have taken Bosch's orb of spirits. They no doubt want its power for their own foul ends.",
 		  "Image":{
-            "Path": "ui/dialog/Lvl01/intruders.png"
+            "Path": "ui/dialog/Lvl01/orb.png"
           }
         }
       ]
