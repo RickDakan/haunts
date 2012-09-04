@@ -1306,9 +1306,10 @@ func removeWaypoint(gp *GamePanel) lua.GoFunction {
     defer gp.script.syncEnd()
     hit := false
     name := L.ToString(-1)
-    for i := range gp.game.Waypoints {
+    for i := 0; i < len(gp.game.Waypoints); i++ {
       if gp.game.Waypoints[i].Name == name {
         hit = true
+        gp.game.viewer.RemoveFloorDrawable(&gp.game.Waypoints[i])
         l := len(gp.game.Waypoints)
         gp.game.Waypoints[i] = gp.game.Waypoints[l-1]
         gp.game.Waypoints = gp.game.Waypoints[0 : l-1]
