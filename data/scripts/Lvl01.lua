@@ -67,7 +67,7 @@ function intrudersSetup()
       filename = "ch01/" .. name .. ".lua"
       Script.BindAi(ent, filename)
     end
-  end
+  end 
 
   -- Choose entry point here.
   Script.SaveStore()
@@ -123,6 +123,7 @@ function RoundStart(intruders, round)
       intrudersSetup() 
     else
       Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      denizensSetup()
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
     end
     Script.SetLosMode("intruders", "blind")
@@ -139,7 +140,6 @@ function RoundStart(intruders, round)
 
   if store.nFirstWaypointDown and not store.bSetup2Done then
     store.bSetup2Done = true
-    denizensSetup()
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
