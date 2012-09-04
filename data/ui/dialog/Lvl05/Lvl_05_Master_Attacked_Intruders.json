@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Intruders attacked the master.  Summoning started.",
+          "Image":{
+            "Path": "ui/dialog/Lvl05/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}
