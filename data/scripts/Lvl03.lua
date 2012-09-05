@@ -281,6 +281,7 @@ function OnAction(intruders, round, exec)
       --The denizens have not yet activated the alarm.
       store.bFloodStarted = true
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_And_Alarm_Intruders.json")
+      Script.SetMusicParam("tension_level", 0.9) 
       store.bToldIntrudersAboutAlarm = true
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
