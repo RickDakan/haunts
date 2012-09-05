@@ -56,7 +56,7 @@
           "Text": "But if Tyree and his fellow intruders can control the rift's energies and deactivate the Golem, then all Bosch's secrets will be his.",
   	      "Image":
           {
-            "Path": "ui/dialog/Lvl02/occultist3.png"
+            "Path": "ui/dialog/stills/occultist_dialog.png"
           }
         }
       ]
@@ -71,7 +71,7 @@
           "Text": "Laurel Gale is a writer and investigator specializing in the supernatural, and can use both aid her allies and disrupt her foes, while protecting herself at close range with a rune-inscribed cudgel.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/reporter_still.png"
+            "Path": "ui/dialog/stills/reporter_dialog.png"
           }
         }
       ]
@@ -85,7 +85,7 @@
           "Text": "Shaun Westmacott has traveled the world collecting rare and dangerous antiquities, some of which he uses as weapons to keep the dark forces at bay.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/collector_still.png"
+            "Path": "ui/dialog/stills/collector_dialog.png"
           }
         }
       ]

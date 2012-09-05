@@ -8,11 +8,56 @@
       "Sections":
       [
         {
-          "Text": "Intruders FTW.",
+          "Next": "Start2",
+          "Text": "The darkness beneath Tyree Sanitorium is banished, the vampiric denizens destroyed.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/Lvl04/1922c.png"
           }   
+        }
+      ]
+    },
+   "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The Duchess Orlac might have dissolved in the light, or might have slipped away in the shadows, but her lair is cleansed.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/vampire_left.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Plans for the Museum of Occult Antiquities can now proceed, transfroming what was once a house of horror into an institute of learning.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/collector.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "The next phase of the house's storied existence is about to begin, may it be a beacon of wisdom to all who visit it, lured in by promises of the once-dark secrets now laid bare in the light.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/1922c.png"
+          }
         }
       ]
     }

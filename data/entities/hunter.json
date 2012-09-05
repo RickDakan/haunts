@@ -13,7 +13,7 @@
     "Paramagnetic Pulse",
     "EMR Inhibitor"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
 	"Pick Me Ups",

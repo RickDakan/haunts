@@ -8,11 +8,56 @@
       "Sections":
       [
         {
-          "Text": "The denizens did it n stuff.",
+          "Next": "Start2",
+          "Text": "The darkness beneath Tyree Sanitorium returns, the intruding light banished to the surface.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/1922c.png"
           }   
+        }
+      ]
+    },
+   "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The Duchess Orlac luxuriates in the shadows, salving her wounded pride with the life-blood of her enemies.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/vampire_left.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "The wearisome invaders did give her an idea though - that perhaps she has remained cut off from the surface world long enough.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/collector.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Perhaps it is high time for the darkness to seep up above, and start snuffing out the lights of the accursed living world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl04/1922c.png"
+          }
         }
       ]
     }
