@@ -117,6 +117,9 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
+  if store.execs == nil then
+    store.execs = {}
+  end
 
   if round == 1 then
     if intruders then
@@ -316,15 +319,11 @@ function SetActivatedRooms()
   store.Room4 = false
   store.Room5 = false
 
-print("heck")
-
   StoreWaypoint("Room1", "intruders", (Script.GetSpawnPointsMatching("Room1_mid")[1].Pos), 5, false)
   StoreWaypoint("Room2", "intruders", (Script.GetSpawnPointsMatching("Room2_mid")[1].Pos), 5, false)
   StoreWaypoint("Room3", "intruders", (Script.GetSpawnPointsMatching("Room3_mid")[1].Pos), 5, false)
   StoreWaypoint("Room4", "intruders", (Script.GetSpawnPointsMatching("Room4_mid")[1].Pos), 5, false)
   StoreWaypoint("Room5", "intruders", (Script.GetSpawnPointsMatching("Room5_mid")[1].Pos), 5, false)
-
-print("doubleheck")
 
   store.BeaconCount = 0
   store.nBeaconedRooms = 0  --need 2 counters b/c they can put > 1 beacon per room
