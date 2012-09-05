@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Summoning started. (denizens)",
+          "Image":{
+            "Path": "ui/dialog/Lvl05/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

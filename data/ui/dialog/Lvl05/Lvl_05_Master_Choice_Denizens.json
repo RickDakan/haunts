@@ -3,45 +3,51 @@
   "Pages": {
     "Start": {
       "Format": "NoOptionsLeftImage",
-      "Sections":[
+      "Sections":
+      [
         {
           "Next": "Choice1",
           "Text": "Choose the denizen master",
           "Image":{
-          "Path": "ui/dialog/Ch05/denizens.png"
+          "Path": "ui/dialog/Lvl05/denizens.png"
           }
         }
       ]
     },
     "Choice1": {
       "Format": "FourOptions",
-      "Sections":[
+      "Sections":
+      [
         {
           "Id":   "1",
           "Text": "Alexander Tostowaryk",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/denizens.png"
           }
         },
         {
           "Id":   "2",
           "Text": "James MacLeod",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/denizens.png"
           }
         },
         {
           "Id":   "3",
           "Text": "Danielle Marricotte",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/denizens.png"
           }
         },
         {
           "Id":   "4",
           "Text": "Nelle Anders",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/denizens.png"
           }
         }
       ]

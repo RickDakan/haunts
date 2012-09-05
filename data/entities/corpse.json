@@ -13,7 +13,7 @@
   ],
   "HauntEnt": {
     "Cost":  1,
-    "Level": "Minion"
+    "Level": "Servitor"
   },
   "Base": {
     "Ap_max": 6,
