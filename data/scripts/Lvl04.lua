@@ -138,6 +138,10 @@ function RoundStart(intruders, round)
   end
 
   if intruders and round > 1 then
+    --JONATHAN, it is this use of SetActivatedRooms that is still incorrect.
+    --If I comment this out, the waypoints update correctly when a beacon is placed.
+    --However, this use covers the initial display of the waypoints, and also handles 
+    --waypoints in rooms where a beacon was destroyed during the denizens' turn.
     SetActivatedRooms()
   end
 
@@ -331,27 +335,27 @@ print("doubleheck")
       store.BeaconCount = store.BeaconCount + 1
       if pointIsInSpawns(beaconEnt.Pos, "Room1") and not store.Room1 then
         store.Room1 = true
-         StoreWaypoint("Room1", "", "", "", true)
+        StoreWaypoint("Room1", "", "", "", true)
         store.nBeaconedRooms = store.nBeaconedRooms + 1
       end
       if pointIsInSpawns(beaconEnt.Pos, "Room2") and not store.Room2 then
         store.Room2 = true
-         StoreWaypoint("Room2", "", "", "", true)
+        StoreWaypoint("Room2", "", "", "", true)
         store.nBeaconedRooms = store.nBeaconedRooms + 1
       end      
       if pointIsInSpawns(beaconEnt.Pos, "Room3") and not store.Room3 then
         store.Room3 = true
-         StoreWaypoint("Room3", "", "", "", true)
+        StoreWaypoint("Room3", "", "", "", true)
         store.nBeaconedRooms = store.nBeaconedRooms + 1
       end
       if pointIsInSpawns(beaconEnt.Pos, "Room4") and not store.Room4 then
         store.Room4 = true
-         StoreWaypoint("Room4", "", "", "", true)
+        StoreWaypoint("Room4", "", "", "", true)
         store.nBeaconedRooms = store.nBeaconedRooms + 1
       end
       if pointIsInSpawns(beaconEnt.Pos, "Room5") and not store.Room5 then
         store.Room5 = true
-         StoreWaypoint("Room5", "", "", "", true)
+        StoreWaypoint("Room5", "", "", "", true)
         store.nBeaconedRooms = store.nBeaconedRooms + 1
       end   
     end
