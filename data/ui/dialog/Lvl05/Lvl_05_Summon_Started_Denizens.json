@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Summoning started. (denizens)",
+          "Text": "Ses-kalla begins the ritual. His lost live shall live again, no matter the cost!",
           "Image":{
-            "Path": "ui/dialog/Lvl05/denizens.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-f.png"
           }
         }
       ]
