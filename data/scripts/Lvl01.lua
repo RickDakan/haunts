@@ -303,13 +303,13 @@ function OnAction(intruders, round, exec)
   end 
 
 
-  --after any action, if this ent's Ap is 0, we can select the next ent for them
-  if exec.Ent.ApCur == 0 then 
-    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-    if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
-    end
-  end  
+  -- --after any action, if this ent's Ap is 0, we can select the next ent for them
+  -- if exec.Ent.ApCur == 0 then 
+  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+  --   if nextEnt.ApCur > 0 then
+  --     Script.SelectEnt(nextEnt)
+  --   end
+  -- end  
 
 
 end

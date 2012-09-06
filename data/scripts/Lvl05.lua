@@ -1,4 +1,4 @@
-function setLosModeToRoomsWithSpawnsMatching(side, pattern)
+  function setLosModeToRoomsWithSpawnsMatching(side, pattern)
   sp = Script.GetSpawnPointsMatching(pattern)
   rooms = {}
   for i, spawn in pairs(sp) do
@@ -67,7 +67,7 @@ end
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Sonico Mono", "Christopher Matthias", "Cora Phinneas"}
+    intruder_names = {"Collector", "Detective", "Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
   end 
 
@@ -124,6 +124,7 @@ function RoundStart(intruders, round)
   if intruders and store.bDenizenMasterFoundObLastTurn then
     store.bDenizenMasterFoundObLastTurn = false
     Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Artifact_Found_Intruders.json")
+     Script.SetMusicParam("tension_level", 0.4)
   end
 
   if not intruders and not store.bSummoning then
@@ -237,7 +238,7 @@ function StartSummon()
       StoreWaypoint("Objective" .. i, "", "", "", true)
     end
   end
-
+  Script.SetMusicParam("tension_level", 0.9)
   Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Summon_Started_Denizens.json")
 end
 
@@ -293,12 +294,12 @@ function OnAction(intruders, round, exec)
   end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
-  if exec.Ent.ApCur == 0 then 
-    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-    if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
-    end
-  end  
+  -- if exec.Ent.ApCur == 0 then 
+  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+  --   if nextEnt.ApCur > 0 then
+  --     Script.SelectEnt(nextEnt)
+  --   end
+  -- end  
 end
  
 function IsNextToActiveWaypoint(ent)

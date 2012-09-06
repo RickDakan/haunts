@@ -2,10 +2,10 @@
   "Name": "Administrator",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/cult_leader",
+  "Sprite_path" : "entities/genius",
   "Still": 
   {
-    "Path": "entities/administrator_still.png"
+    "Path": "entities/evil_genius_still.png"
   },
   "Action_names": 
   [
