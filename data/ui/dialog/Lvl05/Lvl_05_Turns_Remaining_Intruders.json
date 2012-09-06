@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "There are {turns} turns remaining (intruders).",
+          "Image":{
+            "Path": "ui/dialog/Lvl05/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "Name": "Christopher Matthias",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/detective",
+  "Still": {
+    "Path": "entities/detective_still.png"
+  },
+  "Action_names": 
+  [
+    "Move Test",
+    "Interact",
+    "Exorcise", 
+    "Kick"
+  ],
+  "Walking_speed": 0.7,
+  "ExplorerEnt": 
+  {
+    "Gear_names": 
+    [
+      "Curb Stompers",
+      "Tantric Mantra",
+      "Pre-loaded Playlist"
+    ]
+  },  
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 16,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 10
+  },
+    "Ai_path": "ais/robed_cultist_new.lua"
+}

@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "Artifact Found Denizens.",
+          "Image":{
+            "Path": "ui/dialog/Lvl05/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

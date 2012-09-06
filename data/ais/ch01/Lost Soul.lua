@@ -3,7 +3,7 @@ function Think()
   end
   target = GetTarget()
   if target then
-    HeadTowards(target.Pos)
+    ret = HeadTowards(target.Pos)
   end
   MoveLikeZombie()
   return false

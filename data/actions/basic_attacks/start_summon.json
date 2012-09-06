@@ -1,0 +1,13 @@
+{
+  "Name"     : "Start Summon",
+  "Kind"     : "Terror",
+  "Animation": "pulse",
+  "Texture"   : {
+    "Path": "actions/icons/shroud.png"
+  },
+  "Ap"       : 20,
+  "Strength" : 30,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true
+}
