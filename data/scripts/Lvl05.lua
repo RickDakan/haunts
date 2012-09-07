@@ -115,7 +115,7 @@ function RoundStart(intruders, round)
   end
 
   if not intruders and not store.bSummoning then
-    Script.SetAp(store.MasterEnt, 30)
+    Script.SetAp(store.MasterEnt, 300)
   end
 
   if store.bSummoning and not intruders then

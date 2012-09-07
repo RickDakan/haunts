@@ -162,6 +162,9 @@ type gameDataGobbable struct {
   House *house.HouseDef
   Ents  []*Entity
 
+  // True for online games
+  Net bool
+
   // Set of all Entities that are still resident.  This is so we can safely
   // clean things up since they will all have ais running in the background
   // preventing them from getting GCed.

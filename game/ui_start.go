@@ -15,7 +15,7 @@ type startLayout struct {
     Texture  texture.Object
     Continue Button
     Versus   Button
-    Story    Button
+    Online   Button
     Settings Button
   }
   Background texture.Object
@@ -39,7 +39,7 @@ func InsertStartMenu(ui gui.WidgetParent) error {
   sm.buttons = []ButtonLike{
     &sm.layout.Menu.Continue,
     &sm.layout.Menu.Versus,
-    &sm.layout.Menu.Story,
+    &sm.layout.Menu.Online,
     &sm.layout.Menu.Settings,
   }
   sm.layout.Menu.Continue.f = func(interface{}) {}
@@ -48,11 +48,11 @@ func InsertStartMenu(ui gui.WidgetParent) error {
     ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
   }
   sm.layout.Menu.Settings.f = func(interface{}) {}
-  sm.layout.Menu.Story.f = func(interface{}) {
+  sm.layout.Menu.Online.f = func(interface{}) {
     ui.RemoveChild(&sm)
-    err := InsertStoryMenu(ui)
+    err := InsertOnlineMenu(ui)
     if err != nil {
-      base.Error().Printf("Unable to make Story Menu: %v", err)
+      base.Error().Printf("Unable to make Online Menu: %v", err)
       return
     }
   }

@@ -258,7 +258,7 @@ function OnAction(intruders, round, exec)
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
-  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
+  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
     store.waypoint_spawn = SelectSpawn("Waypoint2") 

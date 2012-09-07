@@ -1,13 +1,39 @@
 package mrgnet
 
 import (
+  "Fmt"
+  "bytes"
   "crypto/rand"
+  "encoding/gob"
+  "io/ioutil"
   "math/big"
+  "net/http"
+  "net/url"
 )
 
 type NetId int64
 
 const Host_url = "http://localhost:8080"
+
+func DoAction(name string, input, output interface{}) error {
+  buf := bytes.NewBuffer(nil)
+  err := gob.NewEncoder(buf).Encode(input)
+  if err != nil {
+    return err
+  }
+  host_url := fmt.Sprintf("%s/%s", Host_url, name)
+  r, err := http.PostForm(host_url, url.Values{"data": []string{string(buf.Bytes())}})
+  if err != nil {
+    return err
+  }
+  data, err := ioutil.ReadAll(r.Body)
+  if err != nil {
+    panic(err.Error())
+    return nil
+  }
+  dec := gob.NewDecoder(bytes.NewBuffer(data))
+  return dec.Decode(output)
+}
 
 // Creates a random id that will be unique among all other engines with high
 // probability.
