@@ -150,7 +150,6 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
   }
   dt := t - sm.last_t
   sm.last_t = t
-  sm.layout.Unstarted.Scroll.Think(dt)
   if sm.mx == 0 && sm.my == 0 {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
@@ -188,7 +187,6 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
 
     default:
     }
-    base.Log().Printf("Num: %d, region: %v", len(glb.games), glb.Scroll.Region())
 
     if (gui.Point{sm.mx, sm.my}.Inside(glb.Scroll.Region())) {
       for _, button := range glb.games {
@@ -199,6 +197,7 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
         button.Think(sm.region.X, sm.region.Y, 0, 0, dt)
       }
     }
+    glb.Scroll.Think(dt)
   }
 
   if sm.update_alpha > 0.0 && time.Now().Sub(sm.update_time).Seconds() >= 2 {
