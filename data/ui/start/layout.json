@@ -26,11 +26,11 @@
         "Justification": "center"
       }
     },
-    "Story": {
+    "Online": {
       "X": 805,
       "Y": 305,
       "Text": {
-        "String": "Story Mode",
+        "String": "Play Online",
         "Size": 18,
         "Justification": "center"
       }

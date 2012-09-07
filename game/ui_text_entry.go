@@ -161,6 +161,9 @@ func (te *TextEntry) Respond(group gui.EventGroup, data interface{}) bool {
         }
       } else if event.Key.Id() == gin.Return {
         te.Entry.entering = false
+        if te.Button.f != nil {
+          te.Button.f(nil)
+        }
       } else if event.Key.Id() == gin.Escape {
         te.Entry.entering = false
         te.Entry.text = te.Entry.prev
