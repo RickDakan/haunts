@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Final Turn (intruders).",
+          "Text": "Final Turn before the ritual is complete, The Ancient One must be stoppd nowor never!",
           "Image":{
-            "Path": "ui/dialog/Lvl05/intruders2.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

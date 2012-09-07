@@ -5,7 +5,7 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "There are {turns} turns remaining (intruders).",
+          "Text": "You only have {turns} turns to stop the ancient one's ritual!",
           "Image":{
             "Path": "ui/dialog/Lvl05/intruders2.png"
           }

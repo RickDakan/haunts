@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "There are {turns} turns remaining (denizens)",
+          "Text": "Just {turns} turns until the ritual is complete.",
           "Image":{
-            "Path": "ui/dialog/Lvl05/denizens.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

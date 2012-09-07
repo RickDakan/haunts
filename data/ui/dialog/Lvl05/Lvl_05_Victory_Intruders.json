@@ -8,11 +8,56 @@
       "Sections":
       [
         {
-          "Text": "Intruders FTW.",
+          "Next": "Start2",
+          "Text": "The museum is safe for now, although the opening-night party was anything but a success.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl05/intruders2.png"
+            "Path": "ui/dialog/Lvl05/1932c.png"
           }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The ancient thing and its corpse-like minions, the stolen artifacts returned to their places on the walls. ",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Unfortunately, it's unlikely that this will be the last time some terrifying thing decides it wants to take what the museum has worked so hard to collect.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/collector.png"
+          }
+        }
+      ]
+    },
+   "Start4": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Is it possible that the wonders and horrors locked away within the museum's wall might become a center for something besides learning? Something much, much worse?",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/1932c.png"
+          }
         }
       ]
     }

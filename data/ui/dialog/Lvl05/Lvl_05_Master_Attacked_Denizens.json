@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Intruders attacked the master.  Summoning started. (denizens)",
+          "Text": "Ses-kalla has been discovered by security! The ritual must begin at once.",
           "Image":{
-            "Path": "ui/dialog/Lvl05/denizens.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]
