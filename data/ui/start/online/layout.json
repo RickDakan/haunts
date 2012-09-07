@@ -21,24 +21,46 @@
       "Path": "ui/arrow_lf.png"
     }
   },
-  "Games": {
+  "Active": {
     "Up": {
-      "X": 660,
-      "Y": 410,
+      "X": 760,
+      "Y": 350,
       "Texture": {
         "Path": "ui/up_arrow.png"
       }
     },
     "Down": {
-      "X": 620,
-      "Y": 410,
+      "X": 720,
+      "Y": 350,
       "Texture": {
         "Path": "ui/down_arrow.png"
       }
     },
     "Scroll": {
-      "X": 100,
-      "Y": 410,
+      "X": 200,
+      "Y": 350,
+      "Dx": 520,
+      "Dy": 200
+    }
+  },
+  "Unstarted": {
+    "Up": {
+      "X": 760,
+      "Y": 110,
+      "Texture": {
+        "Path": "ui/up_arrow.png"
+      }
+    },
+    "Down": {
+      "X": 720,
+      "Y": 110,
+      "Texture": {
+        "Path": "ui/down_arrow.png"
+      }
+    },
+    "Scroll": {
+      "X": 200,
+      "Y": 110,
       "Dx": 520,
       "Dy": 200
     }

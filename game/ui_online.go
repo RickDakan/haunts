@@ -13,6 +13,15 @@ import (
   "time"
 )
 
+type gameListBox struct {
+  Up     Button
+  Down   Button
+  Scroll ScrollingRegion
+  update chan mrgnet.ListGamesResponse
+  time   time.Time
+  games  []ButtonLike
+}
+
 type onlineLayout struct {
   Title struct {
     X, Y    int
@@ -29,27 +38,19 @@ type onlineLayout struct {
     Justification string
   }
 
-  Games struct {
-    Up     Button
-    Down   Button
-    Scroll ScrollingRegion
-  }
+  Unstarted, Active gameListBox
 }
 
 type OnlineMenu struct {
   layout  onlineLayout
   region  gui.Region
   buttons []ButtonLike
-  games   []ButtonLike
   mx, my  int
   last_t  int64
 
   update_user  chan mrgnet.UpdateUserResponse
   update_alpha float64
   update_time  time.Time
-
-  list_games chan mrgnet.ListGamesResponse
-  list_time  time.Time
 }
 
 func InsertOnlineMenu(ui gui.WidgetParent) error {
@@ -61,19 +62,15 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
   }
   sm.buttons = []ButtonLike{
     &sm.layout.Back,
-    &sm.layout.Games.Up,
-    &sm.layout.Games.Down,
+    &sm.layout.Unstarted.Up,
+    &sm.layout.Unstarted.Down,
+    &sm.layout.Active.Up,
+    &sm.layout.Active.Down,
     &sm.layout.User,
   }
   sm.layout.Back.f = func(interface{}) {
     ui.RemoveChild(&sm)
     InsertStartMenu(ui)
-  }
-  sm.layout.Games.Up.f = func(interface{}) {
-    sm.layout.Games.Scroll.Up()
-  }
-  sm.layout.Games.Down.f = func(interface{}) {
-    sm.layout.Games.Scroll.Down()
   }
 
   var net_id mrgnet.NetId
@@ -82,6 +79,28 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     net_id = mrgnet.NetId(mrgnet.RandomId())
     base.SetStoreVal("netid", fmt.Sprintf("%d", net_id))
   }
+
+  for _, _glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
+    glb := _glb
+    glb.Up.f = func(interface{}) {
+      glb.Scroll.Up()
+    }
+    glb.Down.f = func(interface{}) {
+      glb.Scroll.Down()
+    }
+
+    glb.update = make(chan mrgnet.ListGamesResponse)
+  }
+  go func() {
+    var resp mrgnet.ListGamesResponse
+    mrgnet.DoAction("list", mrgnet.ListGamesRequest{Id: net_id, Unstarted: true}, &resp)
+    sm.layout.Unstarted.update <- resp
+  }()
+  go func() {
+    var resp mrgnet.ListGamesResponse
+    mrgnet.DoAction("list", mrgnet.ListGamesRequest{Id: net_id, Unstarted: false}, &resp)
+    sm.layout.Active.update <- resp
+  }()
 
   sm.update_user = make(chan mrgnet.UpdateUserResponse)
   sm.layout.User.Button.f = func(interface{}) {
@@ -98,14 +117,6 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     var resp mrgnet.UpdateUserResponse
     mrgnet.DoAction("user", mrgnet.UpdateUserRequest{Id: net_id}, &resp)
     sm.update_user <- resp
-  }()
-  // sm.layout.User.f = func(interface{}) {
-
-  sm.list_games = make(chan mrgnet.ListGamesResponse)
-  go func() {
-    var resp mrgnet.ListGamesResponse
-    mrgnet.DoAction("list", mrgnet.ListGamesRequest{Id: net_id, Unstarted: true}, &resp)
-    sm.list_games <- resp
   }()
 
   ui.AddChild(&sm)
@@ -139,47 +150,56 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
   }
   dt := t - sm.last_t
   sm.last_t = t
-  sm.layout.Games.Scroll.Think(dt)
+  sm.layout.Unstarted.Scroll.Think(dt)
   if sm.mx == 0 && sm.my == 0 {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
 
-  for {
+  select {
+  case resp := <-sm.update_user:
+    sm.layout.User.Entry.text = resp.Name
+    sm.update_alpha = 1.0
+    sm.update_time = time.Now()
+  default:
+  }
+  var net_id mrgnet.NetId
+  fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+  for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
     select {
-    case resp := <-sm.update_user:
-      sm.layout.User.Entry.text = resp.Name
-      sm.update_alpha = 1.0
-      sm.update_time = time.Now()
-    case list := <-sm.list_games:
-      if list.Err != "" {
-        base.Error().Printf("Error getting listing: %v", list.Err)
-        break
-      }
-      sm.games = sm.games[0:0]
+    case list := <-glb.update:
+      glb.games = glb.games[0:0]
       for i := range list.Games {
-        base.Log().Printf("LIST: %v", list.Games[i].Name)
         var b Button
+        base.Log().Printf("Adding button: %s", list.Games[i].Name)
         b.Text.Justification = sm.layout.Text.Justification
         b.Text.Size = sm.layout.Text.Size
         b.Text.String = list.Games[i].Name
-        var net_id mrgnet.NetId
-        fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
         b.f = func(interface{}) {
-          var req mrgnet.JoinGameRequest
-          req.Id = net_id
-          req.Game_key = list.Ids[i]
-          var resp mrgnet.JoinGameResponse
-          mrgnet.DoAction("join", req, &resp)
+          // var req mrgnet.JoinGameRequest
+          // req.Id = net_id
+          // req.Game_key = list.Ids[i]
+          // var resp mrgnet.JoinGameResponse
+          // mrgnet.DoAction("join", req, &resp)
         }
-        sm.games = append(sm.games, &b)
-        sort.Sort(onlineButtonSlice(sm.games))
-        sm.layout.Games.Scroll.Height = int(base.GetDictionary(sm.layout.Text.Size).MaxHeight() * float64(len(sm.games)))
+        glb.games = append(glb.games, &b)
       }
+      sort.Sort(onlineButtonSlice(glb.games))
+      glb.Scroll.Height = int(base.GetDictionary(sm.layout.Text.Size).MaxHeight() * float64(len(list.Games)))
+
     default:
-      goto nomore
+    }
+    base.Log().Printf("Num: %d, region: %v", len(glb.games), glb.Scroll.Region())
+
+    if (gui.Point{sm.mx, sm.my}.Inside(glb.Scroll.Region())) {
+      for _, button := range glb.games {
+        button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
+      }
+    } else {
+      for _, button := range glb.games {
+        button.Think(sm.region.X, sm.region.Y, 0, 0, dt)
+      }
     }
   }
-nomore:
 
   if sm.update_alpha > 0.0 && time.Now().Sub(sm.update_time).Seconds() >= 2 {
     sm.update_alpha = doApproach(sm.update_alpha, 0.0, dt)
@@ -187,16 +207,6 @@ nomore:
 
   for _, button := range sm.buttons {
     button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
-  }
-
-  if (gui.Point{sm.mx, sm.my}.Inside(sm.layout.Games.Scroll.Region())) {
-    for _, button := range sm.games {
-      button.Think(sm.region.X, sm.region.Y, sm.mx, sm.my, dt)
-    }
-  } else {
-    for _, button := range sm.games {
-      button.Think(sm.region.X, sm.region.Y, 0, 0, dt)
-    }
   }
 }
 
@@ -211,25 +221,31 @@ func (sm *OnlineMenu) Respond(g *gui.Gui, group gui.EventGroup) bool {
         return true
       }
     }
-    for _, button := range sm.games {
-      // TODO: Check for scroll bounds first
-      if button.handleClick(sm.mx, sm.my, nil) {
-        return true
+    for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
+      inside := gui.Point{sm.mx, sm.my}.Inside(glb.Scroll.Region())
+      if cursor == nil || inside {
+        for _, button := range glb.games {
+          if button.handleClick(sm.mx, sm.my, nil) {
+            return true
+          }
+        }
       }
     }
   }
+
   hit := false
   for _, button := range sm.buttons {
     if button.Respond(group, nil) {
       hit = true
     }
   }
-  inside := gui.Point{sm.mx, sm.my}.Inside(sm.layout.Games.Scroll.Region())
-  if cursor == nil || inside {
-    for _, button := range sm.games {
-      // TODO: Check for scroll bounds first
-      if button.Respond(group, nil) {
-        hit = true
+  for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
+    inside := gui.Point{sm.mx, sm.my}.Inside(glb.Scroll.Region())
+    if cursor == nil || inside {
+      for _, button := range glb.games {
+        if button.Respond(group, nil) {
+          hit = true
+        }
       }
     }
   }
@@ -249,20 +265,21 @@ func (sm *OnlineMenu) Draw(region gui.Region) {
     button.RenderAt(sm.region.X, sm.region.Y)
   }
 
-  sm.layout.Games.Scroll.Region().PushClipPlanes()
   d := base.GetDictionary(sm.layout.Text.Size)
-  sx := sm.layout.Games.Scroll.X
-  sy := sm.layout.Games.Scroll.Top() - int(d.MaxHeight())
-  for _, button := range sm.games {
-    base.Log().Printf("Rendering at %d %d", sx, sy)
-    button.RenderAt(sx, sy)
-    sy -= int(d.MaxHeight())
+  for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
+    glb.Scroll.Region().PushClipPlanes()
+    sx := glb.Scroll.X
+    sy := glb.Scroll.Top() - int(d.MaxHeight())
+    for _, button := range glb.games {
+      button.RenderAt(sx, sy)
+      sy -= int(d.MaxHeight())
+    }
+    glb.Scroll.Region().PopClipPlanes()
   }
-  sm.layout.Games.Scroll.Region().PopClipPlanes()
 
   gl.Color4ub(255, 255, 255, byte(255*sm.update_alpha))
-  sx = sm.layout.User.Entry.X + sm.layout.User.Entry.Dx + 10
-  sy = sm.layout.User.Button.Y
+  sx := sm.layout.User.Entry.X + sm.layout.User.Entry.Dx + 10
+  sy := sm.layout.User.Button.Y
   d.RenderString("Name Updated", float64(sx), float64(sy), 0, d.MaxHeight(), gui.Left)
 }
 
