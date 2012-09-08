@@ -1,11 +1,11 @@
 {
-  "Name": "Table",
+  "Name": "Patient",
   "Dx": 2,
   "Dy": 1,
-  "Sprite_path" : "objects/relics/goal_table",
+  "Sprite_path" : "entities/patient",
   "Still": {
   },
   "ObjectEnt":{
-    "Goal": "Table"
+    "Goal": "Patient"
   }
 }
