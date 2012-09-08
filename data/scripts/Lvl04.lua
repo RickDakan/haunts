@@ -39,6 +39,13 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
+<<<<<<< HEAD
+=======
+  --spawn an initial beacon
+  print("SCRIPT: ", "Beacon")
+  Script.SpawnEntitySomewhereInSpawnPoints("Beacon", Script.GetSpawnPointsMatching("Beacon_Start"), false)
+
+>>>>>>> Jonathan/devel
   --set these modular variables.
   store.MasterName = nil
   store.IntrudersPlacedBeaconLastTurn = false
@@ -56,7 +63,12 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
+<<<<<<< HEAD
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn)
+=======
+    print("SCRIPT:", name)
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
+>>>>>>> Jonathan/devel
     Script.SetCondition(ent, "Pitch Black", true)
     Script.SetGear(ent, "Beacons")
   end
@@ -117,12 +129,14 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
-
+  if store.execs == nil then
+    store.execs = {}
+  end
   if round == 1 then
     if intruders then
       intrudersSetup()     
     else
-      Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
+      -- Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -134,6 +148,7 @@ function RoundStart(intruders, round)
 
     Script.EndPlayerInteraction()
 
+    print("SCRIPT: End round 1")
     return
   end
 
@@ -224,9 +239,6 @@ end
 
 function OnAction(intruders, round, exec)
   -- Check for players being dead here
-  if store.execs == nil then
-    store.execs = {}
-  end
   store.execs[table.getn(store.execs) + 1] = exec
 
   if exec.Action.Name == "Place Beacon" then
@@ -533,3 +545,24 @@ function AnyIntrudersAlive()
   end
   return false  
 end
+<<<<<<< HEAD
+=======
+
+function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
+  print("SCRIPT: 1")
+  waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
+  print("SCRIPT: 2")
+  store.execs[table.getn(store.execs) + 1] = waypoint_exec
+  print("SCRIPT: 3")
+  doWaypoint(waypoint_exec)
+  print("SCRIPT: 4")
+end
+
+function doWaypoint(waypointExec)
+  if waypointExec.remove then
+    return Script.RemoveWaypoint(waypointExec.name)
+  else
+    return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
+  end
+end
+>>>>>>> Jonathan/devel

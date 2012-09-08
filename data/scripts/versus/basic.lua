@@ -17,6 +17,7 @@ function DoTutorials()
 end
 
 function Init(data)
+<<<<<<< HEAD
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
   Script.LoadHouse("Lvl_05_museum")  
@@ -463,6 +464,15 @@ function GetEntityWithMostAP(side)
     end
   end
   return entToSelect
+=======
+  -- level_choices = Script.ChooserFromFile("ui/start/versus/map_select.json")
+  Script.LoadHouse("Lvl_01_Haunted_House") 
+end
+
+function RoundStart(intruders, round)
+  Script.StartScript("Lvl04.lua")
+  -- Script.StartScript(level_choices[1])
+>>>>>>> Jonathan/devel
 end
 
 function StoreSpawn(entName, spawnPos)
