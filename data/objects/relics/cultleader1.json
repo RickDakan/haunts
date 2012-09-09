@@ -1,0 +1,11 @@
+{
+  "Name": "Den_Cult_Leader_Wax_1",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/wax/denizens/cult_leader_wax_1",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Relic"
+  }
+}
