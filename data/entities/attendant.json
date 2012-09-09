@@ -18,9 +18,9 @@
   },
   "Base": {
     "Ap_max": 8,
-    "Hp_max": 6,
-    "Corpus": 9,
-    "Ego": 9,
+    "Hp_max": 7,
+    "Corpus": 4,
+    "Ego": 5,
     "Sight": 10
   },
     "Ai_path": "ais/robed_cultist_new.lua"

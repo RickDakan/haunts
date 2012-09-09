@@ -25,8 +25,8 @@
   "Base": {
     "Ap_max": 8,
     "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Corpus": 6,
+    "Ego": 6,
     "Sight": 15
   },
   "Dissolve": false

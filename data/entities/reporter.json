@@ -23,10 +23,10 @@
     ]
   },
   "Base": {
-    "Ap_max": 8,
-    "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Ap_max": 11,
+    "Hp_max": 17,
+    "Corpus": 4,
+    "Ego": 4,
     "Sight": 15
   },
   "Dissolve": false
