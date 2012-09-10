@@ -65,6 +65,20 @@
       "Dy": 120
     }
   },
+  "NewGame": {
+    "X": 100,
+    "Y": 580,
+    "Text": {
+      "String": "Start New Game",
+      "Size": 15,
+      "Justification": "left"
+    }
+  },
+  "Error": {
+    "X": 100,
+    "Y": 100,
+    "Size": 15
+  },
   "User": {
     "Button": {
       "X": 100,

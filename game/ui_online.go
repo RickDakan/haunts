@@ -30,7 +30,14 @@ type onlineLayout struct {
   Background texture.Object
   Back       Button
 
-  User TextEntry
+  User    TextEntry
+  NewGame Button
+
+  Error struct {
+    X, Y int
+    Size int
+    err  string
+  }
 
   Text struct {
     String        string
@@ -51,6 +58,11 @@ type OnlineMenu struct {
   update_user  chan mrgnet.UpdateUserResponse
   update_alpha float64
   update_time  time.Time
+
+  control struct {
+    in  chan struct{}
+    out chan struct{}
+  }
 }
 
 func InsertOnlineMenu(ui gui.WidgetParent) error {
@@ -67,7 +79,10 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     &sm.layout.Active.Up,
     &sm.layout.Active.Down,
     &sm.layout.User,
+    &sm.layout.NewGame,
   }
+  sm.control.in = make(chan struct{})
+  sm.control.out = make(chan struct{})
   sm.layout.Back.f = func(interface{}) {
     ui.RemoveChild(&sm)
     InsertStartMenu(ui)
@@ -78,6 +93,40 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
   if net_id == 0 {
     net_id = mrgnet.NetId(mrgnet.RandomId())
     base.SetStoreVal("netid", fmt.Sprintf("%d", net_id))
+  }
+
+  in_newgame := false
+  sm.layout.NewGame.f = func(interface{}) {
+    if in_newgame {
+      return
+    }
+    in_newgame = true
+    go func() {
+      var req mrgnet.NewGameRequest
+      req.Id = net_id
+      var resp mrgnet.NewGameResponse
+      done := make(chan bool, 1)
+      go func() {
+        mrgnet.DoAction("new", req, &resp)
+        done <- true
+      }()
+      select {
+      case <-done:
+      case <-time.After(3 * time.Second):
+        resp.Err = "Couldn't connect to server."
+      }
+      <-sm.control.in
+      if resp.Err != "" {
+        sm.layout.Error.err = resp.Err
+        base.Error().Printf("Couldn't make new game: %v", resp.Err)
+        sm.control.out <- struct{}{}
+        return
+      }
+      ui.RemoveChild(&sm)
+      ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
+      in_newgame = false
+      sm.control.out <- struct{}{}
+    }()
   }
 
   for _, _glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
@@ -102,7 +151,6 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     sm.layout.Active.update <- resp
   }()
 
-  sm.update_user = make(chan mrgnet.UpdateUserResponse)
   sm.layout.User.Button.f = func(interface{}) {
     var req mrgnet.UpdateUserRequest
     req.Name = sm.layout.User.Entry.text
@@ -110,13 +158,21 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     var resp mrgnet.UpdateUserResponse
     go func() {
       mrgnet.DoAction("user", req, &resp)
-      sm.update_user <- resp
+      <-sm.control.in
+      sm.layout.User.SetText(resp.Name)
+      sm.update_alpha = 1.0
+      sm.update_time = time.Now()
+      sm.control.out <- struct{}{}
     }()
   }
   go func() {
     var resp mrgnet.UpdateUserResponse
     mrgnet.DoAction("user", mrgnet.UpdateUserRequest{Id: net_id}, &resp)
-    sm.update_user <- resp
+    <-sm.control.in
+    sm.layout.User.SetText(resp.Name)
+    sm.update_alpha = 1.0
+    sm.update_time = time.Now()
+    sm.control.out <- struct{}{}
   }()
 
   ui.AddChild(&sm)
@@ -154,13 +210,16 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
 
-  select {
-  case resp := <-sm.update_user:
-    sm.layout.User.Entry.text = resp.Name
-    sm.update_alpha = 1.0
-    sm.update_time = time.Now()
-  default:
+  done := false
+  for !done {
+    select {
+    case sm.control.in <- struct{}{}:
+      <-sm.control.out
+    default:
+      done = true
+    }
   }
+
   var net_id mrgnet.NetId
   fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
   for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
@@ -280,6 +339,13 @@ func (sm *OnlineMenu) Draw(region gui.Region) {
   sx := sm.layout.User.Entry.X + sm.layout.User.Entry.Dx + 10
   sy := sm.layout.User.Button.Y
   d.RenderString("Name Updated", float64(sx), float64(sy), 0, d.MaxHeight(), gui.Left)
+
+  if sm.layout.Error.err != "" {
+    gl.Color4ub(255, 0, 0, 255)
+    l := sm.layout.Error
+    d := base.GetDictionary(l.Size)
+    d.RenderString(fmt.Sprintf("ERROR: %s", l.err), float64(l.X), float64(l.Y), 0, d.MaxHeight(), gui.Left)
+  }
 }
 
 func (sm *OnlineMenu) DrawFocused(region gui.Region) {

@@ -59,8 +59,7 @@ type UpdateUserResponse struct {
 }
 
 type NewGameRequest struct {
-  Id     NetId
-  Script string
+  Id NetId
 }
 
 type NewGameResponse struct {
