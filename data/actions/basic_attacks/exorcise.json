@@ -5,10 +5,10 @@
   "Texture"   : {
     "Path": "actions/icons/exorcise.png"
   },
-  "Ap"       : 5,
-  "Strength" : 7,
+  "Ap"       : 6,
+  "Strength" : 12,
   "Damage"   : 5,
-  "Range"    : 10,
+  "Range"    : 15,
   "Target_enemies": true,
    "Sounds"   : {
     "exorcise": "Haunts/SFX/Intruders/Occultist/Exorcise"

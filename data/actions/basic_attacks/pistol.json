@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/pistol.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
+  "Ap"       : 4,
+  "Strength" : 10,
   "Damage"   : 3,
   "Range"    : 10,
   "Target_enemies": true,

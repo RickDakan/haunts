@@ -6,7 +6,7 @@
     "Path": "actions/icons/pummel.png"
   },
   "Ap"       : 6,
-  "Strength" : 8,
+  "Strength" : 14,
   "Damage"   : 6,
   "Range"    : 1,
   "Target_enemies": true,

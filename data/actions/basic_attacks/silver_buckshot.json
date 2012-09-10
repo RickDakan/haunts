@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/silver.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
+  "Ap"       : 4,
+  "Strength" : 12,
   "Damage"   : 4,
   "Range"    : 6,
   "Target_enemies": true,

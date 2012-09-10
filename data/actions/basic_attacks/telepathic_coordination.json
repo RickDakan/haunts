@@ -2,7 +2,7 @@
   "Name"      : "Telepathic Coordination",
   "Kind"      : "Poison",
   "Ap"        : 3,
-  "Strength"  : 7,
+  "Strength"  : 10,
   "Damage"    : 0,
   "Range"     : 10,
   "Target_enemies": true,
@@ -14,6 +14,6 @@
     "Path": "actions/icons/coordination.png"
   },
   "Conditions": [
-    "Telepathic Target"
+    "Attack -2"
   ]
 }

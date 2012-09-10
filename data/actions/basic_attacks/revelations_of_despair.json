@@ -6,13 +6,13 @@
     "Path": "actions/icons/kiss.png"
   },
   "Ap"       : 4,
-  "Strength" : 5,
+  "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,
   "Target_enemies": true,
   "Conditions": [
-     "Dread",
-	 "Panic",
-	 "Horrified"
+     "AP -2",
+	 "Corpus -2",
+	 "Ego -2"
    ]
 }

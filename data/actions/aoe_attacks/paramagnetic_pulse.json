@@ -1,11 +1,12 @@
 {
   "Name"      : "Paramagnetic Pulse",
   "Kind"      : "Fire",
-  "Ap"        : 3,
-  "Strength"  : 5,
-  "Damage"    : 2,
+  "Ap"        : 4,
+  "Strength"  : 10,
+  "Damage"    : 3,
   "Range"     : 4,
-  "Diameter"  : 2,
+  "Diameter"  : 3,
+  "Ammo"      : 3,
   "Animation" : "pulse",
   "Target_enemies": true,
   "Sounds"   : {
@@ -15,6 +16,7 @@
     "Path": "actions/icons/pulse.png"
   },
   "Conditions": [
-  "Agony"
+  "AP -2",
+  "Ego -2"
   ]
 }

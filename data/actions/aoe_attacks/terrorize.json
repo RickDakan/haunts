@@ -2,9 +2,9 @@
   "Name"      : "Terrorize",
   "Kind"      : "Fire",
   "Ap"        : 6,
-  "Strength"  : 5,
-  "Damage"    : 3,
-  "Range"     : 2,
+  "Strength"  : 10,
+  "Damage"    : 2,
+  "Range"     : 4,
   "Diameter"  : 4,
   "Animation" : "pulse",
   "Target_enemies": true,
@@ -13,5 +13,9 @@
   },
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"
-  }
+  },
+  "Conditions": [
+    "Attack -2",
+    "AP -2"
+  ]
 }

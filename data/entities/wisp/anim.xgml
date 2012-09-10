@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Cp1252"?>
 <section name="xgml">
 	<attribute key="Creator" type="String">yFiles</attribute>
-	<attribute key="Version" type="String">2.8</attribute>
+	<attribute key="Version" type="String">2.9</attribute>
 	<section name="graph">
 		<attribute key="hierarchic" type="int">1</attribute>
 		<attribute key="label" type="String"></attribute>
@@ -89,7 +89,8 @@
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">4</attribute>
-			<attribute key="label" type="String">ranged_01</attribute>
+			<attribute key="label" type="String">ranged_01
+func:discharge</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">43.0</attribute>
 				<attribute key="y" type="double">114.78955078125</attribute>
@@ -100,7 +101,8 @@
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">ranged_01</attribute>
+				<attribute key="text" type="String">ranged_01
+func:discharge</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -369,10 +371,10 @@ mark:start
 			<attribute key="id" type="int">18</attribute>
 			<attribute key="label" type="String">readyGroup</attribute>
 			<section name="graphics">
-				<attribute key="x" type="double">-15.299211502075195</attribute>
-				<attribute key="y" type="double">-214.90359497070312</attribute>
-				<attribute key="w" type="double">327.4015808105469</attribute>
-				<attribute key="h" type="double">306.80718994140625</attribute>
+				<attribute key="x" type="double">-15.299211186694464</attribute>
+				<attribute key="y" type="double">-214.90360260009766</attribute>
+				<attribute key="w" type="double">327.4015776266111</attribute>
+				<attribute key="h" type="double">306.8072052001953</attribute>
 				<attribute key="type" type="String">roundrectangle</attribute>
 				<attribute key="fill" type="String">#CAECFF84</attribute>
 				<attribute key="outline" type="String">#666699</attribute>
@@ -714,8 +716,8 @@ weight:0.5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 				<section name="Line">
 					<section name="point">
-						<attribute key="x" type="double">-15.299211502075195</attribute>
-						<attribute key="y" type="double">-214.90359497070312</attribute>
+						<attribute key="x" type="double">-15.299211186694464</attribute>
+						<attribute key="y" type="double">-214.90360260009766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-150.0</attribute>
@@ -728,8 +730,8 @@ weight:0.5</attribute>
 				</section>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">-0.4198773503303528</attribute>
-				<attribute key="ySource" type="double">0.9998440146446228</attribute>
+				<attribute key="xSource" type="double">-0.4198773544136029</attribute>
+				<attribute key="ySource" type="double">0.9998439649182518</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">move
@@ -855,8 +857,8 @@ weight:5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">0.35018253326416016</attribute>
-				<attribute key="ySource" type="double">-0.038652271032333374</attribute>
+				<attribute key="xSource" type="double">0.35018253666963767</attribute>
+				<attribute key="ySource" type="double">-0.03865226910999635</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">defend
@@ -900,8 +902,8 @@ weight:5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">0.3657674193382263</attribute>
-				<attribute key="ySource" type="double">0.4392281174659729</attribute>
+				<attribute key="xSource" type="double">0.3657674228952647</attribute>
+				<attribute key="ySource" type="double">0.4392280956213451</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">ranged</attribute>

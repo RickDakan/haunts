@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/flintlock.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
+  "Ap"       : 6,
+  "Strength" : 10,
   "Damage"   : 5,
   "Range"    : 10,
   "Target_enemies": true,

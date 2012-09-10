@@ -2,8 +2,8 @@
   "Name"     : "Feast",
   "Kind"     : "Brutal",
   "Animation": "melee",
-  "Ap"       : 3,
-  "Strength" : 6,
+  "Ap"       : 4,
+  "Strength" : 12,
   "Damage"   : 3,
   "Range"    : 1,
   "Target_enemies": true
