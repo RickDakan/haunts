@@ -11,6 +11,6 @@
   "Range"    : 10,
   "Target_enemies": true,
    "Sounds"   : {
-    "grasp": "Haunts/SFX/Intruders/Occultist/Exorcise"
+    "exorcise": "Haunts/SFX/Intruders/Occultist/Exorcise"
   }
 }

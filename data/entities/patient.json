@@ -1,5 +1,5 @@
 {
-  "Name": "Patient OLD  DO NOT USE",
+  "Name": "Patient",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/patient",
