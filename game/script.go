@@ -99,6 +99,8 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
     "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
     "Rand":                              func() { gp.script.L.PushGoFunctionAsCFunction(randFunc(gp)) },
+    "UpdateState":                       func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
+    "UpdateExecs":                       func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -165,9 +167,6 @@ func (gs *gameScript) OnRound(g *Game) {
   base.Log().Printf("Launching script.RoundStart")
 
   go func() {
-    // If this is a net game, then before RoundStart we need to send the current
-    // state of the game to the server so we can store it for playbacks.
-
     // // round begins automatically
     // <-round_middle
     // for
@@ -1430,6 +1429,77 @@ func randFunc(gp *GamePanel) lua.GoFunction {
     n := L.ToInteger(-1)
     L.PushInteger(int(gp.game.Rand.Int63()%int64(n)) + 1)
     return 1
+  }
+}
+
+func updateStateFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "UpdateState") {
+      return 0
+    }
+    if gp.game.Net == "" {
+      base.Error().Printf("Tried to UpdateState in a non-Net game.")
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    var net_id mrgnet.NetId
+    fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+    var req mrgnet.UpdateGameRequest
+    req.Id = net_id
+    req.Game_key = gp.game.Net
+    req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
+    req.Intruders = gp.game.Side == SideExplorers
+    str, err := base.ToGobToBase64(gp.game)
+    if err != nil {
+      base.Error().Printf("Error gobbing game state: %v", err)
+      return 0
+    }
+    req.State = []byte(str)
+    var resp mrgnet.UpdateGameResponse
+    mrgnet.DoAction("update", req, &resp)
+    if resp.Err != "" {
+      base.Error().Printf("Error updating game state: %v", resp.Err)
+      return 0
+    }
+    base.Log().Printf("Successfully update game state: %v", gp.game.Net)
+    return 0
+  }
+}
+
+func updateExecsFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "UpdateExecs", LuaArray) {
+      return 0
+    }
+    if gp.game.Net == "" {
+      base.Error().Printf("Tried to UpdateState in a non-Net game.")
+      return 0
+    }
+    buf := bytes.NewBuffer(nil)
+    err := LuaEncodeValue(buf, L, -1)
+    if err != nil {
+      base.Error().Printf("Unable to serialize execs: %v", err)
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    var net_id mrgnet.NetId
+    fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+    var req mrgnet.UpdateGameRequest
+    req.Id = net_id
+    req.Game_key = gp.game.Net
+    req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
+    req.Intruders = gp.game.Side == SideExplorers
+    req.Execs = buf.Bytes()
+    var resp mrgnet.UpdateGameResponse
+    mrgnet.DoAction("update", req, &resp)
+    if resp.Err != "" {
+      base.Error().Printf("Error updating game execs: %v", resp.Err)
+      return 0
+    }
+    base.Log().Printf("Successfully update game execs: %v", gp.game.Net)
+    return 0
   }
 }
 

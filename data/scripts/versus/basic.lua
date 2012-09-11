@@ -4,6 +4,6 @@ function Init(data)
 end
 
 function RoundStart(intruders, round)
-  Script.StartScript("Lvl04.lua")
+  Script.StartScript("Lvl01.lua")
   -- Script.StartScript(level_choices[1])
 end

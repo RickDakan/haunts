@@ -50,7 +50,7 @@ function Init(data)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
 
   -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
-
+  store.execs = {}
 end
 
 function intrudersSetup()
@@ -131,6 +131,8 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
+  Script.UpdateState()
+  print("SCRIPT: Round Start")
   if round == 1 then
     if intruders then
       intrudersSetup() 
@@ -314,6 +316,8 @@ end
  
 
 function RoundEnd(intruders, round)
+  print("SCRIPT: Round End")
+  Script.UpdateExecs(execs)
   if round == 1 then
     return
   end

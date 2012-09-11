@@ -115,7 +115,8 @@ type Game struct {
   Intruders_name string
   Intruders_id   NetId
 
-  Playbacks []Playback
+  State [][]byte
+  Execs [][]byte
 
   // If this is non-zero then the game is over and the winner is the player
   // whose NetId matches this value
