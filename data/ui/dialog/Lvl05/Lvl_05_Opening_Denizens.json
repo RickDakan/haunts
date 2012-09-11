@@ -99,7 +99,7 @@
       [
         {
           "Next": "Start8",
-          "Text": "Ses-kalla can start the Ritual of Renewel to bring back Nuratum at any time, but once he does, he will be immobile and vulnerable.",
+          "Text": "Ses-kalla can start the Ritual of Renewal to bring back Nuratum at any time, but once he does, he will be immobile and vulnerable.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/ancient-one-m.png"
