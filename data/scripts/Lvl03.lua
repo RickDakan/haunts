@@ -69,6 +69,11 @@ function Init(data)
   store.bWaypointDown = false
   store.bFloodStarted = false
   store.bShiftChange = false
+
+  --We can't kill objects, so we just have to move the patients to a hidden room.
+  --We also can't move them all to the same place, so we'll need to gimmick the "Despawn"
+  --with a counter
+  store.DeathCounter = 0
 end
 
 function intrudersSetup()
@@ -89,51 +94,20 @@ function intrudersSetup()
 end
 
 function denizensSetup()
-  -- This creates a list of entities and associated point values.  The order
-  -- the names are listed in here is the order they will appear to the user.
-  if IsStoryMode() then
-    ents = {
-      {"Administrator", 1},
-    }
-  else
-    --permit all choices for normal vs play.
-
-  end
-  
   Script.SetVisibility("denizens")
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
 
-  -- Now we give the user a ui with which to place these entities.  The user
-  -- will have 1 point to spend, and each of the options costs one point, so
-  -- they will only place 1.  We will make sure they place exactly one.
-  -- Also the "Master-.*" indicates that the entity can only be placed in
-  -- spawn points that have a name that matches the regular expression
-  -- "Master-.*", which means anything that begins with "Master-".  So
-  -- "Master-BackRoom" and "Master-Center" both match, for example.
-  placed = {}
-  while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
-  end
+  master_spawn = Script.GetSpawnPointsMatching("Master_.*")
+  Script.SpawnEntitySomewhereInSpawnPoints("Administrator", master_spawn, false)
 
   -- placed is an array containing all of the entities placed, in this case
   -- there will only be one, and we will use that one to determine what
   -- servitors to make available to the user to place.
-  if placed[1].Name == "Chosen One" then
-    MasterName = "Chosen One"
-    ServitorEnts = {
-      {"Disciple", 1},
-      {"Devotee", 1},
-      {"Eidolon", 3},
-    }
-  end
-  if placed[1].Name == "Administrator" then
-    MasterName = "Administrator"
-    ServitorEnts = 
-    {
-      {"Attendant", 2},
-      {"Technician", 3},
-    }  
-  end
+  MasterName = "Administrator"
+  ServitorEnts = 
+  {
+    {"Attendant", 2},
+    {"Technician", 3},
+  }  
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
@@ -163,24 +137,6 @@ function RoundStart(intruders, round)
     Script.EndPlayerInteraction()
 
     return
-  end
-
-  if store.bFloodStarted then
-    Script.SetMusicParam("tension_level", 0.7)
-    --At the start of each denizen turn, we're going to randomly spawn attendants at 
-    --the flood points.  Also need to prevent spawning within LoS of an intruder.
-
-    if TotalDeniCount() < 14 then  --don't want to overdo it
-      for i = 1, 3, 1 do
-        --Pick an entity
-        if math.random(4) > 2 then
-          floodEnt = ServitorEnts[1][1]
-        else
-          floodEnt = ServitorEnts[2][1]
-        end     
-        Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, Script.GetSpawnPointsMatching("Flood_Point"), true)
-      end
-    end  
   end
 
   if store.bShiftChange and not intruders then
@@ -274,8 +230,7 @@ function OnAction(intruders, round, exec)
     StoreCondition("Carrying Antidote", exec.Ent, true)
     doCondition(condition_exec)
 
-    StoreGear("Antidote", exec.Ent, true)
-    doGear(gear_exec)
+    StoreGear("Antidote", exec.Ent)
 
     if not store.bFloodStarted then    
       --The denizens have not yet activated the alarm.
@@ -290,8 +245,8 @@ function OnAction(intruders, round, exec)
   end 
 
   if exec.Action.Name == "Hand Antidote" then
-    StoreGear("Antidote", exec.Target, true)
-    doGear(gear_exec)    
+    StoreGear("", exec.Ent) 
+    StoreGear("Antidote", exec.Target)     
     --remove the carrying condition from the exec ent.  The target will get the
     --condition b/c of the ability.
     StoreCondition("Carrying Antidote", exec.Ent, false)
@@ -391,6 +346,20 @@ function RoundEnd(intruders, round)
         store.bToldDenizensAboutFloodStart = true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Intruders_Got_To_Waypoint_Denizens.json")
       end
+
+      if store.bFloodStarted then
+        Script.SetMusicParam("tension_level", 0.7)
+        --At the start of each denizen turn, we're going to randomly spawn attendants at 
+        --the flood points.  Also need to prevent spawning within LoS of an intruder.
+
+        if TotalDeniCount() < 20 then  --don't want to overdo it
+          for i = 1, 3, 1 do 
+            ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", Script.GetSpawnPointsMatching("Flood_Point"), true)
+            filename = "ch03/Orderly.lua"
+            Script.BindAi(ent, filename)
+          end
+        end  
+      end      
     else
       Script.DialogBox("ui/dialog/Lvl03/pass_to_intruders.json")
       if not store.bDoneIntruderIntro then
@@ -468,9 +437,10 @@ function doSpawn(spawnExec)
   Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
 end
 
-function StoreGear(name, ent, addGear)
+function StoreGear(name, ent)
   gear_exec = {script_gear=true, name=name, entity=ent, add=addGear}
   store.execs[table.getn(store.execs) + 1] = gear_exec
+  doGear(gear_exec)
 end
 
 function doGear(gearExec)
@@ -489,14 +459,13 @@ end
 function StoreDespawn(ent)
   despawn_exec = {script_despawn=true, entity=ent}
   store.execs[table.getn(store.execs) + 1] = despawn_exec
+  deSpawn(despawn_exec)
 end
 
 function deSpawn(despawnExec)
-  if despawnExec.entity.HpMax then  --can only kill things that have hp
-    Script.PlayAnimations(despawnExec.entity, {"defend", "killed"})
-    Script.SetHp(despawnExec.entity, 0)
-  end
   DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
+  DeadBodyDump[1].Pos.X = DeadBodyDump[1].Pos.X + store.DeathCounter
+  store.DeathCounter = store.DeathCounter + 1
   Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
 end
 
@@ -583,8 +552,6 @@ end
 function SpawnIntruderOrMonster(entToKillAndReplace)
   SpawnPos = entToKillAndReplace.Pos 
   StoreDespawn(entToKillAndReplace)
-  deSpawn(store.execs[table.getn(store.execs)]) 
-
   thingToSpawn = ""
 
   if store.nIntrudersFound == 0 then
