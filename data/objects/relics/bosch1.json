@@ -1,0 +1,11 @@
+{
+  "Name": "Den_Bosch_Wax_1",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/wax/denizens/bosch_wax_1",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Relic"
+  }
+}

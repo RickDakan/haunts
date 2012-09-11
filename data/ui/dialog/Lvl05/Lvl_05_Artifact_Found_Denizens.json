@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Artifact Found Denizens.",
+          "Text": "Ses-kalla has successfully stolen an artifact.",
           "Image":{
-            "Path": "ui/dialog/Lvl05/denizens.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

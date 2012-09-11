@@ -6,14 +6,15 @@
     "Path": "actions/icons/kiss.png"
   },
   "Ap"       : 5,
-  "Strength" : 5,
-  "Damage"   : 2,
-  "Range"    : 7,
+  "Strength" : 10,
+  "Damage"   : 1,
+  "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
     "fire": "Haunts/SFX/Denizens/Cultists/Male Cultist/Envenomed Dart"
   },
   "Conditions": [
-     "Poison"
+     "Poison",
+     "AP -2"
    ]
 }

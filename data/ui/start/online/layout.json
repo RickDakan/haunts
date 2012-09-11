@@ -1,0 +1,84 @@
+{
+  "NOTITLE": {
+    "X": 212,
+    "Y": 500,
+    "Texture": {
+      "Path": "ui/start/online/title.png"
+    }
+  },
+  "Background": {
+    "Path": "ui/dialog/large.png"
+  },
+  "Text": {
+    "String": "Start New Game",
+    "Size": 15,
+    "Justification": "left"
+  },
+  "Back": {
+    "X": 100,
+    "Y": 100,
+    "Texture": {
+      "Path": "ui/arrow_lf.png"
+    }
+  },
+  "Active": {
+    "Up": {
+      "X": 760,
+      "Y": 350,
+      "Texture": {
+        "Path": "ui/up_arrow.png"
+      }
+    },
+    "Down": {
+      "X": 720,
+      "Y": 350,
+      "Texture": {
+        "Path": "ui/down_arrow.png"
+      }
+    },
+    "Scroll": {
+      "X": 200,
+      "Y": 350,
+      "Dx": 520,
+      "Dy": 200
+    }
+  },
+  "Unstarted": {
+    "Up": {
+      "X": 760,
+      "Y": 110,
+      "Texture": {
+        "Path": "ui/up_arrow.png"
+      }
+    },
+    "Down": {
+      "X": 720,
+      "Y": 110,
+      "Texture": {
+        "Path": "ui/down_arrow.png"
+      }
+    },
+    "Scroll": {
+      "X": 200,
+      "Y": 110,
+      "Dx": 520,
+      "Dy": 200
+    }
+  },
+  "User": {
+    "Button": {
+      "X": 100,
+      "Y": 640,
+      "Text": {
+        "String": "Online Handle",
+        "Size": 15,
+        "Justification": "left"
+      }
+    },
+    "Entry": {
+      "Default": "Anonymous",
+      "X": 300,
+      "Dx": 300
+    }
+  }
+}

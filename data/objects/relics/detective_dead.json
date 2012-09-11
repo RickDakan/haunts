@@ -1,0 +1,11 @@
+{
+  "Name": "Int_Detective_Dead",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "objects/relics/wax/intruders/detective_dead",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Relic"
+  }
+}

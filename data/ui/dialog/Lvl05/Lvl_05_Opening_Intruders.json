@@ -1,16 +1,138 @@
 {
-  "Size": "medium",
-  "Pages": {
-    "Start": {
-      "Format": "NoOptionsLeftImage",
-      "Sections":[
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
         {
-          "Text": "Opening Intruders.",
-          "Image":{
-            "Path": "ui/dialog/Lvl05/intruders2.png"
+          "Next": "Start2",
+          "Text": "January 17, 1934. Opening night at The Museum of Occult Antiquities, presented by The Tyree Trust.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/1932c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "SOME GUY, the museum's curator, has assembled the greatest collection of arcane artifact in the world, many of which were already in the old house when he bought it.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/collector.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Of course, such treasures will prove an incredible temptation to some of the less savory supernatural entities in the world. The security team is on guard against potential threats.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/bounty_hunter.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "An ancient entity has infiltrated the museum disguised as a normal patron.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "The creature is stealing artifacts from the museum, presumably to use in some dangerous ritual. The team must watch the suspicious-looking visitors closely.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "The more artifacts the ancient one collects, the faster his ritual will be and the more monsters he will summon to protect him during the ritual.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/corpse_dialog.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Watch the visitors closely - if any of them move preturnaturally fast or is in a suspicious location when an artifact is stolen, they might be the ancient one.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/reporter_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Attacking the disguised ancient one will reveal him, but attacking an innoncent, wealthy patron will result in the security member being arrested and removed from the museum.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/occultist_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "But if he is attacked by security while in disguise, Ses-kalla will be forced to start the ritual immediately.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]
     }
-  }
-}

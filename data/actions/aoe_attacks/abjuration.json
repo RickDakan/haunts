@@ -1,11 +1,11 @@
 {
   "Name"      : "Abjuration",
   "Kind"      : "Fire",
-  "Ap"        : 4,
-  "Strength"  : 5,
-  "Damage"    : 2,
+  "Ap"        : 5,
+  "Strength"  : 10,
+  "Damage"    : 3,
   "Range"     : 10,
-  "Diameter"  : 10,
+  "Diameter"  : 5,
   "Animation" : "pulse",
   "Target_enemies": true,
   "Sounds"   : {

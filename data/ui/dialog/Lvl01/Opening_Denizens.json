@@ -12,7 +12,7 @@
           "Text": "Bosch Manor, April 30, 1895",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }
         }
       ]
@@ -27,7 +27,7 @@
           "Text": "Cornelius Bosch has finally completed his new home, a remote haven where he can carry out his research in private, away from ignorant society scolds and envious rivals.",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }       
         }   
      ] 
@@ -117,7 +117,7 @@
           "Text": "The angry shades of the workers who died building Bosch Manor serve on in death, bringing agony to anything they touch.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/shade_still.png"
+            "Path": "ui/dialog/stills/shade_dialog.png"
           }
         }
       ]
@@ -128,10 +128,10 @@
       "Sections":
       [
         {
-          "Text": "Lost Souls from the beyond crackle with deadly ectoplasmic energy that can strike at the Tyrees from a distance.",
+          "Text": "Lost Souls from the beyond crackle with deadly ectoplasmic energy that can strike at the Tyrees from a distance. They cannot open doors, so need a shade or Bosch to lead the way.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/wisp_still.png"
+            "Path": "ui/dialog/stills/orb_dialog.png"
           }
         }
       ]

@@ -281,6 +281,7 @@ function OnAction(intruders, round, exec)
       --The denizens have not yet activated the alarm.
       store.bFloodStarted = true
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_And_Alarm_Intruders.json")
+      Script.SetMusicParam("tension_level", 0.9) 
       store.bToldIntrudersAboutAlarm = true
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
@@ -330,30 +331,37 @@ function OnAction(intruders, round, exec)
 
   --if the deni master spotted the intruders, show dialogue
   if exec.Action.Name == "Identify Escapee" then
-    --Can only be used on an intruder, so we don't need to check the target.
-    --Once used, the master may escape the board in order to activate the alarm.
-    bInstrudersSpotted = true
-    Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Identified_Escapees_Denizens.json")
+
+    -- Can only be used on an intruder, so we don't need to check the target.
+    -- Once used, the master may escape the board in order to activate the alarm.
+    -- bInstrudersSpotted = true
+    -- Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Identified_Escapees_Denizens.json")
+
+    --Forcing the master to escape took too long.  Now if he spots the intruders,
+    --he can sound the alarm immediately
+    store.bFloodStarted = true
+    Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
+    store.bToldDenizensAboutFloodStart = true
   end 
 
-  --if the deni mast reached the exit after seeing the intruders, sound the alarm
-  if bInstrudersSpotted then
-    if exec.Ent.Name == MasterName then
-      if pointIsInSpawns(exec.Ent.Pos, "Escape") then
-        store.bFloodStarted = true
-        Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
-        store.bToldDenizensAboutFloodStart = true
-      end
-    end
-  end
+  -- --if the deni mast reached the exit after seeing the intruders, sound the alarm
+  -- if bInstrudersSpotted then
+  --   if exec.Ent.Name == MasterName then
+  --     if pointIsInSpawns(exec.Ent.Pos, "Escape") then
+  --       store.bFloodStarted = true
+  --       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
+  --       store.bToldDenizensAboutFloodStart = true
+  --     end
+  --   end
+  -- end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
-  if exec.Ent.ApCur == 0 then
-    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-    if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
-    end
-  end
+  -- if exec.Ent.ApCur == 0 then
+  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+  --   if nextEnt.ApCur > 0 then
+  --     Script.SelectEnt(nextEnt)
+  --   end
+  -- end
 end
  
 

@@ -5,15 +5,16 @@
   "Texture"   : {
     "Path": "actions/icons/flask.png"
   },
-  "Ap"       : 1,
+  "Ap"       : 3,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
   "Target_allies": true,
   "Sounds"   : {
-    "soothe": "Haunts//SFX/Intruders/Detective/Fortifying Drink"
+    "drink": "Haunts//SFX/Intruders/Detective/Fortifying Drink"
   },
   "Conditions": [
-     "Psychic Shroud"
+     "Corpus +2",
+     "Ego +2"
    ]
 }

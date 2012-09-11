@@ -6,7 +6,7 @@
   {
     "Path": "actions/icons/pistol.png"
   },
-  "Ap"       : 3,
+  "Ap"       : 6,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,

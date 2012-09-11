@@ -1,8 +1,8 @@
 {
   "Name"      : "Voice of the Beyond",
   "Kind"      : "Terror",
-  "Ap"        : 4,
-  "Strength"  : 7,
+  "Ap"        : 5,
+  "Strength"  : 12,
   "Damage"    : 0,
   "Range"     : 10,
   "Animation" : "visions",
@@ -11,8 +11,8 @@
   },
   "Target_allies": true,
   "Conditions": [
-    "Invigorated",
-	"Inspired",
-	"Focused"
+  "AP +2",
+	"Corpus +2",
+	"Ego +2"
   ]
 }

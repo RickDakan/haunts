@@ -2,9 +2,9 @@
   "Name": "Nelle Anders",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/robed_cultist",
+  "Sprite_path" : "entities/cordelia",
   "Still": {
-    "Path": "entities/technician_still.png"
+    "Path": "entities/cordelia_still.png"
   },
   "Action_names": [
     "Move Test",
@@ -16,7 +16,7 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 8,
     "Hp_max": 1,
     "Corpus": 2,
     "Ego": 2,

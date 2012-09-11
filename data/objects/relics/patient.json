@@ -1,0 +1,11 @@
+{
+  "Name": "Patient BAD",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/patient",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Patient"
+  }
+}

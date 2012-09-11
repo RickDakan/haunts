@@ -118,6 +118,10 @@ end
 
 function RoundStart(intruders, round)
 
+  if not store.execs then
+    store.execs = {}
+  end
+
   if round == 1 then
     if intruders then
       intrudersSetup()     
@@ -138,10 +142,6 @@ function RoundStart(intruders, round)
   end
 
   if intruders and round > 1 then
-    --JONATHAN, it is this use of SetActivatedRooms that is still incorrect.
-    --If I comment this out, the waypoints update correctly when a beacon is placed.
-    --However, this use covers the initial display of the waypoints, and also handles 
-    --waypoints in rooms where a beacon was destroyed during the denizens' turn.
     SetActivatedRooms()
   end
 
@@ -316,15 +316,11 @@ function SetActivatedRooms()
   store.Room4 = false
   store.Room5 = false
 
-print("heck")
-
   StoreWaypoint("Room1", "intruders", (Script.GetSpawnPointsMatching("Room1_mid")[1].Pos), 5, false)
   StoreWaypoint("Room2", "intruders", (Script.GetSpawnPointsMatching("Room2_mid")[1].Pos), 5, false)
   StoreWaypoint("Room3", "intruders", (Script.GetSpawnPointsMatching("Room3_mid")[1].Pos), 5, false)
   StoreWaypoint("Room4", "intruders", (Script.GetSpawnPointsMatching("Room4_mid")[1].Pos), 5, false)
   StoreWaypoint("Room5", "intruders", (Script.GetSpawnPointsMatching("Room5_mid")[1].Pos), 5, false)
-
-print("doubleheck")
 
   store.BeaconCount = 0
   store.nBeaconedRooms = 0  --need 2 counters b/c they can put > 1 beacon per room

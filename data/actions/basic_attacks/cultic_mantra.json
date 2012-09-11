@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/shroud.png"
   },
-  "Ap"       : 1,
+  "Ap"       : 3,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
@@ -14,6 +14,6 @@
     "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Mantra"
     },  
   "Conditions": [
-     "Focused"
+     "Corpus +2"
    ]
 }

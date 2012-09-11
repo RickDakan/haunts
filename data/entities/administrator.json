@@ -2,10 +2,10 @@
   "Name": "Administrator",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/cult_leader",
+  "Sprite_path" : "entities/genius",
   "Still": 
   {
-    "Path": "entities/administrator_still.png"
+    "Path": "entities/evil_genius_still.png"
   },
   "Action_names": 
   [
@@ -21,10 +21,10 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 11,
+    "Ap_max": 10,
     "Hp_max": 10,
     "Corpus": 5,
-    "Ego": 5,
+    "Ego": 7,
     "Sight": 20
   }
 }

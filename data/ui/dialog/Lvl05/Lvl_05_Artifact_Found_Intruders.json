@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Artifact Found Intruders.",
+          "Text": "The disguised ancient one has stolen an artifact!",
           "Image":{
-            "Path": "ui/dialog/Lvl05/intruders2.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

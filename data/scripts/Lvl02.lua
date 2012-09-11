@@ -40,11 +40,9 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
 
-  --Highlight the op point for the deniznes
-  Script.SetWaypoint("Relic" , "denizens", Relic.Pos, 3)
+
+
 
 
 --  Script.SelectEnt(Relic)
@@ -121,6 +119,10 @@ function denizensSetup()
   -- match anything with the prefix "Servitor_".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_.*")
   placed = Script.PlaceEntities("Servitors_.*", ents, 0, 10)
+  relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
+  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
+   --Highlight the op point for the deniznes
+  Script.SetWaypoint("Relic" , "denizens", Relic.Pos, 3) 
 end
 
 function RoundStart(intruders, round)
@@ -221,12 +223,12 @@ function OnAction(intruders, round, exec)
   end 
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
-  if exec.Ent.ApCur == 0 then
-    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-    if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
-    end
-  end   
+  -- if exec.Ent.ApCur == 0 then
+  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+  --   if nextEnt.ApCur > 0 then
+  --     Script.SelectEnt(nextEnt)
+  --   end
+  -- end   
 end
 
 function RoundEnd(intruders, round)

@@ -12,7 +12,7 @@
           "Text": "Bosch Manor, April 30, 1895",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }
         }
       ]
@@ -27,7 +27,7 @@
           "Text": "The famed and feared occultist, Cornelius Bosch has finally completed his new home, a remote haven where he can carry out his necromantic research away from the watchful eyes of civil society.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }       
         }   
      ] 
@@ -102,7 +102,7 @@
           "Text": "Tyree himself can use incantations to smite the foul spirits from afar.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist_still.png"
+            "Path": "ui/dialog/stills/occultist_dialog.png"
           }
         }
       ]
@@ -114,10 +114,10 @@
       [
         {
           "Next": "Start9",
-          "Text": "His sister, Codelia, is handy with a pistol or up close, and has psychic defenses to aid all the Tyrees.",
+          "Text": "His sister, Cordelia, is handy with a pistol or up close, and has psychic defenses to aid all the Tyrees.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/teen_still.png"
+            "Path": "ui/dialog/stills/teen_dialog.png"
           }
         }
       ]
@@ -132,7 +132,7 @@
           "Text": "Alphonso Sax, the infamous inventor of dangerous and some say infernal devices, needs to get close to use his spirit-disrupting weapons.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/hunter_still.png"
+            "Path": "ui/dialog/stills/hunter_dialog.png"
           }
         }
       ]

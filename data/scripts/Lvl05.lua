@@ -39,22 +39,35 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
+  --we will incorporate some randomness here.
+  math.randomseed(os.time())
+
   store.ActivatedObjectives = {}
   --ok lissen.  We're gonna spawn a lotta buncha op points.
   store.Objectives = Script.GetSpawnPointsMatching("Artifact")
-  for i = 1, 10, 1 do
-    Script.SetWaypoint("Objective" .. i, "denizens", store.Objectives[i].Pos, 1)
-    print("Objective" .. i)
+  i = 1
+  while i <= 10 do
+    nRandomNumberOfAwesomenoess = math.random(25)
+    nRandomCounter = 1
+    for _, obj in pairs(store.Objectives) do
+      if nRandomCounter == nRandomNumberOfAwesomenoess then
+        Script.SetWaypoint("Objective" .. i, "denizens", store.Objectives[i].Pos, 1)
+        i = i + 1
+        break
+      else
+        nRandomCounter = nRandomCounter + 1
+      end
+    end
   end   
 
-  store.ObjectivesAcquired = 0
+  store.ObjectivesAcquired = 1
   store.bSummoning = false
 end
 
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Sonico Mono", "Christopher Matthias", "Cora Phinneas"}
+    intruder_names = {"Collector", "Ghost Hunter", "Detective"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
   end 
 
@@ -79,7 +92,6 @@ function denizensSetup()
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, denizen_spawn, false)
     if tonumber(choice[1]) == i then
       store.MasterName = ent.Name
-      store.MasterEnt = ent
     end
     i = i + 1
   end
@@ -115,13 +127,13 @@ function RoundStart(intruders, round)
   end
 
   if not intruders and not store.bSummoning then
-    Script.SetAp(store.MasterEnt, 30)
+    Script.SetAp(GetMasterEnt(), 30)
   end
 
   if store.bSummoning and not intruders then
     --the deni master is locked in place (MasterEnt will have been replaced with the real master)
-    Script.SetAp(store.MasterEnt, 0)
-    Script.SetWaypoint("Master", "intruders", store.MasterEnt.Pos, 1)
+    Script.SetAp(GetMasterEnt(), 0)
+    Script.SetWaypoint("Master", "intruders", GetMasterEnt().Pos, 1)
   end
 
   store.game = Script.SaveGameState()
@@ -167,12 +179,20 @@ function GetDistanceBetweenPoints(pos1, pos2)
   return v1 + v2
 end
 
+function GetMasterEnt()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name == store.MasterName then
+      return ent
+    end
+  end
+end
+
 function StartSummon()
   --Try to spawn a zombie around the master for each artifact he found
   store.bSummoning = true
 
   --replace the master ent with the real master.
-  posToUse = store.MasterEnt.Pos
+  posToUse = GetMasterEnt().Pos
 
   --Get rid of the other 
   for _, ent in pairs(Script.GetAllEnts()) do
@@ -181,18 +201,30 @@ function StartSummon()
     end 
   end 
 
-  StoreSpawn("Bosch", posToUse)
+  StoreSpawn("Ancient One", posToUse)
+  store.MasterName = "Ancient One"
+  Script.SelectEnt(GetMasterEnt())
 
-  for i = 1, store.ObjectivesAcquired, 1  do
+  i = 1
+  while i <= store.ObjectivesAcquired do
     --Summon a new minion
     omgCounter = 1
-    for _, PossibleSpawn in pairs(Script.GetLos(store.MasterEnt)) do
-      if Script.SpawnEntityAtPosition("Shade", PossibleSpawn.Pos) then
-        i = i + 1
+    nRandomNumberOfAwesomenoess = math.random(200)
+    nRandomCounter = 1
+    for _, PossibleSpawn in pairs(Script.GetLos(GetMasterEnt())) do
+      if nRandomCounter == nRandomNumberOfAwesomenoess then
+        ent = StoreSpawn("Corpse", PossibleSpawn) 
+        if ent.HpCur > 0 then  --we succeeded at spawning a dude
+          Script.SetAp(ent, 0)
+          i = i + 1
+          break
+        end
+      else
+        nRandomCounter = nRandomCounter + 1
       end
     end
     omgCounter = omgCounter + 1
-    if omgCounter >= 100 then
+    if omgCounter >= 50 then
       break
     end
   end
@@ -201,8 +233,12 @@ function StartSummon()
 
   --deactivate all the remaining waypoints
   for i = 1, 10, 1 do
-    StoreWaypoint("Objective" .. i, "", "", "", true)
+    if not store.ActivatedObjectives[i] then
+      StoreWaypoint("Objective" .. i, "", "", "", true)
+    end
   end
+
+  Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Summon_Started_Denizens.json")
 end
 
 function OnMove(ent, path)
@@ -216,16 +252,12 @@ function OnAction(intruders, round, exec)
   end
   store.execs[table.getn(store.execs) + 1] = exec
 
-  if  exec.Ent.Name == store.MasterEnt.Name then
+  if  exec.Ent.Name == GetMasterEnt().Name then
     IndexTriggered = IsNextToActiveWaypoint(exec.Ent)
     if IndexTriggered then
-      print("happy1")
       store.ActivatedObjectives[IndexTriggered] = true
-      print("happy2:", IndexTriggered)
       StoreWaypoint("Objective" .. IndexTriggered, "", "", "", true)
-      print("happy3")
       store.ObjectivesAcquired = store.ObjectivesAcquired + 1
-      print("happy4")
       store.bDenizenMasterFoundObLastTurn = true
       Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Artifact_Found_Denizens.json")
     end
@@ -235,25 +267,29 @@ function OnAction(intruders, round, exec)
     StartSummon()
   end
 
-  if exec.Ent.Side.Intruder and exec.Ent.Name == store.MasterEnt.Name then
-    if exec.Target.Side.Denizen and not exec.Target.Name == store.MasterEnt.Name then
-      --they intruders attacked a decoy.  The attacking intruder is removed from the game
+  if exec.Ent.Side.Intruder then
+    if exec.Target.Side.Denizen and not (exec.Target.Name == store.MasterName) and not store.bSummoning then
+      --the intruders attacked a decoy.  The attacking intruder is removed from the game
       Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Attacked_Wrong_Entity_Intruders.json")
       StoreDespawn(exec.Ent)
     end
 
-    --if the intruders attack the denizens, the summon starts immediately
-    if exec.Target.Side.Denizen and exec.Target.Name == store.MasterEnt.Name and not store.bSummoning then
+    --if the intruders attack the denizen master, the summon starts immediately
+    if exec.Target.Side.Denizen and (exec.Target.Name == store.MasterName) and not store.bSummoning then
       Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Master_Attacked_Intruders.json")
       store.bMasterAttacked = true
       StartSummon()
     end    
 
-    if exec.Target.Name == store.MasterEnt.Name and store.bSummoning then
+    if exec.Target.Name == store.MasterName and store.bSummoning then
       if exec.Target.HpCur <= 0 then
         Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Intruders.json")
       end
     end
+  end
+
+  if not AnyIntrudersAlive() then
+    Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Denizens.json")
   end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
@@ -270,10 +306,7 @@ function IsNextToActiveWaypoint(ent)
   for _, obj in pairs(store.Objectives) do
     if i <= 10 then
       --is this objective already activated
-      print("Happy:")
       if not store.ActivatedObjectives[i] then
-        print("Ent:", ent.Pos.X)
-        print("Obj:", obj.Pos.X)
         if GetDistanceBetweenPoints(ent.Pos, obj.Pos) <= 2 then
           --They finded an artifact!
           return i  --Need the index to know which one to activate
@@ -309,6 +342,7 @@ function RoundEnd(intruders, round)
         Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Denizens.json")
       end
       if store.bMasterAttacked then
+        store.bMasterAttacked = false --keep us from showing this more than once.
         Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Master_Attacked_Denizens.json")
       end
       if store.bSummoning then
@@ -324,7 +358,7 @@ function RoundEnd(intruders, round)
       end
 
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
-        Script.DialogBox("ui/dialog/Lvl04/pass_to_intruders.json")
+        Script.DialogBox("ui/dialog/Lvl05/pass_to_intruders.json")
         
         if store.bSummoning then
           --reduce the turns remaining and tell the intruders about it.
@@ -368,7 +402,7 @@ function RoundEnd(intruders, round)
           LastIntruderEnt = exec.Ent
         end 
         if exec.Ent.Side == "denizens" then
-          LastDenizenEnt = store.MasterEnt --always the master on this board
+          LastDenizenEnt = GetMasterEnt() --always the master on this board
         end 
       end
     end
@@ -448,27 +482,25 @@ function StoreDespawn(ent)
 end
 
 function deSpawn(despawnExec)
-  if despawnExec.entity.HpMax then  --can only kill things that have hp
+  if despawnExec.entity.Side.Denizen and not despawn_exec.entity.Name == store.MasterName then  --not replacing them with anything.  Kill them where they stand
     Script.PlayAnimations(despawnExec.entity, {"defend", "killed"})
     Script.SetHp(despawnExec.entity, 0)
+  else
+    Script.SetHp(despawnExec.entity, 0)
+    Script.PlayAnimations(despawnExec.entity, {"defend", "killed"})
+    DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
+    Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
   end
-  DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
-  Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
 end
 
 function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
-  print("Name:", wpname)
   waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
-  print("remove:", wpremove)
   store.execs[table.getn(store.execs) + 1] = waypoint_exec
-  print("DO IT") 
   doWaypoint(waypoint_exec)
-  print("hippo")
 end
 
 function doWaypoint(waypointExec)
   if waypointExec.remove then
-    print("Why won't you work?", waypointExec.name)
     return Script.RemoveWaypoint(waypointExec.name)
   else
     return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)

@@ -1,12 +1,12 @@
 {
   "Name"      : "Blessed Bombard",
   "Kind"      : "Fire",
-  "Ap"        : 4,
-  "Strength"  : 5,
-  "Damage"    : 5,
+  "Ap"        : 3,
+  "Strength"  : 10,
+  "Damage"    : 6,
   "Range"     : 10,
   "Diameter"  : 5,
-  "Ammo"      : 2,
+  "Ammo"      : 3,
   "Animation" : "cast",
   "Target_enemies": true,
   "Sounds"   : {

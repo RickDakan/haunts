@@ -6,7 +6,7 @@
     "Path": "actions/icons/kiss.png"
   },
   "Ap"       : 5,
-  "Strength" : 5,
+  "Strength" : 10,
   "Damage"   : 1,
   "Range"    : 7,
   "Target_enemies": true,
@@ -14,6 +14,6 @@
     "fire": "Haunts/SFX/Denizens/Cultists/Female Cultist/Parasitic Gift"
   },
   "Conditions": [
-     "Blindness"
+     "AP -2"
    ]
 }
