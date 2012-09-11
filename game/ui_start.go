@@ -45,7 +45,7 @@ func InsertStartMenu(ui gui.WidgetParent) error {
   sm.layout.Menu.Continue.f = func(interface{}) {}
   sm.layout.Menu.Versus.f = func(interface{}) {
     ui.RemoveChild(&sm)
-    ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
+    ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil, ""))
   }
   sm.layout.Menu.Settings.f = func(interface{}) {}
   sm.layout.Menu.Online.f = func(interface{}) {

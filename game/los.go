@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/mrgnet"
   "reflect"
   "regexp"
   "time"
@@ -162,8 +163,7 @@ type gameDataGobbable struct {
   House *house.HouseDef
   Ents  []*Entity
 
-  // True for online games
-  Net bool
+  Net mrgnet.GameKey
 
   // Set of all Entities that are still resident.  This is so we can safely
   // clean things up since they will all have ais running in the background

@@ -12,6 +12,7 @@ import (
 )
 
 type NetId int64
+type GameKey string
 
 const Host_url = "http://localhost:8080"
 
@@ -63,9 +64,9 @@ type NewGameRequest struct {
 }
 
 type NewGameResponse struct {
-  Err  string
-  Name string
-  Id   string
+  Err      string
+  Name     string
+  Game_key GameKey
 }
 
 type ListGamesRequest struct {
@@ -74,9 +75,26 @@ type ListGamesRequest struct {
 }
 
 type ListGamesResponse struct {
-  Err   string
-  Games []Game
-  Ids   []string
+  Err       string
+  Games     []Game
+  Game_keys []GameKey
+}
+
+// Updates an active game by appending a Playback, or updating the last
+// playback, with either new State or new Execs
+type UpdateGameRequest struct {
+  Id        NetId
+  Game_key  GameKey
+  Round     int
+  Intruders bool
+
+  // Exactly one of the following two should be set
+  State []byte
+  Execs []byte
+}
+
+type UpdateGameResponse struct {
+  Err string
 }
 
 type JoinGameRequest struct {

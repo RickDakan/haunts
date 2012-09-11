@@ -123,7 +123,7 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
         return
       }
       ui.RemoveChild(&sm)
-      ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
+      ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil, resp.Game_key))
       in_newgame = false
       sm.control.out <- struct{}{}
     }()

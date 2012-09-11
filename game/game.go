@@ -5,6 +5,7 @@ import (
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/mrgnet"
   "math/rand"
   "sort"
 )
@@ -24,7 +25,7 @@ type GamePanel struct {
   game   *Game
 }
 
-func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel {
+func MakeGamePanel(script string, p *Player, data map[string]string, game_key mrgnet.GameKey) *GamePanel {
   var gp GamePanel
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
   if p == nil {
@@ -34,7 +35,7 @@ func MakeGamePanel(script string, p *Player, data map[string]string) *GamePanel 
   if script == "" {
     script = p.Script_path
   }
-  startGameScript(&gp, script, p, data)
+  startGameScript(&gp, script, p, data, game_key)
   return &gp
 }
 

@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/haunts/game/hui"
   "github.com/runningwild/haunts/game/status"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/mrgnet"
   "github.com/runningwild/haunts/sound"
   "github.com/runningwild/haunts/texture"
   lua "github.com/xenith-studios/golua"
@@ -33,7 +34,7 @@ func (gs *gameScript) syncEnd() {
   gs.sync <- struct{}{}
 }
 
-func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string) {
+func startGameScript(gp *GamePanel, path string, player *Player, data map[string]string, game_key mrgnet.GameKey) {
   // Clear out the panel, now the script can do whatever it wants
   player.Script_path = path
   gp.AnchorBox = gui.MakeAnchorBox(gui.Dims{1024, 768})
@@ -150,6 +151,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
       } else {
+        gp.game.Net = game_key
         gp.game.comm.script_to_game <- nil
       }
     }()
@@ -161,7 +163,11 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
 // Runs RoundEnd
 func (gs *gameScript) OnRound(g *Game) {
   base.Log().Printf("Launching script.RoundStart")
+
   go func() {
+    // If this is a net game, then before RoundStart we need to send the current
+    // state of the game to the server so we can store it for playbacks.
+
     // // round begins automatically
     // <-round_middle
     // for
@@ -300,7 +306,7 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     if !res {
       base.Error().Printf("Unable to properly autosave.")
     }
-    startGameScript(gp, script, player, nil)
+    startGameScript(gp, script, player, nil, gp.game.Net)
     return 0
   }
 }
