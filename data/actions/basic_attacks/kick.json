@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/kick.png"
   },
-  "Ap"       : 2,
-  "Strength" : 5,
+  "Ap"       : 3,
+  "Strength" : 10,
   "Damage"   : 2,
   "Range"    : 1,
   "Target_enemies": true,

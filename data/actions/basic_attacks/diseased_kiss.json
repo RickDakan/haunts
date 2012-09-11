@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/kiss.png"
   },
-  "Ap"       : 5,
-  "Strength" : 5,
+  "Ap"       : 6,
+  "Strength" : 10,
   "Damage"   : 3,
   "Range"    : 1,
   "Target_enemies": true,

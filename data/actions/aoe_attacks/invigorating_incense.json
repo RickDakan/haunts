@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/disrupt.png"
   },
-  "Ap"       : 4,
+  "Ap"       : 2,
   "Strength" : 20,
   "Damage"   : 0,
   "Range"    : 1,
@@ -15,6 +15,6 @@
     "smoking": "Haunts/SFX/Intruders/Reporter/flask"
   },  
   "Conditions": [
-     "Focused"
+     "Attack +2"
    ]
 }

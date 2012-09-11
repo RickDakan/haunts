@@ -12,7 +12,7 @@
           "Text": "Bosch Manor, April 30, 1895",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }
         }
       ]
@@ -27,7 +27,7 @@
           "Text": "The famed and feared occultist, Cornelius Bosch has finally completed his new home, a remote haven where he can carry out his necromantic research away from the watchful eyes of civil society.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/1922b.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }       
         }   
      ] 
@@ -114,7 +114,7 @@
       [
         {
           "Next": "Start9",
-          "Text": "His sister, Codelia, is handy with a pistol or up close, and has psychic defenses to aid all the Tyrees.",
+          "Text": "His sister, Cordelia, is handy with a pistol or up close, and has psychic defenses to aid all the Tyrees.",
           "Image":
           {
             "Path": "ui/dialog/stills/teen_dialog.png"

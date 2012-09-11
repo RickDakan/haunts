@@ -3,11 +3,11 @@
   "Kind"     : "Terror",
   "Animation": "cast",
   "Ap"       : 3,
-  "Strength" : 7,
+  "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,
   "Target_enemies": true,
   "Conditions": [
-     "Agony"
+     "Corpus -2"
    ]
 }

@@ -1,11 +1,11 @@
 {
   "Name"      : "Visions of Despair",
   "Kind"      : "Terror",
-  "Ap"        : 4,
-  "Strength"  : 6,
+  "Ap"        : 5,
+  "Strength"  : 10,
   "Damage"    : 0,
   "Range"     : 10,
-  "Diameter"  : 2,
+  "Diameter"  : 3,
   "Animation" : "cast",
   "Target_enemies": true,
   "Sounds"   : {
@@ -15,6 +15,7 @@
     "Path": "actions/icons/visions.png"
   },
   "Conditions": [
-    "Visions of Despair"
+    "Poison"
+    "Corpus -2"
   ]
 }

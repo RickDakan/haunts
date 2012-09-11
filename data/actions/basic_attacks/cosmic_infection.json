@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/disrupt.png"
   },
-  "Ap"       : 4,
-  "Strength" : 7,
+  "Ap"       : 6,
+  "Strength" : 10,
   "Damage"   : 1,
   "Range"    : 1,
   "Target_enemies": true,
@@ -14,7 +14,7 @@
     "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Cosmic Infection"
   },
   "Conditions" : [
-     "Agony",
-     "Horrified"
+     "AP -2",
+     "Poison"
    ]
 }

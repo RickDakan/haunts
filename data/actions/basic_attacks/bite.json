@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/pummel.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
+  "Ap"       : 5,
+  "Strength" : 10,
   "Damage"   : 3,
   "Range"    : 1,
   "Target_enemies": true,

@@ -67,7 +67,7 @@ end
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Sonico Mono", "Christopher Matthias", "Cora Phinneas"}
+    intruder_names = {"Collector", "Ghost Hunter", "Detective"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
   end 
 
@@ -288,7 +288,7 @@ function OnAction(intruders, round, exec)
     end
   end
 
-  if not AnyIntrudersAlive then
+  if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Denizens.json")
   end
 

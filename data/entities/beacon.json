@@ -9,7 +9,6 @@
   "Action_names": [
     "Move Test"
   ],
-  "Enemy_los": true,
   "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
@@ -20,7 +19,7 @@
   },
   "Base": {
     "Ap_max": 0,
-    "Hp_max": 2,
+    "Hp_max": 1,
     "Corpus": 1,
     "Ego": 1,
     "Sight": 15

@@ -5,9 +5,9 @@
   "Texture"   : {
     "Path": "actions/icons/disrupt.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
-  "Damage"   : 3,
+  "Ap"       : 4,
+  "Strength" : 10,
+  "Damage"   : 2,
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {

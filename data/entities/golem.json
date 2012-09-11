@@ -21,8 +21,8 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 8,
-    "Hp_max": 18,
+    "Ap_max": 10,
+    "Hp_max": 20,
     "Corpus": 10,
     "Ego": 10,
     "Sight": 30

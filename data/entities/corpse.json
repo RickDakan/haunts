@@ -13,13 +13,13 @@
   ],
   "HauntEnt": {
     "Cost":  1,
-    "Level": "Servitor"
+    "Level": "Minion"
   },
   "Base": {
-    "Ap_max": 6,
+    "Ap_max": 8,
     "Hp_max": 9,
-    "Corpus": 9,
-    "Ego": 6,
+    "Corpus": 10,
+    "Ego": 8,
     "Sight": 20
   },
   "Dissolve": false,
