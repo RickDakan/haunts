@@ -99,11 +99,18 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
     "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
     "Rand":                              func() { gp.script.L.PushGoFunctionAsCFunction(randFunc(gp)) },
-    "UpdateState":                       func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
-    "UpdateExecs":                       func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
+
+  gp.script.L.NewTable()
+  LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
+    "Active":      func() { gp.script.L.PushGoFunctionAsCFunction(activeNetFunc(gp)) },
+    "UpdateState": func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
+    "UpdateExecs": func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
+  })
+  gp.script.L.SetMetaTable(-2)
+  gp.script.L.SetGlobal("Net")
 
   registerUtilityFunctions(gp.script.L)
   if player.Lua_store != nil {
@@ -1432,9 +1439,19 @@ func randFunc(gp *GamePanel) lua.GoFunction {
   }
 }
 
+func activeNetFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "Active") {
+      return 0
+    }
+    L.PushBoolean(gp.game.Net != "")
+    return 1
+  }
+}
+
 func updateStateFunc(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "UpdateState") {
+    if !LuaCheckParamsOk(L, "UpdateState", LuaString) {
       return 0
     }
     if gp.game.Net == "" {
@@ -1450,12 +1467,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
     req.Game_key = gp.game.Net
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
-    str, err := base.ToGobToBase64(gp.game)
-    if err != nil {
-      base.Error().Printf("Error gobbing game state: %v", err)
-      return 0
-    }
-    req.State = []byte(str)
+    req.State = []byte(L.ToString(-1))
     var resp mrgnet.UpdateGameResponse
     mrgnet.DoAction("update", req, &resp)
     if resp.Err != "" {
@@ -1473,7 +1485,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
       return 0
     }
     if gp.game.Net == "" {
-      base.Error().Printf("Tried to UpdateState in a non-Net game.")
+      base.Error().Printf("Tried to UpdateExecs in a non-Net game.")
       return 0
     }
     buf := bytes.NewBuffer(nil)

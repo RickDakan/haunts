@@ -111,33 +111,19 @@ func LuaDecodeValue(r io.Reader, L *lua.State, g *Game) error {
 }
 
 func LuaEncodeTable(w io.Writer, L *lua.State, index int) error {
-  base.Log().Printf("Encoding")
   L.PushNil()
-  base.Log().Printf("Encoding")
   for L.Next(index-1) != 0 {
-    base.Log().Printf("Encoding")
     binary.Write(w, binary.LittleEndian, byte(1))
-    base.Log().Printf("Encoding")
     err := LuaEncodeValue(w, L, -2)
-    base.Log().Printf("Encoding")
     if err != nil {
-      base.Log().Printf("Encoding")
       return err
-      base.Log().Printf("Encoding")
     }
-    base.Log().Printf("Encoding")
     err = LuaEncodeValue(w, L, -1)
-    base.Log().Printf("Encoding")
     if err != nil {
-      base.Log().Printf("Encoding")
       return err
-      base.Log().Printf("Encoding")
     }
-    base.Log().Printf("Encoding")
     L.Pop(1)
-    base.Log().Printf("Encoding")
   }
-  base.Log().Printf("Encoding")
   return binary.Write(w, binary.LittleEndian, byte(0))
 }
 

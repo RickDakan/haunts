@@ -17,7 +17,11 @@ function DoTutorials()
 end
 
 function Init(data)
-  side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+  if Net.Active() then
+    side_choices = {"Denizens"}
+  else
+    side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+  end
 
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_01_Haunted_House")  
@@ -50,7 +54,6 @@ function Init(data)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
 
   -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
-  store.execs = {}
 end
 
 function intrudersSetup()
@@ -131,8 +134,8 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
-  Script.UpdateState()
   print("SCRIPT: Round Start")
+  store.execs = {}
   if round == 1 then
     if intruders then
       intrudersSetup() 
@@ -149,6 +152,8 @@ function RoundStart(intruders, round)
     end
 
     Script.EndPlayerInteraction()
+    store.game = Script.SaveGameState()
+    Net.UpdateState(store.game)
     return
   end
 
@@ -173,6 +178,7 @@ function RoundStart(intruders, round)
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
   store.game = Script.SaveGameState()
+  Net.UpdateState(store.game)
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
@@ -315,9 +321,44 @@ function OnAction(intruders, round, exec)
 end
  
 
+function DoPlayback(state, execs)
+  Script.LoadGameState(state)
+
+  --focus the camera on somebody on each team.
+  side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
+  Script.FocusPos(GetEntityWithMostAP(side2).Pos)
+
+  for _, exec in pairs(execs) do
+    bDone = false
+    if exec.script_spawn then
+      doSpawn(exec)
+      bDone = true
+    end
+    if exec.script_despawn then
+      deSpawn(exec)
+      bDone = true
+    end
+    if exec.script_waypoint then
+      doWaypoint(exec)
+      bDone = true
+    end
+    if not bDone then
+      Script.DoExec(exec)
+
+      --will be used at turn start to try to reselect the last thing they acted with.
+      if exec.Ent.Side == "intruders" then
+        LastIntruderEnt = exec.Ent
+      end
+      if exec.Ent.Side == "denizens" then
+        LastDenizenEnt = exec.Ent
+      end
+    end
+  end
+end
+
 function RoundEnd(intruders, round)
   print("SCRIPT: Round End")
-  Script.UpdateExecs(execs)
+  Net.UpdateExecs(execs)
   if round == 1 then
     return
   end
@@ -358,41 +399,9 @@ function RoundEnd(intruders, round)
       end
     end
 
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
-    Script.LoadGameState(store.game)
-
-    --focus the camera on somebody on each team.
-    side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
-    Script.FocusPos(GetEntityWithMostAP(side2).Pos)
-
-    for _, exec in pairs(store.execs) do
-      bDone = false
-      if exec.script_spawn then
-        doSpawn(exec)
-        bDone = true
-      end
-      if exec.script_despawn then
-        deSpawn(exec)
-        bDone = true
-      end      
-      if exec.script_waypoint then
-        doWaypoint(exec)
-        bDone = true
-      end             
-      if not bDone then
-        Script.DoExec(exec)
-
-        --will be used at turn start to try to reselect the last thing they acted with.
-        if exec.Ent.Side == "intruders" then
-          LastIntruderEnt = exec.Ent
-        end 
-        if exec.Ent.Side == "denizens" then
-          LastDenizenEnt = exec.Ent
-        end 
-      end
-    end
-    store.execs = {}
+    DoPlayback(store.game, store.execs)
   end
 
 
