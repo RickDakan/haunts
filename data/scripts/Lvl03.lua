@@ -41,7 +41,9 @@ function Init(data)
   end
 
   --spawn the objective point and the fake op points
-  waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
+  --!!!!
+  waypoint_spawn = Script.GetSpawnPointsMatching("CrashTest")
+  --waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
   objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
 
   store.Waypoint = objSpawn
@@ -137,6 +139,23 @@ function RoundStart(intruders, round)
     Script.EndPlayerInteraction()
 
     return
+  end
+
+  if store.bFloodStarted then
+    --At the start of each denizen turn, we're going to randomly spawn attendants at 
+    --the flood points.  Also need to prevent spawning within LoS of an intruder.
+
+    available_spawns = Script.GetSpawnPointsMatching("Flood_Point")
+    if TotalDeniCount() < 20 and intruders then
+      for i = 1, 3, 1 do
+        --Pick an entity    
+
+        --JONATHAN - The orderlies spawn at the start of the intruders turn and then move
+        --on the next deni turn.  That's when the crash happens. 
+        ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
+        Script.SetAp(ent, 0)
+      end
+    end
   end
 
   if store.bShiftChange and not intruders then
@@ -238,6 +257,13 @@ function OnAction(intruders, round, exec)
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_And_Alarm_Intruders.json")
       Script.SetMusicParam("tension_level", 0.9) 
       store.bToldIntrudersAboutAlarm = true
+      for i = 1, 3, 1 do
+        --Pick an entity
+
+        --JONATHAN - Uncomment these two lines to see a crash when the waypoint is first activated.    
+        -- ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
+        -- Script.SetAp(ent, 0)
+      end
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Waypoint_Only_Intruders.json")
@@ -288,9 +314,8 @@ function OnAction(intruders, round, exec)
   if exec.Action.Name == "Identify Escapee" then
 
     -- Can only be used on an intruder, so we don't need to check the target.
-    -- Once used, the master may escape the board in order to activate the alarm.
+    -- Once used, the flood starts.
     -- bInstrudersSpotted = true
-    -- Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Identified_Escapees_Denizens.json")
 
     --Forcing the master to escape took too long.  Now if he spots the intruders,
     --he can sound the alarm immediately
@@ -298,17 +323,6 @@ function OnAction(intruders, round, exec)
     Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
     store.bToldDenizensAboutFloodStart = true
   end 
-
-  -- --if the deni mast reached the exit after seeing the intruders, sound the alarm
-  -- if bInstrudersSpotted then
-  --   if exec.Ent.Name == MasterName then
-  --     if pointIsInSpawns(exec.Ent.Pos, "Escape") then
-  --       store.bFloodStarted = true
-  --       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Alarm_Started_Denizens.json")
-  --       store.bToldDenizensAboutFloodStart = true
-  --     end
-  --   end
-  -- end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   -- if exec.Ent.ApCur == 0 then
@@ -345,21 +359,8 @@ function RoundEnd(intruders, round)
         --got to the waypoint.  Tell deni's about both the waypoint and the alarm.
         store.bToldDenizensAboutFloodStart = true
         Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Intruders_Got_To_Waypoint_Denizens.json")
-      end
-
-      if store.bFloodStarted then
         Script.SetMusicParam("tension_level", 0.7)
-        --At the start of each denizen turn, we're going to randomly spawn attendants at 
-        --the flood points.  Also need to prevent spawning within LoS of an intruder.
-
-        if TotalDeniCount() < 20 then  --don't want to overdo it
-          for i = 1, 3, 1 do 
-            ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", Script.GetSpawnPointsMatching("Flood_Point"), true)
-            filename = "ch03/Orderly.lua"
-            Script.BindAi(ent, filename)
-          end
-        end  
-      end      
+      end 
     else
       Script.DialogBox("ui/dialog/Lvl03/pass_to_intruders.json")
       if not store.bDoneIntruderIntro then
@@ -431,10 +432,11 @@ end
 function StoreSpawn(name, spawnPos)
   spawn_exec = {script_spawn=true, name=name, pos=spawnPos}
   store.execs[table.getn(store.execs) + 1] = spawn_exec
+  return doSpawn(spawn_exec)
 end
 
 function doSpawn(spawnExec)
-  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+  return Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
 end
 
 function StoreGear(name, ent)
@@ -586,7 +588,6 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   end
 
   StoreSpawn(thingToSpawn, SpawnPos)
-  doSpawn(spawn_exec)
 
 end
 

@@ -9,7 +9,7 @@ function GetTarget()
   targets = {"Ghost Hunter", "Collector", "Reporter", "Detective"}
   print("targetting2")
   for _, target in pairs(targets) do
-    print("targetting3")
+    print("targetting3", target)
     ents = Cheat.GetEntsByName(target)
     print("targetting4")
     if table.getn(ents) > 0 then
