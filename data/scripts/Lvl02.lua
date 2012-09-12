@@ -40,14 +40,18 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
+  math.randomseed(os.time())
+  store.DeathCounter = 0
 
+  relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
+  i = 1
+  store.RelicPositions = {}
+  for _, spawn in pairs(relic_spawn) do
+    store.RelicPositions[i] = spawn.Pos
+    i = i + 1
+    Script.SpawnEntityAtPosition("Rift", spawn.Pos)
+  end
 
-
-
-
---  Script.SelectEnt(Relic)
-  --Sets the length of time the intruders have to get the master to the relic after the relic has been triggered.
-  store.nCountdown = 5
 end
 
 function intrudersSetup()
@@ -55,8 +59,6 @@ function intrudersSetup()
   if IsStoryMode() then
     intruder_names = {"Collector", "Occultist", "Reporter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
-  -- else
-  --   --permit all choices for normal vs play
   end 
 
   for _, name in pairs(intruder_names) do
@@ -68,71 +70,43 @@ function intrudersSetup()
 end
 
 function denizensSetup()
-  -- This creates a list of entities and associated point values.  The order
-  -- the names are listed in here is the order they will appear to the user.
-  if IsStoryMode() then
-    ents = {
-      {"Golem", 1},
-    }
-  else
-    --permit all choices for normal vs play.
-
-  end
   Script.SetVisibility("denizens")
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
 
-  -- Now we give the user a ui with which to place these entities.  The user
-  -- will have 1 point to spend, and each of the options costs one point, so
-  -- they will only place 1.  We will make sure they place exactly one.
-  -- Also the "Master-.*" indicates that the entity can only be placed in
-  -- spawn points that have a name that matches the regular expression
-  -- "Master-.*", which means anything that begins with "Master-".  So
-  -- "Master-BackRoom" and "Master-Center" both match, for example.
-  placed = {}
-  while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
-  end
+  spawn = Script.GetSpawnPointsMatching("Master_.*")
+  Script.SpawnEntitySomewhereInSpawnPoints("Golem", spawn, false)
 
-  -- placed is an array containing all of the entities placed, in this case
-  -- there will only be one, and we will use that one to determine what
-  -- servitors to make available to the user to place.
-  if placed[1].Name == "Chosen One" then
-    MasterName = "Chosen One" 
-    ents = {
-      {"Disciple", 1},
-      {"Devotee", 1},
-      {"Eidolon", 3},
-    }
-  end
-  if placed[1].Name == "Golem" then
-    MasterName = "Golem"
-    ents = {
-      {"Angry Shade", 1},
-      {"Lost Soul", 1},
-      {"Vengeful Wraith", 2},
-     }  
-  end
+  store.MasterName = "Golem"
+  ServitorEnts = 
+  {
+    {"Angry Shade", 1},
+    {"Lost Soul", 1},
+    {"Vengeful Wraith", 2},
+  }  
 
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_.*")
-  placed = Script.PlaceEntities("Servitors_.*", ents, 0, 10)
-  relic_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
-  Relic = Script.SpawnEntitySomewhereInSpawnPoints("Rift", relic_spawn, false)
-   --Highlight the op point for the deniznes
-  Script.SetWaypoint("Relic" , "denizens", Relic.Pos, 3) 
+  placed = Script.PlaceEntities("Servitors_.*", ServitorEnts, 0, 8)
+  MoveWaypoint()
 end
 
 function RoundStart(intruders, round)
+  if store.execs == nil then
+    store.execs = {}
+  end
   if round == 1 then
-    if intruders then
+    if intruders and not store.bDoneIntruderSetup then
+      store.bDoneIntruderSetup = true
       intrudersSetup()     
     else
-      Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Opening_Denizens.json")
-      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
-      denizensSetup()
+      if not store.bDoneDeniSetup then
+        store.bDoneDeniSetup = true
+        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Opening_Denizens.json")
+        Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+        denizensSetup()
+      end
     end
     Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")
@@ -141,6 +115,7 @@ function RoundStart(intruders, round)
       DoTutorials()
     end
 
+    store.execs = {}  
     Script.EndPlayerInteraction()
     return
   end
@@ -168,46 +143,59 @@ function RoundStart(intruders, round)
 end
 
 function GetDistanceBetweenEnts(ent1, ent2)
-  return (math.abs(ent1.Pos.X - ent2.Pos.X) + math.abs(ent1.Pos.Y - ent2.Pos.Y))
+  v1 = ent1.Pos.X - ent2.Pos.X
+  if v1 < 0 then
+    v1 = 0-v1
+  end
+  v2 = ent1.Pos.Y - ent2.Pos.Y
+  if v2 < 0 then
+    v2 = 0-v2
+  end
+  return v1 + v2
 end
 
+function GetDistanceBetweenPoints(pos1, pos2)
+  v1 = pos1.X - pos2.X
+  if v1 < 0 then
+    v1 = 0-v1
+  end
+  v2 = pos1.Y - pos2.Y
+  if v2 < 0 then
+    v2 = 0-v2
+  end
+  return v1 + v2
+end
+
+
 function OnMove(ent, path)
-  -- for _, ent in pairs(Script.GetAllEnts()) do
-  --   if ent.Name == "Relic" then
-  --     Relic = ent
-  --     break
-  --   end
-  -- end
 
   return table.getn(path)
 end
 
 function OnAction(intruders, round, exec)
-  -- Check for players being dead here
   if store.execs == nil then
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
  
   if exec.Action.Type == "Basic Attack" then
-    if exec.Target.Name == MasterName and exec.Target.Hp <= 0 then
+    if exec.Target.Name == store.MasterName and exec.Target.Hp <= 0 then
       --master is dead.  Intruders win.
       Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Intruders.json")
     end
   end
 
-  if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not store.bCountdownTriggered then
+  if  exec.Ent.Side.Intruder and GetDistanceBetweenPoints(exec.Ent.Pos, store.ActivePos) <= 3 and not store.bHarmedGolem then
     --The intruders got to the relic before the master.  They win.
-    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Intruders.json")
+    store.bHarmedGolem = true
+    --Script.SetHp(MasterEnt(), MasterEnt().HpCur - 5)
+    StoreDamage(5, MasterEnt())
   end 
 
-  if exec.Ent.Name == MasterName and GetDistanceBetweenEnts(exec.Ent, Relic) <= 3 and not store.bCountdownTriggered then
-     store.bCountdownTriggered = true
-     StoreWaypoint("Relic", "", "", "", true)
-     if exec.Ent.ApCur > 5 then
-      Script.SetAp(exec.Ent, 5)
-     end
-     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Denizens.json", {turns=store.nCountdown})
+  if exec.Ent.Name == store.MasterName and GetDistanceBetweenPoints(exec.Ent.Pos, store.ActivePos) <= 3 then
+    store.bHarmedGolem = false --reset this so the intruders can race to the next rift.
+    MoveWaypoint()
+    SpawnMinions(exec.Ent)
   end 
 
   --the intruders can only see the objective in LoS
@@ -222,6 +210,11 @@ function OnAction(intruders, round, exec)
     end
   end 
 
+  if not AnyIntrudersAlive() then
+    --game over, the denizens win.
+    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Denizens.json")
+  end
+
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   -- if exec.Ent.ApCur == 0 then
   --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
@@ -231,17 +224,58 @@ function OnAction(intruders, round, exec)
   -- end   
 end
 
+function MoveWaypoint()
+  if not store.bWPSetupDone then
+    store.bWPSetupDone = true
+    store.ActivePos = {}
+    store.ActivePos.X = 0
+    store.ActivePos.Y = 0
+  end
+  bNewPointFound = false
+  while not bNewPointFound do
+    indexToUse = math.random(1, table.getn(store.RelicPositions))  
+    if store.RelicPositions[indexToUse].X ~= store.ActivePos.X or store.RelicPositions[indexToUse].Y ~= store.ActivePos.Y then
+      bNewPointFound = true
+    end
+  end
+  StoreWaypoint("Relic", "denizens", store.RelicPositions[indexToUse], 3, false) 
+  StoreWaypoint("RelicInt", "intruders", store.RelicPositions[indexToUse], 3, false) 
+  store.ActivePos = store.RelicPositions[indexToUse]
+  print("gtheckouttamove")
+end
+
+function SpawnMinions(mstrEnt)
+  i = 1
+  while i <= 6 do
+    --Summon a new minion
+    omgCounter = 1
+    nRandomNumberOfAwesomenoess = math.random(200)
+    nRandomCounter = 1
+    for _, PossibleSpawn in pairs(Script.GetLos(mstrEnt)) do
+      if nRandomCounter == nRandomNumberOfAwesomenoess then
+        ent = StoreSpawn("Angry Shade", PossibleSpawn) 
+        if ent.HpCur > 0 then  --we succeeded at spawning a dude
+          Script.SetAp(ent, 0)
+          i = i + 1
+          break
+        end
+      else
+        nRandomCounter = nRandomCounter + 1
+      end
+    end
+    omgCounter = omgCounter + 1
+    if omgCounter >= 50 then
+      break
+    end
+  end
+end
+
 function RoundEnd(intruders, round)
   if round == 1 then
     return
   end
 
   bSkipOtherChecks = false  --Resets this every round
-
-  if store.nCountdown == 0 then
-    --game over, the denizens win.
-    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Denizens.json")
-  end
 
   if store.side == "Humans" then
     Script.ShowMainBar(false)
@@ -308,7 +342,11 @@ function RoundEnd(intruders, round)
       if exec.script_waypoint then
         doWaypoint(exec)
         bDone = true
-      end          
+      end  
+      if exec.script_damage then
+        doDamage(exec)
+        bDone = true
+      end                 
       if not bDone then
         Script.DoExec(exec)
 
@@ -322,20 +360,24 @@ function RoundEnd(intruders, round)
       end
     end
     store.execs = {}
-
-    if store.bCountdownTriggered then
-      --always let the intruders know where the deni master is
-      StoreWaypoint("Relic2", "intruders", MasterEnt().Pos, 1, false)
-    end    
   end
 end
 
 function MasterEnt()
   for _, ent in pairs(Script.GetAllEnts()) do
-    if ent.Name == MasterName then
+    if ent.Name == store.MasterName then
       return ent
     end
   end
+end
+
+function AnyIntrudersAlive()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Side.Intruder and ent.HpCur > 0 then
+      return true
+    end
+  end
+  return false  
 end
 
 function pointIsInSpawn(pos, sp)
@@ -345,10 +387,11 @@ end
 function StoreSpawn(name, spawnPos)
   spawn_exec = {script_spawn=true, name=name, pos=spawnPos}
   store.execs[table.getn(store.execs) + 1] = spawn_exec
+  return doSpawn(spawn_exec)
 end
 
 function doSpawn(spawnExec)
-  Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+  return Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
 end
 
 function StoreDespawn(ent)
@@ -357,12 +400,10 @@ function StoreDespawn(ent)
 end
 
 function deSpawn(despawnExec)
-  if despawnExec.entity.HpMax then  --can only kill things that have hp
-    Script.PlayAnimations(despawnExec.entity, {"defend", "killed"})
-    Script.SetHp(despawnExec.entity, 0)
-  end
-  DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
-  Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
+  -- DeadBodyDump = Script.GetSpawnPointsMatching("Dead_People")
+  -- DeadBodyDump[1].Pos.X = DeadBodyDump[1].Pos.X + store.DeathCounter
+  -- store.DeathCounter = store.DeathCounter + 1
+  -- Script.SetPosition(despawnExec.entity, DeadBodyDump[1].Pos)
 end
 
 function SelectCharAtTurnStart(side)
@@ -415,4 +456,14 @@ function doWaypoint(waypointExec)
   else
     return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
   end
+end
+
+function StoreDamage(amnt, ent)
+  damage_exec = {script_damage=true, amount=amnt, entity=ent, hpcur=ent.HpCur}
+  store.execs[table.getn(store.execs) + 1] = damage_exec
+  doDamage(damage_exec)
+end
+
+function doDamage(damageExec)
+  Script.SetHp(damageExec.entity, damageExec.hpcur - damageExec.amount)
 end
