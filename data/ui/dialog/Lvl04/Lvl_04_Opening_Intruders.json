@@ -24,7 +24,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "ADAM MC-CAMEO, noted philanthropist and antiquarian is determine to reclaim the structure and turn it into a museum. But he knows that he has to clear out whatever's in the catacombs first.",
+          "Text": "Peter Chelios, noted philanthropist and antiquarian is determine to reclaim the structure and turn it into a museum. But he knows that he has to clear out whatever's in the catacombs first.",
           "Image":
           {
             "Path": "ui/dialog/Lvl04/collector.png"
@@ -57,7 +57,7 @@
           "Text": "Each member of this final team carries Luciferic Beacons, which create pools of magical sunlight. These will weaken the creatures of darkness, making them vulnerable.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -72,7 +72,7 @@
           "Text": "If the team can place beacons in five different chambers of the catacombs, they will cleanse the evil and destroy the supernatural darkness.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -102,7 +102,7 @@
           "Text": "And the beacons are fragile, easily destroyed if left unguarded.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -114,10 +114,10 @@
       [
         {
           "Next": "Start9",
-          "Text": "This GUY is GOOD AT THIS",
+          "Text": "Nikola Fury is an action academic, a paranormal investigator who prefers to get up close and personal in the field.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/hunter_dialog.png"
           }
         }
       ]
@@ -128,28 +128,13 @@
       "Sections":
       [
         {
-          "Next": "Start10",
-          "Text": "This GUY is GOOD AT THIS",
+          "Text": "Tracy Latona is a medium with psychic assistance abilities for her friends and silver bullets in her pistol for things that go bump in the night.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
-          }
-        }
-      ]
-    },
-   "Start10": 
-    {
-      "Format": "NoOptionsLeftImage",
-      "Sections":
-      [
-        {
-          "Text": "This GUY is GOOD AT THIS",
-          "Image":
-          {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/cordelia_dialog.png"
           }
         }
       ]
     }
-  }
+   }
 }

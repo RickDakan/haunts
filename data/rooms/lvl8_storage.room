@@ -1,0 +1,1 @@
+{"Name":"lvl8_storage","Size":{"Name":"Medium_B","Dx":15,"Dy":20},"Furniture":[{"Defname":"Armoire","X":7,"Y":11,"Rotation":1,"Flip":false},{"Defname":"Barrels 01 Black","X":7,"Y":10,"Rotation":0,"Flip":false}],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_18_pit.png"},"Wall":{"Path":"rooms/walls/wall_02.png"},"Themes":null,"Sizes":null,"Decor":null}

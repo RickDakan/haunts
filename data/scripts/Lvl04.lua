@@ -20,7 +20,9 @@ function Init(data)
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
   -- check data.map == "random" or something else
-  Script.LoadHouse("Lvl_04_Catacombs")  
+  Script.LoadHouse("Lvl_04_Catacombs")
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 2")
+  Script.SetMusicParam("tension_level", 0.1)   
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -258,6 +260,7 @@ function OnAction(intruders, round, exec)
 
     if (store.Room1 or store.Room2 or store.Room3 or store.Room4 or store.Room5) and not store.bTalkedAboutBeaconInFirstRoom then
       store.bTalkedAboutBeaconInFirstRoom = true
+      Script.SetMusicParam("tension_level", 0.4)  
       Script.DialogBox("ui/dialog/Lvl04/Lvl_04_First_Beacon_Intruders.json")
     end    
 

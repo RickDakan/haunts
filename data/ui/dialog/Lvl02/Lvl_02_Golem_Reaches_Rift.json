@@ -1,0 +1,54 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The arcane rift fills the Golem's clay veins with unholy life.",
+		  "Image":{
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "'To me, spirits and cadavers! Protect your master as I fulfill my destiny!'",
+		  "Image":{
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }       
+        }   
+      ] 
+    },
+    "Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "The Golem draws reinforcements from the rift.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/shade.png"
+          }       
+        }   
+      ] 
+    }    
+  }
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

@@ -21,7 +21,8 @@ function Init(data)
 
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_02_Basement_Lab")
-  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")  
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+  Script.SetMusicParam("tension_level", 0.1)   
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -189,12 +190,14 @@ function OnAction(intruders, round, exec)
     --The intruders got to the relic before the master.  They win.
     store.bHarmedGolem = true
     --Script.SetHp(MasterEnt(), MasterEnt().HpCur - 5)
+    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Intruder_Reaches_Rift.json")
     StoreDamage(5, MasterEnt())
   end 
 
   if exec.Ent.Name == store.MasterName and GetDistanceBetweenPoints(exec.Ent.Pos, store.ActivePos) <= 3 then
     store.bHarmedGolem = false --reset this so the intruders can race to the next rift.
     MoveWaypoint()
+    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Golem_Reaches_Rift.json")
     SpawnMinions(exec.Ent)
   end 
 
