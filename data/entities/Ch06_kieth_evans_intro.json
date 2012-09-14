@@ -1,0 +1,28 @@
+{
+  "Name": "Professor Keith Evans intro",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/Collector",
+  "Still": {
+    "Path": "entities/collector_still.png"
+  },
+  "Action_names": [
+    "Move Test"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": {
+    "Gear_names": [
+	"Pick Me Ups",
+	"Experimental Battery",
+	"Spectral Goggles v2"
+    ]
+  },
+  "Base": {
+    "Ap_max": 100,
+    "Hp_max": 20,
+    "Corpus": 11,
+    "Ego": 9,
+    "Sight": 15
+  },
+  "Dissolve": true
+}
