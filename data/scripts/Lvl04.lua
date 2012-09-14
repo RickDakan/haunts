@@ -138,6 +138,7 @@ function RoundStart(intruders, round)
       DoTutorials()
     end
 
+    store.game = Script.SaveGameState()
     Script.EndPlayerInteraction()
 
     return
