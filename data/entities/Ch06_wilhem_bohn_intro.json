@@ -1,0 +1,25 @@
+{
+  "Name": "Sir Wilhem Bohn intro",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/detective",
+  "Still": {
+    "Path": "entities/detective_still.png"
+  },
+  "Action_names": [
+    "Move Test"  
+  ],
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 0,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 100,
+    "Hp_max": 20,
+    "Corpus": 9,
+    "Ego": 11,
+    "Sight": 30
+  },
+  "Dissolve": true
+}
