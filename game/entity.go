@@ -146,9 +146,6 @@ func (e *Entity) Load(g *Game) {
     }
   })
 
-  e.Ai_file_override = e.Ai_path
-  e.LoadAi()
-
   if e.Side() == SideHaunt || e.Side() == SideExplorers {
     e.los = &losData{}
     full_los := make([]bool, house.LosTextureSizeSquared)
@@ -163,6 +160,9 @@ func (e *Entity) Load(g *Game) {
   g.viewer.AddDrawable(e)
 
   e.game = g
+
+  e.Ai_file_override = e.Ai_path
+  e.LoadAi()
 }
 
 func (e *Entity) Release() {

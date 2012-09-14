@@ -1,0 +1,28 @@
+{
+  "Name": "Foster Father",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/cult_leader",
+  "Still": {
+    "Path": "entities/cult_leader_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+	"Crozier",
+	"Revelations of Despair",
+	"Voice of the Beyond"    
+  ],
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 0,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 115,
+    "Corpus": 12,
+    "Ego": 11,
+    "Sight": 30
+  },
+  "Dissolve": false
+}

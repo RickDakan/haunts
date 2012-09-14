@@ -42,5 +42,16 @@
     },
     "Text": "1926 -- The Duchess Orlac flourishes in the preternatural darkness of the catacombs beneath the shuttered Tyree Sanitorium.",
     "Size": 20
+  },
+   {
+    "Id": "Lvl05.lua",
+    "Small": {
+      "Path": "ui/start/versus/ancient-one.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_04.png"
+    },
+    "Text": "1935 -- Museum and stuff.",
+    "Size": 20
   }
 ]

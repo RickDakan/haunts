@@ -23,7 +23,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "Elias Tyree has taken a risk breaking Bosch's wards when he finally entered the cellars. Now an arcane rift has opened.",
+          "Text": "Elias Tyree has taken a risk breaking Bosch's wards when he finally entered the cellars. Now arcane rifts are opening throught the lab.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl02/occultist3.png"
@@ -38,7 +38,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "If The Thing Bosch was creating seizes the rift before Tyree does, it will become unimaginably powerful.",
+          "Text": "The Thing Bosch was creating can use the energy from these rifts to summon more spirits to its aid.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl02/golem.png"
@@ -53,7 +53,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "But if Tyree and his fellow intruders can control the rift's energies and deactivate the Golem, then all Bosch's secrets will be his.",
+          "Text": "But if Tyree and his fellow intruders can reach a rift first, they can channel some of the energy into a powerful feedback burst, damaging The Thing.",
   	      "Image":
           {
             "Path": "ui/dialog/stills/occultist_dialog.png"

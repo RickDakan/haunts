@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "The Duchess Orlac was drawn to the darkness, having existed in the shadows for centuries in the Old World. But even an ocean away she was drawn to the Tyree Manse's evil.",
+          "Text": "The Duchess Orlac, who has existed in the shadows for centuries in the Old Worl sensed this umbral anomaly from an ocean away drawing her to the Tyree Manse's evil.",
           "Image":
           {
             "Path": "ui/dialog/Lvl04/vampire_left.png"
@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "The catacombs have become her new home, and the shadowy monster her new servants. Unlife away from the poisonous light of day has never been grander, her powers never greater.",
+          "Text": "The catacombs have become her new home, and the shadowy monsters her new servants. Unlife away from the poisonous light of day has never been grander, her powers never greater.",
           "Image":
           {
             "Path": "ui/dialog/Lvl04/vampire_left.png"
@@ -69,7 +69,7 @@
       [
         {
           "Next": "Start6",
-          "Text": "But humans are drawn to the darkness as well, unfortunately, they always bring light with them. These intruders have brought a particularly powerful luminesence with them.",
+          "Text": "But humans are drawn to the darkness as well and, unfortunately, they always bring light with them. These intruders have brought a particularly powerful luminesence with them.",
           "Image":
           {
             "Path": "ui/dialog/Lvl04/collector.png"
@@ -87,7 +87,7 @@
           "Text": "Their beacons are as bright as the sun, making The Duchess and her minions vulnerable. Should they illuminate enough of the catacombs, they will destroy the darkness and banish Orlac.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -102,7 +102,7 @@
           "Text": "Every beacon lit makes The Duchess summon more dark minions to try and snuff the light out. The beacons are fragile, but deadly, and must be stopped.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
           }
         }
       ]
@@ -117,7 +117,7 @@
           "Text": "Merely stiking the luciferous intruders once drains Orlac, sending her to her lair to recover.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
           }
         }
       ]
@@ -129,10 +129,10 @@
       [
         {
           "Next": "Start10",
-          "Text": "These Minions always attack the Intruders",
+          "Text": "The Darklings are creatures of pure darkness, and focus on attacking the beacons.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/shade_dialog.png"
           }
         }
       ]
@@ -143,10 +143,10 @@
       "Sections":
       [
         {
-          "Text": "These minions always attack the beacons",
+          "Text": "The bogeymen are monstrous remains of Tyree's experiments, now under Orlac's control. They prefer to feast on the intruders.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/eidolon_dialog.png"
           }
         }
       ]
