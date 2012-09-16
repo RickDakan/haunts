@@ -1,0 +1,11 @@
+{
+  "Name": "Door 13 - Wall Opening 2sp",
+  "Width": 2,
+  "Always_open": true,
+  "Opened_texture": {
+    "Path": "doors/door_13_wall_opening_small.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_13_wall_opening_small.png"
+  }
+}
