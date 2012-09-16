@@ -160,7 +160,6 @@ function RoundStart(intruders, round)
 
   if store.bShiftChange and not intruders then
     store.bShiftChange = false  
-
     if ValueForReinforce() > 1 then
       for i = 1,  math.floor((ValueForReinforce()/2) + .5) , 1 do
         --Pick an entity
@@ -168,7 +167,7 @@ function RoundStart(intruders, round)
           floodEnt = ServitorEnts[1][1]
         else
           floodEnt = ServitorEnts[2][1]
-        end     
+        end  
         Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, Script.GetSpawnPointsMatching("Servitors_Start"), true)
       end
     end 
@@ -528,7 +527,7 @@ function ValueForReinforce()
 
   nTotalValueOnBoard = 0
   for _, ent in pairs(Script.GetAllEnts()) do
-    for _, entValue in pairs(ents) do
+    for _, entValue in pairs(ServitorEnts) do
       if ent.Name == entValue[1] then
         nTotalValueOnBoard = nTotalValueOnBoard + entValue[2]
       end 
