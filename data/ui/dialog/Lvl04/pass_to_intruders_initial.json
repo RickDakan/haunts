@@ -1,0 +1,16 @@
+{
+  "Size": "large",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsCenterImage",
+      "Sections":[
+        {
+          "Text": "",
+          "Image":{
+            "Path": "ui/dialog/Lvl04/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}
