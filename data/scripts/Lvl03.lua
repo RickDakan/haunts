@@ -42,8 +42,8 @@ function Init(data)
 
   --spawn the objective point and the fake op points
   --!!!!
-  waypoint_spawn = Script.GetSpawnPointsMatching("CrashTest")
-  --waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
+
+  waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
   objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
 
   store.Waypoint = objSpawn
@@ -243,8 +243,8 @@ function OnAction(intruders, round, exec)
     --The intruders got to the first waypoint.
     store.bWaypointDown = true
 
-    StoreWaypoint("Waypoint", "", "", "", true)
-    StoreWaypoint("Waypoint", "intruders", Script.GetSpawnPointsMatching("Waypoint2")[1].Pos, 3, false)  
+    StoreWaypoint("Waypoint1", "", "", "", true)
+    StoreWaypoint("Waypoint2", "intruders", Script.GetSpawnPointsMatching("Waypoint2")[1].Pos, 3, false)  
 
     StoreCondition("Carrying Antidote", exec.Ent, true)
     doCondition(condition_exec)
@@ -261,8 +261,8 @@ function OnAction(intruders, round, exec)
         --Pick an entity
 
         --JONATHAN - Uncomment these two lines to see a crash when the waypoint is first activated.    
-        -- ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
-        -- Script.SetAp(ent, 0)
+        ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
+        Script.SetAp(ent, 0)
       end
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.

@@ -1,0 +1,31 @@
+{
+  "Name": "Corpse 6 intruder",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Vengeful Curse",
+    "Grave Grasp",
+    "Ghastly Howl"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": 
+  {
+    "Gear_names": 
+    [
+      "Pick Me Ups"
+    ]
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 11,
+    "Ego": 9,
+    "Sight": 10
+  },
+  "Dissolve": false
+}

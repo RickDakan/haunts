@@ -37,21 +37,20 @@ function Init(data)
   math.randomseed(os.time())
 
   --Spawn intro versions of each of the 4 master.
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Vampire 6", "Vampire_Start")
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Vampire 6", Script.GetSpawnPointsMatching("Vampire_Start"), false)
   Script.SetWaypoint("Vampire", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Vampire2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Cult Leader 6", "Cult_Leader_Start")
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Cult Leader 6", Script.GetSpawnPointsMatching("Cult_Leader_Start"), false)
   Script.SetWaypoint("Cult Leader", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Cult Leader2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch 6", "Bosch_Start")
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch 6", Script.GetSpawnPointsMatching("Bosch_Start"), false)
   Script.SetWaypoint("Bosch", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Bosch2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Ancient 6", "Ancient_Start")
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Ancient 6", Script.GetSpawnPointsMatching("Ancient_Start"), false)
   Script.SetWaypoint("Ancient", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Ancient2", "denizens", ent.Pos, 1)
-
   --Spawn the golem.
-  Script.SpawnEntitySomewhereInSpawnPoints("Golem 6", "Golem_Start")
+  Script.SpawnEntitySomewhereInSpawnPoints("Golem 6", Script.GetSpawnPointsMatching("Golem_Start"), false)
 
   store.bChoiceMode = true
   store.IntruderNames = {"Professor Keith Evans"}
@@ -60,10 +59,11 @@ function Init(data)
   store.DenizenNames = {"Sir Wilhem Bohn"}
   store.DenizenTypes = {"Master"}
   store.DenizenMinions = {}
+
+  store.ScoreCounter = 10
 end
 
 function intrudersSetup()
-
   if IsStoryMode() then
     intruder_names = {"Professor Keith Evans intro"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
@@ -83,16 +83,24 @@ function denizensSetup()
     denizen_spawn = Script.GetSpawnPointsMatching("Master_Start")
   end 
 
+  for _, name in pairs(denizen_names) do
+    ent = Script.SpawnEntitySomewhereInSpawnPoints(name, denizen_spawn, false)
+  end
+
   -- Choose entry point here.
   Script.SaveStore()
 end
 
 function RoundStart(intruders, round)
+  if not store.execs then
+    store.execs = {}
+  end
+
   if round == 1 then
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl05/Lvl_06_Opening_Denizens.json")
+      Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Opening_Denizens.json")
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
       denizensSetup()
     end
@@ -103,31 +111,15 @@ function RoundStart(intruders, round)
       DoTutorials()
     end
 
+    store.game = Script.SaveGameState()
     Script.EndPlayerInteraction()
 
     return
   end
 
   if store.bChoiceMode then
-
-
+    ZeroMasterAp()
   else
-
-    --Each turn, we'll spawn two minions for the opposing team per phase
-    SpawnMinions(1, 2, not intruders)
-    if store.TurnCounter > 10 then
-      SpawnMinions(2, 2, not intruders)
-    end
-    if store.TurnCounter > 20 then
-      SpawnMinions(3, 2, not intruders)
-    end        
-    if store.TurnCounter > 30 then
-      SpawnMinions(4, 2, not intruders)
-    end
-
-
-    MoveMinions(intruders)
-
     RespawnDeadPeople(intruders)
   end
 
@@ -175,16 +167,15 @@ function OnAction(intruders, round, exec)
     if EntIsMinion(exec.Ent) then
       if GetDistanceBetweenPoints(exec.Ent.Pos, Script.GetSpawnPointsMatching("Objective")[1].Pos) <= 2 then
         StoreDespawn(exec.Ent)
-        Explode()
-        PushGolem(exe.Ent.Side.Intruder)
-
+        --Explode()
+        PushGolem(exec.Ent.Side.Intruder)
         --If the golem reaches the doors on either side, the opposing side wins.
-        golemEnt = GetEntWithName("Golem 6")
-        if pointIsInSpawns(golemEnt.Pos "Intruders_Win") then
-          Script.DialogBox("ui/dialog/Lvl06/Victory_Intruders.json")
+        Script.SetAp(exec.Ent, 0)
+        if store.ScoreCounter >= 20 then
+          Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Victory_Intruders.json")
         end
-        if pointIsInSpawns(golemEnt.Pos "Denizens_Win") then
-          Script.DialogBox("ui/dialog/Lvl06/Victory_Denizens.json")
+        if store.ScoreCounter <= 0 then
+          Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Victory_Denizens.json")
         end
       end
     end
@@ -230,7 +221,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl06/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl05/Lvl_06_Opening_Intruders.json")
+        Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
@@ -242,7 +233,10 @@ function RoundEnd(intruders, round)
       if store.bChoiceMode then
 
       else
-
+        if not store.bDeniSetupDone then
+          store.bDeniSetupDone = true
+          RespawnDeadPeople(false)
+        end 
       end
 
     end
@@ -261,6 +255,10 @@ function RoundEnd(intruders, round)
         doSpawn(exec)
         bDone = true
       end
+      if exec.script_setPos then
+        doSetPos(exec)
+        bDone = true
+      end      
       if exec.script_despawn then
         deSpawn(exec)
         bDone = true
@@ -268,11 +266,7 @@ function RoundEnd(intruders, round)
       if exec.script_waypoint then
         doWaypoint(exec)
         bDone = true
-      end
-      if exec.script_ai then
-        doAi(exec)
-        bDone = true
-      end                   
+      end                 
       if not bDone then
         Script.DoExec(exec)
 
@@ -292,42 +286,24 @@ end
 function EndChoicePhase()
   store.bChoiceMode = false
   if table.getn(store.DenizenNames) < 3 then  --add the last dude to the team with fewer dudes.
-    PickEnt(GetEntWithName(store.DenizenNames[1]) .. " intro", true)
+    PickEnt(GetEntWithName(store.DenizenNames[1] .. " intro"), true)
   else
-    PickEnt(GetEntWithName(store.IntruderNames[1]) .. " intro", true)
+    PickEnt(GetEntWithName(store.IntruderNames[1] .. " intro"), true)
   end
-
   --Despawn the two dummy dudes.
-  StoreDespawn(GetEntWithName(store.IntruderNames[1]))
-  StoreDespawn(GetEntWithName(store.DenizenNames[1]))
+  StoreDespawn(GetEntWithName(store.IntruderNames[1] .. " intro"))
+  StoreDespawn(GetEntWithName(store.DenizenNames[1]  .. " intro"))
 
-  --Spawn the real intruder and master and their teams.
+  StoreWaypoint("Objective", "intruders", Script.GetSpawnPointsMatching("Objective")[1].Pos, 2, false)
+  StoreWaypoint("ObjectiveDen", "denizens", Script.GetSpawnPointsMatching("Objective")[1].Pos, 2, false)
+
+  -- --Spawn the real intruder and master and their teams.
   RespawnDeadPeople(true)
-  RespawnDeadPeople(false)
+  -- RespawnDeadPeople(false)
+
+  Script.EndPlayerInteraction()
 
   --Side that didn't just pick will have the first turn.
-end
-
-function SpawnMinions(phase, amount, bMinionSideIsIntruders)
-  spawns = Script.GetSpawnPointsMatching("Spawn" .. phase)
-  for i = 1, amount, 1 do
-    if bMinionSideIsIntruders then
-      ent = StoreSpawn(store.IntruderMinions[math.random(4) - 1], RandomPointInSpawns(spawns))
-    else
-      ent = StoreSpawn(store.DenizenMinions[math.random(4) - 1], RandomPointInSpawns(spawns))
-    end
-    StoreAi(ent, "ch06/minion.lua") 
-  end
-end
-
-function MoveMinions(bIntruders)
-  for _, ent in pairs(Script.GetAllEnts()) do
-    if ent.Side.Intruder = bIntruders then
-      if EntIsMinion(ent) then
-
-      end
-    end
-  end
 end
 
 function Explode()
@@ -352,14 +328,28 @@ end
 
 function PushGolem(bIntruders)
   golemEnt = GetEntWithName("Golem 6")
+  newPos = golemEnt.Pos
   newPos.Y = golemEnt.Pos.Y
   if bIntruders then
     newPos.X = golemEnt.Pos.X + 1
+    store.ScoreCounter = store.ScoreCounter + 1
   else
     newPos.X = golemEnt.Pos.X - 1
+    store.ScoreCounter = store.ScoreCounter - 1
   end
   ClearSpot(newPos)
-  Script.SetPosition(golemEnt, newPos)
+  StoreSetPos(golemEnt, newPos)
+  side3 = {Intruder = bntruders, Denizen = not intruders, Npc = false, Object = false}
+  nextEnt = GetEntityWithMostAP(side3)
+  Script.SelectEnt(nextEnt)
+end
+
+function ZeroMasterAp()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name ~= store.IntruderNames[1] .. " intro" and ent.Name ~= store.DenizenNames[1] .. " intro" then
+      Script.SetAp(ent, 0)
+    end  
+  end
 end
 
 --****END EVENTS****--
@@ -372,7 +362,17 @@ function StoreSpawn(entName, spawnPos)
 end
 
 function doSpawn(spawnExec)
-  return Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+   return Script.SpawnEntityAtPosition(spawnExec.name, spawnExec.pos)
+end
+
+function StoreSetPos(ent, setPos)
+  setpos_exec = {script_setPos=true, entity=ent, pos=setPos}
+  store.execs[table.getn(store.execs) + 1] = setpos_exec
+  return doSetPos(setpos_exec)
+end
+
+function doSetPos(SetPosExec)
+   return Script.SetPosition(SetPosExec.entity, SetPosExec.pos)
 end
 
 function StoreDespawn(ent)
@@ -400,16 +400,6 @@ function doWaypoint(waypointExec)
   else
     return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
   end
-end
-
-function StoreAi(ent, fileName)
-  ai_exec = {script_ai=true, entity=ent, filename=fileName}
-  store.execs[table.getn(store.execs) + 1] = ai_exec
-  doWaypoint(ai_exec)
-end
-
-function doAi(AiExec)
-  Script.BindAi(AiExec.entity, AiExec.filename)
 end
 --****END STORE/DO****--
 
@@ -485,97 +475,87 @@ function GetEntityWithMostAP(side)
   return entToSelect
 end
 
-function setLosModeToRoomsWithSpawnsMatching(side, pattern)
-  sp = Script.GetSpawnPointsMatching(pattern)
-  rooms = {}
-  for i, spawn in pairs(sp) do
-    rooms[i] = Script.RoomAtPos(spawn.Pos)
-  end
-  Script.SetLosMode(side, rooms)
-end
-
-function RandomPointInSpawns(spawns)
-  nRandomNumberOfAwesomenoess = math.random(0, table.getn(spawns) + 1)
-  return spawns[nRandomNumberOfAwesomenoess].Pos
-end
-
 function PickEnt(ent, bForce)
   checkEnt = GetEntWithName("Bosch 6")
-  if checkEnt.HpCur > 0 then
-    if GetDistanceBetweenEnts(ent, checkEnt) <= 1 or bForce then
+  if not store.sel1 then
+    if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Bosch Intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Bosch 6 intruder"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Bosch"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Wraith Intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Wraith 6 intruder"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Bosch Denizen"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Bosch 6"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Bosch"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Wraith Denizen"        
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Wraith 6"        
       end
       StoreWaypoint("Bosch", "", "", "", true)
       StoreWaypoint("Bosch2", "", "", "", true)
       StoreDespawn(checkEnt)
+      store.sel1 = true
       Script.SetAp(ent, 0)
     end
   end
 
   checkEnt = GetEntWithName("Vampire 6")
-  if checkEnt.HpCur > 0 then
-    if GetDistanceBetweenEnts(ent, checkEnt) <= 1 or bForce then
+  if not store.sel2 then
+    if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Vampire Intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Vampire 6 intruder"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Vampire"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Shade Intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Shade 6 intruder"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Vampire Denizen"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Vampire 6"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Vampire"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Shade Denizen"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Shade 6"
       end
       StoreWaypoint("Vampire", "", "", "", true)
       StoreWaypoint("Vampire2", "", "", "", true)
       StoreDespawn(checkEnt)
+      store.sel2 = true
       Script.SetAp(ent, 0)
     end
   end
 
   checkEnt = GetEntWithName("Ancient 6")
-  if checkEnt.HpCur > 0 then
-    if GetDistanceBetweenEnts(ent, checkEnt) <= 1 or bForce then
+  if not store.sel3 then
+    if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Ancient Intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Ancient 6 intruder"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Ancient"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Corpse Intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Corpse 6 intruder"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Ancient Denizen"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Ancient 6"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Ancient"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Corpse Denizen"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Corpse 6"
       end
       StoreWaypoint("Ancient", "", "", "", true)
       StoreWaypoint("Ancient2", "", "", "", true)
       StoreDespawn(checkEnt)
+      store.sel3 = true
       Script.SetAp(ent, 0)
     end
   end
 
   checkEnt = GetEntWithName("Cult Leader 6")
-  if checkEnt.HpCur > 0 then
-    if GetDistanceBetweenEnts(ent, checkEnt) <= 1 or bForce then
+  if not store.sel4 then
+    if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Cult Leader Intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Cult Leader 6 intruder"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Cult_Leader"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Cultist Intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Cultist 6 intruder"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Cult Leader Denizen"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Cult Leader 6"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Cult_Leader"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Cultist Denizen"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Cultist 6"
       end
       StoreWaypoint("Cult Leader", "", "", "", true)
       StoreWaypoint("Cult Leader2", "", "", "", true)
       StoreDespawn(checkEnt)
+      store.sel4 = true
       Script.SetAp(ent, 0)
     end
   end  
@@ -584,16 +564,29 @@ end
 function RespawnDeadPeople(intruders)
   if intruders then
     for i = 1, 3, 1 do
-      if GetEntWithName(store.IntruderNames[i]).HpCur <= 0 then
-        ent = StoreSpawn(store.IntruderNames[i], GetSpawnPointsMatching(store.IntruderTypes[i] .. "_Spawn")[1].Pos)
+      ent = GetEntWithName(store.IntruderNames[i])
+      if not ent then            
+        ent = StoreSpawn(store.IntruderNames[i], Script.GetSpawnPointsMatching(store.IntruderTypes[i] .. "_Spawn")[1].Pos)
         Script.SetAp(ent, 0) --death means you lose a turn.
+      else
+        if ent.HpCur <= 0 then
+          ent = StoreSpawn(store.IntruderNames[i], Script.GetSpawnPointsMatching(store.IntruderTypes[i] .. "_Spawn")[1].Pos)
+          Script.SetAp(ent, 0) --death means you lose a turn.
+        end
       end
+
     end
   else
     for i = 1, 3, 1 do
-      if GetEntWithName(store.DenizenNames[i]).HpCur <= 0 then      
-        ent = StoreSpawn(store.DenizenNames[i], GetSpawnPointsMatching(store.DenizenTypes[i] .. "_Spawn")[1].Pos)
+      ent = GetEntWithName(store.DenizenNames[i])
+      if not ent then  
+        ent = StoreSpawn(store.DenizenNames[i], Script.GetSpawnPointsMatching(store.DenizenTypes[i] .. "_Spawn")[1].Pos)
         Script.SetAp(ent, 0)
+      else
+        if ent.HpCur <= 0 then
+          ent = StoreSpawn(store.DenizenNames[i], Script.GetSpawnPointsMatching(store.DenizenTypes[i] .. "_Spawn")[1].Pos)
+          Script.SetAp(ent, 0) --death means you lose a turn.
+        end
       end
     end
   end
@@ -601,7 +594,7 @@ end
 
 function EntIsMinion(ent)
   for i = 1, 3, 1 do
-    if net.Name == store.DenizenNames[i] or net.Name == store.DenizenNames[i] then
+    if ent.Name == store.IntruderNames[i] or ent.Name == store.DenizenNames[i] then
       return false
     end  
   end
@@ -609,7 +602,7 @@ function EntIsMinion(ent)
 end
 
 function ClearSpot(pos)
-  for _, ent in pairs(Script.GetAllEnts())
+  for _, ent in pairs(Script.GetAllEnts()) do
     if ent.Pos.X == pos.X and ent.Pos.Y == pos.Y then
       StoreDespawn(ent)
     end
@@ -617,7 +610,7 @@ function ClearSpot(pos)
 end
 
 function pointIsInSpawn(pos, sp)
-  return pos.X >= sp.Pos.X and pos.X < sp.Pos.X + sp.Dims.Dx and pos.Y >= sp.Pos.Y and pos.Y < sp.Pos.Y + sp.Dims.Dy
+   return pos.X >= sp.Pos.X and pos.X < sp.Pos.X + sp.Dims.Dx and pos.Y >= sp.Pos.Y and pos.Y < sp.Pos.Y + sp.Dims.Dy
 end
 
 function pointIsInSpawns(pos, regexp)

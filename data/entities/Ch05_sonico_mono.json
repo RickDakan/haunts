@@ -2,33 +2,32 @@
   "Name": "Sonico Mono",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/detective",
+  "Sprite_path" : "entities/hunter",
   "Still": {
-    "Path": "entities/detective_still.png"
+    "Path": "entities/hunter_still.png"
   },
-  "Action_names": 
-  [
+  "Action_names": [
     "Move Test",
     "Interact",
-    "Exorcise", 
-    "Kick"
+    "Accuse",
+    "Psychometric Disruptor",
+    "Paramagnetic Pulse",
+    "EMR Inhibitor"
   ],
-  "Walking_speed": 0.7,
-  "ExplorerEnt": 
-  {
-    "Gear_names": 
-    [
-      "Curb Stompers",
-      "Tantric Mantra",
-      "Pre-loaded Playlist"
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": [
+  "Pick Me Ups",
+  "Experimental Battery",
+  "Spectral Goggles v2"
     ]
-  },  
+  },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 16,
-    "Corpus": 9,
-    "Ego": 9,
-    "Sight": 10
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 15
   },
-    "Ai_path": "ais/robed_cultist_new.lua"
+  "Dissolve": false
 }

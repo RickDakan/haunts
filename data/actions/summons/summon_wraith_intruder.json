@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Wraith int",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 7,
+  "Range"    : 3,
+  "Ent_name" : "Wraith 6 intruder",
+  "Personal_los": true
+}
