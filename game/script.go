@@ -16,6 +16,7 @@ import (
   "io/ioutil"
   "path/filepath"
   "regexp"
+  "time"
 )
 
 type gameScript struct {
@@ -98,6 +99,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "SetWaypoint":                       func() { gp.script.L.PushGoFunctionAsCFunction(setWaypoint(gp)) },
     "RemoveWaypoint":                    func() { gp.script.L.PushGoFunctionAsCFunction(removeWaypoint(gp)) },
     "Rand":                              func() { gp.script.L.PushGoFunctionAsCFunction(randFunc(gp)) },
+    "Sleep":                             func() { gp.script.L.PushGoFunctionAsCFunction(sleepFunc(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Script")
@@ -1423,6 +1425,17 @@ func randFunc(gp *GamePanel) lua.GoFunction {
     }
     n := L.ToInteger(-1)
     L.PushInteger(int(gp.game.Rand.Int63()%int64(n)) + 1)
+    return 1
+  }
+}
+
+func sleepFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "Sleep", LuaFloat) {
+      return 0
+    }
+    seconds := L.ToNumber(-1)
+    time.Sleep(time.Microsecond * time.Duration(1000000*seconds))
     return 1
   }
 }

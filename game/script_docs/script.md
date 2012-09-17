@@ -248,4 +248,13 @@ _mode_: One of "none", "blind", "all", or "entities", or an array of rooms.  "no
 ###Script.__EndPlayerInteraction__()
 Indicates that the current human player is done.  Ais will continue to perform their actions and then the turn will end.  
 
+------
+
+###Script.__Rand__(_n_)
+Returns a random integer in the range 1..n, inclusive.  
+
+------
+
+###Script.__Sleep__(_s_)
+Sleeps to _s_ seconds.  _s_ may be a floating point number, so .5 will sleep for half a second.  
 
