@@ -1,0 +1,9 @@
+{
+  "Name": "Attack -5",
+  "Strength": 5,
+  "Kind": "Poison",
+  "Duration": 3,
+  "Base": {
+    "Attack": -5
+  }
+}

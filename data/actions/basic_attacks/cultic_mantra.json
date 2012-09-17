@@ -5,13 +5,13 @@
   "Texture"   : {
     "Path": "actions/icons/shroud.png"
   },
-  "Ap"       : 3,
+  "Ap"       : 2,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
   "Target_allies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Mantra"
+    "mantra": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Mantra"
     },  
   "Conditions": [
      "Corpus +2"

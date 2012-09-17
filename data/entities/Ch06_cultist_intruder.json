@@ -1,5 +1,5 @@
 {
-  "Name": "Cultist 6 intruder",
+  "Name": "Cultist for Evans",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/robed_cultist",
@@ -8,9 +8,9 @@
   },
   "Action_names": [
     "Move Test",
-    "Vengeful Curse",
-    "Grave Grasp",
-    "Ghastly Howl"
+    "Interact",
+    "Cultic Mantra",
+    "Sacrificial Blade"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": 
@@ -22,9 +22,9 @@
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Hp_max": 5,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 10
   },
   "Dissolve": false

@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/white_codex.png"
   },
-  "Ap"       : 5,
+  "Ap"       : 3,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,
@@ -15,6 +15,7 @@
   },
   "Conditions": [
      "Corpus -2",
+     "Ego -2",
      "Attack -2"
    ]
 }

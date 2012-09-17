@@ -1,5 +1,5 @@
 {
-  "Name"     : "Summon Corpse int",
+  "Name"     : "Raise Corpse",
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
@@ -7,6 +7,6 @@
   },
   "Ap"       : 7,
   "Range"    : 3,
-  "Ent_name" : "Corpse 6 intruder",
+  "Ent_name" : "Corpse for Evans",
   "Personal_los": true
 }

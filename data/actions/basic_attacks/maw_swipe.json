@@ -7,7 +7,7 @@
   },
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Maw"
+    "consume": "Haunts/SFX/Denizens/Cultists/Eidolon/Maw"
   },
   "Ap"       : 2,
   "Strength" : 10,

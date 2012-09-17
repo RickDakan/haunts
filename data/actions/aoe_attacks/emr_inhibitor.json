@@ -5,7 +5,7 @@
   "Strength"  : 10,
   "Damage"    : 0,
   "Range"     : 6,
-  "Diameter"  : 3,
+  "Diameter"  : 4,
   "Animation" : "inhibit",
   "Target_enemies": true,
   "Sounds"   : {
@@ -16,6 +16,6 @@
   },
   "Conditions": [
     "Attack -2",
-    "AP -2"
+    "Corpuse -2"
   ]
 }

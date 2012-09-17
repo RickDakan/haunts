@@ -1,5 +1,5 @@
 {
-  "Name": "Corpse 6 intruder",
+  "Name": "Corpse for Evans",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/corpse",
@@ -8,9 +8,8 @@
   },
   "Action_names": [
     "Move Test",
-    "Vengeful Curse",
-    "Grave Grasp",
-    "Ghastly Howl"
+    "Pummel",
+    "Diseased Kiss"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": 
@@ -21,10 +20,10 @@
     ]
   },
   "Base": {
-    "Ap_max": 10,
-    "Hp_max": 20,
+    "Ap_max": 8,
+    "Hp_max": 8,
     "Corpus": 11,
-    "Ego": 9,
+    "Ego": 10,
     "Sight": 10
   },
   "Dissolve": false

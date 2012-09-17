@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/nazar.png"
   },
-  "Ap"       : 5,
+  "Ap"       : 4,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,

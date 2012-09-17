@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "Nuratum, blessed of Isis, is returned, and together the two wizened ancient ones can seize the power and glory that the King of Ur once denied them.",
+          "Text": "Nuratum, blessed of Ishtar, is returned, and together the two wizened ancient ones can seize the power and glory that the King of Ur once denied them.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/ancient-one-f.png"
@@ -49,7 +49,7 @@
     },
    "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {

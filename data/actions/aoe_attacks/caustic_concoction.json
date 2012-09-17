@@ -2,7 +2,7 @@
   "Name"      : "Caustic Concoction",
   "Kind"      : "Fire",
   "Ap"        : 5,
-  "Strength"  : 6,
+  "Strength"  : 10,
   "Damage"    : 2,
   "Range"     : 10,
   "Diameter"  : 4,
@@ -12,9 +12,9 @@
     "vials": "Haunts/SFX/Intruders/Reporter/Vials"
   },
   "Texture"   : {
-    "Path": "actions/icons/bombard.png"
+    "Path": "actions/icons/flask.png"
   },
   "Conditions": [
-    "Dread"
+    "AP -2"
   ]
 }

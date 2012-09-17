@@ -1,8 +1,8 @@
 {
-  "Name": "Vampire 6",
+  "Name": "Subject Orlac",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/master",
+  "Sprite_path" : "entities/vamp_fem",
   "Still": 
   {
     "Path": "entities/vampire_still.png"
@@ -12,7 +12,7 @@
     "Move Test", 
     "Interact",
     "Bite",
-    "Terrorize",
+    "Umbral Leech",
     "Summon Shade"
   ],
   "HauntEnt": {
@@ -21,8 +21,8 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 22,
-    "Hp_max": 14,
+    "Ap_max": 15,
+    "Hp_max": 20,
     "Corpus": 8,
     "Ego": 8,
     "Sight": 15

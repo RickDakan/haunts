@@ -260,8 +260,8 @@ function OnAction(intruders, round, exec)
         --Pick an entity
 
         --JONATHAN - Uncomment these two lines to see a crash when the waypoint is first activated.    
-        ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
-        Script.SetAp(ent, 0)
+        -- ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
+        -- Script.SetAp(ent, 0)
       end
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
@@ -558,7 +558,7 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   if store.nIntrudersFound == 0 then
     store.nIntrudersFound = store.nIntrudersFound + 1
     if store.nIntrudersFound == 1 then
-      thingToSpawn = "Collector"
+      thingToSpawn = "Occultist"
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder1.json")
     end
   else

@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/flask.png"
   },
-  "Ap"       : 3,
+  "Ap"       : 2,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,

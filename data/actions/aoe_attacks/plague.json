@@ -1,0 +1,20 @@
+{
+  "Name"      : "Plague of Locusts",
+  "Kind"      : "Fire",
+  "Ap"        : 5,
+  "Strength"  : 10,
+  "Damage"    : 2,
+  "Range"     : 10,
+  "Diameter"  : 8,
+  "Animation" : "pulse",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "plague": "Haunts/SFX/Denizens/Bosses/Ancient One/Plague"
+  },
+  "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  }  ,  
+  "Conditions": [
+     "AP -2"
+   ]
+}

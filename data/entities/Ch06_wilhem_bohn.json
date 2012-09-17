@@ -2,19 +2,18 @@
   "Name": "Sir Wilhem Bohn",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/detective",
+  "Sprite_path" : "entities/occultist",
   "Still": 
   {
-    "Path": "entities/detective_still.png"
+    "Path": "entities/occultist_still.png"
   },
   "Action_names": 
   [
     "Move Test",
     "Interact",
-    "Silver Buckshot",
-    "Dragonfire Round",
-    "Fortifying Drink",
-    "Blessed Bombard"
+    "Dire Curse",
+    "Abjuration",
+    "Exorcise"
   ],
   "Walking_speed": 1,
   "HauntEnt": {
@@ -23,10 +22,10 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 22,
-    "Hp_max": 14,
-    "Corpus": 8,
-    "Ego": 8,
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 15
   },
   "Dissolve": false

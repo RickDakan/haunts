@@ -11,7 +11,7 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Cosmic Infection"
+    "infect": "Haunts/SFX/Denizens/Cultists/Eidolon/Cosmic Infection"
   },
   "Conditions" : [
      "AP -2",

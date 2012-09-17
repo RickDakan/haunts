@@ -1,33 +1,31 @@
 {
-  "Name": "Collector",
-  "Dx": 1,
-  "Dy": 1,
-  "Sprite_path" : "entities/collector",
-  "Still": {
-    "Path": "entities/collector_still.png"
-  },
-  "Action_names": [
-    "Move Test",
-    "Interact",
-    "Aetheric Flintlocks",
-    "Talismanic Aura",
-    "Brandish Idol",
-    "Codex"
-  ],
-  "Walking_speed": 1,
-  "ExplorerEnt": {
-    "Gear_names": [
-	"Pick Me Ups",
-	"Experimental Battery",
-	"Spectral Goggles v2"
-    ]
-  },
-  "Base": {
-    "Ap_max": 10,
-    "Hp_max": 20,
-    "Corpus": 10,
-    "Ego": 10,
-    "Sight": 15
-  },
-  "Dissolve": false
+	"Name": "Collector",
+	"Dx": 1,
+	"Dy": 1,
+	"Sprite_path": "entities/collector",
+	"Still":{
+		"Path": "entities/collector_still.png"
+	},
+	"Action_names": [
+	"Move Test",
+	"Interact",
+	"Aetheric Flintlocks",
+	"Talismanic Aura",
+	"Brandish Idol"
+	],
+	"Walking_speed": 0.5,
+	"ExplorerEnt": {
+		"Gear_names": [
+		"Pick Me Ups",
+		"Experimenntal Battery"
+		]
+	},
+	"Base": {
+		"Ap_max": 10,
+		"Hp_max": 20,
+		"Corpus": 10,
+		"Ego": 10,
+		"Sight": 15
+	},
+	"Dissolve": false
 }

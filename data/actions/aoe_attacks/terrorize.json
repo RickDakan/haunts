@@ -1,9 +1,9 @@
 {
   "Name"      : "Terrorize",
   "Kind"      : "Fire",
-  "Ap"        : 6,
+  "Ap"        : 3,
   "Strength"  : 10,
-  "Damage"    : 2,
+  "Damage"    : 0,
   "Range"     : 4,
   "Diameter"  : 4,
   "Animation" : "pulse",

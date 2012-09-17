@@ -2,7 +2,7 @@
   "Name": "Administrator",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/other_genius",
+  "Sprite_path" : "entities/genius",
   "Still": 
   {
     "Path": "entities/evil_genius_still.png"

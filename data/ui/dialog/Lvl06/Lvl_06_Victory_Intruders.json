@@ -8,10 +8,10 @@
       "Sections":
       [
         {
-          "Text": "Intruders FTW.",
+          "Text": "Prof. Evans wins",
           "Image":
           {
-            "Path": "ui/dialog/Lvl06/intruders2.png"
+            "Path": "ui/dialog/Lvl06/collector.png"
           }   
         }
       ]

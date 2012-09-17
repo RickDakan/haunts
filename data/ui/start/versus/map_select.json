@@ -53,5 +53,16 @@
     },
     "Text": "1935 -- Museum and stuff.",
     "Size": 20
+  },
+   {
+    "Id": "Lvl06.lua",
+    "Small": {
+      "Path": "ui/start/versus/scientist.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_04.png"
+    },
+    "Text": "1942 -- Creature Feature.",
+    "Size": 20
   }
 ]
