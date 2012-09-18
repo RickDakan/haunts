@@ -1,10 +1,10 @@
 {
   "Name"      : "Umbral Leech",
   "Kind"      : "Fire",
-  "Ap"        : 6,
+  "Ap"        : 8,
   "Strength"  : 10,
   "Damage"    : 3,
-  "Range"     : 1,
+  "Range"     : 4,
   "Diameter"  : 4,
   "Animation" : "pulse",
   "Target_enemies": true,
