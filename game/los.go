@@ -127,6 +127,11 @@ type gameDataTransient struct {
   // Indicates if we're waiting for a script to run or something
   Turn_state   turnState
   Action_state actionState
+
+  net struct {
+    key  mrgnet.GameKey
+    game *mrgnet.Game
+  }
 }
 
 func (gdt *gameDataTransient) alloc() {
@@ -162,8 +167,6 @@ type gameDataGobbable struct {
   // probably figure that out at some point
   House *house.HouseDef
   Ents  []*Entity
-
-  Net mrgnet.GameKey
 
   // Set of all Entities that are still resident.  This is so we can safely
   // clean things up since they will all have ais running in the background

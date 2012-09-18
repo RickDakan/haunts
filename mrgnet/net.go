@@ -99,12 +99,22 @@ type UpdateGameResponse struct {
 
 type JoinGameRequest struct {
   Id       NetId
-  Game_key string
+  Game_key GameKey
 }
 
 type JoinGameResponse struct {
   Err        string
   Successful bool
+}
+
+type StatusRequest struct {
+  Id       NetId
+  Game_key GameKey
+}
+
+type StatusResponse struct {
+  Err  string
+  Game *Game
 }
 
 type Game struct {
@@ -121,12 +131,4 @@ type Game struct {
   // If this is non-zero then the game is over and the winner is the player
   // whose NetId matches this value
   Winner NetId
-}
-
-// State is the state of the game before the playback.
-// The state of the game after the playback is the State field of the next
-// Playback.
-type Playback struct {
-  State []byte
-  Execs []byte
 }

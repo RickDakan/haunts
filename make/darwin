@@ -4,8 +4,8 @@ cd tools
 go run version.go
 cd ..
 
-#go build --tags release .
-go build .
+go build --tags release .
+#go build .
 install_name_tool -change  ./libfmodex.dylib @executable_path/../lib/libfmodex.dylib ./haunts
 install_name_tool -change  ./libfmodevent.dylib @executable_path/../lib/libfmodevent.dylib ./haunts
 

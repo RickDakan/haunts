@@ -105,7 +105,14 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
 
   gp.script.L.NewTable()
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
-    "Active":      func() { gp.script.L.PushGoFunctionAsCFunction(activeNetFunc(gp)) },
+    "Active": func() {
+      gp.script.L.PushGoFunctionAsCFunction(
+        func(L *lua.State) int {
+          L.PushBoolean(game_key != "")
+          return 1
+        })
+    },
+    "Side":        func() { gp.script.L.PushGoFunctionAsCFunction(netSideFunc(gp)) },
     "UpdateState": func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
     "UpdateExecs": func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
   })
@@ -160,7 +167,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
       } else {
-        gp.game.Net = game_key
+        gp.game.net.key = game_key
         gp.game.comm.script_to_game <- nil
       }
     }()
@@ -312,7 +319,7 @@ func startScript(gp *GamePanel, player *Player) lua.GoFunction {
     if !res {
       base.Error().Printf("Unable to properly autosave.")
     }
-    startGameScript(gp, script, player, nil, gp.game.Net)
+    startGameScript(gp, script, player, nil, gp.game.net.key)
     return 0
   }
 }
@@ -1439,12 +1446,28 @@ func randFunc(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func activeNetFunc(gp *GamePanel) lua.GoFunction {
+func netSideFunc(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "Active") {
+    if !LuaCheckParamsOk(L, "Side") {
       return 0
     }
-    L.PushBoolean(gp.game.Net != "")
+    if gp.game.net.game == nil {
+      // If we haven't gotten the game yet that is because it is the first
+      // turn, so it must be the Denizens turn.
+      L.PushString("Denizens")
+      return 1
+    }
+    var net_id mrgnet.NetId
+    fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+    switch {
+    case gp.game.net.game.Denizens_id == net_id:
+      L.PushString("Denizens")
+    case gp.game.net.game.Intruders_id == net_id:
+      L.PushString("Intruders")
+    default:
+      base.Error().Printf("Asked for a net side, but don't know the side.")
+      L.PushString("Unknown")
+    }
     return 1
   }
 }
@@ -1454,7 +1477,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "UpdateState", LuaString) {
       return 0
     }
-    if gp.game.Net == "" {
+    if gp.game.net.key == "" {
       base.Error().Printf("Tried to UpdateState in a non-Net game.")
       return 0
     }
@@ -1464,7 +1487,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
     fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
     var req mrgnet.UpdateGameRequest
     req.Id = net_id
-    req.Game_key = gp.game.Net
+    req.Game_key = gp.game.net.key
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
     req.State = []byte(L.ToString(-1))
@@ -1474,7 +1497,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error updating game state: %v", resp.Err)
       return 0
     }
-    base.Log().Printf("Successfully update game state: %v", gp.game.Net)
+    base.Log().Printf("Successfully update game state: %v", gp.game.net.key)
     return 0
   }
 }
@@ -1484,7 +1507,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
     if !LuaCheckParamsOk(L, "UpdateExecs", LuaArray) {
       return 0
     }
-    if gp.game.Net == "" {
+    if gp.game.net.key == "" {
       base.Error().Printf("Tried to UpdateExecs in a non-Net game.")
       return 0
     }
@@ -1500,7 +1523,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
     fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
     var req mrgnet.UpdateGameRequest
     req.Id = net_id
-    req.Game_key = gp.game.Net
+    req.Game_key = gp.game.net.key
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
     req.Execs = buf.Bytes()
@@ -1510,7 +1533,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error updating game execs: %v", resp.Err)
       return 0
     }
-    base.Log().Printf("Successfully update game execs: %v", gp.game.Net)
+    base.Log().Printf("Successfully update game execs: %v", gp.game.net.key)
     return 0
   }
 }

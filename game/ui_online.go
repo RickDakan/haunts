@@ -63,6 +63,8 @@ type OnlineMenu struct {
     in  chan struct{}
     out chan struct{}
   }
+
+  ui gui.WidgetParent
 }
 
 func InsertOnlineMenu(ui gui.WidgetParent) error {
@@ -87,6 +89,7 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     ui.RemoveChild(&sm)
     InsertStartMenu(ui)
   }
+  sm.ui = ui
 
   var net_id mrgnet.NetId
   fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
@@ -116,16 +119,17 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
         resp.Err = "Couldn't connect to server."
       }
       <-sm.control.in
+      defer func() {
+        in_newgame = false
+        sm.control.out <- struct{}{}
+      }()
       if resp.Err != "" {
         sm.layout.Error.err = resp.Err
         base.Error().Printf("Couldn't make new game: %v", resp.Err)
-        sm.control.out <- struct{}{}
         return
       }
       ui.RemoveChild(&sm)
-      ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil, resp.Game_key))
-      in_newgame = false
-      sm.control.out <- struct{}{}
+      ui.AddChild(MakeGamePanel("Lvl01.lua", nil, nil, resp.Game_key))
     }()
   }
 
@@ -232,12 +236,41 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
         b.Text.Justification = sm.layout.Text.Justification
         b.Text.Size = sm.layout.Text.Size
         b.Text.String = list.Games[i].Name
+        game_key := list.Game_keys[i]
+        in_joingame := false
         b.f = func(interface{}) {
-          // var req mrgnet.JoinGameRequest
-          // req.Id = net_id
-          // req.Game_key = list.Ids[i]
-          // var resp mrgnet.JoinGameResponse
-          // mrgnet.DoAction("join", req, &resp)
+          if in_joingame {
+            return
+          }
+          in_joingame = true
+          go func() {
+            var req mrgnet.JoinGameRequest
+            req.Id = net_id
+            req.Game_key = game_key
+            var resp mrgnet.JoinGameResponse
+            done := make(chan bool, 1)
+            go func() {
+              mrgnet.DoAction("join", req, &resp)
+              done <- true
+            }()
+            select {
+            case <-done:
+            case <-time.After(3 * time.Second):
+              resp.Err = "Couldn't connect to server."
+            }
+            <-sm.control.in
+            defer func() {
+              in_joingame = false
+              sm.control.out <- struct{}{}
+            }()
+            if resp.Err != "" || !resp.Successful {
+              sm.layout.Error.err = resp.Err
+              base.Error().Printf("Couldn't join game: %v", resp.Err)
+              return
+            }
+            sm.ui.RemoveChild(sm)
+            sm.ui.AddChild(MakeGamePanel("Lvl01.lua", nil, nil, game_key))
+          }()
         }
         glb.games = append(glb.games, &b)
       }
