@@ -1,5 +1,5 @@
 {
-  "Name": "Professor Keith Evans intro",
+  "Name": "Prof. Keith Evans",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/Collector",
@@ -20,8 +20,8 @@
   "Base": {
     "Ap_max": 100,
     "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 15
   },
   "Dissolve": true

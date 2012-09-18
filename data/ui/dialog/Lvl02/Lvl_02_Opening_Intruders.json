@@ -68,7 +68,7 @@
       [
         {
           "Next": "Start6",
-          "Text": "Laurel Gale is a writer and investigator specializing in the supernatural, and can use both aid her allies and disrupt her foes, while protecting herself at close range with a rune-inscribed cudgel.",
+          "Text": "Laurel Gale is a writer and investigator specializing in the supernatural. She can both aid her allies and disrupt her foes, while protecting herself at close range with a rune-inscribed cudgel.",
           "Image":
           {
             "Path": "ui/dialog/stills/reporter_dialog.png"

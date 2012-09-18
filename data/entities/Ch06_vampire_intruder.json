@@ -1,17 +1,17 @@
 {
-  "Name": "Vampire 6 intruder",
+  "Name": "Codename: Orlac",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/robed_cultist",
+  "Sprite_path" : "entities/vamp_fem",
   "Still": {
-    "Path": "entities/technician_still.png"
+    "Path": "entities/vampire_fem_still.png"
   },
   "Action_names": [
     "Move Test", 
     "Interact",
     "Bite",
-    "Terrorize",
-    "Summon Shade int"
+    "Umbral Leech",
+    "Summon Shadow"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": {
@@ -22,10 +22,10 @@
     ]
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 15,
     "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Corpus": 8,
+    "Ego": 8,
     "Sight": 15
   },
   "Dissolve": false

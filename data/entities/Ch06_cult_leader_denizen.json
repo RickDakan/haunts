@@ -1,5 +1,5 @@
 {
-  "Name": "Cult Leader 6",
+  "Name": "Subject Chosen",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/cult_leader",
@@ -11,8 +11,9 @@
   [
     "Move Test", 
     "Interact",
-    "Bite",
-    "Terrorize", 
+    "Crozier",
+    "Revelations of Despair",
+    "Voice of the Beyond",  
     "Summon Cultist"
   ],
   "HauntEnt": {
@@ -21,10 +22,10 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 22,
-    "Hp_max": 14,
-    "Corpus": 8,
-    "Ego": 8,
+    "Ap_max": 10,
+    "Hp_max": 15,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 15
   },
   "Dissolve": true

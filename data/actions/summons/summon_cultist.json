@@ -7,6 +7,9 @@
   },
   "Ap"       : 7,
   "Range"    : 3,
-  "Ent_name" : "Cultist 6",
+  "Sounds"   : {
+    "summon": "Haunts/SFX/Denizens/Cultists/Cult Leader/Summon"
+  },
+  "Ent_name" : "Cultist for Bohn",
   "Personal_los": true
 }

@@ -6,5 +6,8 @@
   "Strength" : 12,
   "Damage"   : 3,
   "Range"    : 1,
+  "Sounds"   : {
+    "feast": "Haunts/SFX/Denizens/Cultists/Eidolon/Feast"
+  },
   "Target_enemies": true
 }

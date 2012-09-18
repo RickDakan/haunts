@@ -1,5 +1,5 @@
 {
-  "Name": "Shade 6 intruder",
+  "Name": "Shade for Evans",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/shade",
@@ -8,9 +8,8 @@
   },
   "Action_names": [
     "Move Test",
-    "Vengeful Curse",
-    "Grave Grasp",
-    "Ghastly Howl"
+    "Interact",
+    "Chill Touch"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": 
@@ -21,10 +20,10 @@
     ]
   },
   "Base": {
-    "Ap_max": 10,
-    "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Ap_max": 14,
+    "Hp_max": 3,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 10
   },
   "Dissolve": false

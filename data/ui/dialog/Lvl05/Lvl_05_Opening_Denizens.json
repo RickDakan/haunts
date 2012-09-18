@@ -24,7 +24,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "The undying sorcerer Ses-kalla, has walked the Earth since he was ousted from the throne in ancient Sumer.",
+          "Text": "The undying sorcerer Ses-kalla has walked the Earth since he was ousted from the throne in ancient Sumer.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/ancient-one-m.png"
@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "Driven by an eternal desire to be reunited with his dead love, Nuratum, whom he dreams of someday restoring to life.",
+          "Text": "He is driven by an eternal desire to be reunited with his dead love, Nuratum, whom he dreams of someday restoring to life.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/ancient-one-f.png"
@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "The new museum opened by the Tyree Trust hosts scores of ancient artifacts he has spent centuries searching for, now under one roof.",
+          "Text": "The new museum opened by the Tyree Trust hosts scores of ancient artifacts Ses-kalla has spent centuries searching for. Now they are all under one roof.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/collector.png"
@@ -84,7 +84,7 @@
       [
         {
           "Next": "Start7",
-          "Text": "The museum's heavily armed and suspicious staff are on guard against supernatural threats, and will be watching for any suspicious behavior.",
+          "Text": "The museum's heavily armed and observant staff are on guard against supernatural threats, and will be watching for any suspicious behavior.",
           "Image":
           {
             "Path": "ui/dialog/Lvl05/collector.png"

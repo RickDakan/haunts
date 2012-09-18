@@ -1,0 +1,17 @@
+{
+  "Name"      : "Umbral Leech",
+  "Kind"      : "Fire",
+  "Ap"        : 8,
+  "Strength"  : 10,
+  "Damage"    : 3,
+  "Range"     : 4,
+  "Diameter"  : 4,
+  "Animation" : "pulse",
+  "Target_enemies": true,
+  "Sounds"   : {
+    "terror": "Haunts/SFX/Denizens/Bosses/Vampire/Terror"
+  },
+  "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  }
+}

@@ -10,8 +10,11 @@
   "Damage"   : 0,
   "Range"    : 10,
   "Target_enemies": true,
+  "Sounds"   : {
+    "reveal": "Haunts/SFX/Denizens/Cultists/Cult Leader/Revelations"
+  },
   "Conditions": [
-     "AP -2",
+    "AP -2",
 	 "Corpus -2",
 	 "Ego -2"
    ]

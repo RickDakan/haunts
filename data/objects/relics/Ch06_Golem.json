@@ -1,8 +1,8 @@
 {
-  "Name": "Golem 6",
+  "Name": "The Golem",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/chair",
+  "Sprite_path" : "entities/golem",
   "Still": {
   },
   "ObjectEnt":{

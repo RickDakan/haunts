@@ -6,7 +6,7 @@
     "Path": "actions/icons/summon_orb.png"
   },
   "Ap"       : 6,
-  "Range"    : 3,
+  "Range"    : 1,
   "Ent_name" : "Beacon",
   "Personal_los": true
 }

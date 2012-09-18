@@ -14,6 +14,7 @@
     "Path": "actions/icons/coordination.png"
   },
   "Conditions": [
-    "Attack -2"
+    "Attack -2",
+    "Corpus -2"
   ]
 }

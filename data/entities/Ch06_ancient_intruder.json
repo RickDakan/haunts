@@ -1,32 +1,35 @@
 {
-  "Name": "Ancient 6 intruder",
+  "Name": "Codename: Ancient",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/robed_cultist",
-  "Still": {
-    "Path": "entities/technician_still.png"
+  "Sprite_path" : "entities/ancient",
+  "Still": 
+  {
+    "Path": "entities/ancient_one_still.png"
   },
-  "Action_names": [
-    "Move Test", 
+  "Action_names": 
+  [
+    "Move Test",
     "Interact",
-    "Bite",
-    "Terrorize",
-    "Summon Corpse int"
+    "Ancient Blade",
+    "Plague of Locusts",
+    "Hypnotic Ritual",
+    "Raise Corpse"
   ],
-  "Walking_speed": 1,
-  "ExplorerEnt": {
-    "Gear_names": [
-  "Pick Me Ups",
-  "Experimental Battery",
-  "Spectral Goggles v2"
-    ]
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
-    "Sight": 15
+    "Hp_max": 18,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 30
   },
-  "Dissolve": false
+  "Dissolve": true
 }
+
+
+

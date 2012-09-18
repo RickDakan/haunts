@@ -11,7 +11,7 @@
   "Range"    : 7,
   "Target_enemies": true,
  "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Female Cultist/Parasitic Gift"
+    "gift": "Haunts/SFX/Denizens/Cultists/Female Cultist/Parasitic Gift"
   },
   "Conditions": [
      "AP -2"

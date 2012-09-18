@@ -8,10 +8,10 @@
       "Sections":
       [
         {
-          "Text": "The denizens did it n stuff.",
+          "Text": "Sir Wilhelm Bohn wins",
           "Image":
           {
-            "Path": "ui/dialog/Lvl06/denizens.png"
+            "Path": "ui/dialog/Lvl06/occultist.png"
           }   
         }
       ]

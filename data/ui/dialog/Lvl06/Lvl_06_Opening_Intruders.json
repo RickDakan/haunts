@@ -1,13 +1,152 @@
 {
-  "Size": "medium",
-  "Pages": {
-    "Start": {
-      "Format": "NoOptionsLeftImage",
-      "Sections":[
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
         {
-          "Text": "Opening Intruders.",
-          "Image":{
-            "Path": "ui/dialog/Lvl06/intruders2.png"
+          "Next": "Start2",
+          "Text": "September 17, 1943. The Tyree Trust uses wartime research funding to try and develop an American countermeasure to combat German Thulekraft occult operatives.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/1942c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Professor Keith Evans, from Miskatonic University is the Trust's liason with the War Department and the project's leader, charged with turning the horrors of the manse into weapons of war.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/collector.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Unfortunately, Britain sent over the annoying Sir Wilhelm Bohn to offer his own, feeble expertise on how to deal with the house's supernaturals.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/occultist2.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Both agree on only one thing - their best hope for success lies in reactivating the recently-excavated Golem, created by Cornelius Bosch.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/golem.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "With no more time to waste, Prof. Evans has decided to make a deal with the least dangerous denizens that have lain sealed away beneath the museum for study.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/occultist2.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Sir Bohn has thus far led the outreach to these four entities, but he's been sloppy and incautious in his negotiations with these powerful and dangerous supernaturals.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/collector.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Now Evans is stepping in to take over negotiations. Sir Bohn claims to know how to handle such beings, but thus far he's proven incompetant.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Each supernatural entity can summon up lesser beings and use their occult essences to power the Golem.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/bosch_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "Bohn will know doubt be pestering the entities as well, but Evans has figured out that he only needs two supernaturals to agree to his terms.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/cult_leader_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start10": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Of course knowing Bohn, he will probably try to recruit two of his own allies so that he can steal all the credit for the Trust's research.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/ancient_one_dialog.png"
           }
         }
       ]

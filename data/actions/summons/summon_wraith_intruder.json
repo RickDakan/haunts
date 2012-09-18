@@ -1,5 +1,5 @@
 {
-  "Name"     : "Summon Wraith int",
+  "Name"     : "Call Wraith",
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
@@ -7,6 +7,6 @@
   },
   "Ap"       : 7,
   "Range"    : 3,
-  "Ent_name" : "Wraith 6 intruder",
+  "Ent_name" : "Wraith for Evans",
   "Personal_los": true
 }

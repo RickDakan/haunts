@@ -1,5 +1,5 @@
 {
-  "Name"     : "Summon Shade int",
+  "Name"     : "Summon Shadow",
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
@@ -7,6 +7,6 @@
   },
   "Ap"       : 7,
   "Range"    : 3,
-  "Ent_name" : "Shade 6 intruder",
+  "Ent_name" : "Shade for Evans",
   "Personal_los": true
 }

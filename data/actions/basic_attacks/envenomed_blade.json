@@ -11,7 +11,7 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Cultists/Female Cultist/Envenomed Dagger"
+    "dagger": "Haunts/SFX/Cultists/Female Cultist/Envenomed Dagger"
   },
   "Conditions": [
      "Poison"

@@ -37,20 +37,20 @@ function Init(data)
   math.randomseed(os.time())
 
   --Spawn intro versions of each of the 4 master.
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Vampire 6", Script.GetSpawnPointsMatching("Vampire_Start"), false)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Subject Orlac", Script.GetSpawnPointsMatching("Vampire_Start"), false)
   Script.SetWaypoint("Vampire", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Vampire2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Cult Leader 6", Script.GetSpawnPointsMatching("Cult_Leader_Start"), false)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Subject Chosen", Script.GetSpawnPointsMatching("Cult_Leader_Start"), false)
   Script.SetWaypoint("Cult Leader", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Cult Leader2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch 6", Script.GetSpawnPointsMatching("Bosch_Start"), false)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Subject Bosch", Script.GetSpawnPointsMatching("Bosch_Start"), false)
   Script.SetWaypoint("Bosch", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Bosch2", "denizens", ent.Pos, 1)
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Ancient 6", Script.GetSpawnPointsMatching("Ancient_Start"), false)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Subject Ancient", Script.GetSpawnPointsMatching("Ancient_Start"), false)
   Script.SetWaypoint("Ancient", "intruders", ent.Pos, 1)
   Script.SetWaypoint("Ancient2", "denizens", ent.Pos, 1)
   --Spawn the golem.
-  Script.SpawnEntitySomewhereInSpawnPoints("Golem 6", Script.GetSpawnPointsMatching("Golem_Start"), false)
+  Script.SpawnEntitySomewhereInSpawnPoints("The Golem", Script.GetSpawnPointsMatching("Golem_Start"), false)
 
   store.bChoiceMode = true
   store.IntruderNames = {"Professor Keith Evans"}
@@ -65,7 +65,7 @@ end
 
 function intrudersSetup()
   if IsStoryMode() then
-    intruder_names = {"Professor Keith Evans intro"}
+    intruder_names = {"Prof. Keith Evans"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
   end 
 
@@ -79,7 +79,7 @@ end
 
 function denizensSetup()
   if IsStoryMode() then
-    denizen_names = {"Sir Wilhem Bohn intro"}
+    denizen_names = {"Sir Wilhem"}
     denizen_spawn = Script.GetSpawnPointsMatching("Master_Start")
   end 
 
@@ -286,13 +286,13 @@ end
 function EndChoicePhase()
   store.bChoiceMode = false
   if table.getn(store.DenizenNames) < 3 then  --add the last dude to the team with fewer dudes.
-    PickEnt(GetEntWithName(store.DenizenNames[1] .. " intro"), true)
+    PickEnt(GetEntWithName("Sir Wilhem"), true)
   else
-    PickEnt(GetEntWithName(store.IntruderNames[1] .. " intro"), true)
+    PickEnt(GetEntWithName("Prof. Keith Evans"), true)
   end
   --Despawn the two dummy dudes.
-  StoreDespawn(GetEntWithName(store.IntruderNames[1] .. " intro"))
-  StoreDespawn(GetEntWithName(store.DenizenNames[1]  .. " intro"))
+  StoreDespawn(GetEntWithName("Sir Wilhem"))
+  StoreDespawn(GetEntWithName("Prof. Keith Evans"))
 
   StoreWaypoint("Objective", "intruders", Script.GetSpawnPointsMatching("Objective")[1].Pos, 2, false)
   StoreWaypoint("ObjectiveDen", "denizens", Script.GetSpawnPointsMatching("Objective")[1].Pos, 2, false)
@@ -311,7 +311,7 @@ function Explode()
 
 
   for _, ent in pairs(Script.GetAllEnts()) do
-    if not EntIsMinion(ent) and not ent.Name == "Golem 6" then  --Can remove this if we want the game to be longer...
+    if not EntIsMinion(ent) and not ent.Name == "The Golem" then  --Can remove this if we want the game to be longer...
       if GetDistanceBetweenPoints(ent.Pos, Script.GetSpawnPointsMatching("Objective")[1].Pos) <= 10 then
         if ent.HpCur > 3 then
           --!!!! play got hit animation here
@@ -327,7 +327,7 @@ end
 
 
 function PushGolem(bIntruders)
-  golemEnt = GetEntWithName("Golem 6")
+  golemEnt = GetEntWithName("The Golem")
   newPos = golemEnt.Pos
   newPos.Y = golemEnt.Pos.Y
   if bIntruders then
@@ -346,7 +346,7 @@ end
 
 function ZeroMasterAp()
   for _, ent in pairs(Script.GetAllEnts()) do
-    if ent.Name ~= store.IntruderNames[1] .. " intro" and ent.Name ~= store.DenizenNames[1] .. " intro" then
+    if ent.Name ~= "Prof. Keith Evans" and ent.Name ~= "Sir Wilhem" then
       Script.SetAp(ent, 0)
     end  
   end
@@ -476,18 +476,18 @@ function GetEntityWithMostAP(side)
 end
 
 function PickEnt(ent, bForce)
-  checkEnt = GetEntWithName("Bosch 6")
+  checkEnt = GetEntWithName("Subject Bosch")
   if not store.sel1 then
     if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Bosch 6 intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Codename: Bosch"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Bosch"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Wraith 6 intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Wraith for Evans"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Bosch 6"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Subject Bosch"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Bosch"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Wraith 6"        
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Wraith for Bohn"        
       end
       StoreWaypoint("Bosch", "", "", "", true)
       StoreWaypoint("Bosch2", "", "", "", true)
@@ -497,18 +497,19 @@ function PickEnt(ent, bForce)
     end
   end
 
-  checkEnt = GetEntWithName("Vampire 6")
+  checkEnt = GetEntWithName("Subject Orlac")
   if not store.sel2 then
     if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Vampire 6 intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Codename: Orlac"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Vampire"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Shade 6 intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Shade for Evans"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Vampire 6"
+        -- NEW THING
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Subject Orlac"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Vampire"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Shade 6"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Shade for Bohn"
       end
       StoreWaypoint("Vampire", "", "", "", true)
       StoreWaypoint("Vampire2", "", "", "", true)
@@ -518,18 +519,18 @@ function PickEnt(ent, bForce)
     end
   end
 
-  checkEnt = GetEntWithName("Ancient 6")
+  checkEnt = GetEntWithName("Subject Ancient")
   if not store.sel3 then
     if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Ancient 6 intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Codename: Ancient"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Ancient"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Corpse 6 intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Corpse for Evans"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Ancient 6"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Subject Ancient"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Ancient"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Corpse 6"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Corpse for Bohn"
       end
       StoreWaypoint("Ancient", "", "", "", true)
       StoreWaypoint("Ancient2", "", "", "", true)
@@ -539,18 +540,18 @@ function PickEnt(ent, bForce)
     end
   end
 
-  checkEnt = GetEntWithName("Cult Leader 6")
+  checkEnt = GetEntWithName("Subject Chosen")
   if not store.sel4 then
     if GetDistanceBetweenEnts(ent, checkEnt) <= 2 or bForce then
       --They selected this ent.
       if ent.Side.Intruder then
-        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Cult Leader 6 intruder"
+        store.IntruderNames[table.getn(store.IntruderNames) + 1] = "Codename: Chosen"
         store.IntruderTypes[table.getn(store.IntruderTypes) + 1] = "Cult_Leader"
-        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Cultist 6 intruder"
+        store.IntruderMinions[table.getn(store.IntruderMinions) + 1] = "Cultist for Evans"
       else
-        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Cult Leader 6"
+        store.DenizenNames[table.getn(store.DenizenNames) + 1] = "Subject Chosen"
         store.DenizenTypes[table.getn(store.DenizenTypes) + 1] = "Cult_Leader"
-        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Cultist 6"
+        store.DenizenMinions[table.getn(store.DenizenMinions) + 1] = "Cultist for Bohn"
       end
       StoreWaypoint("Cult Leader", "", "", "", true)
       StoreWaypoint("Cult Leader2", "", "", "", true)

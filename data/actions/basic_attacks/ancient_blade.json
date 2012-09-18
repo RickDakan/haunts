@@ -1,0 +1,16 @@
+{
+  "Name"     : "Ancient Blade",
+  "Kind"     : "Brutal",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/pummel.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 4,
+  "Range"    : 1,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "blade": "Haunts/SFX/Denizens/Bosses/Ancient One/Blade"
+    }  
+}

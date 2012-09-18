@@ -1,5 +1,5 @@
 {
-  "Name"     : "Summon Cultist int",
+  "Name"     : "Call Cultist",
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
@@ -7,6 +7,9 @@
   },
   "Ap"       : 7,
   "Range"    : 3,
-  "Ent_name" : "Cultist 6 intruder",
+  "Sounds"   : {
+    "summon": "Haunts/SFX/Denizens/Cultists/Cult Leader/Summon"
+  },
+  "Ent_name" : "Cultist for Evans",
   "Personal_los": true
 }

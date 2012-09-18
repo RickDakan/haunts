@@ -1,5 +1,5 @@
 {
-  "Name": "Cult Leader 6 intruder",
+  "Name": "Codename: Chosen",
   "Dx": 1,
   "Dy": 1,
   "Sprite_path" : "entities/cult_leader",
@@ -9,9 +9,10 @@
   "Action_names": [
     "Move Test", 
     "Interact",
-    "Bite",
-    "Terrorize",
-    "Summon Cultist int"
+    "Crozier",
+    "Revelations of Despair",
+    "Voice of the Beyond",  
+    "Call Cultist"
   ],
   "Walking_speed": 1,
   "ExplorerEnt": {
@@ -23,9 +24,9 @@
   },
   "Base": {
     "Ap_max": 10,
-    "Hp_max": 20,
-    "Corpus": 11,
-    "Ego": 9,
+    "Hp_max": 15,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 15
   },
   "Dissolve": false

@@ -10,6 +10,9 @@
     "Path": "actions/icons/coordination.png"
   },
   "Target_allies": true,
+  "Sounds"   : {
+    "voice": "Haunts/SFX/Denizens/Cultists/Cult Leader/voice"
+  },
   "Conditions": [
   "AP +2",
 	"Corpus +2",
