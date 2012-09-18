@@ -1,21 +1,19 @@
 {
-  "Name"      : "Visions of Despair",
-  "Kind"      : "Terror",
-  "Ap"        : 5,
-  "Strength"  : 10,
-  "Damage"    : 0,
-  "Range"     : 10,
-  "Diameter"  : 3,
-  "Animation" : "cast",
+  "Name"     : "Visions of Despair",
+  "Kind"     : "Terror",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/arc.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 8,
   "Target_enemies": true,
   "Sounds"   : {
     "visions": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Visions of Despair"
-  },  
-  "Texture"   : {
-    "Path": "actions/icons/visions.png"
-  },
+    },  
   "Conditions": [
-    "Poison"
-    "Corpus -2"
+     "AP -2"
   ]
 }

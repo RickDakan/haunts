@@ -1,0 +1,28 @@
+{
+  "Name": "Corpse 6",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move Test",
+    "Vengeful Curse",
+    "Grave Grasp",
+    "Ghastly Howl"
+  ],
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 10,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": true,
+  "ai_path": "ais/wraith_new.lua"
+}

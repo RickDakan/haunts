@@ -42,8 +42,8 @@ function Init(data)
 
   --spawn the objective point and the fake op points
   --!!!!
-  waypoint_spawn = Script.GetSpawnPointsMatching("CrashTest")
-  --waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
+
+  waypoint_spawn = Script.GetSpawnPointsMatching("Relic_Spawn")
   objSpawn = Script.SpawnEntitySomewhereInSpawnPoints("Antidote", waypoint_spawn, false)
 
   store.Waypoint = objSpawn
@@ -160,7 +160,6 @@ function RoundStart(intruders, round)
 
   if store.bShiftChange and not intruders then
     store.bShiftChange = false  
-
     if ValueForReinforce() > 1 then
       for i = 1,  math.floor((ValueForReinforce()/2) + .5) , 1 do
         --Pick an entity
@@ -168,7 +167,7 @@ function RoundStart(intruders, round)
           floodEnt = ServitorEnts[1][1]
         else
           floodEnt = ServitorEnts[2][1]
-        end     
+        end  
         Script.SpawnEntitySomewhereInSpawnPoints(floodEnt, Script.GetSpawnPointsMatching("Servitors_Start"), true)
       end
     end 
@@ -243,8 +242,8 @@ function OnAction(intruders, round, exec)
     --The intruders got to the first waypoint.
     store.bWaypointDown = true
 
-    StoreWaypoint("Waypoint", "", "", "", true)
-    StoreWaypoint("Waypoint", "intruders", Script.GetSpawnPointsMatching("Waypoint2")[1].Pos, 3, false)  
+    StoreWaypoint("Waypoint1", "", "", "", true)
+    StoreWaypoint("Waypoint2", "intruders", Script.GetSpawnPointsMatching("Waypoint2")[1].Pos, 3, false)  
 
     StoreCondition("Carrying Antidote", exec.Ent, true)
     doCondition(condition_exec)
@@ -261,8 +260,8 @@ function OnAction(intruders, round, exec)
         --Pick an entity
 
         --JONATHAN - Uncomment these two lines to see a crash when the waypoint is first activated.    
-        -- ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
-        -- Script.SetAp(ent, 0)
+        ent = Script.SpawnEntitySomewhereInSpawnPoints("Orderly", available_spawns, true)
+        Script.SetAp(ent, 0)
       end
     else
       --Denizens already started the alarm.  Just tell the intruders about the waypoint.
@@ -528,7 +527,7 @@ function ValueForReinforce()
 
   nTotalValueOnBoard = 0
   for _, ent in pairs(Script.GetAllEnts()) do
-    for _, entValue in pairs(ents) do
+    for _, entValue in pairs(ServitorEnts) do
       if ent.Name == entValue[1] then
         nTotalValueOnBoard = nTotalValueOnBoard + entValue[2]
       end 

@@ -279,6 +279,7 @@ function OnAction(intruders, round, exec)
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
       store.Waypoint3 = StoreSpawn("Mirror", store.waypoint_spawn.Pos)
+      Script.SetMusicParam("tension_level", 0.5) 
       Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
 
       StoreWaypoint("Waypoint2", "", "", "", true)

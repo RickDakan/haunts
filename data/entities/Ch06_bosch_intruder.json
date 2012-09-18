@@ -1,0 +1,32 @@
+{
+  "Name": "Bosch 6 intruder",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/master",
+  "Still": {
+    "Path": "entities/bosch_still.png"
+  },
+  "Action_names": [
+    "Move Test", 
+    "Interact",
+    "Bite",
+    "Terrorize",
+    "Summon Wraith int"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": {
+    "Gear_names": [
+  "Pick Me Ups",
+  "Experimental Battery",
+  "Spectral Goggles v2"
+    ]
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 11,
+    "Ego": 9,
+    "Sight": 15
+  },
+  "Dissolve": false
+}

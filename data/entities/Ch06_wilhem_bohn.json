@@ -1,0 +1,33 @@
+{
+  "Name": "Sir Wilhem Bohn",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/detective",
+  "Still": 
+  {
+    "Path": "entities/detective_still.png"
+  },
+  "Action_names": 
+  [
+    "Move Test",
+    "Interact",
+    "Silver Buckshot",
+    "Dragonfire Round",
+    "Fortifying Drink",
+    "Blessed Bombard"
+  ],
+  "Walking_speed": 1,
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 22,
+    "Hp_max": 14,
+    "Corpus": 8,
+    "Ego": 8,
+    "Sight": 15
+  },
+  "Dissolve": false
+}

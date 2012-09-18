@@ -21,7 +21,8 @@ function Init(data)
 
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_02_Basement_Lab")
-  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")  
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+  Script.SetMusicParam("tension_level", 0.1)   
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -120,11 +121,6 @@ function RoundStart(intruders, round)
     return
   end
 
-  if store.bCountdownTriggered and not intruders then
-    Script.SetAp(MasterEnt(), 5)
-    Script.SetMusicParam("tension_level", 0.7)
-  end
-
   store.game = Script.SaveGameState()
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
@@ -173,11 +169,12 @@ function OnMove(ent, path)
 end
 
 function OnAction(intruders, round, exec)
+
   if store.execs == nil then
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
- 
+
   if exec.Action.Type == "Basic Attack" then
     if exec.Target.Name == store.MasterName and exec.Target.Hp <= 0 then
       --master is dead.  Intruders win.
@@ -189,25 +186,15 @@ function OnAction(intruders, round, exec)
     --The intruders got to the relic before the master.  They win.
     store.bHarmedGolem = true
     --Script.SetHp(MasterEnt(), MasterEnt().HpCur - 5)
-    StoreDamage(5, MasterEnt())
+    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Intruder_Reaches_Rift.json")
+    StoreDamage(25, MasterEnt())
   end 
 
   if exec.Ent.Name == store.MasterName and GetDistanceBetweenPoints(exec.Ent.Pos, store.ActivePos) <= 3 then
     store.bHarmedGolem = false --reset this so the intruders can race to the next rift.
     MoveWaypoint()
+    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Golem_Reaches_Rift.json")
     SpawnMinions(exec.Ent)
-  end 
-
-  --the intruders can only see the objective in LoS
-  for _, ent in pairs(Script.GetAllEnts()) do
-    if ent.Side.Intruder then   
-      --can this intruder see the objective?
-      for _, place in pairs(Script.GetLos(ent)) do
-        if pointIsInSpawn(place, HighlightSpawn) then
-          Script.SetVisibleSpawnPoints("intruders", HighlightSpawn.Name) 
-        end
-      end
-    end
   end 
 
   if not AnyIntrudersAlive() then
@@ -216,12 +203,15 @@ function OnAction(intruders, round, exec)
   end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
-  -- if exec.Ent.ApCur == 0 then
-  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-  --   if nextEnt.ApCur > 0 then
-  --     Script.SelectEnt(nextEnt)
-  --   end
-  -- end   
+  if exec.Ent.ApCur == 0 then
+    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+    if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        --When a wait function exists, add it here!!!!
+      end
+      Script.SelectEnt(nextEnt)
+    end
+  end   
 end
 
 function MoveWaypoint()
@@ -241,7 +231,6 @@ function MoveWaypoint()
   StoreWaypoint("Relic", "denizens", store.RelicPositions[indexToUse], 3, false) 
   StoreWaypoint("RelicInt", "intruders", store.RelicPositions[indexToUse], 3, false) 
   store.ActivePos = store.RelicPositions[indexToUse]
-  print("gtheckouttamove")
 end
 
 function SpawnMinions(mstrEnt)
@@ -288,11 +277,7 @@ function RoundEnd(intruders, round)
     end
 
     if intruders then
-      if store.bCountdownTriggered then
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Denizens.json", {turns=store.nCountdown})
-      else
-        Script.DialogBox("ui/dialog/Lvl02/pass_to_denizens.json")
-      end
+      Script.DialogBox("ui/dialog/Lvl02/pass_to_denizens.json")
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
@@ -301,23 +286,8 @@ function RoundEnd(intruders, round)
         bSkipOtherChecks = true
       end
 
-      if store.bCountdownTriggered and not store.bShowedIntruderTimerMessage and not bSkipOtherChecks then
-        store.bShowedIntruderTimerMessage = true
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Countdown_Started_Intruders.json", {turns=store.nCountdown})
-        bSkipOtherChecks = true
-      end
-
-      if store.bCountdownTriggered and not bSkipOtherChecks then  --timer is triggered and we've already intro'd it
-        Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Turns_Remaining_Intruders.json", {turns=store.nCountdown})
-        bSkipOtherChecks = true
-      end
-
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
         Script.DialogBox("ui/dialog/Lvl02/pass_to_intruders.json")
-      end
-
-      if store.bCountdownTriggered then
-        store.nCountdown = store.nCountdown - 1
       end
     end
 

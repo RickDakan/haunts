@@ -67,7 +67,7 @@ end
 function intrudersSetup()
 
   if IsStoryMode() then
-    intruder_names = {"Collector", "Ghost Hunter", "Detective"}
+    intruder_names = {"Christopher Matthias", "Cora Phinneas", "Sonico Mono"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruder_Start")
   end 
 

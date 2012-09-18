@@ -69,7 +69,7 @@
       [
         {
           "Next": "Start6",
-          "Text": "But his work has not gone unnoticed by the covetous Tyrees, petty dillettente dabblers in the occult who think their money can win them any prize.",
+          "Text": "Unfortunately, his work has not gone unnoticed by the covetous Tyrees, petty dillettente dabblers in the occult who think their money can win them any prize.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/occultist3.png"
@@ -128,7 +128,7 @@
       "Sections":
       [
         {
-          "Text": "Lost Souls from the beyond crackle with deadly ectoplasmic energy that can strike at the Tyrees from a distance. They cannot open doors, so need a shade or Bosch to lead the way.",
+          "Text": "Lost Souls from the beyond crackle with deadly ectoplasmic energy that can strike at the Tyrees from a distance. They cannot open doors, and so need a shade or Bosch to lead the way.",
           "Image":
           {
             "Path": "ui/dialog/stills/orb_dialog.png"
