@@ -406,6 +406,8 @@ func loadGameStateRaw(gp *GamePanel, state string) {
   gp.game.script = gp.script
   gp.AnchorBox.RemoveChild(viewer)
   base.Log().Printf("LoadGameStateRaw: Turn = %d, Side = %d", gp.game.Turn, gp.game.Side)
+  gp.game.OnRound(false)
+
   for _, child := range gp.AnchorBox.GetChildren() {
     if o, ok := child.(*Overlay); ok {
       gp.AnchorBox.RemoveChild(o)
@@ -1078,6 +1080,7 @@ func setVisibility(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Cannot pass '%s' as first parameter of setVisibility()", side_str)
       return 0
     }
+    base.Log().Printf("SetVisibility: %s", side_str)
     gp.game.SetVisibility(side)
     return 0
   }
@@ -1526,7 +1529,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error updating game state: %v", resp.Err)
       return 0
     }
-    base.Log().Printf("Successfully update game state: %v", gp.game.net.key)
+    base.Log().Printf("UpdateState: Turn = %d, Side = %d", gp.game.Turn, gp.game.Side)
     return 0
   }
 }
@@ -1593,7 +1596,7 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
         base.Log().Printf("Found the expected %d states", expect)
         break
       }
-      base.Log().Printf("Found %d instead of %d states", len(resp.Game.State), expect)
+      base.Log().Printf("Found %d instead of %d states", len(resp.Game.Execs), expect)
       time.Sleep(time.Second * 5)
     }
     return 0

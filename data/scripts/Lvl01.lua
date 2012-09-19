@@ -152,7 +152,7 @@ function RoundStart(intruders, round)
       denizensSetup()
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
     end
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")
 
     if IsStoryMode() then
@@ -170,7 +170,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")          
   end
   
@@ -180,7 +180,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")
   end
 
@@ -192,7 +192,7 @@ function RoundStart(intruders, round)
   SelectCharAtTurnStart(side)
 
   if Side() == "Humans" then
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
@@ -201,7 +201,7 @@ function RoundStart(intruders, round)
     end
     Script.ShowMainBar(true)
   else
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("intruders")
@@ -366,10 +366,15 @@ function DoPlayback(state, execs)
 end
 
 function RoundEnd(intruders, round)
-  print("SCRIPT: Round End")
+  print("SCRIPT: Round End:", Net.Side())
   Net.UpdateExecs(execs)
-
+  print("SCRIPT: Net active is", Net.Active())
   if Net.Active() then
+    if Side() == "Denizens" then
+      Script.SetVisibility("denizens")
+    else
+      Script.SetVisibility("intruders")
+    end
     Net.Wait()
     cur = Script.SaveGameState()
     state, execs = Net.LatestStateAndExecs()
@@ -385,7 +390,7 @@ function RoundEnd(intruders, round)
 
   if Side() == "Humans" then
     Script.ShowMainBar(false)
-    Script.SetLosMode("intruders", "all")
+    Script.SetLosMode("intruders", "blind")
     Script.SetLosMode("denizens", "blind")
     if intruders then
       Script.SetVisibility("denizens")

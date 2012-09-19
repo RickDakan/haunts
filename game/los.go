@@ -405,14 +405,16 @@ func (g *Game) SetVisibility(side Side) {
 // 1. The game script gets to run its OnRound() function
 // 2. Entities with stats and HpCur() <= 0 are removed.
 // 3. Entities all have their OnRound() function called.
-func (g *Game) OnRound() {
+func (g *Game) OnRound(do_scripts bool) {
   // Don't end the round if any of the following are true
   // An action is currently executing
   if g.Action_state != noAction {
+    base.Log().Printf("No OnRound - have action")
     return
   }
   // Any master ai is still active
   if g.Side == SideHaunt && (g.Ai.minions.Active() || g.Ai.denizens.Active()) {
+    base.Log().Printf("No OnRound - waiting on ais")
     return
   }
 
@@ -433,18 +435,20 @@ func (g *Game) OnRound() {
   // The entity ais must be activated before the master ais, otherwise the
   // masters might be running with stale data if one of the entities has been
   // reloaded.
-  for i := range g.Ents {
-    g.Ents[i].Ai.Activate()
-    base.Log().Printf("EntityActive '%s': %t", g.Ents[i].Name, g.Ents[i].Ai.Active())
-  }
+  if do_scripts {
+    for i := range g.Ents {
+      g.Ents[i].Ai.Activate()
+      base.Log().Printf("EntityActive '%s': %t", g.Ents[i].Name, g.Ents[i].Ai.Active())
+    }
 
-  if g.Side == SideHaunt {
-    g.Ai.minions.Activate()
-    g.Ai.denizens.Activate()
-    g.player_inactive = g.Ai.denizens.Active()
-  } else {
-    g.Ai.intruders.Activate()
-    g.player_inactive = g.Ai.intruders.Active()
+    if g.Side == SideHaunt {
+      g.Ai.minions.Activate()
+      g.Ai.denizens.Activate()
+      g.player_inactive = g.Ai.denizens.Active()
+    } else {
+      g.Ai.intruders.Activate()
+      g.player_inactive = g.Ai.intruders.Active()
+    }
   }
 
   for i := range g.Ents {
@@ -456,7 +460,9 @@ func (g *Game) OnRound() {
     return ent.Stats == nil || ent.Stats.HpCur() > 0
   })
 
-  g.script.OnRound(g)
+  if do_scripts {
+    g.script.OnRound(g)
+  }
 
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
@@ -1012,7 +1018,7 @@ func (g *Game) Think(dt int64) {
     case <-g.comm.script_to_game:
       g.Turn_state = turnStateStart
       base.Log().Printf("ScriptComm: change to turnStateStart")
-      g.OnRound()
+      g.OnRound(true)
     default:
     }
   }
