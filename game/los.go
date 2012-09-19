@@ -1065,9 +1065,13 @@ func (g *Game) Think(dt int64) {
   for _, ent := range g.Ents {
     ent.Think(dt)
     s := ent.Sprite()
-    if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
-      g.viewer.RemoveFloorDrawable(g.current_action)
-      ent.current_action = nil
+    if s == nil {
+      base.Error().Printf("Not sprite for %s", ent.Sprite_path)
+    } else {
+      if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
+        g.viewer.RemoveFloorDrawable(g.current_action)
+        ent.current_action = nil
+      }
     }
   }
   if g.new_ent != nil {

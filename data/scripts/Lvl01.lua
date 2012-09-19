@@ -16,6 +16,13 @@ function DoTutorials()
   --It would be super cool.
 end
 
+function Side()
+  if Net.Active() then
+    return Net.Side()
+  end
+  return store.side
+end
+
 function Init(data)
   if Net.Active() then
     side_choices = {"Denizens"}
@@ -28,21 +35,22 @@ function Init(data)
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
   store.side = side_choices[1]
-  -- store.side = "Humans"
-  if store.side == "Humans" then
+  -- Side() = "Humans"
+  if Side() == "Humans" or Net.Active() then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
     Script.BindAi("intruder", "human")
-  end
-  if store.side == "Denizens" then
-    Script.BindAi("denizen", "human")
-    Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "ch01/intruders.lua")
-  end
-  if store.side == "Intruders" then
-    Script.BindAi("denizen", "ch01/denizens.lua")
-    Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "human")
+  else
+    if Side() == "Denizens" then
+      Script.BindAi("denizen", "human")
+      Script.BindAi("minions", "minions.lua")
+      Script.BindAi("intruder", "ch01/intruders.lua")
+    end
+    if Side() == "Intruders" then
+      Script.BindAi("denizen", "ch01/denizens.lua")
+      Script.BindAi("minions", "minions.lua")
+      Script.BindAi("intruder", "human")
+    end
   end
 
   store.nFirstWaypointDown = false
@@ -66,7 +74,7 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
-    if store.side == "Denizens" then
+    if Side() == "Denizens" then
       filename = "ch01/" .. name .. ".lua"
       Script.BindAi(ent, filename)
     end
@@ -85,7 +93,7 @@ function denizensSetup()
 
   end
   
-  if store.side == "Intruders" then
+  if Side() == "Intruders" then
     master_spawn = Script.GetSpawnPointsMatching("Master_.*")
     ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
     placed = {ent}
@@ -117,7 +125,7 @@ function denizensSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
   points = 6
-  if store.side == "Intruders" then
+  if Side() == "Intruders" then
     servitor_spawn = Script.GetSpawnPointsMatching("Servitors_Start1")
     while points > 0 do
       option = ServitorEnts[Script.Rand(table.getn(ServitorEnts))]
@@ -183,7 +191,7 @@ function RoundStart(intruders, round)
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
 
-  if store.side == "Humans" then
+  if Side() == "Humans" then
     Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "entities")
     if intruders then
@@ -322,6 +330,7 @@ end
  
 
 function DoPlayback(state, execs)
+  print("SCRIPT: DoPlayback")
   Script.LoadGameState(state)
 
   --focus the camera on somebody on each team.
@@ -359,13 +368,22 @@ end
 function RoundEnd(intruders, round)
   print("SCRIPT: Round End")
   Net.UpdateExecs(execs)
+
+  if Net.Active() then
+    Net.Wait()
+    cur = Script.SaveGameState()
+    state, execs = Net.LatestStateAndExecs()
+    DoPlayback(cur, execs)
+    return
+  end
+
   if round == 1 then
     return
   end
 
   bSkipOtherChecks = false  --Resets this every round
 
-  if store.side == "Humans" then
+  if Side() == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "all")
     Script.SetLosMode("denizens", "blind")

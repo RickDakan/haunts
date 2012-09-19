@@ -17,6 +17,7 @@ import (
   "io/ioutil"
   "path/filepath"
   "regexp"
+  "time"
 )
 
 type gameScript struct {
@@ -112,9 +113,11 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           return 1
         })
     },
-    "Side":        func() { gp.script.L.PushGoFunctionAsCFunction(netSideFunc(gp)) },
-    "UpdateState": func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
-    "UpdateExecs": func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
+    "Side":                func() { gp.script.L.PushGoFunctionAsCFunction(netSideFunc(gp)) },
+    "UpdateState":         func() { gp.script.L.PushGoFunctionAsCFunction(updateStateFunc(gp)) },
+    "UpdateExecs":         func() { gp.script.L.PushGoFunctionAsCFunction(updateExecsFunc(gp)) },
+    "Wait":                func() { gp.script.L.PushGoFunctionAsCFunction(netWaitFunc(gp)) },
+    "LatestStateAndExecs": func() { gp.script.L.PushGoFunctionAsCFunction(netLatestStateAndExecsFunc(gp)) },
   })
   gp.script.L.SetMetaTable(-2)
   gp.script.L.SetGlobal("Net")
@@ -137,32 +140,56 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   if !res {
     base.Error().Printf("There was an error running script %s:\n%s", path, prog)
   } else {
-    base.Log().Printf("No_init: %v\n", player.No_init)
+    // if resp.Game.Denizens_id == 
     go func() {
-      gp.script.L.NewTable()
-      for k, v := range data {
-        gp.script.L.PushString(k)
-        gp.script.L.PushString(v)
-        gp.script.L.SetTable(-3)
-      }
-      gp.script.L.SetGlobal("__data")
-      gp.script.L.SetExecutionLimit(250000)
-      if player.No_init {
-        gp.script.syncStart()
-        loadGameStateRaw(gp, player.Game_state)
-        gp.game.script = gp.script
-        gp.script.syncEnd()
-      } else {
-        gp.script.L.DoString("Init(__data)")
-        if gp.game.Side == SideHaunt {
-          gp.game.Ai.minions.Activate()
-          gp.game.Ai.denizens.Activate()
-          gp.game.player_inactive = gp.game.Ai.denizens.Active()
-        } else {
-          gp.game.Ai.intruders.Activate()
-          gp.game.player_inactive = gp.game.Ai.intruders.Active()
+      if game_key != "" {
+        var net_id mrgnet.NetId
+        fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+        var req mrgnet.StatusRequest
+        req.Game_key = game_key
+        req.Id = net_id
+        var resp mrgnet.StatusResponse
+        mrgnet.DoAction("status", req, &resp)
+        if resp.Err != "" {
+          base.Error().Printf("%s", resp.Err)
+          return
         }
-
+        if resp.Game != nil && len(resp.Game.Execs) > 0 {
+          loadGameStateRaw(gp, string(resp.Game.State[len(resp.Game.Execs)-1]))
+          gp.game.net.game = resp.Game
+          gp.game.net.key = game_key
+          if net_id == resp.Game.Denizens_id {
+            gp.game.Side = SideHaunt
+          } else {
+            gp.game.Side = SideExplorers
+          }
+        }
+      }
+      if gp.game == nil {
+        gp.script.L.NewTable()
+        for k, v := range data {
+          gp.script.L.PushString(k)
+          gp.script.L.PushString(v)
+          gp.script.L.SetTable(-3)
+        }
+        gp.script.L.SetGlobal("__data")
+        gp.script.L.SetExecutionLimit(250000)
+        if player.No_init {
+          gp.script.syncStart()
+          loadGameStateRaw(gp, player.Game_state)
+          gp.game.script = gp.script
+          gp.script.syncEnd()
+        } else {
+          gp.script.L.DoString("Init(__data)")
+          if gp.game.Side == SideHaunt {
+            gp.game.Ai.minions.Activate()
+            gp.game.Ai.denizens.Activate()
+            gp.game.player_inactive = gp.game.Ai.denizens.Active()
+          } else {
+            gp.game.Ai.intruders.Activate()
+            gp.game.player_inactive = gp.game.Ai.intruders.Active()
+          }
+        }
       }
       if gp.game == nil {
         base.Error().Printf("Script failed to load a house during Init().")
@@ -376,7 +403,9 @@ func loadGameStateRaw(gp *GamePanel, state string) {
     base.Error().Printf("Error decoding game state: %v", err)
     return
   }
+  gp.game.script = gp.script
   gp.AnchorBox.RemoveChild(viewer)
+  base.Log().Printf("LoadGameStateRaw: Turn = %d, Side = %d", gp.game.Turn, gp.game.Side)
   for _, child := range gp.AnchorBox.GetChildren() {
     if o, ok := child.(*Overlay); ok {
       gp.AnchorBox.RemoveChild(o)
@@ -1535,6 +1564,73 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
     }
     base.Log().Printf("Successfully update game execs: %v", gp.game.net.key)
     return 0
+  }
+}
+
+func netWaitFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "Wait") {
+      return 0
+    }
+    if gp.game.net.key == "" {
+      base.Error().Printf("Tried to Wait in a non-net game.")
+      return 0
+    }
+    var net_id mrgnet.NetId
+    fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+    var req mrgnet.StatusRequest
+    req.Game_key = gp.game.net.key
+    req.Id = net_id
+    for {
+      var resp mrgnet.StatusResponse
+      mrgnet.DoAction("status", req, &resp)
+      if resp.Err != "" {
+        base.Error().Printf("%s", resp.Err)
+        return 0
+      }
+      expect := gp.game.Turn + 1
+      if len(resp.Game.State) == len(resp.Game.Execs) && len(resp.Game.State) == expect {
+        base.Log().Printf("Found the expected %d states", expect)
+        break
+      }
+      base.Log().Printf("Found %d instead of %d states", len(resp.Game.State), expect)
+      time.Sleep(time.Second * 5)
+    }
+    return 0
+  }
+}
+
+func netLatestStateAndExecsFunc(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "LatestStateAndExecs") {
+      return 0
+    }
+    if gp.game.net.key == "" {
+      base.Error().Printf("Tried to get LatestStateAndExecs in a non-net game.")
+      return 0
+    }
+    var net_id mrgnet.NetId
+    fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
+    var req mrgnet.StatusRequest
+    req.Game_key = gp.game.net.key
+    req.Id = net_id
+    var resp mrgnet.StatusResponse
+    mrgnet.DoAction("status", req, &resp)
+    if resp.Err != "" {
+      base.Error().Printf("%s", resp.Err)
+      return 0
+    }
+    if len(resp.Game.State) != len(resp.Game.Execs) {
+      base.Error().Printf("Not the same number of States and Execss")
+      return 0
+    }
+    state := resp.Game.State[len(resp.Game.State)-1]
+    L.PushString(string(state))
+    buf := bytes.NewBuffer(resp.Game.Execs[len(resp.Game.Execs)-1])
+    gp.script.syncStart()
+    LuaDecodeValue(buf, L, gp.game)
+    gp.script.syncEnd()
+    return 2
   }
 }
 
