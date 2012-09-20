@@ -409,8 +409,10 @@ func doGameOnRound(gp *GamePanel) lua.GoFunction {
 
 func loadGameStateRaw(gp *GamePanel, state string) {
   var viewer gui.Widget
+  var hv_state house.HouseViewerState
   if gp.game != nil {
     viewer = gp.game.viewer
+    hv_state = gp.game.viewer.GetState()
   }
   err := base.FromBase64FromGob(&gp.game, state)
   if err != nil {
@@ -427,6 +429,9 @@ func loadGameStateRaw(gp *GamePanel, state string) {
       gp.AnchorBox.RemoveChild(o)
       break
     }
+  }
+  if viewer != nil {
+    gp.game.viewer.SetState(hv_state)
   }
   gp.AnchorBox.AddChild(gp.game.viewer, gui.Anchor{0.5, 0.5, 0.5, 0.5})
   gp.AnchorBox.AddChild(MakeOverlay(gp.game), gui.Anchor{0.5, 0.5, 0.5, 0.5})
