@@ -1,10 +1,10 @@
 package mrgnet
 
 import (
-  "Fmt"
   "bytes"
   "crypto/rand"
   "encoding/gob"
+  "fmt"
   "io/ioutil"
   "math/big"
   "net/http"
@@ -14,7 +14,7 @@ import (
 type NetId int64
 type GameKey string
 
-const Host_url = "http://localhost:8080"
+const Host_url = "http://mobrulesgames.appspot.com/"
 
 func DoAction(name string, input, output interface{}) error {
   buf := bytes.NewBuffer(nil)
@@ -115,6 +115,15 @@ type StatusRequest struct {
 type StatusResponse struct {
   Err  string
   Game *Game
+}
+
+type KillRequest struct {
+  Id       NetId
+  Game_key GameKey
+}
+
+type KillResponse struct {
+  Err string
 }
 
 type Game struct {
