@@ -261,10 +261,16 @@ func (g *Game) GobDecode(data []byte) error {
   for _, ent := range g.Ents {
     base.GetObject("entities", ent)
   }
+
   g.setup()
   for _, ent := range g.Ents {
     ent.Load(g)
+    base.Log().Printf("Ungob, ent: %p, %s", ent, ent.Name)
+    g.UpdateEntLos(ent, true)
   }
+  g.mergeLos(SideHaunt)
+  g.mergeLos(SideExplorers)
+
   var sss []sprite.SpriteState
   if err := dec.Decode(&sss); err != nil {
     return err
@@ -786,10 +792,6 @@ func (g *Game) setup() {
   g.gameDataTransient.alloc()
   g.all_ents_in_game = make(map[*Entity]bool)
   g.all_ents_in_memory = make(map[*Entity]bool)
-  for i := range g.Ents {
-    base.Log().Printf("Ungob, ent: %p", g.Ents[i])
-    g.UpdateEntLos(g.Ents[i], true)
-  }
   if g.Side == SideHaunt {
     g.viewer.Los_tex = g.los.intruders.tex
   } else {
