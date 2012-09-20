@@ -418,13 +418,17 @@ func (g *Game) OnRound(do_scripts bool) {
     return
   }
 
-  g.Turn++
-  if g.Side == SideExplorers {
-    g.Side = SideHaunt
-  } else {
-    g.Side = SideExplorers
+  if do_scripts {
+    g.Turn++
+    if g.Side == SideExplorers {
+      base.Log().Printf("OnRound from %d Intruders to %d Denizens", g.Turn-1, g.Turn)
+      g.Side = SideHaunt
+    } else {
+      base.Log().Printf("OnRound from %d Denizens to %d Intruders", g.Turn-1, g.Turn)
+      g.Side = SideExplorers
+    }
+    g.viewer.Los_tex.Remap()
   }
-  g.viewer.Los_tex.Remap()
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -784,10 +788,7 @@ func (g *Game) setup() {
   g.all_ents_in_memory = make(map[*Entity]bool)
   for i := range g.Ents {
     base.Log().Printf("Ungob, ent: %p", g.Ents[i])
-    if g.Ents[i].Side() == g.Side {
-      base.Log().Printf("Ungob, ent: %p", g.Ents[i])
-      g.UpdateEntLos(g.Ents[i], true)
-    }
+    g.UpdateEntLos(g.Ents[i], true)
   }
   if g.Side == SideHaunt {
     g.viewer.Los_tex = g.los.intruders.tex

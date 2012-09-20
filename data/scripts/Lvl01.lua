@@ -148,7 +148,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
     end
@@ -161,6 +161,7 @@ function RoundStart(intruders, round)
 
     Script.EndPlayerInteraction()
     store.game = Script.SaveGameState()
+    print("Update State Round/Intruders: ", round, intruders)
     Net.UpdateState(store.game)
     return
   end
@@ -186,6 +187,7 @@ function RoundStart(intruders, round)
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
   store.game = Script.SaveGameState()
+  print("Update State Round/Intruders: ", round, intruders)
   Net.UpdateState(store.game)
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
@@ -330,7 +332,7 @@ end
  
 
 function DoPlayback(state, execs)
-  print("SCRIPT: DoPlayback")
+  print("SCRIPT: DoPlayback - ", table.getn(execs))
   Script.LoadGameState(state)
 
   --focus the camera on somebody on each team.
@@ -338,20 +340,25 @@ function DoPlayback(state, execs)
   Script.FocusPos(GetEntityWithMostAP(side2).Pos)
 
   for _, exec in pairs(execs) do
+    print("SCRIPT: proc exec")
     bDone = false
     if exec.script_spawn then
+      print("SRCIPT: Exec - Spawn")
       doSpawn(exec)
       bDone = true
     end
     if exec.script_despawn then
+      print("SRCIPT: Exec - Despawn")
       deSpawn(exec)
       bDone = true
     end
     if exec.script_waypoint then
+      print("SRCIPT: Exec - Waypoint")
       doWaypoint(exec)
       bDone = true
     end
     if not bDone then
+      print("SRCIPT: Exec - Standard")
       Script.DoExec(exec)
 
       --will be used at turn start to try to reselect the last thing they acted with.
@@ -363,11 +370,13 @@ function DoPlayback(state, execs)
       end
     end
   end
+  -- Script.GameOnRound()
 end
 
 function RoundEnd(intruders, round)
   print("SCRIPT: Round End:", Net.Side())
-  Net.UpdateExecs(execs)
+  print("Update Execs Round/Intruders: ", round, intruders)
+  Net.UpdateExecs(store.execs)
   print("SCRIPT: Net active is", Net.Active())
   if Net.Active() then
     if Side() == "Denizens" then
@@ -375,10 +384,12 @@ function RoundEnd(intruders, round)
     else
       Script.SetVisibility("intruders")
     end
+    Script.ShowMainBar(false)
     Net.Wait()
-    cur = Script.SaveGameState()
+    -- cur = Script.SaveGameState()
     state, execs = Net.LatestStateAndExecs()
-    DoPlayback(cur, execs)
+    DoPlayback(state, execs)
+    Script.ShowMainBar(true)
     return
   end
 

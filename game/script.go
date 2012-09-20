@@ -62,6 +62,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   LuaPushSmartFunctionTable(gp.script.L, FunctionTable{
     "ChooserFromFile":                   func() { gp.script.L.PushGoFunctionAsCFunction(chooserFromFile(gp)) },
     "StartScript":                       func() { gp.script.L.PushGoFunctionAsCFunction(startScript(gp, player)) },
+    "GameOnRound":                       func() { gp.script.L.PushGoFunctionAsCFunction(doGameOnRound(gp)) },
     "SaveGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(saveGameState(gp)) },
     "LoadGameState":                     func() { gp.script.L.PushGoFunctionAsCFunction(loadGameState(gp)) },
     "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
@@ -162,6 +163,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
             gp.game.Side = SideHaunt
           } else {
             gp.game.Side = SideExplorers
+            gp.game.Turn++
           }
         }
       }
@@ -390,6 +392,18 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     }
     L.PushString(str)
     return 1
+  }
+}
+
+func doGameOnRound(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "GameOnRound") {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gp.game.OnRound(false)
+    return 0
   }
 }
 
