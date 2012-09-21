@@ -278,7 +278,7 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
               return
             }
             sm.ui.RemoveChild(sm)
-            sm.ui.AddChild(MakeGamePanel("Lvl01.lua", nil, nil, game_key))
+            sm.ui.AddChild(MakeGamePanel("", nil, nil, game_key))
           }()
         }
         glb.games = append(glb.games, &b)

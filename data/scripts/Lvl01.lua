@@ -148,7 +148,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
+      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
     end
