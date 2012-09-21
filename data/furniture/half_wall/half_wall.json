@@ -1,0 +1,13 @@
+{
+  "Name": "Half Wall",
+  "Orientations" : [
+    {
+      "Dx": 4,
+      "Dy": 1,
+      "Texture": {
+        "Path": "furniture/half_wall/half_wall.png"
+      }
+    }
+  ],
+  "Blocks_los" : true
+}
