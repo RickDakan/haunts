@@ -2,13 +2,14 @@ package game
 
 import (
   "fmt"
-  "math"
-  "path/filepath"
+  gl "github.com/chsc/gogl/gl21"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
+  "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/texture"
-  gl "github.com/chsc/gogl/gl21"
+  "math"
+  "path/filepath"
 )
 
 type Option interface {
@@ -192,6 +193,77 @@ type Chooser struct {
   mx, my             int
 
   last_t int64
+}
+
+func InsertMapChooser(ui gui.WidgetParent) error {
+  var bops []OptionBasic
+  datadir := base.GetDataDir()
+  err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start", "versus", "map_select.json"), "json", &bops)
+  if err != nil {
+    base.Error().Printf("Unable to insert MapChooser: %v", err)
+    return err
+  }
+  var opts []Option
+  algorithm.Map2(bops, &opts, func(ob OptionBasic) Option { return &ob })
+  for _, opt := range opts {
+    base.Log().Printf(opt.String())
+  }
+
+  var ch Chooser
+  err = base.LoadAndProcessObject(filepath.Join(datadir, "ui", "chooser", "layout.json"), "json", &ch.layout)
+  if err != nil {
+    base.Error().Printf("Unable to insert MapChooser: %v", err)
+    return err
+  }
+  ch.options = opts
+  ch.buttons = []*Button{
+    &ch.layout.Up,
+    &ch.layout.Down,
+    &ch.layout.Back,
+    &ch.layout.Next,
+  }
+  ch.non_scroll_buttons = []*Button{
+    &ch.layout.Back,
+    &ch.layout.Next,
+  }
+  ch.layout.Up.f = func(interface{}) {
+    ch.layout.Options.Up()
+  }
+  ch.layout.Down.f = func(interface{}) {
+    ch.layout.Options.Down()
+  }
+  ch.selected = make(map[int]bool)
+  ch.layout.Back.f = func(interface{}) {
+    ui.RemoveChild(&ch)
+    err := InsertStartMenu(ui)
+    if err != nil {
+      base.Error().Printf("Unable to make Start Menu: %v", err)
+      return
+    }
+  }
+  ch.layout.Next.f = func(interface{}) {
+    for i := range ch.options {
+      if ch.selected[i] {
+        ui.RemoveChild(&ch)
+        ui.AddChild(MakeGamePanel(ch.options[i].String(), nil, nil, ""))
+      }
+    }
+  }
+  ch.layout.Next.valid_func = func() bool {
+    return ch.selector(-1, ch.selected, false)
+  }
+  ch.min, ch.max = 1, 1
+  if ch.min == 1 && ch.max == 1 {
+    ch.selector = SelectExactlyOne
+  } else {
+    ch.selector = SelectInRange(ch.min, ch.max)
+  }
+  ch.info_region = gui.Region{
+    gui.Point{ch.layout.Info.X, ch.layout.Info.Y},
+    gui.Dims{ch.layout.Info.Dx, ch.layout.Info.Dy},
+  }
+  ui.AddChild(&ch)
+  return nil
 }
 
 func MakeChooser(opts []Option) (*Chooser, <-chan []string, error) {
