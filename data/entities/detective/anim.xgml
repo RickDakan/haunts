@@ -636,7 +636,8 @@ sync:hit</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">30</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+func:dragon</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
 				<attribute key="y" type="double">140.0791015625</attribute>
@@ -647,7 +648,8 @@ sync:hit</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+func:dragon</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -796,7 +798,8 @@ sync:hit</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">38</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+func:blast</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">873.94482421875</attribute>
 				<attribute key="y" type="double">140.0791015625</attribute>
@@ -807,7 +810,8 @@ sync:hit</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+func:blast</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

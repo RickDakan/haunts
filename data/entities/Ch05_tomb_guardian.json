@@ -1,0 +1,28 @@
+{
+  "Name": "Tomb Guardian",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Pummel",
+    "Diseased Kiss"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 9,
+    "Corpus": 10,
+    "Ego": 8,
+    "Sight": 20
+  },
+  "Dissolve": false,
+  "Ai_path": "ais/corpse.lua"
+}

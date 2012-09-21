@@ -2,6 +2,9 @@
   "Name"     : "Feast",
   "Kind"     : "Brutal",
   "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/squid_hand.png"
+  },
   "Ap"       : 4,
   "Strength" : 12,
   "Damage"   : 3,

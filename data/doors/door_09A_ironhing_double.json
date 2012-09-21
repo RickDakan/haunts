@@ -1,0 +1,10 @@
+{
+  "Name": "Door 09A - Ironhinge Double",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_frame_white_double.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_09A_ironhinge_double_closed.png"
+  }
+}

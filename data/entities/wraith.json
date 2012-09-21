@@ -7,7 +7,7 @@
     "Path": "entities/wraith_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Vengeful Curse",
     "Grave Grasp",

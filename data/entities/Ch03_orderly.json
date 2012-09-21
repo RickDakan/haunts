@@ -7,7 +7,7 @@
     "Path": "entities/female_cultist_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Sedate"
   ],

@@ -12,6 +12,6 @@
     "terror": "Haunts/SFX/Denizens/Bosses/Vampire/Terror"
   },
   "Texture"   : {
-    "Path": "actions/icons/abjurate.png"
+    "Path": "actions/icons/terror.png"
   }
 }

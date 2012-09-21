@@ -1,1 +1,1 @@
-{"Name":"lvl8_hall_a_3","Size":{"Name":"Hall_A","Dx":20,"Dy":5},"Furniture":[],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_02.png"},"Wall":{"Path":"rooms/walls/wall_floral_paper.png"},"Themes":null,"Sizes":null,"Decor":null}
+{"Name":"lvl8_hall_a_3","Size":{"Name":"Hall_A","Dx":20,"Dy":5},"Furniture":[],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_02_maplewood_hall_a.png"},"Wall":{"Path":"rooms/walls/wall_floral_paper.png"},"Themes":null,"Sizes":null,"Decor":null}

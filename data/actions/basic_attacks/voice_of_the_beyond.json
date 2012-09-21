@@ -7,7 +7,7 @@
   "Range"     : 10,
   "Animation" : "visions",
   "Texture"   : {
-    "Path": "actions/icons/coordination.png"
+    "Path": "actions/icons/visions_b.png"
   },
   "Target_allies": true,
   "Sounds"   : {

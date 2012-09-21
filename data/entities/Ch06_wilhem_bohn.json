@@ -9,13 +9,13 @@
   },
   "Action_names": 
   [
-    "Move Test",
+    "Move",
     "Interact",
     "Dire Curse",
     "Abjuration",
     "Exorcise"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "HauntEnt": {
     "Cost":    15,
     "Minions": 25,

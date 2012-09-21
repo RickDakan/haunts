@@ -6,7 +6,7 @@
       "Sections":[
         {
           "Next": "Start2",
-          "Text": "Bosch cannot be simply killed in his own domain.",
+          "Text": "Simply killing him will not stop Bosch in his own domain.",
 		  "Image":{
             "Path": "ui/dialog/lvl01/master.png"
           }

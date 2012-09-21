@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "ranged",
   "Texture"   : {
-  "Path": "actions/icons/pistol.png"
+  "Path": "actions/icons/cast.png"
   },
   "Ap"       : 3,
   "Strength" : 10,

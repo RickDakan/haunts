@@ -14,7 +14,9 @@ end
 function Init(data)
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
-  Script.LoadHouse("Lvl_06_creature_feature")  
+  Script.LoadHouse("Lvl_06_creature_feature")
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 2")
+  Script.SetMusicParam("tension_level", 0.1)     
 
   store.side = side_choices[1]
   if store.side == "Humans" then

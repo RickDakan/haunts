@@ -1,8 +1,8 @@
 {
   "Name": "Attack +2",
-  "Strength": 5,
+  "Strength": 10,
   "Kind": "Poison",
-  "Duration": 5,
+  "Duration": 3,
   "Base": {
     "Attack": 2
   }

@@ -5,7 +5,7 @@
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"
   },
-  "Ap"       : 7,
+  "Ap"       : 8,
   "Range"    : 3,
   "Ent_name" : "Shade for Evans",
   "Personal_los": true

@@ -186,6 +186,7 @@ function OnAction(intruders, round, exec)
     --The intruders got to the relic before the master.  They win.
     store.bHarmedGolem = true
     --Script.SetHp(MasterEnt(), MasterEnt().HpCur - 5)
+    Script.SetMusicParam("tension_level", 0.6)
     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Intruder_Reaches_Rift.json")
     StoreDamage(25, MasterEnt())
   end 
@@ -193,6 +194,7 @@ function OnAction(intruders, round, exec)
   if exec.Ent.Name == store.MasterName and GetDistanceBetweenPoints(exec.Ent.Pos, store.ActivePos) <= 3 then
     store.bHarmedGolem = false --reset this so the intruders can race to the next rift.
     MoveWaypoint()
+    Script.SetMusicParam("tension_level", 0.3)
     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Golem_Reaches_Rift.json")
     SpawnMinions(exec.Ent)
   end 
@@ -283,6 +285,7 @@ function RoundEnd(intruders, round)
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl02/pass_to_intruders.json")
         Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Opening_Intruders.json")
+        Script.SetMusicParam("tension_level", 0.2)
         bSkipOtherChecks = true
       end
 

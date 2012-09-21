@@ -1,0 +1,10 @@
+{
+  "Name": "Door 01A - Knocker Double",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_frame_black_double.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_01A_knocker_double_closed.png"
+  }
+}

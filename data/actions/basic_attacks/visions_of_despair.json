@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/arc.png"
+    "Path": "actions/icons/visions.png"
   },
   "Ap"       : 3,
   "Strength" : 10,

@@ -21,6 +21,7 @@ function Init(data)
 
   Script.LoadHouse("Lvl_05_museum")  
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+  Script.SetMusicParam("tension_level", 0.2)
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -123,6 +124,7 @@ function RoundStart(intruders, round)
 
   if intruders and store.bDenizenMasterFoundObLastTurn then
     store.bDenizenMasterFoundObLastTurn = false
+    Script.SetMusicParam("tension_level", 0.5)
     Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Artifact_Found_Intruders.json")
   end
 
@@ -237,7 +239,7 @@ function StartSummon()
       StoreWaypoint("Objective" .. i, "", "", "", true)
     end
   end
-
+  Script.SetMusicParam("tension_level", 0.9)
   Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Summon_Started_Denizens.json")
 end
 

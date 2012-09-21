@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/disrupt.png"
+    "Path": "actions/icons/truncheon.png"
   },
   "Ap"       : 3,
   "Strength" : 10,

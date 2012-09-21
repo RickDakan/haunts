@@ -7,7 +7,7 @@
     "Path": "entities/vampire_fem_still.png"
   },
   "Action_names": [
-    "Move Test", 
+    "Move", 
     "Interact",
     "Bite",
     "Umbral Leech",

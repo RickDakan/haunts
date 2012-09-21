@@ -3,7 +3,7 @@
   "Kind"     : "Brutal",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/sword_b.png"
   },
   "Ap"       : 3,
   "Strength" : 10,

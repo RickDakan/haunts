@@ -1,0 +1,33 @@
+{
+  "Name": "Claire Murray",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/detective",
+  "Still": {
+    "Path": "entities/detective_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Silver Buckshot",
+    "Dragonfire Round",
+    "Fortifying Drink",
+    "Blessed Bombard"
+  ],
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": [
+	"Pick Me Ups",
+	"Experimental Battery",
+	"Spectral Goggles v2"
+    ]
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 11,
+    "Ego": 9,
+    "Sight": 3
+  },
+  "Dissolve": false
+}

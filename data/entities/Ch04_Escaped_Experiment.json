@@ -1,0 +1,27 @@
+{
+  "Name": "Escaped Experiment",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/eidolon",
+  "Still": {
+    "Path": "entities/eidolon_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Harm",
+	  "Terrorize"
+  ],
+  "HauntEnt": {
+    "Cost":  2,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 13,
+    "Hp_max": 5,
+    "Corpus": 8,
+    "Ego": 8,
+    "Sight": 12
+  },
+  "Dissolve": false,
+  "ai_path": "ais/eidolon.lua"
+}

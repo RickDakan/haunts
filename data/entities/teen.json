@@ -7,7 +7,7 @@
     "Path": "entities/teen_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Pistol",
     "Kick",

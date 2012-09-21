@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "pulse",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/device.png"
   },
   "Ap"       : 4,
   "Strength" : 10,

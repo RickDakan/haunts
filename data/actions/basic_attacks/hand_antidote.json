@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "pulse",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/beaker_b.png"
   },
   "Ap"       : 1,
   "Strength" : 100,

@@ -7,7 +7,7 @@
     "Path": "entities/wisp_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Ectoplasmic Discharge"
   ],
   "HauntEnt": {
@@ -16,7 +16,7 @@
   },
   "Base": {
     "Ap_max": 13,
-    "Hp_max": 2,
+    "Hp_max": 1,
     "Corpus": 9,
     "Ego": 9,
     "Sight": 20

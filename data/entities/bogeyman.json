@@ -7,7 +7,7 @@
     "Path": "entities/eidolon_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Harm",
 	  "Terrorize"
   ],

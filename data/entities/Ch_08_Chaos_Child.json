@@ -7,7 +7,8 @@
     "Path": "entities/creepy_child_still.png"
   },
   "Action_names": [
-    "Move Test",
+  "Move",
+  "Interact",
 	"Crozier",
 	"Revelations of Despair",
 	"Voice of the Beyond"    

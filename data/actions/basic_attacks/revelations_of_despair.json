@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "chant",
   "Texture"   : {
-    "Path": "actions/icons/kiss.png"
+    "Path": "actions/icons/visions_b.png"
   },
   "Ap"       : 4,
   "Strength" : 10,

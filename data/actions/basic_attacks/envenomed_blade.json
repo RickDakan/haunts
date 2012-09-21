@@ -3,7 +3,7 @@
   "Kind"     : "Poison",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/disrupt.png"
+    "Path": "actions/icons/dagger.png"
   },
   "Ap"       : 4,
   "Strength" : 10,

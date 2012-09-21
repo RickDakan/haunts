@@ -7,7 +7,7 @@
     "Path": "entities/bosch_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Start Summon"
   ],

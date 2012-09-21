@@ -3,7 +3,7 @@
   "Kind"     : "Poison",
   "Animation": "ranged",
   "Texture"   : {
-    "Path": "actions/icons/kiss.png"
+    "Path": "actions/icons/squid.png"
   },
   "Ap"       : 5,
   "Strength" : 10,

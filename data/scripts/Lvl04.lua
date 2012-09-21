@@ -54,7 +54,7 @@ end
 
 function intrudersSetup()
   if IsStoryMode() then
-    intruder_names = {"Nikola Fury", "Peter Chelios", "Tracy Latona"}
+    intruder_names = {"Claire Murray", "Peter Chelios", "Tracy Latona"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
@@ -74,14 +74,14 @@ function denizensSetup()
   
   Script.SetVisibility("denizens")
   master_spawn = Script.GetSpawnPointsMatching("Master_Start")
-  Script.SpawnEntitySomewhereInSpawnPoints("Vampire", master_spawn, false)
-  store.MasterName = "Vampire"
+  Script.SpawnEntitySomewhereInSpawnPoints("Duchess Orlac", master_spawn, false)
+  store.MasterName = "Duchess Orlac"
   Script.SelectEnt(GetMasterEnt())
 
   ServitorEnts = 
   {
-    {"Darkling", 1},
-    {"Bogeyman", 2},
+    {"Umbral Fury", 1},
+    {"Escaped Experiment", 2},
   }  
 
   -- Just like before the user gets a ui to place these entities, but this
@@ -102,6 +102,7 @@ function RoundStart(intruders, round)
       intrudersSetup()     
     else
       Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
+      Script.SetMusicParam("tension_level", 0.3)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -382,7 +383,7 @@ function RoundEnd(intruders, round)
       end
     end
 
-    --if the vampire is dead, respawn her
+    --if the Duchess Orlac is dead, respawn her
     ent = GetMasterEnt()
     if ent then
       if ent.HpCur <= 0 then

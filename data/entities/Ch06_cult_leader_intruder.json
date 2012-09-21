@@ -7,7 +7,7 @@
     "Path": "entities/cult_leader_still.png"
   },
   "Action_names": [
-    "Move Test", 
+    "Move", 
     "Interact",
     "Crozier",
     "Revelations of Despair",
