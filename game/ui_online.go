@@ -129,7 +129,16 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
         return
       }
       ui.RemoveChild(&sm)
-      ui.AddChild(MakeGamePanel("Lvl01.lua", nil, nil, resp.Game_key))
+      err := InsertMapChooser(
+        ui,
+        func(name string) {
+          ui.AddChild(MakeGamePanel(name, nil, nil, resp.Game_key))
+        },
+        InsertOnlineMenu,
+      )
+      if err != nil {
+        base.Error().Printf("Error making Map Chooser: %v", err)
+      }
     }()
   }
 

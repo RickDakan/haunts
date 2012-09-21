@@ -195,7 +195,7 @@ type Chooser struct {
   last_t int64
 }
 
-func InsertMapChooser(ui gui.WidgetParent) error {
+func InsertMapChooser(ui gui.WidgetParent, chosen func(string), resert func(ui gui.WidgetParent) error) error {
   var bops []OptionBasic
   datadir := base.GetDataDir()
   err := base.LoadAndProcessObject(filepath.Join(datadir, "ui", "start", "versus", "map_select.json"), "json", &bops)
@@ -235,7 +235,7 @@ func InsertMapChooser(ui gui.WidgetParent) error {
   ch.selected = make(map[int]bool)
   ch.layout.Back.f = func(interface{}) {
     ui.RemoveChild(&ch)
-    err := InsertStartMenu(ui)
+    err := resert(ui)
     if err != nil {
       base.Error().Printf("Unable to make Start Menu: %v", err)
       return
@@ -245,7 +245,7 @@ func InsertMapChooser(ui gui.WidgetParent) error {
     for i := range ch.options {
       if ch.selected[i] {
         ui.RemoveChild(&ch)
-        ui.AddChild(MakeGamePanel(ch.options[i].String(), nil, nil, ""))
+        chosen(ch.options[i].String())
       }
     }
   }
