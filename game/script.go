@@ -192,10 +192,17 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           gp.game.net.key = game_key
           if net_id == resp.Game.Denizens_id {
             gp.game.Side = SideHaunt
+            gp.game.Turn = len(resp.Game.Execs) + 1
+            if gp.game.Turn%2 == 1 {
+              gp.game.Turn--
+            }
           } else {
             gp.game.Side = SideExplorers
+            gp.game.Turn = len(resp.Game.Execs) + 1
+            if gp.game.Turn%2 == 0 {
+              gp.game.Turn--
+            }
           }
-          gp.game.Turn = len(resp.Game.Execs) + 1
         }
       }
     }
