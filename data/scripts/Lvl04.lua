@@ -42,6 +42,7 @@ function Init(data)
   end
 
   --spawn an initial beacon
+  print("SCRIPT: ", "Beacon")
   Script.SpawnEntitySomewhereInSpawnPoints("Beacon", Script.GetSpawnPointsMatching("Beacon_Start"), false)
 
   --set these modular variables.
@@ -61,6 +62,7 @@ function intrudersSetup()
   end 
 
   for _, name in pairs(intruder_names) do
+    print("SCRIPT:", name)
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
     Script.SetCondition(ent, "Pitch Black", true)
     Script.SetGear(ent, "Beacons")
@@ -92,7 +94,6 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
-
   if not store.execs then
     store.execs = {}
   end
@@ -101,7 +102,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup()     
     else
-      Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
+      -- Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -114,6 +115,7 @@ function RoundStart(intruders, round)
     store.game = Script.SaveGameState()
     Script.EndPlayerInteraction()
 
+    print("SCRIPT: End round 1")
     return
   end
 
@@ -207,9 +209,6 @@ end
 
 function OnAction(intruders, round, exec)
   -- Check for players being dead here
-  if store.execs == nil then
-    store.execs = {}
-  end
   store.execs[table.getn(store.execs) + 1] = exec
 
   if exec.Action.Name == "Place Beacon" then
@@ -558,9 +557,13 @@ function AnyIntrudersAlive()
 end
 
 function StoreWaypoint(wpname, wpside, wppos, wpradius, wpremove)
+  print("SCRIPT: 1")
   waypoint_exec = {script_waypoint=true, name=wpname, side=wpside, pos=wppos, radius=wpradius, remove=wpremove}
+  print("SCRIPT: 2")
   store.execs[table.getn(store.execs) + 1] = waypoint_exec
+  print("SCRIPT: 3")
   doWaypoint(waypoint_exec)
+  print("SCRIPT: 4")
 end
 
 function doWaypoint(waypointExec)

@@ -120,8 +120,8 @@ func (b *Button) RenderAt(x, y int) {
     default:
       just = gui.Center
       b.bounds.x -= b.bounds.dx / 2
+      base.Warn().Printf("Failed to indicate valid aligmnent for button '%s/%s', '%s' is not valid.", b.Text.String, b.Texture.Path, b.Text.Justification)
       b.Text.Justification = "center"
-      base.Warn().Printf("Failed to indicate valid aligmnent, '%s' is not valid.", b.Text.Justification)
     }
     d.RenderString(b.Text.String, float64(b.X+x), float64(b.Y+y), 0, d.MaxHeight(), just)
   }

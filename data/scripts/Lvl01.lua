@@ -16,29 +16,41 @@ function DoTutorials()
   --It would be super cool.
 end
 
+function Side()
+  if Net.Active() then
+    return Net.Side()
+  end
+  return store.side
+end
+
 function Init(data)
-  side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+  if Net.Active() then
+    side_choices = {"Denizens"}
+  else
+    side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+  end
 
   -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_01_Haunted_House")  
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
 
   store.side = side_choices[1]
-  -- store.side = "Humans"
-  if store.side == "Humans" then
+  -- Side() = "Humans"
+  if Side() == "Humans" or Net.Active() then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
     Script.BindAi("intruder", "human")
-  end
-  if store.side == "Denizens" then
-    Script.BindAi("denizen", "human")
-    Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "ch01/intruders.lua")
-  end
-  if store.side == "Intruders" then
-    Script.BindAi("denizen", "ch01/denizens.lua")
-    Script.BindAi("minions", "minions.lua")
-    Script.BindAi("intruder", "human")
+  else
+    if Side() == "Denizens" then
+      Script.BindAi("denizen", "human")
+      Script.BindAi("minions", "minions.lua")
+      Script.BindAi("intruder", "ch01/intruders.lua")
+    end
+    if Side() == "Intruders" then
+      Script.BindAi("denizen", "ch01/denizens.lua")
+      Script.BindAi("minions", "minions.lua")
+      Script.BindAi("intruder", "human")
+    end
   end
 
   store.nFirstWaypointDown = false
@@ -50,7 +62,6 @@ function Init(data)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
 
   -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
-
 end
 
 function intrudersSetup()
@@ -63,7 +74,7 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
-    if store.side == "Denizens" then
+    if Side() == "Denizens" then
       filename = "ch01/" .. name .. ".lua"
       Script.BindAi(ent, filename)
     end
@@ -82,7 +93,7 @@ function denizensSetup()
 
   end
   
-  if store.side == "Intruders" then
+  if Side() == "Intruders" then
     master_spawn = Script.GetSpawnPointsMatching("Master_.*")
     ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
     placed = {ent}
@@ -114,7 +125,7 @@ function denizensSetup()
   -- time they can place more, and this time they go into spawn points that
   -- match anything with the prefix "Servitor_".
   points = 6
-  if store.side == "Intruders" then
+  if Side() == "Intruders" then
     servitor_spawn = Script.GetSpawnPointsMatching("Servitors_Start1")
     while points > 0 do
       option = ServitorEnts[Script.Rand(table.getn(ServitorEnts))]
@@ -131,6 +142,8 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
+  print("SCRIPT: Round Start")
+  store.execs = {}
   if round == 1 then
     if intruders then
       intrudersSetup() 
@@ -147,7 +160,9 @@ function RoundStart(intruders, round)
     end
 
     Script.EndPlayerInteraction()
-    return 
+    store.game = Script.SaveGameState()
+    Net.UpdateState(store.game)
+    return
   end
 
   if store.nFirstWaypointDown and not store.bSetup2Done then
@@ -171,11 +186,13 @@ function RoundStart(intruders, round)
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
   store.game = Script.SaveGameState()
+  print("Update State Round/Intruders: ", round, intruders)
+  Net.UpdateState(store.game)
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
 
-  if store.side == "Humans" then
+  if Side() == "Humans" then
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     if intruders then
@@ -316,14 +333,75 @@ function OnAction(intruders, round, exec)
 end
  
 
+function DoPlayback(state, execs)
+  print("SCRIPT: DoPlayback - ", table.getn(execs))
+  Script.LoadGameState(state)
+
+  --focus the camera on somebody on each team.
+  side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
+  Script.FocusPos(GetEntityWithMostAP(side2).Pos)
+
+  for _, exec in pairs(execs) do
+    print("SCRIPT: proc exec")
+    bDone = false
+    if exec.script_spawn then
+      print("SRCIPT: Exec - Spawn")
+      doSpawn(exec)
+      bDone = true
+    end
+    if exec.script_despawn then
+      print("SRCIPT: Exec - Despawn")
+      deSpawn(exec)
+      bDone = true
+    end
+    if exec.script_waypoint then
+      print("SRCIPT: Exec - Waypoint")
+      doWaypoint(exec)
+      bDone = true
+    end
+    if not bDone then
+      print("SRCIPT: Exec - Standard")
+      Script.DoExec(exec)
+
+      --will be used at turn start to try to reselect the last thing they acted with.
+      if exec.Ent.Side == "intruders" then
+        LastIntruderEnt = exec.Ent
+      end
+      if exec.Ent.Side == "denizens" then
+        LastDenizenEnt = exec.Ent
+      end
+    end
+  end
+  -- Script.GameOnRound()
+end
+
 function RoundEnd(intruders, round)
+  print("SCRIPT: Round End:", Net.Side())
+  print("Update Execs Round/Intruders: ", round, intruders)
+  Net.UpdateExecs(store.execs)
+  print("SCRIPT: Net active is", Net.Active())
+  if Net.Active() then
+    if Side() == "Denizens" then
+      Script.SetVisibility("denizens")
+    else
+      Script.SetVisibility("intruders")
+    end
+    Script.ShowMainBar(false)
+    Net.Wait()
+    -- cur = Script.SaveGameState()
+    state, execs = Net.LatestStateAndExecs()
+    DoPlayback(state, execs)
+    Script.ShowMainBar(true)
+    return
+  end
+
   if round == 1 then
     return
   end
 
   bSkipOtherChecks = false  --Resets this every round
 
-  if store.side == "Humans" then
+  if Side() == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "blind")
@@ -359,39 +437,7 @@ function RoundEnd(intruders, round)
 
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
-    Script.LoadGameState(store.game)
-
-    --focus the camera on somebody on each team.
-    side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
-    Script.FocusPos(GetEntityWithMostAP(side2).Pos)
-
-    for _, exec in pairs(store.execs) do
-      bDone = false
-      if exec.script_spawn then
-        doSpawn(exec)
-        bDone = true
-      end
-      if exec.script_despawn then
-        deSpawn(exec)
-        bDone = true
-      end      
-      if exec.script_waypoint then
-        doWaypoint(exec)
-        bDone = true
-      end             
-      if not bDone then
-        Script.DoExec(exec)
-
-        --will be used at turn start to try to reselect the last thing they acted with.
-        if exec.Ent.Side == "intruders" then
-          LastIntruderEnt = exec.Ent
-        end 
-        if exec.Ent.Side == "denizens" then
-          LastDenizenEnt = exec.Ent
-        end 
-      end
-    end
-    store.execs = {}
+    DoPlayback(store.game, store.execs)
   end
 
 

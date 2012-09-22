@@ -58,6 +58,15 @@ func (te *TextEntry) Text() string {
   return te.Entry.text
 }
 
+func (te *TextEntry) SetText(text string) {
+  te.Entry.text = text
+  te.Entry.prev = text
+  te.Entry.cursor.index = 0
+  te.Entry.cursor.offset = -1
+  te.Entry.ghost.index = 0
+  te.Entry.ghost.offset = -1
+}
+
 func (te *TextEntry) handleClick(x, y int, data interface{}) bool {
   if te.Button.handleClick(x, y, data) {
     return true
@@ -105,7 +114,6 @@ func (te *TextEntry) setCursor(mx, my int) bool {
 
   d := base.GetDictionary(te.Button.Text.Size)
   last_dx := 0
-  base.Log().Printf("Inside")
   te.Entry.ghost.index = -1
   for i := range te.Entry.text {
     w := int(d.StringWidth(te.Entry.text[0 : i+1]))

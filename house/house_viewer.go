@@ -16,13 +16,7 @@ type doorInfo struct {
   Valid bool
 }
 
-type HouseViewer struct {
-  gui.Childless
-  gui.BasicZone
-  gui.NonFocuser
-
-  house *HouseDef
-
+type HouseViewerState struct {
   zoom, angle, fx, fy float32
   floor, ifloor       mathgl.Mat4
 
@@ -33,6 +27,16 @@ type HouseViewer struct {
 
   // Need to keep track of time so we can measure time between thinks
   last_timestamp int64
+}
+
+type HouseViewer struct {
+  gui.Childless
+  gui.BasicZone
+  gui.NonFocuser
+
+  house *HouseDef
+
+  HouseViewerState
 
   drawables          []Drawable
   Los_tex            *LosTexture
@@ -148,6 +152,14 @@ func (hv *HouseViewer) BoardToWindow(bx, by float32) (int, int) {
 
   fx, fy, _ := hv.boardToModelview(bx, by)
   return int(fx), int(fy)
+}
+
+func (hv *HouseViewer) GetState() HouseViewerState {
+  return hv.HouseViewerState
+}
+
+func (hv *HouseViewer) SetState(state HouseViewerState) {
+  hv.HouseViewerState = state
 }
 
 // Changes the current zoom from e^(zoom) to e^(zoom+dz)
