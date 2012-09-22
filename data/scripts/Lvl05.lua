@@ -349,7 +349,6 @@ function RoundEnd(intruders, round)
         Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Turns_Remaining_Denizens.json", {turns=store.nTurnsRemaining})
       end
     else
-      ZeroDenizenAp()  --Always set all deni AP = 0 to protect the master.
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl05/pass_to_intruders.json")
@@ -407,6 +406,9 @@ function RoundEnd(intruders, round)
       end
     end
     store.execs = {}
+    if not intruders then 
+      ZeroDenizenAp()  --Always set all deni AP = 0 to protect the master.
+    end
   end
 end
 
