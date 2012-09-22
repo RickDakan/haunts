@@ -558,7 +558,7 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
   if store.nIntrudersFound == 0 then
     store.nIntrudersFound = store.nIntrudersFound + 1
     if store.nIntrudersFound == 1 then
-      thingToSpawn = "Occultist"
+      thingToSpawn = "Collector"
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder1.json")
     end
   else

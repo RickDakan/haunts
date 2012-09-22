@@ -114,10 +114,10 @@
       [
         {
           "Next": "Start9",
-          "Text": "Nikola Fury is an action academic, a paranormal investigator who prefers to get up close and personal in the field.",
+          "Text": "Claire Murray is an action academic, a paranormal investigator who prefers to get up close and personal in the field.",
           "Image":
           {
-            "Path": "ui/dialog/stills/hunter_dialog.png"
+            "Path": "ui/dialog/stills/detective_dialog.png"
           }
         }
       ]

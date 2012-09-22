@@ -9,7 +9,7 @@
   "Animation" : "pulse",
   "Target_enemies": true,
   "Sounds"   : {
-    "blast": "Haunts/SFX/Intruders/Occultist/Exorcise"
+    "blast": "Haunts/SFX/Intruders/Occultist/Abjuration"
   },
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"

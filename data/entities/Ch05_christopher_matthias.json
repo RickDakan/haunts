@@ -7,7 +7,7 @@
     "Path": "entities/collector_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Accuse",
     "Aetheric Flintlocks",
@@ -15,7 +15,7 @@
     "Brandish Idol",
     "Codex"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
   "Pick Me Ups",

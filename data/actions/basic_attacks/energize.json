@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "ward",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/charge.png"
   },
   "Ap"       : 4,
   "Strength" : 10,

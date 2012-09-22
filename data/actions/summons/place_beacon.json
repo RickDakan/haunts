@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
-    "Path": "actions/icons/summon_orb.png"
+    "Path": "actions/icons/abjurate.png"
   },
   "Ap"       : 6,
   "Range"    : 1,

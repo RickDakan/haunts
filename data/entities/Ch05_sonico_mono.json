@@ -7,7 +7,7 @@
     "Path": "entities/hunter_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Accuse",
     "Psychometric Disruptor",

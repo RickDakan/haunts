@@ -7,11 +7,12 @@
     "Path": "entities/occultist_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Dire Curse",
     "Abjuration",
-    "Exorcise"
+    "Exorcise",
+    "First Aid"
  ],
   "Walking_speed": 0.5,
   "ExplorerEnt": {

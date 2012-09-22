@@ -7,7 +7,7 @@
     "Path": "entities/detective_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Accuse",
     "Silver Buckshot",
@@ -15,7 +15,7 @@
     "Fortifying Drink",
     "Blessed Bombard"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
   "Pick Me Ups",

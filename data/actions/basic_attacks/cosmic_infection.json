@@ -3,7 +3,7 @@
   "Kind"     : "Poison",
   "Animation": "infect",
   "Texture"   : {
-    "Path": "actions/icons/disrupt.png"
+    "Path": "actions/icons/infect.png"
   },
   "Ap"       : 6,
   "Strength" : 10,

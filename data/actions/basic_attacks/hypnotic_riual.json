@@ -3,7 +3,7 @@
   "Kind"     : "Terror",
   "Animation": "cast",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/chant.png"
   },
   "Ap"       : 5,
   "Strength" : 10,

@@ -12,7 +12,7 @@
     "blast": "Haunts/SFX/Intruders/Occultist/Exorcise"
   },
   "Texture"   : {
-    "Path": "actions/icons/abjurate.png"
+    "Path": "actions/icons/terror.png"
   },
   "Conditions": [
     "Attack -2",

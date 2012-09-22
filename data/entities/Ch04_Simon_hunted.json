@@ -7,11 +7,11 @@
     "Path": "entities/hunter_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Psychometric Disruptor"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
     	"Pick Me Ups",

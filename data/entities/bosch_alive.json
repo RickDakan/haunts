@@ -7,7 +7,7 @@
     "Path": "entities/bosch_alive_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Arc of Decay",
     "Visions of Despair"

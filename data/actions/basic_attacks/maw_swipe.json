@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/squid_hand.png"
   },
   "Target_enemies": true,
   "Sounds"   : {

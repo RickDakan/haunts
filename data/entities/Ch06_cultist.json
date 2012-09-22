@@ -7,7 +7,7 @@
     "Path": "entities/robed_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Cultic Mantra",
     "Sacrificial Blade"

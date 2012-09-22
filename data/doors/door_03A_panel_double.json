@@ -1,0 +1,10 @@
+{
+  "Name": "Door 03A - Oval Panel Double",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_frame_black_double.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_03A_oval_panel_double_closed.png"
+  }
+}

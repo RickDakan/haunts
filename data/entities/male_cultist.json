@@ -7,7 +7,7 @@
     "Path": "entities/male_cultist_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
 	"Inject",
 	"Envenomed Dart"
   ],

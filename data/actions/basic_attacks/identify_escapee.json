@@ -4,11 +4,11 @@
   "Animation": "ranged",
   "Texture"   : 
   {
-    "Path": "actions/icons/pistol.png"
+    "Path": "actions/icons/interact.png"
   },
   "Ap"       : 6,
   "Strength" : 10,
   "Damage"   : 0,
-  "Range"    : 10,
+  "Range"    : 4,
   "Target_enemies": true
 }

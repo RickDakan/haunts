@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "ranged",
   "Texture"   : {
-    "Path": "actions/icons/interact.png"
+    "Path": "actions/icons/crush.png"
   },
   "Ap"       : 1,
   "Strength" : 20,

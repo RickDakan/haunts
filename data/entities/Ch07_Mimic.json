@@ -7,7 +7,8 @@
     "Path": "entities/psychopath_still.png"
   },
   "Action_names": [
-  "Move Test",
+  "Move",
+  "Interact",
 	"Parasitic Gift",
 	"Envenomed Blade"
   ],

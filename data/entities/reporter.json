@@ -7,14 +7,14 @@
     "Path": "entities/reporter_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Runescribed Cudgel",
     "Disruption Broadcaster",
     "Invigorating Incense",
     "Caustic Concoction"
   ],
-  "Walking_speed": 1,
+  "Walking_speed": 0.5,
   "ExplorerEnt": {
     "Gear_names": [
 	"Pick Me Ups",

@@ -12,7 +12,7 @@
     "vials": "Haunts/SFX/Intruders/Reporter/Vials"
   },
   "Texture"   : {
-    "Path": "actions/icons/flask.png"
+    "Path": "actions/icons/beaker.png"
   },
   "Conditions": [
     "AP -2"

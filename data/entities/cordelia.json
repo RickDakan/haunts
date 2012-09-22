@@ -7,7 +7,7 @@
     "Path": "entities/cordelia_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Pistol",
     "Kick",

@@ -11,7 +11,7 @@
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Intruders/Collector/Seer Stone"
+    "idol": "Haunts/SFX/Intruders/Collector/Seer Stone"
   },
   "Conditions": [
      "AP -2"

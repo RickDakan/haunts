@@ -3,7 +3,7 @@
   "Kind"     : "Fire",
   "Animation": "summon",
  "Texture"   : {
-    "Path": "actions/icons/summon_shade.png"
+    "Path": "actions/icons/summon.png"
   },
   "Ap"       : 7,
   "Range"    : 3,

@@ -7,7 +7,8 @@
     "Path": "entities/master_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
+    "Interact",
     "Arc of Decay",
     "Poltergeist Blast",
     "Visions of Despair",

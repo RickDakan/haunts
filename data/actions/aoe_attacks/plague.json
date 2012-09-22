@@ -12,7 +12,7 @@
     "plague": "Haunts/SFX/Denizens/Bosses/Ancient One/Plague"
   },
   "Texture"   : {
-    "Path": "actions/icons/abjurate.png"
+    "Path": "actions/icons/swarm.png"
   }  ,  
   "Conditions": [
      "AP -2"

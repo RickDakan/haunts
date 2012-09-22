@@ -1,0 +1,10 @@
+{
+  "Name": "Door 10A - Tripanel Double",
+  "Width": 2,
+  "Opened_texture": {
+    "Path": "doors/door_frame_white_double.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_10A_tripanel_double_closed.png"
+  }
+}

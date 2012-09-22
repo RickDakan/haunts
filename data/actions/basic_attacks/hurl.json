@@ -3,7 +3,7 @@
   "Kind"     : "Brutal",
   "Animation": "cast",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/piece.png"
   },
   "Ap"       : 4,
   "Strength" : 8,

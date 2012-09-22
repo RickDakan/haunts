@@ -7,7 +7,7 @@
 		"Path": "entities/collector_still.png"
 	},
 	"Action_names": [
-	"Move Test",
+	"Move",
 	"Interact",
 	"Aetheric Flintlocks",
 	"Talismanic Aura",
