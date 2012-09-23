@@ -1,0 +1,9 @@
+{
+  "Name": "Revealed",
+  "Strength": 100,
+  "Kind": "Terror",
+  "Duration": 100,
+  "Base": {
+    "Corpus": 3
+  }
+}

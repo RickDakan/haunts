@@ -1,0 +1,20 @@
+{
+  "Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "Intruders found the victom (denizens).",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}
