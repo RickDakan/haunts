@@ -9,7 +9,7 @@
       [
         {
           "Next": "Start2",
-          "Text": "To open a door, select the Interact action (or press 2).",
+          "Text": "This tutorial covered all the basics for playing the denizens in haunts.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl01/1892c.png"
@@ -24,7 +24,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "You then click on the Threshold of the door you wish to open. If you click on the Threshold of an open door, you will close it.",
+          "Text": "But every Chapter in the dark history of Tyree Manse has its own unique goals, entities, and win conditions.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl01/1892c.png"
@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "Notice that doors on the bottom two edges of a room always show their Threshold, even when you can't yet see the other side of the door.",
+          "Text": "So pay attention to the introduction for each level to find out how to survive whatever terrors it has to offer.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl01/master.png"
@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "Not all units can open and close doors. For example, the Lost Soul Orbs cannot, and so need other units to open the way for them.",
+          "Text": "Also, you can play through the Intruders Tutorial to learn more about them and refresh you knowledge of some of the game's core mechanics.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
@@ -68,7 +68,7 @@
       "Sections":
       [
         {
-          "Text": "Open the door before Bosch and move to location marked in his laboratory.",
+          "Text": "Welcome to Tyree Manse. We hope you survive your stay.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/occultist3.png"
@@ -78,4 +78,5 @@
     }                               
   }
 }
+	
 	

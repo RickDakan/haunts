@@ -9,7 +9,7 @@
       [
         {
           "Next": "Start2",
-          "Text": "The denizens haunting Tyree Manse come in many forms, but all share some commonalities when it comes to controlling them.",
+          "Text": "Some meddlesome intruders have forced their way into Bosch's home. Time to take care of them.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl01/1892c.png"
@@ -24,7 +24,7 @@
       [
         {
           "Next": "Start3",
-          "Text": "Each Chapter presents you with a different set of denizens, usually with one Master and a number of servitors at your disposal.",
+          "Text": "Now your servitors are activated, and can move and attack the intruders.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl01/1892c.png"
@@ -39,7 +39,7 @@
       [
         {
           "Next": "Start4",
-          "Text": "In this tutorial you will play Cornelius Bosch, the original builder of the house.",
+          "Text": "Attacking works like moving or interacting. Select an attack either by clicking on it or pressing the corresponding number key.",
 		      "Image":
           {
             "Path": "ui/dialog/Lvl01/master.png"
@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "First you will be asked to place Bosch in on of the two highlighted starting squares. Click on Bosch in the display area at the bottom of the screen and then click on the square you wish to place him in.",
+          "Text": "Some actions will be dimmed and you will be unable to select them. This means you don't have a valid target in range of that action, so you need to move closer (or let them come to you).",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
@@ -69,7 +69,7 @@
       [
         {
           "Next": "Start6",
-          "Text": "Then you will place Bosch's servitors. He has two kinds, Angry Shades and Lost Soul Orbs. Notice that there is a Points counter in the bottom left, and each kind of servitor has its points cost displayed below it.",
+          "Text": "Once you have selected an action, click on the target you wish to use it on. The display indicates how much AP the action will cost. Hit the Escape key to choose a different action.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/occultist3.png"
@@ -84,7 +84,7 @@
       [
         {
           "Next": "Start7",
-          "Text": "Place the servitors in any of the available starting squares. Then click done when you're finished.",
+          "Text": "Your Angry Shades have a melee attack, Chill Touch, which they must be adjacent to the target to use. Lost Souls can use their Ectoplasmic Discharge at a range of 6 spaces.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/master.png"
@@ -98,7 +98,7 @@
       "Sections":
       [
         {
-          "Text": "Go ahead and try it now.",
+          "Text": "Go ahead and attack the Intruder with your ghosts.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/Master.png"
@@ -108,16 +108,4 @@
     }                                        
   }
 }
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
