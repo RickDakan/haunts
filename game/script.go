@@ -420,7 +420,7 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
 }
 
 type totalState struct {
-  Game  *Game
+  Game  **Game
   Store []byte
 }
 
@@ -438,7 +438,7 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     L.Pop(1)
 
     ts := totalState{
-      Game:  gp.game,
+      Game:  &gp.game,
       Store: buf.Bytes(),
     }
     str, err := base.ToGobToBase64(ts)
@@ -472,12 +472,13 @@ func loadGameStateRaw(gp *GamePanel, L *lua.State, state string) {
     hv_state = gp.game.viewer.GetState()
   }
   var ts totalState
+  ts.Game = &gp.game
   err := base.FromBase64FromGob(&ts, state)
   if err != nil {
     base.Error().Printf("Error decoding game state: %v", err)
     return
   }
-  gp.game = ts.Game
+  // gp.game = ts.Game
   gp.game.script = gp.script
   LuaDecodeValue(bytes.NewBuffer(ts.Store), L, gp.game)
   L.SetGlobal("store")
