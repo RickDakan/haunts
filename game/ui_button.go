@@ -106,7 +106,6 @@ func (b *Button) RenderAt(x, y int) {
     b.bounds.y = b.Y + y
     b.bounds.dx = int(d.StringWidth(b.Text.String))
     b.bounds.dy = int(d.MaxHeight())
-    base.Log().Printf("Button '%s' @ %d %d %d %d", b.Text.String, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
     var just gui.Justification
     switch b.Text.Justification {
     case "center":
@@ -120,7 +119,6 @@ func (b *Button) RenderAt(x, y int) {
     default:
       just = gui.Center
       b.bounds.x -= b.bounds.dx / 2
-      base.Warn().Printf("Failed to indicate valid aligmnent for button '%s/%s', '%s' is not valid.", b.Text.String, b.Texture.Path, b.Text.Justification)
       b.Text.Justification = "center"
     }
     d.RenderString(b.Text.String, float64(b.X+x), float64(b.Y+y), 0, d.MaxHeight(), just)
