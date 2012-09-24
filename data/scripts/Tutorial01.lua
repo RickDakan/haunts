@@ -16,7 +16,7 @@ function Init(data)
 end
 
 function intrudersSetup()
-  intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
+  intruder_names = {"Detective", "Occultist", "Ghost Hunter"}
   intruder_spawn = Script.GetSpawnPointsMatching("intruders_start")
 
   for _, name in pairs(intruder_names) do
@@ -40,7 +40,7 @@ function RoundStart(intruders, round)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
 
     Script.EndPlayerInteraction()
     return 
@@ -48,7 +48,7 @@ function RoundStart(intruders, round)
 
   Script.SetVisibility("intruders")
   if intruders then
-	Script.ShowMainBar(true)
+  Script.ShowMainBar(true)
   end
 
   if not bIntruderIntroDone then
@@ -104,8 +104,8 @@ function OnAction(intruders, round, exec)
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = true
 
-    Script.SetWaypoint("Waypoint2", "intruders", SelectSpawn("Waypoint2").Pos, 1)  
     Script.RemoveWaypoint("Waypoint1") 
+    Script.SetWaypoint("Waypoint2", "intruders", SelectSpawn("Waypoint2").Pos, 1)  
     Script.DialogBox("ui/dialog/tutorial/intruders_tutorial_3_doors.json")
   end 
 
@@ -115,11 +115,12 @@ function OnAction(intruders, round, exec)
       --The intruders got to the second waypoint.
       store.nSecondWaypointDown = true 
 
-      Script.SetWaypoint("Waypoint3", "intruders", SelectSpawn("Waypoint3").Pos, 1)  
       Script.RemoveWaypoint("Waypoint2")
+      Script.SetWaypoint("Waypoint3", "intruders", SelectSpawn("Waypoint3").Pos, 1)  
 
       Script.DialogBox("ui/dialog/tutorial/intruders_tutorial_4_actions.json")
 
+      --store.bSpawnDudes = true
       filename = "tutorial/" .. "Shade" .. ".lua"
       spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
       ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, false)
@@ -143,17 +144,20 @@ function OnAction(intruders, round, exec)
 
 
   if store.nSecondWaypointDown then
-    if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 2 and not store.bThirdWaypointDown then
+    if  exec.Ent.Side.Intruder and GetDistanceBetweenPoints(exec.Ent.Pos, Script.GetSpawnPointsMatching("Waypoint3")[1].Pos) <= 2 and not store.bThirdWaypointDown then
       store.bThirdWaypointDown = true
       Script.DialogBox("ui/dialog/tutorial/intruders_tutorial_5_actions_two.json")
       spawns = Script.GetSpawnPointsMatching("Master_start")
-      Script.SpawnEntitySomewhereInSpawnPoints("Bosch", spawns. false)
-
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", spawns, false)
+      filename = "tutorial/" .. "Bosch" .. ".lua"
+      Script.BindAi(ent, filename)
     end   
   end
 
   if store.bThirdWaypointDown and not MasterIsAlive() then
+    Script.RemoveWaypoint("Waypoint3")
     Script.DialogBox("ui/dialog/tutorial/Finale_Tutorial_Intruders.json")
+    Script.RemoveWaypoint("Waypoint3")
   end
 
   if not AnyIntrudersAlive() then
