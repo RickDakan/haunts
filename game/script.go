@@ -130,7 +130,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
 
   registerUtilityFunctions(gp.script.L)
   if player.Lua_store != nil {
-    loadGameStateRaw(gp, player.Game_state)
+    loadGameStateRaw(gp, gp.script.L, player.Game_state)
     err := LuaDecodeTable(bytes.NewBuffer(player.Lua_store), gp.script.L, gp.game)
     if err != nil {
       base.Warn().Printf("Error decoding lua state: %v", err)
@@ -188,7 +188,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           return
         }
         if len(resp.Game.Execs) > 0 {
-          loadGameStateRaw(gp, string(resp.Game.State[len(resp.Game.Execs)-1]))
+          loadGameStateRaw(gp, gp.script.L, string(resp.Game.State[len(resp.Game.Execs)-1]))
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
           if net_id == resp.Game.Denizens_id {
@@ -197,12 +197,14 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
             if gp.game.Turn%2 == 0 {
               gp.game.Turn--
             }
+            base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
           } else {
             gp.game.Side = SideExplorers
             gp.game.Turn = len(resp.Game.Execs) + 1
             if gp.game.Turn%2 == 1 {
               gp.game.Turn--
             }
+            base.Log().Printf("Setting side to Intruders, Turn %d", gp.game.Turn)
           }
         }
       }
@@ -218,7 +220,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
       gp.script.L.SetExecutionLimit(250000)
       if player.No_init {
         gp.script.syncStart()
-        loadGameStateRaw(gp, player.Game_state)
+        loadGameStateRaw(gp, gp.script.L, player.Game_state)
         gp.game.script = gp.script
         gp.script.syncEnd()
       } else {
@@ -417,6 +419,11 @@ func selectHouse(gp *GamePanel) lua.GoFunction {
   }
 }
 
+type totalState struct {
+  Game  *Game
+  Store []byte
+}
+
 func saveGameState(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
     if !LuaCheckParamsOk(L, "SaveGameState") {
@@ -424,11 +431,22 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    str, err := base.ToGobToBase64(gp.game)
+
+    buf := bytes.NewBuffer(nil)
+    L.GetGlobal("store")
+    LuaEncodeValue(buf, L, -1)
+    L.Pop(1)
+
+    ts := totalState{
+      Game:  gp.game,
+      Store: buf.Bytes(),
+    }
+    str, err := base.ToGobToBase64(ts)
     if err != nil {
       base.Error().Printf("Error gobbing game state: %v", err)
       return 0
     }
+
     L.PushString(str)
     return 1
   }
@@ -446,19 +464,24 @@ func doGameOnRound(gp *GamePanel) lua.GoFunction {
   }
 }
 
-func loadGameStateRaw(gp *GamePanel, state string) {
+func loadGameStateRaw(gp *GamePanel, L *lua.State, state string) {
   var viewer gui.Widget
   var hv_state house.HouseViewerState
   if gp.game != nil {
     viewer = gp.game.viewer
     hv_state = gp.game.viewer.GetState()
   }
-  err := base.FromBase64FromGob(&gp.game, state)
+  var ts totalState
+  err := base.FromBase64FromGob(&ts, state)
   if err != nil {
     base.Error().Printf("Error decoding game state: %v", err)
     return
   }
+  gp.game = ts.Game
   gp.game.script = gp.script
+  LuaDecodeValue(bytes.NewBuffer(ts.Store), L, gp.game)
+  L.SetGlobal("store")
+
   gp.AnchorBox.RemoveChild(viewer)
   base.Log().Printf("LoadGameStateRaw: Turn = %d, Side = %d", gp.game.Turn, gp.game.Side)
   gp.game.OnRound(false)
@@ -483,7 +506,7 @@ func loadGameState(gp *GamePanel) lua.GoFunction {
     }
     gp.script.syncStart()
     defer gp.script.syncEnd()
-    loadGameStateRaw(gp, L.ToString(-1))
+    loadGameStateRaw(gp, L, L.ToString(-1))
     return 0
   }
 }
