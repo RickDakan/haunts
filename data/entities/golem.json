@@ -2,15 +2,18 @@
   "Name": "Golem",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/master",
+  "Sprite_path" : "entities/golem",
   "Still": 
   {  
     "Path": "entities/golem_still.png"
   },
   "Action_names": 
   [
-    "Move Test", 
-    "Interact"
+    "Move", 
+    "Interact",
+    "Smash",
+    "Hurl",
+    "Energize"
   ],
   "HauntEnt": {
     "Cost":    15,
@@ -18,11 +21,11 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 8,
-    "Hp_max": 18,
+    "Ap_max": 10,
+    "Hp_max": 100,
     "Corpus": 10,
     "Ego": 10,
     "Sight": 30
   },
-  "Dissolve": true
+  "Dissolve": false
 } 

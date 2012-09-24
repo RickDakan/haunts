@@ -3,10 +3,10 @@
   "Kind"     : "Brutal",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/sword.png"
   },
-  "Ap"       : 2,
-  "Strength" : 5,
+  "Ap"       : 4,
+  "Strength" : 10,
   "Damage"   : 1,
   "Range"    : 1,
   "Target_enemies": true,

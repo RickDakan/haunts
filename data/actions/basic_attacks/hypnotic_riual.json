@@ -1,0 +1,19 @@
+{
+  "Name"     : "Hypnotic Ritual",
+  "Kind"     : "Terror",
+  "Animation": "cast",
+  "Texture"   : {
+    "Path": "actions/icons/chant.png"
+  },
+  "Ap"       : 5,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 5,
+  "Target_allies": true,
+  "Sounds"   : {
+    "ritual": "Haunts/SFX/Denizens/Bosses/Ancient One/Ritual"
+    },  
+  "Conditions": [
+     "AP -5"
+   ]
+}

@@ -1,0 +1,12 @@
+{
+  "Name"     : "Raise Corpse",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_chill.png"
+  },
+  "Ap"       : 7,
+  "Range"    : 3,
+  "Ent_name" : "Corpse for Evans",
+  "Personal_los": true
+}

@@ -66,7 +66,7 @@ end
 
 function intrudersSetup()
   if IsStoryMode() then
-    intruder_names = {"Teen", "Occultist", "Researcher"}
+    intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
@@ -149,10 +149,10 @@ function RoundStart(intruders, round)
       intrudersSetup() 
     else
       Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
-      denizensSetup()
       Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+      denizensSetup()
     end
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "blind")
 
     if IsStoryMode() then
@@ -161,7 +161,6 @@ function RoundStart(intruders, round)
 
     Script.EndPlayerInteraction()
     store.game = Script.SaveGameState()
-    print("Update State Round/Intruders: ", round, intruders)
     Net.UpdateState(store.game)
     return
   end
@@ -171,7 +170,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "blind")          
   end
   
@@ -181,7 +180,7 @@ function RoundStart(intruders, round)
     Script.SetVisibility("denizens")
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "blind")
   end
 
@@ -281,7 +280,8 @@ function OnAction(intruders, round, exec)
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
-    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json") 
+    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
+    Script.SetMusicParam("tension_level", 0.3) 
 
     StoreWaypoint("Waypoint1", "", "", "", true)
     StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
@@ -296,6 +296,7 @@ function OnAction(intruders, round, exec)
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
       store.Waypoint3 = StoreSpawn("Mirror", store.waypoint_spawn.Pos)
+      Script.SetMusicParam("tension_level", 0.5) 
       Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
 
       StoreWaypoint("Waypoint2", "", "", "", true)
@@ -310,6 +311,7 @@ function OnAction(intruders, round, exec)
     if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
       Script.DialogBox("ui/dialog/Lvl01/Victory_Intruders.json")
+      Script.SetMusicParam("tension_level", 0.7)
     end   
   end
 
@@ -319,13 +321,13 @@ function OnAction(intruders, round, exec)
   end 
 
 
-  --after any action, if this ent's Ap is 0, we can select the next ent for them
-  if exec.Ent.ApCur == 0 then 
-    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-    if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
-    end
-  end  
+  -- --after any action, if this ent's Ap is 0, we can select the next ent for them
+  -- if exec.Ent.ApCur == 0 then 
+  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+  --   if nextEnt.ApCur > 0 then
+  --     Script.SelectEnt(nextEnt)
+  --   end
+  -- end  
 
 
 end
@@ -401,7 +403,7 @@ function RoundEnd(intruders, round)
 
   if Side() == "Humans" then
     Script.ShowMainBar(false)
-    Script.SetLosMode("intruders", "blind")
+    Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "blind")
     if intruders then
       Script.SetVisibility("denizens")

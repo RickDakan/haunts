@@ -1,0 +1,19 @@
+{
+  "Name"     : "Visions of Despair",
+  "Kind"     : "Terror",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/visions.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 8,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "visions": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Visions of Despair"
+    },  
+  "Conditions": [
+     "AP -2"
+  ]
+}

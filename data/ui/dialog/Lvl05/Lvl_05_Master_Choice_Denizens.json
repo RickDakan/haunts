@@ -3,45 +3,51 @@
   "Pages": {
     "Start": {
       "Format": "NoOptionsLeftImage",
-      "Sections":[
+      "Sections":
+      [
         {
           "Next": "Choice1",
-          "Text": "Choose the denizen master",
+          "Text": "Choose Ses-kalla's Disguise. You will control the other innocent patrons as distractions.",
           "Image":{
-          "Path": "ui/dialog/Ch05/denizens.png"
+          "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]
     },
     "Choice1": {
       "Format": "FourOptions",
-      "Sections":[
+      "Sections":
+      [
         {
           "Id":   "1",
           "Text": "Alexander Tostowaryk",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/stills/bosch_dialog.png"
           }
         },
         {
           "Id":   "2",
           "Text": "James MacLeod",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/stills/occultist_dialog.png"
           }
         },
         {
           "Id":   "3",
           "Text": "Danielle Marricotte",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/stills/reporter_dialog.png"
           }
         },
         {
           "Id":   "4",
           "Text": "Nelle Anders",
-          "Image":{
-            "Path": "ui/dialog/Ch05/denizens.png"
+          "Image":
+          {
+            "Path": "ui/dialog/stills/cordelia_dialog.png"
           }
         }
       ]

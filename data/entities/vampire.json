@@ -2,17 +2,17 @@
   "Name": "Vampire",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/master",
+  "Sprite_path" : "entities/vamp_fem",
   "Still": 
   {
-    "Path": "entities/master_still.png"
+    "Path": "entities/vampire_fem_still.png"
   },
   "Action_names": 
   [
-    "Move Test", 
+    "Move", 
     "Interact",
     "Bite",
-    "Terrorize"
+    "Umbral Leech"
   ],
   "HauntEnt": {
     "Cost":    15,

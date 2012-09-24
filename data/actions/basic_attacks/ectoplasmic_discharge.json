@@ -6,8 +6,8 @@
     "Path": "actions/icons/discharge.png"
   },
   "Ap"       : 5,
-  "Strength" : 5,
-  "Damage"   : 4,
+  "Strength" : 10,
+  "Damage"   : 3,
   "Range"    : 6,
   "Target_enemies": true,
   "Sounds"   : {

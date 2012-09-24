@@ -46,7 +46,7 @@ time:2500</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
 			</section>
-			<attribute key="gid" type="int">21</attribute>
+			<attribute key="gid" type="int">20</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">2</attribute>
@@ -66,7 +66,7 @@ time:2500</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
 			</section>
-			<attribute key="gid" type="int">21</attribute>
+			<attribute key="gid" type="int">20</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">3</attribute>
@@ -86,7 +86,7 @@ time:2500</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
 			</section>
-			<attribute key="gid" type="int">21</attribute>
+			<attribute key="gid" type="int">20</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">4</attribute>
@@ -106,7 +106,7 @@ time:2500</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
 			</section>
-			<attribute key="gid" type="int">21</attribute>
+			<attribute key="gid" type="int">20</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">5</attribute>
@@ -381,29 +381,6 @@ time:150</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">18</attribute>
-			<attribute key="label" type="String">undamaged_01
-time:400
-</attribute>
-			<section name="graphics">
-				<attribute key="x" type="double">420.0</attribute>
-				<attribute key="y" type="double">-299.3809814453125</attribute>
-				<attribute key="w" type="double">148.0</attribute>
-				<attribute key="h" type="double">41.33121109008789</attribute>
-				<attribute key="type" type="String">rectangle</attribute>
-				<attribute key="fill" type="String">#FFCC00</attribute>
-				<attribute key="outline" type="String">#000000</attribute>
-			</section>
-			<section name="LabelGraphics">
-				<attribute key="text" type="String">undamaged_01
-time:400
-</attribute>
-				<attribute key="fontSize" type="int">12</attribute>
-				<attribute key="fontName" type="String">Dialog</attribute>
-				<attribute key="anchor" type="String">c</attribute>
-			</section>
-		</section>
-		<section name="node">
-			<attribute key="id" type="int">19</attribute>
 			<attribute key="label" type="String">turn_left
 time:0</attribute>
 			<section name="graphics">
@@ -424,7 +401,7 @@ time:0</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">20</attribute>
+			<attribute key="id" type="int">19</attribute>
 			<attribute key="label" type="String">turn_right
 time:0</attribute>
 			<section name="graphics">
@@ -445,7 +422,7 @@ time:0</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">21</attribute>
+			<attribute key="id" type="int">20</attribute>
 			<attribute key="label" type="String">Group 2</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">-150.0</attribute>
@@ -474,7 +451,7 @@ time:0</attribute>
 			<attribute key="isGroup" type="boolean">true</attribute>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">22</attribute>
+			<attribute key="id" type="int">21</attribute>
 			<attribute key="label" type="String">turn_left
 time:0</attribute>
 			<section name="graphics">
@@ -495,7 +472,7 @@ time:0</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">23</attribute>
+			<attribute key="id" type="int">22</attribute>
 			<attribute key="label" type="String">turn_right
 time:0</attribute>
 			<section name="graphics">
@@ -516,7 +493,7 @@ time:0</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">24</attribute>
+			<attribute key="id" type="int">23</attribute>
 			<attribute key="label" type="String">ready_02
 time:150</attribute>
 			<section name="graphics">
@@ -538,7 +515,7 @@ time:150</attribute>
 			<attribute key="gid" type="int">17</attribute>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">25</attribute>
+			<attribute key="id" type="int">24</attribute>
 			<attribute key="label" type="String">prepare_visions_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -557,7 +534,7 @@ time:150</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">26</attribute>
+			<attribute key="id" type="int">25</attribute>
 			<attribute key="label" type="String">defending_01
 sync:hit</attribute>
 			<section name="graphics">
@@ -578,8 +555,8 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">27</attribute>
-			<attribute key="label" type="String">undamaged_02
+			<attribute key="id" type="int">26</attribute>
+			<attribute key="label" type="String">defending_01
 time:400</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">420.0</attribute>
@@ -591,7 +568,7 @@ time:400</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">undamaged_02
+				<attribute key="text" type="String">defending_01
 time:400</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
@@ -599,7 +576,7 @@ time:400</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">28</attribute>
+			<attribute key="id" type="int">27</attribute>
 			<attribute key="label" type="String">defending_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -618,7 +595,7 @@ time:400</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">29</attribute>
+			<attribute key="id" type="int">28</attribute>
 			<attribute key="label" type="String">defending_01
 sync:hit</attribute>
 			<section name="graphics">
@@ -639,7 +616,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">30</attribute>
+			<attribute key="id" type="int">29</attribute>
 			<attribute key="label" type="String">ready_03
 time:100</attribute>
 			<section name="graphics">
@@ -661,7 +638,7 @@ time:100</attribute>
 			<attribute key="gid" type="int">17</attribute>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">31</attribute>
+			<attribute key="id" type="int">30</attribute>
 			<attribute key="label" type="String">defending_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">420.0</attribute>
@@ -680,7 +657,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">32</attribute>
+			<attribute key="id" type="int">31</attribute>
 			<attribute key="label" type="String">ego_damaged_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">420.0</attribute>
@@ -699,7 +676,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">33</attribute>
+			<attribute key="id" type="int">32</attribute>
 			<attribute key="label" type="String">buffed_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">710.6218872070312</attribute>
@@ -718,7 +695,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">34</attribute>
+			<attribute key="id" type="int">33</attribute>
 			<attribute key="label" type="String">buffed_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">722.3694458007812</attribute>
@@ -737,7 +714,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">35</attribute>
+			<attribute key="id" type="int">34</attribute>
 			<attribute key="label" type="String">defending_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">735.0</attribute>
@@ -756,7 +733,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">36</attribute>
+			<attribute key="id" type="int">35</attribute>
 			<attribute key="label" type="String">buffed_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">735.0</attribute>
@@ -775,7 +752,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">37</attribute>
+			<attribute key="id" type="int">36</attribute>
 			<attribute key="label" type="String">ego_damaged_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">420.0</attribute>
@@ -794,7 +771,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">38</attribute>
+			<attribute key="id" type="int">37</attribute>
 			<attribute key="label" type="String">melee_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
@@ -813,7 +790,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">39</attribute>
+			<attribute key="id" type="int">38</attribute>
 			<attribute key="label" type="String">melee_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
@@ -832,7 +809,7 @@ time:100</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">40</attribute>
+			<attribute key="id" type="int">39</attribute>
 			<attribute key="label" type="String">melee_03
 sync:hit</attribute>
 			<section name="graphics">
@@ -853,7 +830,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">41</attribute>
+			<attribute key="id" type="int">40</attribute>
 			<attribute key="label" type="String">visions_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -872,7 +849,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">42</attribute>
+			<attribute key="id" type="int">41</attribute>
 			<attribute key="label" type="String">visions_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -891,7 +868,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">43</attribute>
+			<attribute key="id" type="int">42</attribute>
 			<attribute key="label" type="String">visions_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -910,7 +887,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">44</attribute>
+			<attribute key="id" type="int">43</attribute>
 			<attribute key="label" type="String">visions_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -929,7 +906,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">45</attribute>
+			<attribute key="id" type="int">44</attribute>
 			<attribute key="label" type="String">visions_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -948,7 +925,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">46</attribute>
+			<attribute key="id" type="int">45</attribute>
 			<attribute key="label" type="String">visions_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -967,7 +944,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">47</attribute>
+			<attribute key="id" type="int">46</attribute>
 			<attribute key="label" type="String">visions_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -986,7 +963,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">48</attribute>
+			<attribute key="id" type="int">47</attribute>
 			<attribute key="label" type="String">visions_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">488.7582702636719</attribute>
@@ -1005,7 +982,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">49</attribute>
+			<attribute key="id" type="int">48</attribute>
 			<attribute key="label" type="String">summon_01</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1024,7 +1001,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">50</attribute>
+			<attribute key="id" type="int">49</attribute>
 			<attribute key="label" type="String">summon_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1043,7 +1020,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">51</attribute>
+			<attribute key="id" type="int">50</attribute>
 			<attribute key="label" type="String">summon_03</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1062,7 +1039,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">52</attribute>
+			<attribute key="id" type="int">51</attribute>
 			<attribute key="label" type="String">summon_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1081,7 +1058,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">53</attribute>
+			<attribute key="id" type="int">52</attribute>
 			<attribute key="label" type="String">summon_03</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1100,7 +1077,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">54</attribute>
+			<attribute key="id" type="int">53</attribute>
 			<attribute key="label" type="String">summon_02</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1119,7 +1096,7 @@ sync:hit</attribute>
 			</section>
 		</section>
 		<section name="node">
-			<attribute key="id" type="int">55</attribute>
+			<attribute key="id" type="int">54</attribute>
 			<attribute key="label" type="String">summon_03</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
@@ -1270,7 +1247,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">-0.38399025797843933</attribute>
-				<attribute key="ySource" type="double">0.9927207231521606</attribute>
+				<attribute key="ySource" type="double">0.9927206635475159</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">move
@@ -1388,7 +1365,7 @@ weight:0.5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.56959468126297</attribute>
-				<attribute key="ySource" type="double">0.7536358833312988</attribute>
+				<attribute key="ySource" type="double">0.753635823726654</attribute>
 				<attribute key="xTarget" type="double">-0.21959459781646729</attribute>
 			</section>
 			<section name="LabelGraphics">
@@ -1476,27 +1453,11 @@ weight:5</attribute>
 			</section>
 			<section name="edgeAnchor">
 				<attribute key="xSource" type="double">0.32025226950645447</attribute>
-				<attribute key="ySource" type="double">-0.03837687149643898</attribute>
+				<attribute key="ySource" type="double">-0.03837686777114868</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">defend
 weight:5</attribute>
-				<attribute key="fontSize" type="int">12</attribute>
-				<attribute key="fontName" type="String">Dialog</attribute>
-				<attribute key="model" type="String">six_pos</attribute>
-				<attribute key="position" type="String">tail</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">6</attribute>
-			<attribute key="target" type="int">18</attribute>
-			<attribute key="label" type="String">undamaged</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-			<section name="LabelGraphics">
-				<attribute key="text" type="String">undamaged</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="model" type="String">six_pos</attribute>
@@ -1542,7 +1503,7 @@ weight:5</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">19</attribute>
+			<attribute key="source" type="int">18</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1555,7 +1516,7 @@ weight:5</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">20</attribute>
+			<attribute key="source" type="int">19</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1568,8 +1529,8 @@ weight:5</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">21</attribute>
-			<attribute key="target" type="int">22</attribute>
+			<attribute key="source" type="int">20</attribute>
+			<attribute key="target" type="int">21</attribute>
 			<attribute key="label" type="String">turn_left
 facing:-1</attribute>
 			<section name="graphics">
@@ -1590,8 +1551,8 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">21</attribute>
-			<attribute key="target" type="int">23</attribute>
+			<attribute key="source" type="int">20</attribute>
+			<attribute key="target" type="int">22</attribute>
 			<attribute key="label" type="String">turn_right
 facing:1</attribute>
 			<section name="graphics">
@@ -1612,7 +1573,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">22</attribute>
+			<attribute key="source" type="int">21</attribute>
 			<attribute key="target" type="int">4</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1624,7 +1585,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">23</attribute>
+			<attribute key="source" type="int">22</attribute>
 			<attribute key="target" type="int">4</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1637,7 +1598,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">24</attribute>
+			<attribute key="source" type="int">23</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1668,7 +1629,7 @@ facing:1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">17</attribute>
-			<attribute key="target" type="int">25</attribute>
+			<attribute key="target" type="int">24</attribute>
 			<attribute key="label" type="String">cast</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1705,7 +1666,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">26</attribute>
+			<attribute key="source" type="int">25</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1747,7 +1708,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">27</attribute>
+			<attribute key="source" type="int">26</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1777,7 +1738,7 @@ facing:1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">17</attribute>
-			<attribute key="target" type="int">28</attribute>
+			<attribute key="target" type="int">27</attribute>
 			<attribute key="label" type="String">summon</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1814,7 +1775,7 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">29</attribute>
+			<attribute key="source" type="int">28</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1852,16 +1813,8 @@ facing:1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">18</attribute>
-			<attribute key="target" type="int">27</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
 			<attribute key="source" type="int">17</attribute>
-			<attribute key="target" type="int">20</attribute>
+			<attribute key="target" type="int">19</attribute>
 			<attribute key="label" type="String">turn_right
 facing:1</attribute>
 			<section name="graphics">
@@ -1893,7 +1846,7 @@ facing:1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">17</attribute>
-			<attribute key="target" type="int">19</attribute>
+			<attribute key="target" type="int">18</attribute>
 			<attribute key="label" type="String">turn_left
 facing:-1</attribute>
 			<section name="graphics">
@@ -1925,15 +1878,15 @@ facing:-1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">0</attribute>
-			<attribute key="target" type="int">30</attribute>
+			<attribute key="target" type="int">29</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">30</attribute>
-			<attribute key="target" type="int">24</attribute>
+			<attribute key="source" type="int">29</attribute>
+			<attribute key="target" type="int">23</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -1954,8 +1907,8 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">30</attribute>
-			<attribute key="target" type="int">30</attribute>
+			<attribute key="source" type="int">29</attribute>
+			<attribute key="target" type="int">29</attribute>
 			<attribute key="label" type="String">weight:9</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -1992,7 +1945,23 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
+			<attribute key="source" type="int">32</attribute>
+			<attribute key="target" type="int">33</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
 			<attribute key="source" type="int">33</attribute>
+			<attribute key="target" type="int">35</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">35</attribute>
 			<attribute key="target" type="int">34</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2000,7 +1969,7 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">34</attribute>
+			<attribute key="source" type="int">31</attribute>
 			<attribute key="target" type="int">36</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2009,23 +1978,7 @@ facing:-1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">36</attribute>
-			<attribute key="target" type="int">35</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">32</attribute>
-			<attribute key="target" type="int">37</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">37</attribute>
-			<attribute key="target" type="int">31</attribute>
+			<attribute key="target" type="int">30</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -2033,7 +1986,7 @@ facing:-1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">6</attribute>
-			<attribute key="target" type="int">32</attribute>
+			<attribute key="target" type="int">31</attribute>
 			<attribute key="label" type="String">ego_damaged</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2070,7 +2023,7 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">31</attribute>
+			<attribute key="source" type="int">30</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2105,7 +2058,7 @@ facing:-1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">6</attribute>
-			<attribute key="target" type="int">33</attribute>
+			<attribute key="target" type="int">32</attribute>
 			<attribute key="label" type="String">buffed</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2134,7 +2087,7 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">35</attribute>
+			<attribute key="source" type="int">34</attribute>
 			<attribute key="target" type="int">15</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2168,6 +2121,14 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
+			<attribute key="source" type="int">37</attribute>
+			<attribute key="target" type="int">38</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
 			<attribute key="source" type="int">38</attribute>
 			<attribute key="target" type="int">39</attribute>
 			<section name="graphics">
@@ -2176,23 +2137,15 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">39</attribute>
-			<attribute key="target" type="int">40</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
 			<attribute key="source" type="int">13</attribute>
-			<attribute key="target" type="int">38</attribute>
+			<attribute key="target" type="int">37</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">40</attribute>
+			<attribute key="source" type="int">39</attribute>
 			<attribute key="target" type="int">14</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
@@ -2200,32 +2153,8 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">41</attribute>
-			<attribute key="target" type="int">42</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">43</attribute>
-			<attribute key="target" type="int">44</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">45</attribute>
-			<attribute key="target" type="int">46</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">47</attribute>
-			<attribute key="target" type="int">48</attribute>
+			<attribute key="source" type="int">40</attribute>
+			<attribute key="target" type="int">41</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -2256,8 +2185,40 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">25</attribute>
-			<attribute key="target" type="int">41</attribute>
+			<attribute key="source" type="int">41</attribute>
+			<attribute key="target" type="int">42</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">43</attribute>
+			<attribute key="target" type="int">44</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">45</attribute>
+			<attribute key="target" type="int">46</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">24</attribute>
+			<attribute key="target" type="int">40</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">47</attribute>
+			<attribute key="target" type="int">25</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -2265,7 +2226,7 @@ facing:-1</attribute>
 		</section>
 		<section name="edge">
 			<attribute key="source" type="int">48</attribute>
-			<attribute key="target" type="int">26</attribute>
+			<attribute key="target" type="int">49</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -2274,30 +2235,6 @@ facing:-1</attribute>
 		<section name="edge">
 			<attribute key="source" type="int">49</attribute>
 			<attribute key="target" type="int">50</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">50</attribute>
-			<attribute key="target" type="int">51</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">52</attribute>
-			<attribute key="target" type="int">53</attribute>
-			<section name="graphics">
-				<attribute key="fill" type="String">#000000</attribute>
-				<attribute key="targetArrow" type="String">standard</attribute>
-			</section>
-		</section>
-		<section name="edge">
-			<attribute key="source" type="int">54</attribute>
-			<attribute key="target" type="int">55</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
@@ -2320,19 +2257,51 @@ facing:-1</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">28</attribute>
-			<attribute key="target" type="int">49</attribute>
+			<attribute key="source" type="int">50</attribute>
+			<attribute key="target" type="int">51</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 		</section>
 		<section name="edge">
-			<attribute key="source" type="int">55</attribute>
-			<attribute key="target" type="int">29</attribute>
+			<attribute key="source" type="int">52</attribute>
+			<attribute key="target" type="int">53</attribute>
 			<section name="graphics">
 				<attribute key="fill" type="String">#000000</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">27</attribute>
+			<attribute key="target" type="int">48</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">54</attribute>
+			<attribute key="target" type="int">28</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+		</section>
+		<section name="edge">
+			<attribute key="source" type="int">6</attribute>
+			<attribute key="target" type="int">26</attribute>
+			<attribute key="label" type="String">undamaged</attribute>
+			<section name="graphics">
+				<attribute key="fill" type="String">#000000</attribute>
+				<attribute key="targetArrow" type="String">standard</attribute>
+			</section>
+			<section name="LabelGraphics">
+				<attribute key="text" type="String">undamaged</attribute>
+				<attribute key="fontSize" type="int">12</attribute>
+				<attribute key="fontName" type="String">Dialog</attribute>
+				<attribute key="model" type="String">six_pos</attribute>
+				<attribute key="position" type="String">tail</attribute>
 			</section>
 		</section>
 	</section>

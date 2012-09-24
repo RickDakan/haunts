@@ -5,15 +5,15 @@
   "Texture"   : {
     "Path": "actions/icons/idol.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
-  "Damage"   : 5,
+  "Ap"       : 5,
+  "Strength" : 10,
+  "Damage"   : 2,
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Intruders/Collector/Seer Stone"
+    "idol": "Haunts/SFX/Intruders/Collector/Seer Stone"
   },
   "Conditions": [
-     "Dread"
+     "AP -2"
    ]
 }

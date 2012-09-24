@@ -1,0 +1,11 @@
+{
+  "Name": "The Golem",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/golem",
+  "Still": {
+  },
+  "ObjectEnt":{
+    "Goal": "Golem"
+  }
+}

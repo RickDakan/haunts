@@ -3,10 +3,10 @@
   "Kind"     : "Fire",
   "Animation": "pulse",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/device.png"
   },
   "Ap"       : 4,
-  "Strength" : 8,
+  "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 15,
   "Target_enemies": true,
@@ -14,6 +14,7 @@
     "device": "Haunts/SFX/Intruders/Reporter/Device"
   },  
   "Conditions": [
-     "Blindness"
+     "Blindness",
+     "Attack -2"
    ]
 }

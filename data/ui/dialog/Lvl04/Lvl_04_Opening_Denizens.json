@@ -9,10 +9,10 @@
       [
         {
           "Next": "Start2",
-          "Text": "The intruders are bringing light into our totally awesome darkness.",
+          "Text": "The Tyree Sanitorium closed in 1919, the property seized by the federal government. But no policeman or official ever dared venture into the sealed catacombs beneath the cursed house.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/1922c.png"
           }   
         }
       ]
@@ -24,55 +24,55 @@
       [
         {
           "Next": "Start3",
-          "Text": "One of them will be carrying a bag of beacons (Bacon bag!).  We should kill him so we can destroy the bag (and eat the bacon).",
+          "Text": "There, in the ancient tunnels Bosch excavated, Dr. Tyree hid away his most dangerous failed experiments - things out of darkness even he could not control.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/scientist.png"
           }       
         }   
      ] 
     },
     "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsLeftImage",
       "Sections":
       [
         {
           "Next": "Start4",
-          "Text": "They're crafty, though.  They can trade the beacon bag.",
+          "Text": "The Duchess Orlac, who has existed in the shadows for centuries in the Old World sensed this umbral anomaly from an ocean away drawing her to the Tyree Manse's evil.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/vampire_left.png"
           }
         }
       ]
     },
     "Start4": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsLeftImage",
       "Sections":
       [
         {
           "Next": "Start5",
-          "Text": "And if they light up the 5 big rooms, that'll suck for us.",
+          "Text": "The catacombs have become her new home, and the shadowy monsters her new servants. Unlife away from the poisonous light of day has never been grander, her powers never greater.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/vampire_left.png"
           }
         }
       ]
     },
     "Start5": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
           "Next": "Start6",
-          "Text": "Our master is very fast, but also emo.  Attacking causes him to teleport back to his bedroom (not that anyone cares).",
+          "Text": "But humans are drawn to the darkness as well and, unfortunately, they always bring light with them. These intruders have brought a particularly powerful luminesence with them.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/Lvl04/collector.png"
           }
         }
       ]
@@ -84,10 +84,10 @@
       [
         {
           "Next": "Start7",
-          "Text": "Every time they place a beacon, we get to reinforce.  And the more beacons on the board, the more dudes we can throw at them.",
+          "Text": "Their beacons are as bright as the sun, making The Duchess and her minions vulnerable. Should they illuminate enough of the catacombs, they will destroy the darkness and banish Orlac.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -99,10 +99,10 @@
       [
         {
           "Next": "Start8",
-          "Text": "Oh, and walking into the area illumated by beacons will weaken our dudes greatly.",
+          "Text": "Every beacon lit makes The Duchess summon more dark minions to try and snuff the light out. The beacons are fragile, but deadly, and must be stopped.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
           }
         }
       ]
@@ -113,10 +113,40 @@
       "Sections":
       [
         {
-          "Text": "On the plus side, the beacons are easily destroyed.",
+          "Next": "Start9",
+          "Text": "Merely stiking the luciferous intruders once drains Orlac, sending her to her lair to recover.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/denizens.png"
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
+          }
+        }
+      ]
+    },
+  "Start9": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "The Darklings are creatures of pure darkness, and focus on attacking the beacons.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/shade_dialog.png"
+          }
+        }
+      ]
+    },
+  "Start10": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "The bogeymen are monstrous remains of Tyree's experiments, now under Orlac's control. They prefer to feast on the intruders.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/eidolon_dialog.png"
           }
         }
       ]

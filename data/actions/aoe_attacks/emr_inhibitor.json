@@ -1,11 +1,11 @@
 {
   "Name"      : "EMR Inhibitor",
   "Kind"      : "Fire",
-  "Ap"        : 2,
-  "Strength"  : 5,
+  "Ap"        : 3,
+  "Strength"  : 10,
   "Damage"    : 0,
   "Range"     : 6,
-  "Diameter"  : 3,
+  "Diameter"  : 4,
   "Animation" : "inhibit",
   "Target_enemies": true,
   "Sounds"   : {
@@ -15,6 +15,7 @@
     "Path": "actions/icons/inhibit.png"
   },
   "Conditions": [
-    "EMR Inhibitor"
+    "Attack -2",
+    "Corpuse -2"
   ]
 }

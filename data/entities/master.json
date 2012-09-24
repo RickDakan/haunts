@@ -7,7 +7,8 @@
     "Path": "entities/master_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
+    "Interact",
     "Arc of Decay",
     "Poltergeist Blast",
     "Visions of Despair",
@@ -20,7 +21,7 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 8,
+    "Ap_max": 10,
     "Hp_max": 15,
     "Corpus": 12,
     "Ego": 11,

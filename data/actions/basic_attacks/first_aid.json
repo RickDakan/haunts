@@ -1,0 +1,20 @@
+{
+  "Name"      : "First Aid",
+  "Kind"      : "Fire",
+  "Ap"        : 3,
+  "Strength"  : 10,
+  "Damage"    : 0,
+  "Range"     : 1,
+  "Ammo"      : 2,
+  "Target_allies": true,
+  "Animation" : "summon",
+  "Texture"   : {
+    "Path": "actions/icons/aid.png"
+  },
+  "Sounds"   : {
+    "aid": "Haunts/SFX/Intruders/Occultist/First Aid"
+  },
+  "Conditions": [
+    "First Aid"
+  ]
+}

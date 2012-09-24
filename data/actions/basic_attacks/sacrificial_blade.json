@@ -3,14 +3,14 @@
   "Kind"     : "Brutal",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/sword.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
+  "Ap"       : 4,
+  "Strength" : 10,
   "Damage"   : 3,
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
+    "blade": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
     }  
 }

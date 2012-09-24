@@ -3,14 +3,14 @@
   "Kind"     : "Fire",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/squid_hand.png"
   },
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Maw"
+    "consume": "Haunts/SFX/Denizens/Cultists/Eidolon/Maw"
   },
   "Ap"       : 2,
-  "Strength" : 6,
+  "Strength" : 10,
   "Damage"   : 2,
   "Range"    : 1
 }

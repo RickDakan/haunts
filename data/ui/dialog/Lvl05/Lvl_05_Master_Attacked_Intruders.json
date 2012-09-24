@@ -5,9 +5,9 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Intruders attacked the master.  Summoning started.",
+          "Text": "Security has uncovered the ancient one. Stop him before he completes the ritual!",
           "Image":{
-            "Path": "ui/dialog/Lvl05/intruders2.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

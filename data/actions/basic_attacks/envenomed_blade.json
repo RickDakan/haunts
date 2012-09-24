@@ -3,15 +3,15 @@
   "Kind"     : "Poison",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/disrupt.png"
+    "Path": "actions/icons/dagger.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
-  "Damage"   : 3,
+  "Ap"       : 4,
+  "Strength" : 10,
+  "Damage"   : 2,
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Cultists/Female Cultist/Envenomed Dagger"
+    "dagger": "Haunts/SFX/Cultists/Female Cultist/Envenomed Dagger"
   },
   "Conditions": [
      "Poison"

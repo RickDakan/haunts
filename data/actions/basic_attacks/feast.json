@@ -2,9 +2,15 @@
   "Name"     : "Feast",
   "Kind"     : "Brutal",
   "Animation": "melee",
-  "Ap"       : 3,
-  "Strength" : 6,
+  "Texture"   : {
+    "Path": "actions/icons/squid_hand.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 12,
   "Damage"   : 3,
   "Range"    : 1,
+  "Sounds"   : {
+    "feast": "Haunts/SFX/Denizens/Cultists/Eidolon/Feast"
+  },
   "Target_enemies": true
 }

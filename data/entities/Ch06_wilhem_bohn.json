@@ -1,0 +1,32 @@
+{
+  "Name": "Sir Wilhem Bohn",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/occultist",
+  "Still": 
+  {
+    "Path": "entities/occultist_still.png"
+  },
+  "Action_names": 
+  [
+    "Move",
+    "Interact",
+    "Dire Curse",
+    "Abjuration",
+    "Exorcise"
+  ],
+  "Walking_speed": 0.5,
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 15
+  },
+  "Dissolve": false
+}

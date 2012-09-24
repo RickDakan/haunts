@@ -1,0 +1,16 @@
+{
+  "Name"     : "Sedate",
+  "Kind"     : "Poison",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/dagger_b.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 1,
+  "Range"    : 1,
+  "Target_enemies": true,
+ "Sounds"   : {
+    "fire": "Haunts/SFX/Denizens/Cultists/Male Cultist/Inject"
+  }
+}

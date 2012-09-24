@@ -1,0 +1,28 @@
+{
+  "Name": "Cultist for Bohn",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/robed_cultist",
+  "Still": {
+    "Path": "entities/robed_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Cultic Mantra",
+    "Sacrificial Blade"
+  ],
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 5,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": true,
+  "ai_path": "ais/wraith_new.lua"
+}

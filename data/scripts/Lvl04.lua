@@ -20,7 +20,9 @@ function Init(data)
   side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
 
   -- check data.map == "random" or something else
-  Script.LoadHouse("Lvl_04_Catacombs")  
+  Script.LoadHouse("Lvl_04_Catacombs")
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 2")
+  Script.SetMusicParam("tension_level", 0.1)   
 
   store.side = side_choices[1]
   if store.side == "Humans" then
@@ -53,7 +55,7 @@ end
 
 function intrudersSetup()
   if IsStoryMode() then
-    intruder_names = {"Nikola Fury", "Peter Chelios", "Tracy Latona"}
+    intruder_names = {"Claire Murray", "Peter Chelios", "Tracy Latona"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
   -- else
   --   --permit all choices for normal vs play
@@ -71,45 +73,18 @@ function intrudersSetup()
 end
 
 function denizensSetup()
-  -- This creates a list of entities and associated point values.  The order
-  -- the names are listed in here is the order they will appear to the user.
-  if IsStoryMode() then
-    ents = {
-      {"Vampire", 1},
-    }
-  else
-    --permit all choices for normal vs play.
-
-  end
   
   Script.SetVisibility("denizens")
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Master_.*")
-  Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+  master_spawn = Script.GetSpawnPointsMatching("Master_Start")
+  Script.SpawnEntitySomewhereInSpawnPoints("Duchess Orlac", master_spawn, false)
+  store.MasterName = "Duchess Orlac"
+  Script.SelectEnt(GetMasterEnt())
 
-  placed = {}
-  while table.getn(placed) == 0 do
-    placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
-  end
-
-  -- placed is an array containing all of the entities placed, in this case
-  -- there will only be one, and we will use that one to determine what
-  -- servitors to make available to the user to place.
-  if placed[1].Name == "Chosen One" then
-    store.MasterName = "Chosen One"
-    ServitorEnts = {
-      {"Disciple", 1},
-      {"Devotee", 1},
-      {"Eidolon", 3},
-    }
-  end
-  if placed[1].Name == "Vampire" then
-    store.MasterName = "Vampire"
-    ServitorEnts = 
-    {
-      {"Darkling", 1},
-      {"Bogeyman", 2},
-    }  
-  end
+  ServitorEnts = 
+  {
+    {"Umbral Fury", 1},
+    {"Escaped Experiment", 2},
+  }  
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
@@ -119,14 +94,16 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
-  if store.execs == nil then
+  if not store.execs then
     store.execs = {}
   end
+
   if round == 1 then
     if intruders then
       intrudersSetup()     
     else
-      -- Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
+      Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Opening_Denizens.json")
+      Script.SetMusicParam("tension_level", 0.3)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "blind")
@@ -136,6 +113,7 @@ function RoundStart(intruders, round)
       DoTutorials()
     end
 
+    store.game = Script.SaveGameState()
     Script.EndPlayerInteraction()
 
     print("SCRIPT: End round 1")
@@ -143,10 +121,6 @@ function RoundStart(intruders, round)
   end
 
   if intruders and round > 1 then
-    --JONATHAN, it is this use of SetActivatedRooms that is still incorrect.
-    --If I comment this out, the waypoints update correctly when a beacon is placed.
-    --However, this use covers the initial display of the waypoints, and also handles 
-    --waypoints in rooms where a beacon was destroyed during the denizens' turn.
     SetActivatedRooms()
   end
 
@@ -260,6 +234,7 @@ function OnAction(intruders, round, exec)
 
     if (store.Room1 or store.Room2 or store.Room3 or store.Room4 or store.Room5) and not store.bTalkedAboutBeaconInFirstRoom then
       store.bTalkedAboutBeaconInFirstRoom = true
+      Script.SetMusicParam("tension_level", 0.4)  
       Script.DialogBox("ui/dialog/Lvl04/Lvl_04_First_Beacon_Intruders.json")
     end    
 
@@ -274,18 +249,6 @@ function OnAction(intruders, round, exec)
     Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Victory_Denizens.json")
   end 
 
-  --If the vampire attacks, he automatically moves back to his lair.
-  if exec.Ent.Name == "Vampire" and (exec.Action.Type == "Basic Attack" or exec.Action.Type == "Aoe Attack") then
-    if not store.bToldDenisAboutVampireTeleport then
-      store.bToldDenisAboutVampireTeleport = true
-      Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Vampire_Teleport_Denizens.json")
-    end
-    StoreTeleport(exec.Ent, Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
-    doTeleport(teleport_exec)
-    StoreCondition("Illuminated", exec.Ent, false)
-    doCondition(condition_exec)
-    Script.SelectEnt(exec.Ent)
-  end
 
   --if a denizen other than the master ended up in an illuminated area, taking an action sets their ap to 0
   if exec.Ent.Side.Denizen and not (exec.Ent.Name == store.MasterName) then
@@ -318,15 +281,11 @@ function SetActivatedRooms()
   store.Room4 = false
   store.Room5 = false
 
-print("heck")
-
   StoreWaypoint("Room1", "intruders", (Script.GetSpawnPointsMatching("Room1_mid")[1].Pos), 5, false)
   StoreWaypoint("Room2", "intruders", (Script.GetSpawnPointsMatching("Room2_mid")[1].Pos), 5, false)
   StoreWaypoint("Room3", "intruders", (Script.GetSpawnPointsMatching("Room3_mid")[1].Pos), 5, false)
   StoreWaypoint("Room4", "intruders", (Script.GetSpawnPointsMatching("Room4_mid")[1].Pos), 5, false)
   StoreWaypoint("Room5", "intruders", (Script.GetSpawnPointsMatching("Room5_mid")[1].Pos), 5, false)
-
-print("doubleheck")
 
   store.BeaconCount = 0
   store.nBeaconedRooms = 0  --need 2 counters b/c they can put > 1 beacon per room
@@ -407,12 +366,14 @@ function RoundEnd(intruders, round)
 
     else
       store.IntrudersPlacedBeaconLastTurn = false
-      Script.DialogBox("ui/dialog/Lvl04/pass_to_intruders.json", {rooms=(5-store.nBeaconedRooms)})
 
-      if store.bToldDenisAboutVampireTeleport and not store.bToldIntrudersAboutVampireTeleport then
-        store.bToldIntrudersAboutVampireTeleport = true
-        Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Vampire_Teleport_Intruders.json")
+      if not store.InitialPassToIntrudersDone then
+        store.InitialPassToIntrudersDone = true
+        Script.DialogBox("ui/dialog/Lvl04/pass_to_intruders_initial.json")        
+      else
+        Script.DialogBox("ui/dialog/Lvl04/pass_to_intruders.json", {rooms=(5-store.nBeaconedRooms)})
       end
+
 
       if not store.bDoneIntruderIntro then
         store.bDoneIntruderIntro = true
@@ -420,6 +381,17 @@ function RoundEnd(intruders, round)
         Script.FocusPos(Script.GetSpawnPointsMatching("Intruders_Start")[1].Pos)
       end
     end
+
+    --if the Duchess Orlac is dead, respawn her
+    ent = GetMasterEnt()
+    if ent then
+      if ent.HpCur <= 0 then
+        StoreSpawn(store.MasterName, Script.GetSpawnPointsMatching("Master_Start")[1].Pos)        
+      end
+    else
+      --no ent.  make one.
+      StoreSpawn(store.MasterName, Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+    end 
 
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
@@ -543,21 +515,6 @@ function GetDistanceBetweenPoints(pos1, pos2)
   return v1 + v2
 end
 
-function GetSpawnsFromListWhereNoLoS(spawns)
-  -- for _, possibleSpawn in pairs(spawns) do
-  --   --nasty set of loops here.
-  --   for _, ent in pairs(Script.GetAllEnts()) do
-  --     if ent.Side.Intruder then
-  --       for _, possiblePositions in pairs(Script.)
-
-  --     end
-  --   end
-  -- end
-
-  --!!!!ignore this for now.
-  return spawns
-end
-
 function ValueForReinforce()
   --The denizens get to reinforce after each waypoint goes down.
   --They get 7 - (value of units on the board) + (1 for each beacon)
@@ -615,5 +572,13 @@ function doWaypoint(waypointExec)
     return Script.RemoveWaypoint(waypointExec.name)
   else
     return Script.SetWaypoint(waypointExec.name, waypointExec.side, waypointExec.pos, waypointExec.radius)
+  end
+end
+
+function GetMasterEnt()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Name == store.MasterName then
+      return ent
+    end
   end
 end

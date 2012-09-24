@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "By breaking the wards Bosch left to hold the Golem in place, Tyree has created an arcane rift.",
+          "Text": "By breaking the wards Bosch left to hold the Golem in place, Tyree has destablized the carefully balanced wards Bosch left behind, opening up arcane rifts throughout the lab.",
           "Image":
           {
             "Path": "ui/dialog/Lvl02/occultist3.png"
@@ -69,7 +69,7 @@
       [
         {
           "Next": "Start6",
-          "Text": "The Golem must make its way to the rift youself and absorb its energy while preventing Tyree and his intruders from getting there first.",
+          "Text": "The Golem, powered by these rifts, can use the wild energies to summon spirits to its aid, but Tyree and his intruders get their first they can turn the energies against the Golem, causing agonizing damage.",
     		  "Image":
           {
             "Path": "ui/dialog/Lvl02/golem.png"
@@ -87,7 +87,7 @@
           "Text": "The Angry Shades of Bosch's victims now serve the golem, they need to get close to use their chill touch on enemies.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/shade_still.png"
+            "Path": "ui/dialog/stills/shade_dialog.png"
           }
         }
       ]
@@ -102,7 +102,7 @@
           "Text": "Lost Soul Orbs are singularities of psychic agony, capable of deadly ranged attacks but very unstable, dissipating with a single enemy attack.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/wisp_still.png"
+            "Path": "ui/dialog/stills/orb_dialog.png"
           }
         }
       ]
@@ -116,7 +116,7 @@
           "Text": "Vengeful Wraiths are the most powerful and hard to destroy spirits, with attacks that frighten and disable intruders but do little direct damage.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl02/wraith_still.png"
+            "Path": "ui/dialog/stills/wraith_dialog.png"
           }
         }
       ]

@@ -5,7 +5,7 @@
       "Format": "NoOptionsRightImage",
       "Sections":[
         {
-          "Text": "Attacked Wrong Entity Intruders.",
+          "Text": "You've attacked an innocent patron and are under arrest! Come along quietly, please.",
           "Image":{
             "Path": "ui/dialog/Lvl05/intruders2.png"
           }

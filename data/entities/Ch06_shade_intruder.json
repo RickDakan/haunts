@@ -1,0 +1,30 @@
+{
+  "Name": "Shade for Evans",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/shade",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Chill Touch"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": 
+  {
+    "Gear_names": 
+    [
+      "Pick Me Ups"
+    ]
+  },
+  "Base": {
+    "Ap_max": 14,
+    "Hp_max": 3,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": false
+}

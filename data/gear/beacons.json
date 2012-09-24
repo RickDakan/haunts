@@ -1,10 +1,10 @@
 {
   "Name": "Beacons",
   "Large_icon": {
-    "Path": "gear/icons/painkillers_large.png"
+    "Path": "gear/icons/nazar_large.png"
   },
   "Small_icon": {
-    "Path": "gear/icons/painkillers.png"
+    "Path": "gear/icons/nazar.png"
   },
   "Action": "Place Beacon"
 }

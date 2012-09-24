@@ -5,15 +5,15 @@
   "Texture"   : {
     "Path": "actions/icons/nazar.png"
   },
-  "Ap"       : 2,
+  "Ap"       : 4,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,
   "Target_allies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Intruders/Collector/Talisman"
+    "talisman": "Haunts/SFX/Intruders/Collector/Talisman"
   },
   "Conditions": [
-     "Focused"
+     "AP +2"
    ]
 }              

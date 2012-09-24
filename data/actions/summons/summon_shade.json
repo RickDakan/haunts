@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Shade",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 8,
+  "Range"    : 3,
+  "Ent_name" : "Shade for Bohn",
+  "Personal_los": true
+}

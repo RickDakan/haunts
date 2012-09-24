@@ -3,17 +3,17 @@
   "Kind"     : "Poison",
   "Animation": "melee",
   "Texture"   : {
-    "Path": "actions/icons/pummel.png"
+    "Path": "actions/icons/dagger_b.png"
   },
   "Ap"       : 3,
-  "Strength" : 5,
+  "Strength" : 10,
   "Damage"   : 1,
   "Range"    : 1,
   "Target_enemies": true,
  "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Male Cultist/Inject"
+    "inject": "Haunts/SFX/Denizens/Cultists/Male Cultist/Inject"
   },
   "Conditions" : [
-     "Agony"
+     "Poison"
    ]
 }

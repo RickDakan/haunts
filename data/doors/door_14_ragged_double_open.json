@@ -1,0 +1,11 @@
+{
+  "Name": "Door 14A - Ragged Double Always Open",
+  "Width": 1,
+  "Always_open": true,
+  "Opened_texture": {
+    "Path": "doors/door_14_ragged_double_open.png"
+  },
+  "Closed_texture": {
+    "Path": "doors/door_14_ragged_double_open.png"
+  }
+}

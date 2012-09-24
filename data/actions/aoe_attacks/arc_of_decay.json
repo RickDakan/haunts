@@ -1,8 +1,8 @@
 {
   "Name"      : "Arc of Decay",
   "Kind"      : "Fire",
-  "Ap"        : 3,
-  "Strength"  : 7,
+  "Ap"        : 4,
+  "Strength"  : 10,
   "Damage"    : 4,
   "Range"     : 2,
   "Diameter"  : 2,

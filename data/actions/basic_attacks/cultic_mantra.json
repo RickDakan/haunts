@@ -3,17 +3,17 @@
   "Kind"     : "Terror",
   "Animation": "cast",
   "Texture"   : {
-    "Path": "actions/icons/shroud.png"
+    "Path": "actions/icons/chant_b.png"
   },
-  "Ap"       : 1,
+  "Ap"       : 2,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
   "Target_allies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Mantra"
+    "mantra": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Mantra"
     },  
   "Conditions": [
-     "Focused"
+     "Corpus +2"
    ]
 }

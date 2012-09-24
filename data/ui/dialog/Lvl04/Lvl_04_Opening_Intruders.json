@@ -9,55 +9,55 @@
       [
         {
           "Next": "Start2",
-          "Text": "It's frickin dark.",
+          "Text": "The Tyree Sanitorium closed in 1919, the property seized by the federal government. But no policeman or official ever dared venture into the sealed catacombs beneath the cursed house.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/Lvl04/1922c.png"
           }   
         }
       ]
     },
     "Start2": 
     {
-      "Format": "NoOptionsCenterImage",
+      "Format": "NoOptionsLeftImage",
       "Sections":
       [
         {
           "Next": "Start3",
-          "Text": "Good thing we brought these light beacons.",
+          "Text": "Peter Chelios, noted philanthropist and antiquarian is determine to reclaim the structure and turn it into a museum. But he knows that he has to clear out whatever's in the catacombs first.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/Lvl04/collector.png"
           }       
         }   
      ] 
     },
     "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsLeftImage",
       "Sections":
       [
         {
           "Next": "Start4",
-          "Text": "If we can get active beacons in each of the 5 largest rooms, the denizens here will be routed.",
+          "Text": "The last two teams he sent in didn't come back, but he learned enough from their tragic deaths to discern that the creature down there is severely allergic to light.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/Lvl04/collector.png"
           }
         }
       ]
     },
     "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
           "Next": "Start5",
-          "Text": "Probably worth mentioning, though, that the denizens are much more powerful in the dark.",
+          "Text": "Each member of this final team carries Luciferic Beacons, which create pools of magical sunlight. These will weaken the creatures of darkness, making them vulnerable.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -69,25 +69,25 @@
       [
         {
           "Next": "Start6",
-          "Text": "And they'll be trying to kill our beacons and the dude carrying the beacons.",
+          "Text": "If the team can place beacons in five different chambers of the catacombs, they will cleanse the evil and destroy the supernatural darkness.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
     },
     "Start6": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
           "Next": "Start7",
-          "Text": "And placing lots and lots of beacons will probably get them pretty riled up.",
+          "Text": "No doubt the denizens will grow enraged with each new beacon, calling in reinforcements.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/Lvl04/vampire_right.png"
           }
         }
       ]
@@ -99,10 +99,10 @@
       [
         {
           "Next": "Start8",
-          "Text": "And you don't want to see them when they're riled up.",
+          "Text": "And the beacons are fragile, easily destroyed if left unguarded.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/sigil_dialog.png"
           }
         }
       ]
@@ -113,13 +113,28 @@
       "Sections":
       [
         {
-          "Text": "Actually, you'd probably rather not see them at all.",
+          "Next": "Start9",
+          "Text": "Claire Murray is an action academic, a paranormal investigator who prefers to get up close and personal in the field.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl04/intruders2.png"
+            "Path": "ui/dialog/stills/detective_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Tracy Latona is a medium with psychic assistance abilities for her friends and silver bullets in her pistol for things that go bump in the night.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/cordelia_dialog.png"
           }
         }
       ]
     }
-  }
+   }
 }

@@ -1,0 +1,19 @@
+{
+  "Name"     : "Energize",
+  "Kind"     : "Terror",
+  "Animation": "ward",
+  "Texture"   : {
+    "Path": "actions/icons/charge.png"
+  },
+  "Ap"       : 4,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true,
+  "Sounds"   : {
+    "soothe": "Haunts/SFX/Intruders/Teen/Psychic Shroud"
+  },
+  "Conditions": [
+     "Restore"
+   ]
+}

@@ -3,16 +3,19 @@
   "Kind"     : "Terror",
   "Animation": "chant",
   "Texture"   : {
-    "Path": "actions/icons/kiss.png"
+    "Path": "actions/icons/visions_b.png"
   },
   "Ap"       : 4,
-  "Strength" : 5,
+  "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 10,
   "Target_enemies": true,
+  "Sounds"   : {
+    "reveal": "Haunts/SFX/Denizens/Cultists/Cult Leader/Revelations"
+  },
   "Conditions": [
-     "Dread",
-	 "Panic",
-	 "Horrified"
+    "AP -2",
+	 "Corpus -2",
+	 "Ego -2"
    ]
 }

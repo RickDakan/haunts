@@ -1,0 +1,28 @@
+{
+  "Name": "Tutor",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/male_cultist",
+  "Still": {
+    "Path": "entities/male_cultist_still.png"
+  },
+  "Action_names": [
+  "Move",
+  "Interact",
+	"Inject",
+	"Envenomed Dart"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 6,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": false,
+    "ai_path": "ais/male_cultist.lua"
+}

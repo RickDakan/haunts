@@ -7,7 +7,7 @@
     "Path": "entities/robed_cultist_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Cultic Mantra",
     "Sacrificial Blade"
@@ -17,10 +17,10 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 8,
-    "Hp_max": 6,
-    "Corpus": 9,
-    "Ego": 9,
+    "Ap_max": 10,
+    "Hp_max": 7,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 10
   },
     "Ai_path": "ais/robed_cultist_new.lua"

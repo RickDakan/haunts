@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Prof. Evans wins",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/collector.png"
+          }   
+        }
+      ]
+    }
+  }
+}

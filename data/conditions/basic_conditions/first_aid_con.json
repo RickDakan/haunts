@@ -1,6 +1,6 @@
 {
   "Name": "First Aid",
-  "Strength": 3,
+  "Strength": 10,
   "Kind": "Poison",
   "Duration": 1,
   "Dynamic": {

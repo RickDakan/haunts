@@ -6,11 +6,16 @@
     "Path": "actions/icons/white_codex.png"
   },
   "Ap"       : 3,
-  "Strength" : 5,
-  "Damage"   : 5,
+  "Strength" : 10,
+  "Damage"   : 0,
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Intruders/Collector/Knowledge"
-  }
+    "knowledge": "Haunts/SFX/Intruders/Collector/Knowledge"
+  },
+  "Conditions": [
+     "Corpus -2",
+     "Ego -2",
+     "Attack -2"
+   ]
 }

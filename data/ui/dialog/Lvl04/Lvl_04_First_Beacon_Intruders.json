@@ -1,5 +1,5 @@
 {
-  "Size": "large",
+  "Size": "medium",
   "Pages": 
   {
     "Start": 
@@ -8,7 +8,7 @@
       "Sections":
       [
         {
-          "Text": "That's one cavern down.  Just need to light up the other 4.",
+          "Text": "That's one chamber illuminated. The intruders need to bring the light to another four.",
           "Image":
           {
             "Path": "ui/dialog/Lvl04/intruders2.png"

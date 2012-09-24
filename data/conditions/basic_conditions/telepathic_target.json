@@ -1,8 +1,8 @@
 {
   "Name": "Telepathic Target",
-  "Strength": 7,
+  "Strength": 12,
   "Kind": "Poison",
-  "Duration": 3,
+  "Duration": 2,
   "Base": {
     "Corpus": -2
   }

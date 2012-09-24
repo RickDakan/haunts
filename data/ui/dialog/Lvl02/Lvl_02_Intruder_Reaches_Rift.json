@@ -1,0 +1,43 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start2",
+          "Text": "The Intruders disrupt the flow of energy from the rift.",
+		  "Image":{
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }
+        }
+      ]
+    },
+    "Start2": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Next": "Start3",
+          "Text": "The Golem cries out in rage as the animating energy seeps from him.",
+		  "Image":{
+            "Path": "ui/dialog/Lvl02/golem.png"
+          }       
+        }   
+      ] 
+    },
+    "Start3": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "The Golem can still summon supporters from the rift.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl02/shade.png"
+          }       
+        }   
+      ] 
+    }    
+  }
+}
+	
+	

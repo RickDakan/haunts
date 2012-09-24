@@ -1,0 +1,9 @@
+{
+  "Name": "Restore",
+  "Strength": 20,
+  "Kind": "Poison",
+  "Duration": 1,
+  "Dynamic": {
+    "Hp": 5
+  }
+}

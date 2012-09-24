@@ -106,6 +106,7 @@ func (b *Button) RenderAt(x, y int) {
     b.bounds.y = b.Y + y
     b.bounds.dx = int(d.StringWidth(b.Text.String))
     b.bounds.dy = int(d.MaxHeight())
+    base.Log().Printf("Button '%s' @ %d %d %d %d", b.Text.String, b.bounds.x, b.bounds.y, b.bounds.dx, b.bounds.dy)
     var just gui.Justification
     switch b.Text.Justification {
     case "center":

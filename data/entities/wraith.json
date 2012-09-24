@@ -7,7 +7,8 @@
     "Path": "entities/wraith_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
+    "Interact",
     "Vengeful Curse",
     "Grave Grasp",
     "Ghastly Howl"
@@ -17,10 +18,10 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 6,
-    "Hp_max": 12,
-    "Corpus": 9,
-    "Ego": 9,
+    "Ap_max": 10,
+    "Hp_max": 10,
+    "Corpus": 10,
+    "Ego": 10,
     "Sight": 15
   },
   "Dissolve": true,

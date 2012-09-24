@@ -7,8 +7,8 @@
     "Large": {
       "Path": "ui/start/versus/lvl_01.png"
     },
-    "Text": "A MANSE OF ONE'S OWN -- Cornelius Bosch seeks to conquer death by enslaving the spirits of the dead, but Elias Tyree has come to the door, pledging to end his dark experiments.",
-    "Size": 18
+    "Text": "1892 -- Cornelius Bosch seeks to conquer death by enslaving the spirits of the dead, but Elias Tyree has come to the door, pledging to end his dark experiments.",
+    "Size": 20
   },
   {
     "Id": "Lvl02.lua",
@@ -18,8 +18,8 @@
     "Large": {
       "Path": "ui/start/versus/lvl_02.png"
     },
-    "Text": "FALL OF THE HOUSE OF BOSCH -- Bosch's final experiment, The Golem, lurks in the basement, but trying to steal its secrets might only make it a greater menace.",
-    "Size": 18
+    "Text": "1905 -- Bosch's final experiment, The Golem, lurks in the basement, but trying to steal its secrets might only make it a greater menace.",
+    "Size": 20
   },
   {
     "Id": "Lvl03.lua",
@@ -29,7 +29,40 @@
     "Large": {
       "Path": "ui/start/versus/lvl_03.png"
     },
-    "Text": "THE ABOMINABLE DR. TYREE -- Dr. Tyree has turned the house of his family's enemies into a sanitorium for shell-shocked soldiers, and a laboratory for his own evil experiments.",
-    "Size": 18
+    "Text": "1918 -- Dr. Tyree has turned the house of his family's enemies into a sanitorium for shell-shocked soldiers, and a laboratory for his own evil experiments.",
+    "Size": 20
+  },
+  {
+    "Id": "Lvl04.lua",
+    "Small": {
+      "Path": "ui/start/versus/vampire.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_04.png"
+    },
+    "Text": "1926 -- The Duchess Orlac flourishes in the preternatural darkness of the catacombs beneath the shuttered Tyree Sanitorium.",
+    "Size": 20
+  },
+   {
+    "Id": "Lvl05.lua",
+    "Small": {
+      "Path": "ui/start/versus/ancient-one.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_04.png"
+    },
+    "Text": "1935 -- Museum and stuff.",
+    "Size": 20
+  },
+   {
+    "Id": "Lvl06.lua",
+    "Small": {
+      "Path": "ui/start/versus/scientist.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_04.png"
+    },
+    "Text": "1942 -- Creature Feature.",
+    "Size": 20
   }
 ]

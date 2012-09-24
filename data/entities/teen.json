@@ -2,12 +2,12 @@
   "Name": "Teen",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/cordelia",
+  "Sprite_path" : "entities/teen",
   "Still": {
-    "Path": "entities/cordelia_still.png"
+    "Path": "entities/teen_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Pistol",
     "Kick",
@@ -23,8 +23,8 @@
     ]
   },
   "Base": {
-    "Ap_max": 800,
-    "Hp_max": 200,
+    "Ap_max": 10,
+    "Hp_max": 20,
     "Corpus": 10,
     "Ego": 10,
     "Sight": 15

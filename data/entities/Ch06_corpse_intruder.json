@@ -1,0 +1,31 @@
+{
+  "Name": "Corpse for Evans",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Pummel",
+    "Diseased Kiss"
+  ],
+  "Walking_speed": 1,
+  "ExplorerEnt": 
+  {
+    "Gear_names": 
+    [
+      "Pick Me Ups"
+    ]
+  },
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 8,
+    "Corpus": 11,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": false
+}

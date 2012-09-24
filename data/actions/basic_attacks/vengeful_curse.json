@@ -5,8 +5,8 @@
   "Texture"   : {
     "Path": "actions/icons/vengeful.png"
   },
-  "Ap"       : 4,
-  "Strength" : 5,
+  "Ap"       : 3,
+  "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 5,
   "Target_enemies": true,
@@ -14,6 +14,7 @@
     "curse": "Haunts/SFX/Denizens/Ghosts/Vengeful Wraith/Vengeful Curse"
   },
   "Conditions": [
-     "Corpus -2"
+     "Corpus -2",
+     "Attack -2"
   ]
 }

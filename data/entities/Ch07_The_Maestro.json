@@ -1,0 +1,29 @@
+{
+  "Name": "The Maestro",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/golem",
+  "Still": 
+  {
+    "Path": "entities/psychopath_still.png"
+  },
+  "Action_names": 
+  [
+    "Move",
+    "Interact",
+    "Smash"
+  ],
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 15,
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 30
+  },
+  "Dissolve": true
+}

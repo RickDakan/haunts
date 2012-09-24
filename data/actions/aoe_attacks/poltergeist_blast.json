@@ -2,14 +2,14 @@
   "Name"      : "Poltergeist Blast",
   "Kind"      : "Fire",
   "Ap"        : 5,
-  "Strength"  : 5,
-  "Damage"    : 4,
-  "Range"     : 3,
-  "Diameter"  : 2,
+  "Strength"  : 10,
+  "Damage"    : 2,
+  "Range"     : 6,
+  "Diameter"  : 3,
   "Animation" : "ranged",
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Poltergeist Blast"
+    "blast": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Poltergeist Blast"
   },
   "Texture"   : {
     "Path": "actions/icons/blast.png"

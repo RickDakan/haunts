@@ -5,7 +5,7 @@
   "Texture"   : {
     "Path": "actions/icons/shroud.png"
   },
-  "Ap"       : 1,
+  "Ap"       : 2,
   "Strength" : 10,
   "Damage"   : 0,
   "Range"    : 1,
@@ -14,6 +14,7 @@
     "soothe": "Haunts/SFX/Intruders/Teen/Psychic Shroud"
   },
   "Conditions": [
-     "Psychic Shroud"
+     "Corpus +2",
+     "Ego +2"
    ]
 }

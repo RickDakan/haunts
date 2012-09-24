@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Cp1252"?>
 <section name="xgml">
 	<attribute key="Creator" type="String">yFiles</attribute>
-	<attribute key="Version" type="String">2.8</attribute>
+	<attribute key="Version" type="String">2.9</attribute>
 	<section name="graph">
 		<attribute key="hierarchic" type="int">1</attribute>
 		<attribute key="label" type="String"></attribute>
@@ -244,7 +244,8 @@ sync:hit</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">12</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+func:dagger</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">254.25</attribute>
 				<attribute key="y" type="double">187.144775390625</attribute>
@@ -255,7 +256,8 @@ sync:hit</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+func:dagger</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -370,17 +372,17 @@ time:3000</attribute>
 			<attribute key="id" type="int">18</attribute>
 			<attribute key="label" type="String">readyGroup</attribute>
 			<section name="graphics">
-				<attribute key="x" type="double">12.5</attribute>
-				<attribute key="y" type="double">-208.05300903320312</attribute>
-				<attribute key="w" type="double">383.0</attribute>
-				<attribute key="h" type="double">320.50836181640625</attribute>
+				<attribute key="x" type="double">5.6494140625</attribute>
+				<attribute key="y" type="double">-214.90360260009766</attribute>
+				<attribute key="w" type="double">396.701171875</attribute>
+				<attribute key="h" type="double">306.8072052001953</attribute>
 				<attribute key="type" type="String">roundrectangle</attribute>
 				<attribute key="fill" type="String">#CAECFF84</attribute>
 				<attribute key="outline" type="String">#666699</attribute>
 				<attribute key="outlineStyle" type="String">dotted</attribute>
 				<attribute key="topBorderInset" type="double">0.0</attribute>
-				<attribute key="bottomBorderInset" type="double">13.701171875</attribute>
-				<attribute key="leftBorderInset" type="double">0.0</attribute>
+				<attribute key="bottomBorderInset" type="double">0.0</attribute>
+				<attribute key="leftBorderInset" type="double">13.701171875</attribute>
 				<attribute key="rightBorderInset" type="double">27.0</attribute>
 			</section>
 			<section name="LabelGraphics">
@@ -570,7 +572,8 @@ time:0</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">27</attribute>
-			<attribute key="label" type="String">ranged_01</attribute>
+			<attribute key="label" type="String">ranged_01
+func:gift</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">465.5</attribute>
 				<attribute key="y" type="double">114.78955078125</attribute>
@@ -581,7 +584,8 @@ time:0</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">ranged_01</attribute>
+				<attribute key="text" type="String">ranged_01
+func:gift</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>
@@ -981,8 +985,8 @@ weight:0.5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 				<section name="Line">
 					<section name="point">
-						<attribute key="x" type="double">12.5</attribute>
-						<attribute key="y" type="double">-208.05300903320312</attribute>
+						<attribute key="x" type="double">5.6494140625</attribute>
+						<attribute key="y" type="double">-214.90360260009766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">-150.0</attribute>
@@ -995,8 +999,8 @@ weight:0.5</attribute>
 				</section>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">-0.35892561078071594</attribute>
-				<attribute key="ySource" type="double">0.9571018218994141</attribute>
+				<attribute key="xSource" type="double">-0.3465291223599671</attribute>
+				<attribute key="ySource" type="double">0.9998433277612078</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">move
@@ -1087,8 +1091,8 @@ weight:0.5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 				<section name="Line">
 					<section name="point">
-						<attribute key="x" type="double">12.5</attribute>
-						<attribute key="y" type="double">-208.05300903320312</attribute>
+						<attribute key="x" type="double">5.6494140625</attribute>
+						<attribute key="y" type="double">-214.90360260009766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">179.85885620117188</attribute>
@@ -1105,8 +1109,8 @@ weight:0.5</attribute>
 				</section>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">0.5324148535728455</attribute>
-				<attribute key="ySource" type="double">0.7265955209732056</attribute>
+				<attribute key="xSource" type="double">0.5140264344433374</attribute>
+				<attribute key="ySource" type="double">0.7590432564264697</attribute>
 				<attribute key="xTarget" type="double">-0.21959459781646729</attribute>
 			</section>
 			<section name="LabelGraphics">
@@ -1193,8 +1197,8 @@ weight:5</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">0.2993480861186981</attribute>
-				<attribute key="ySource" type="double">-0.03699992224574089</attribute>
+				<attribute key="xSource" type="double">0.2890092722478459</attribute>
+				<attribute key="ySource" type="double">-0.03865223588402633</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">defend
@@ -1431,7 +1435,7 @@ facing:-1</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">-0.6064945459365845</attribute>
+				<attribute key="xSource" type="double">-0.5855475797961729</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">turn_left
@@ -1452,7 +1456,7 @@ facing:1</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 			</section>
 			<section name="edgeAnchor">
-				<attribute key="xSource" type="double">-0.13428573310375214</attribute>
+				<attribute key="xSource" type="double">-0.12964780400231093</attribute>
 				<attribute key="xTarget" type="double">0.23165960609912872</attribute>
 				<attribute key="yTarget" type="double">0.6592739820480347</attribute>
 			</section>
@@ -1498,8 +1502,8 @@ facing:1</attribute>
 				<attribute key="targetArrow" type="String">standard</attribute>
 				<section name="Line">
 					<section name="point">
-						<attribute key="x" type="double">12.5</attribute>
-						<attribute key="y" type="double">-208.05300903320312</attribute>
+						<attribute key="x" type="double">5.6494140625</attribute>
+						<attribute key="y" type="double">-214.90360260009766</attribute>
 					</section>
 					<section name="point">
 						<attribute key="x" type="double">254.25</attribute>

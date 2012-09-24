@@ -1,17 +1,152 @@
 {
-  "Size": "medium",
+  "Size": "large",
   "Pages": 
   {
     "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "January 17, 1934. Opening night at The Museum of Occult Antiquities, presented by The Tyree Trust.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/1932c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The undying sorcerer Ses-kalla has walked the Earth since he was ousted from the throne in ancient Sumer.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
     {
       "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
-          "Text": "Opening Denizens.",
+          "Next": "Start4",
+          "Text": "He is driven by an eternal desire to be reunited with his dead love, Nuratum, whom he dreams of someday restoring to life.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl05/denizens.png"
+            "Path": "ui/dialog/Lvl05/ancient-one-f.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "The new museum opened by the Tyree Trust hosts scores of ancient artifacts Ses-kalla has spent centuries searching for. Now they are all under one roof.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/collector.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Long practiced in disguising himself amongst mortal men, Ses-kalla, has entered the museum in the form of a normal patron. He must secretly gather as many artifacts as possible before he is discovered.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "The museum's heavily armed and observant staff are on guard against supernatural threats, and will be watching for any suspicious behavior.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/collector.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Ses-kalla can start the Ritual of Renewal to bring back Nuratum at any time, but once he does, he will be immobile and vulnerable.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "The more artifacts he finds, the faster the ritual and the more tomb guardians he can summon to his aid.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/corpse_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "If Ses-kalla can trick the security team into attacking an innocent patron, then the offending security team member will be arrested and removed from the museum.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/bounty_hunter.png"
+          }
+        }
+      ]
+    },
+   "Start10": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "But if he is attacked by security while in disguise, Ses-kalla will be forced to start the ritual immediately.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl05/ancient-one-m.png"
           }
         }
       ]

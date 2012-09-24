@@ -1,0 +1,27 @@
+{
+  "Name": "Corpse for Bohn",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/corpse",
+  "Still": {
+    "Path": "entities/corpse_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact"
+    "Pummel",
+    "Diseased Kiss"
+  ],
+  "HauntEnt": {
+    "Cost":  3,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 8,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": true
+}

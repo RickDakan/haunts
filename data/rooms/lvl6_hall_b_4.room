@@ -1,1 +1,1 @@
-{"Name":"lvl6_hall_b_4","Size":{"Name":"Hall_B","Dx":5,"Dy":20},"Furniture":[],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_01.png"},"Wall":{"Path":"rooms/walls/wall_01.png"},"Themes":null,"Sizes":null,"Decor":null}
+{"Name":"lvl6_hall_b_4","Size":{"Name":"Hall_B","Dx":5,"Dy":20},"Furniture":[],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_01_rug_hall_b.png"},"Wall":{"Path":"rooms/walls/wall_01.png"},"Themes":null,"Sizes":null,"Decor":null}

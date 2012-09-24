@@ -3,18 +3,18 @@
   "Kind"     : "Poison",
   "Animation": "infect",
   "Texture"   : {
-    "Path": "actions/icons/disrupt.png"
+    "Path": "actions/icons/infect.png"
   },
-  "Ap"       : 4,
-  "Strength" : 7,
+  "Ap"       : 6,
+  "Strength" : 10,
   "Damage"   : 1,
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Eidolon/Cosmic Infection"
+    "infect": "Haunts/SFX/Denizens/Cultists/Eidolon/Cosmic Infection"
   },
   "Conditions" : [
-     "Agony",
-     "Horrified"
+     "AP -2",
+     "Poison"
    ]
 }

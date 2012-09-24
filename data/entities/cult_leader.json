@@ -7,7 +7,7 @@
     "Path": "entities/master_still.png"
   },
   "Action_names": [
-    "Move Test",
+  "Move",
 	"Crozier",
 	"Revelations of Despair",
 	"Voice of the Beyond"    
@@ -18,8 +18,8 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 100,
-    "Hp_max": 100,
+    "Ap_max": 10,
+    "Hp_max": 115,
     "Corpus": 12,
     "Ego": 11,
     "Sight": 30

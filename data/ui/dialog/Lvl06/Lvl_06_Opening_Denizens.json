@@ -1,0 +1,155 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "September 17, 1943. The Tyree Trust uses wartime research funding to try and develop an American countermeasure to combat German Thulekraft occult operatives.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/1942c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Sir Willhelm Bohn, on loan from Her Majesty's Government, is the undisputed genius of the operation and has done groundbreaking work in weaponizing spiritual assets.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/occultist2.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Unfortunately, Professor Keith Evans doesn't agree with Bohn's assessment, and has spent his whole time complaining and undermining Bohn's authority.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/collector.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Both agree on only one thing - their best hope for success lies in reactivating the recently-excavated Golem, created by Cornelius Bosch.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/golem.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "In his haste, Prof. Evans has decided to make a deal with the more dangerous denizens that have lain sealed away beneath the museum for study.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/occultist2.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Sir Bohn would have been more cautious in engaging in negotiations with these four powerful and dangerous supernaturals, but the War Department listened to Evans.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl06/collector.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "But he will be damned if he'll let that fool Evans handle the negotiations. Sir Bohn knows how to handle such matters properly.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/vampire_fem_dialog.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Each supernatural entity can summon up lesser beings and use their occult essences to power the Golem.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/bosch_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "Evans will know doubt be pestering the entities as well, but Bohn's calculations say he only needs two supernaturals to agree to his terms.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/cult_leader_dialog.png"
+          }
+        }
+      ]
+    },
+   "Start10": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Of course knowing Evans, he will probably try to recruit two of his own allies so that he can steal all the credit for the Trust's research.",
+          "Image":
+          {
+            "Path": "ui/dialog/stills/ancient_one_dialog.png"
+          }
+        }
+      ]
+    }
+  }
+}

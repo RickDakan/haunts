@@ -7,7 +7,7 @@
     "Path": "entities/shade_still.png"
   },
   "Action_names": [
-    "Move Test",
+    "Move",
     "Interact",
     "Chill Touch"
   ],
@@ -16,7 +16,7 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 8,
+    "Ap_max": 10,
     "Hp_max": 5,
     "Corpus": 7,
     "Ego": 7,

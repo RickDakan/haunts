@@ -9,7 +9,7 @@
   },
   "Action_names": 
   [
-    "Move Test", 
+    "Move", 
     "Interact",
     "Arc of Decay",
     "Visions of Despair"
@@ -20,10 +20,10 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 8,
+    "Ap_max": 10,
     "Hp_max": 18,
-    "Corpus": 10,
-    "Ego": 10,
+    "Corpus": 5,
+    "Ego": 5,
     "Sight": 30
   },
   "Dissolve": true

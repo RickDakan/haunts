@@ -5,12 +5,12 @@
   "Texture"   : {
     "Path": "actions/icons/dire_curse.png"
   },
-  "Ap"       : 3,
-  "Strength" : 5,
-  "Damage"   : 5,
+  "Ap"       : 4,
+  "Strength" : 10,
+  "Damage"   : 3,
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Intruders/Occultist/Dire Curse"
+    "curse": "Haunts/SFX/Intruders/Occultist/Dire Curse"
   }
 }
