@@ -26,11 +26,11 @@ function CrushIntruder(debuf, cond, melee, ranged, aoe)
   if table.getn(enemies) == 0 then
     return false
   end
-  print("crush 2")
+  print("crush 2", Me.Name)
   nearest = enemies[1]
   if aoe and Me.Actions[aoe].Ap > Me.ApCur then
     aoe_dist = Me.Actions[aoe].Range
-    pos, ents = Utils.BestAoeAttackPos(aoe, 1, "minions ok")
+    pos, ents = Utils.BestAoeAttackPos(aoe, 6, "minions ok")
 
     -- We can hit more than one entity so we'll go ahead and use our aoe
     if table.getn(ents) > 1 then
@@ -81,4 +81,3 @@ function CrushIntruder(debuf, cond, melee, ranged, aoe)
   print("crush 5")
   return Do.BasicAttack(attack, target)
 end
-

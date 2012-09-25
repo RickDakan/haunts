@@ -1,5 +1,5 @@
 function Think()
-  while CrushIntruder(nil, nil, nil, "Ectoplasmic Discharge", nil) do
+  while CrushIntruder(nil, nil, nil, "Dire Curse", nil) do
   end
   target = GetTarget()
   if target then
