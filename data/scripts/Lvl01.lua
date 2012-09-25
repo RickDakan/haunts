@@ -153,7 +153,7 @@ function RoundStart(intruders, round)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
 
     if IsStoryMode() then
       DoTutorials()
@@ -171,7 +171,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")          
+    Script.SetLosMode("denizens", "entities")
   end
   
 
@@ -181,7 +181,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
   end
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
@@ -404,7 +404,7 @@ function RoundEnd(intruders, round)
   if Side() == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("denizens")
     else
