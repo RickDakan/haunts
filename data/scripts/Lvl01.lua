@@ -387,7 +387,6 @@ function DoPlayback(state, execs)
     end
     checkExec(exec)
   end
-  -- Script.GameOnRound()
 end
 
 function denizensOnRound()

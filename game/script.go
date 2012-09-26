@@ -192,17 +192,14 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
           gp.game.Turn = len(resp.Game.Execs) + 1
-          if gp.game.Turn%2 == 1 {
-            gp.game.Side = SideHaunt
-          } else {
-            gp.game.Side = SideExplorers
-          }
           if net_id == resp.Game.Denizens_id {
             base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
             gp.game.net.side = SideHaunt
+            gp.game.Side = SideHaunt
           } else {
             base.Log().Printf("Setting side to Intruders, Turn %d", gp.game.Turn)
             gp.game.net.side = SideExplorers
+            gp.game.Side = SideExplorers
           }
         }
       }
@@ -242,12 +239,58 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   }()
 }
 
+func (gs *gameScript) OnRoundWaiting(g *Game) {
+  g.Side = g.net.side
+  g.Turn--
+  go func() {
+    // // round begins automatically
+    // <-round_middle
+    // for
+    //   <-action stuff
+    // <- round end
+    // <- round end done
+    // base.Log().Printf("Game script: %p", gs)
+    // base.Log().Printf("Lua state: %p", gs.L)
+    // gs.L.SetExecutionLimit(250000)
+    // cmd := fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
+    // base.Log().Printf("cmd: '%s'", cmd)
+    // gs.L.DoString(cmd)
+
+    // signals to the game that we're done with the startup stuff
+    g.comm.script_to_game <- nil
+    // base.Log().Printf("ScriptComm: Done with RoundStart")
+
+    g.player_inactive = true
+    _exec := <-g.comm.game_to_script
+    if _exec != nil {
+      panic("Got an exec when we shouldn't have gotten one.")
+    }
+
+    gs.L.SetExecutionLimit(250000)
+    base.Log().Printf("Doing RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
+    gs.L.DoString(fmt.Sprintf("RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
+
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase out")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase in")
+
+    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase in")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase out")
+  }()
+}
+
 // Runs RoundStart
 // Lets the game know that the round middle can begin
 // Runs RoundEnd
 func (gs *gameScript) OnRound(g *Game) {
   base.Log().Printf("Launching script.RoundStart")
-
+  if (g.Turn%2 == 1) != (g.Side == SideHaunt) {
+    base.Log().Printf("SCRIPT: OnRoundWaiting")
+    gs.OnRoundWaiting(g)
+    return
+  }
   go func() {
     // // round begins automatically
     // <-round_middle
