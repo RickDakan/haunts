@@ -7,7 +7,7 @@
     "Path": "entities/psychopath_still.png"
   },
   "Action_names": [
-  "Move",
+  "Move Test",
   "Interact",
 	"Parasitic Gift",
 	"Envenomed Blade"
@@ -17,7 +17,7 @@
     "Level": "Servitor"
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 8,
     "Hp_max": 6,
     "Corpus": 10,
     "Ego": 10,

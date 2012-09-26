@@ -1,0 +1,80 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "This tutorial covered all the basics for playing the intruders in haunts.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/1892c.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "But every Chapter in the dark history of Tyree Manse has its own unique goals, entities, and win conditions.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/1892c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "So pay attention to the introduction for each level to find out how to survive whatever terrors it has to offer.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/occultist3.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Also, you can play through the Denizens Tutorial to learn more about them and refresh you knowledge of some of the game's core mechanics.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/master.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Welcome to Tyree Manse. We hope you survive your stay.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl01/occultist3.png"
+          }
+        }
+      ]
+    }                               
+  }
+}

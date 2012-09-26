@@ -1,0 +1,96 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Bosch himself has come out of his lair to stop you.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/bosch_intro.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "He's tougher than the ghosts you've already fought, and you need to work together to defeat him.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/bosch_into_lab.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "The Teen's Telepathic Coordination action will make it easier to hit Bosch.",
+		      "Image":
+          {
+            "Path": "ui/dialog/tutorial/telepathic_coordination.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "While the Ghost Hunter's EMR Inihibitor will make Bosch less effective in combat.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/emr_inhibitor.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "If any of you intruders are near death, the Occultist can use First Aid to heal them.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/first_aid.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Defeat Bosch, and you will have cleansed this small version of Tyree Manse.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/bosch_intro.png"
+          }
+        }
+      ]
+    }                            
+  }
+}
+	

@@ -1,0 +1,66 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "When adjacent to a door, you can open it using the Interact action (click on its icon or press 2).",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/at_the_door.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "You then click on the Threshold of the door you wish to open. If you click on the Threshold of an open door, you will close it.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/threshold.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Notice that doors on the bottom two edges of a room always show their Threshold, even when you can't yet see the other side of the door.",
+		      "Image":
+          {
+            "Path": "ui/dialog/tutorial/threshold_no_door.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Open the door and move on further into the house towards the next red circle.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/door_is_open.png"
+          }
+        }
+      ]
+    }                               
+  }
+}
+	

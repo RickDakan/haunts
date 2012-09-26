@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "Opening Intruders.",
+          "Image":{
+            "Path": "ui/dialog/Lvl07/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}

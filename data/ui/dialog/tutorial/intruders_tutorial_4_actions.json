@@ -1,0 +1,141 @@
+  {
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Bosch has called up some of the foul spirits at his command to drive you from the house.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/1892c.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "You will need to use your Actions to attack and dispel these malevolent ghosts.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/fighting.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Attacking works like Moving or Interacting. Select an attack either by clicking on it or pressing the corresponding number key.",
+		      "Image":
+          {
+            "Path": "ui/dialog/tutorial/action_select.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Some actions will be dimmed and you will be unable to select them. This means you don't have a valid target in range of that action, so you need to move closer (or let them come to you).",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_pistol_group.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Once you have selected an action, click on the target you wish to use it on. The display indicates how much AP the action will cost. Hit the Escape key to choose a different action.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_pistol_group.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Your Ghost Hunter and Occultist both have area of effect attacks that target multiple squares at once.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/aoe_pulse.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "If the square is red, it his out of range. If it is white, anything within its area, maybe even other Intruders, will be hit by the attack.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/aoe_no.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Your Teen's Psychic Shroud can be used on herself or on your Intruders to make them more resistant to attacks.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/psychic_shroud.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Take care of these ghosts, and then move on to the red circle in the next room.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_next_waypoint.png"
+          }
+        }
+      ]
+    }                                                       
+  }
+}
+	

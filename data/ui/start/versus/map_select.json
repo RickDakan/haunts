@@ -1,4 +1,26 @@
 [
+    {
+    "Id": "Tutorial01.lua",
+    "Small": {
+      "Path": "ui/start/versus/intruders.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "Intruders Tutorial - Learn how to play The Intruders.",
+    "Size": 20
+  },
+  {
+    "Id": "Tutorial02.lua",
+    "Small": {
+      "Path": "ui/start/versus/denizens.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "Denizens Tutorial - Learn how to play The Denizens.",
+    "Size": 20
+  },
   {
     "Id": "Lvl01.lua",
     "Small": {
@@ -57,12 +79,23 @@
    {
     "Id": "Lvl06.lua",
     "Small": {
-      "Path": "ui/start/versus/scientist.png"
+      "Path": "ui/start/versus/cult-leader.png"
     },
     "Large": {
       "Path": "ui/start/versus/lvl_04.png"
     },
     "Text": "1942 -- Creature Feature.",
+    "Size": 20
+  },
+  {
+    "Id": "Lvl07.lua",
+    "Small": {
+      "Path": "ui/start/versus/psychopath.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "1958 - Waxworks",
     "Size": 20
   }
 ]

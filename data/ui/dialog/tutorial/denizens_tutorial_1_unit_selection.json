@@ -34,7 +34,7 @@
     },
 	  "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -42,66 +42,66 @@
           "Text": "In this tutorial you will play Cornelius Bosch, the original builder of the house.",
 		      "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/bosch_intro.png"
           }
         }
       ]
     },
     "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Next": "Start5",
-          "Text": "First you will be asked to place Bosch in on of the two highlighted starting squares. Click on Bosch in the display area at the bottom of the screen and then click on the square you wish to place him in.",
+          "Text": "First you will be asked to place Bosch in one of the two highlighted starting squares. Click on Bosch in the display area at the bottom of the screen and then click on the square you wish to place him in.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
+            "Path": "ui/dialog/tutorial/place_bosch.png"
           }
         }
       ]
     },
     "Start5": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Next": "Start6",
-          "Text": "Then you will place Bosch's servitors. He has two kinds, Angry Shades and Lost Soul Orbs. Notice that there is a Points counter in the bottom left, and each kind of servitor has its points cost displayed below it.",
+          "Text": "Then you will place Bosch's servitors. He has two kinds, Angry Shades and Lost Soul Orbs.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist3.png"
+            "Path": "ui/dialog/tutorial/placement_2.png"
           }
         }
       ]
     },
     "Start6": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Next": "Start7",
-          "Text": "Place the servitors in any of the available starting squares. Then click done when you're finished.",
+          "Text": "Notice that there is a Points counter in the bottom left, and each kind of servitor has its points cost displayed below it. Place the servitors in any of the available starting squares. Then click Done when you're finished.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/points_cost.png"
           }
         }
       ]
     },
     "Start7": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Text": "Go ahead and try it now.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Master.png"
+            "Path": "ui/dialog/tutorial/placement_2.png"
           }
         }
       ]
