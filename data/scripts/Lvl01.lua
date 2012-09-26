@@ -153,7 +153,7 @@ function RoundStart(intruders, round)
       denizensSetup()
     end
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
 
     if IsStoryMode() then
       DoTutorials()
@@ -171,7 +171,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start2")
     placed = Script.PlaceEntities("Servitors_Start2", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")          
+    Script.SetLosMode("denizens", "entities")
   end
   
 
@@ -181,7 +181,7 @@ function RoundStart(intruders, round)
     setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start3")
     placed = Script.PlaceEntities("Servitors_Start3", ServitorEnts, 0, ValueForReinforce())
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
   end
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
@@ -268,16 +268,23 @@ function SelectSpawn(SpawnName)
   return possible_spawns[1]      
 end
 
-function OnAction(intruders, round, exec)
-  -- Check for players being dead here
-  if store.execs == nil then
-    store.execs = {}
+-- Does any special processing from an exec.  This is in its own function because
+-- it might be called during DoAction if the exec occurred locally, or in a
+-- playback if the exec occurred remotely.
+function checkExec(exec)
+  print("SCRIPT: Checking Exec")
+  print("SCRIPT:", exec.Ent)
+  if exec.Ent then
+    print("SCRIPT:", exec.Ent.Side.Intruder)
+    print("SCRIPT: Ent - ", exec.Ent.Pos.X, exec.Ent.Pos.Y)
+    print("SCRIPT: Ent - ", store.Waypoint1.Pos.X, store.Waypoint1.Pos.Y)
+    print("SCRIPT:", GetDistanceBetweenEnts(exec.Ent, store.Waypoint1))
+    print("SCRIPT:", store.nFirstWaypointDown)
   end
-  store.execs[table.getn(store.execs) + 1] = exec
-
-  if exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
+  if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
+    print("WAYPOINT SET MONKEY")
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
     Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
@@ -291,7 +298,7 @@ function OnAction(intruders, round, exec)
 
 
   if store.nFirstWaypointDown then
-    if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
+    if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
       --The intruders got to the second waypoint.
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
@@ -308,7 +315,7 @@ function OnAction(intruders, round, exec)
 
 
   if store.nSecondWaypointDown then
-    if  exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
+    if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
       Script.DialogBox("ui/dialog/Lvl01/Victory_Intruders.json")
       Script.SetMusicParam("tension_level", 0.7)
@@ -328,8 +335,15 @@ function OnAction(intruders, round, exec)
   --     Script.SelectEnt(nextEnt)
   --   end
   -- end  
+end
 
-
+function OnAction(intruders, round, exec)
+  -- Check for players being dead here
+  if store.execs == nil then
+    store.execs = {}
+  end
+  store.execs[table.getn(store.execs) + 1] = exec
+  checkExec(exec)
 end
  
 
@@ -371,15 +385,27 @@ function DoPlayback(state, execs)
         LastDenizenEnt = exec.Ent
       end
     end
+    checkExec(exec)
   end
   -- Script.GameOnRound()
+end
+
+function denizensOnRound()
+  if store.nFirstWaypointDown and not store.bShowedFirstWaypointMessage then
+    store.bShowedFirstWaypointMessage = true
+    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Denizens.json")
+  end
+
+  if store.nSecondWaypointDown and not store.bShowedSecondWaypointMessage then
+    store.bShowedSecondWaypointMessage = true
+    Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Denizens.json")
+  end
 end
 
 function RoundEnd(intruders, round)
   print("SCRIPT: Round End:", Net.Side())
   print("Update Execs Round/Intruders: ", round, intruders)
   Net.UpdateExecs(store.execs)
-  print("SCRIPT: Net active is", Net.Active())
   if Net.Active() then
     if Side() == "Denizens" then
       Script.SetVisibility("denizens")
@@ -391,6 +417,9 @@ function RoundEnd(intruders, round)
     -- cur = Script.SaveGameState()
     state, execs = Net.LatestStateAndExecs()
     DoPlayback(state, execs)
+    if Side() == "Denizens" then
+      denizensOnRound()
+    end
     Script.ShowMainBar(true)
     return
   end
@@ -404,7 +433,7 @@ function RoundEnd(intruders, round)
   if Side() == "Humans" then
     Script.ShowMainBar(false)
     Script.SetLosMode("intruders", "entities")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("denizens")
     else
@@ -413,15 +442,7 @@ function RoundEnd(intruders, round)
 
     if intruders then
       Script.DialogBox("ui/dialog/Lvl01/pass_to_denizens.json")
-      if store.nFirstWaypointDown and not store.bShowedFirstWaypointMessage then
-        store.bShowedFirstWaypointMessage = true
-        Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Denizens.json")
-      end
-
-      if store.nSecondWaypointDown and not store.bShowedSecondWaypointMessage then
-        store.bShowedSecondWaypointMessage = true
-        Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Denizens.json")
-      end
+      denizensOnRound()
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true

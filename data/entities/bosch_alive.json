@@ -19,7 +19,7 @@
     "Level":   "Master"
   },
   "Base": {
-    "Ap_max": 10,
+    "Ap_max": 100,
     "Hp_max": 10,
     "Corpus": 10,
     "Ego": 10,

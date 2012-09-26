@@ -89,7 +89,13 @@ func LuaDecodeValue(r io.Reader, L *lua.State, g *Game) error {
   case luaEncEntity:
     var id uint64
     err = binary.Read(r, binary.LittleEndian, &id)
-    LuaPushEntity(L, g.EntityById(EntityId(id)))
+    ent := g.EntityById(EntityId(id))
+    LuaPushEntity(L, ent)
+    if ent != nil {
+      base.Log().Printf("LUA: Push Ent %s", ent.Name)
+    } else {
+      base.Log().Printf("LUA: Push Ent NIL")
+    }
   case luaEncTable:
     err = LuaDecodeTable(r, L, g)
   case luaEncString:
@@ -218,8 +224,8 @@ func LuaPushSmartFunctionTable(L *lua.State, ft FunctionTable) {
 // e.gear_options -> Table mapping gear to icon for all available gear
 // e.gear -> Name of the selected gear, nil if none is selected
 // e.actions -> Array of actions this entity has available
-func LuaPushEntity(L *lua.State, ent *Entity) {
-  if ent == nil {
+func LuaPushEntity(L *lua.State, _ent *Entity) {
+  if _ent == nil {
     L.PushNil()
     return
   }
@@ -227,19 +233,22 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
   // never change.
   L.NewTable()
   L.PushString("Name")
-  L.PushString(ent.Name)
+  L.PushString(_ent.Name)
   L.SetTable(-3)
   L.PushString("id")
-  L.PushInteger(int(ent.Id))
+  L.PushInteger(int(_ent.Id))
   L.SetTable(-3)
   L.PushString("type")
   L.PushString("Entity")
   L.SetTable(-3)
 
+  id := _ent.Id
+
   // Meta table for the Entity so that any dynamic data is generated
   // on-the-fly
   LuaPushSmartFunctionTable(L, FunctionTable{
     "Conditions": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       for _, condition := range ent.Stats.ConditionNames() {
         L.PushString(condition)
@@ -248,6 +257,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "Side": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       sides := map[string]Side{
         "Denizen":  SideHaunt,
@@ -262,9 +272,11 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "State": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushString(ent.Sprite().State())
     },
     "Master": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       for key, val := range ent.Ai_data {
         L.PushString(key)
@@ -273,6 +285,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "GearOptions": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       if ent.ExplorerEnt != nil {
         for _, gear_name := range ent.ExplorerEnt.Gear_names {
@@ -286,6 +299,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "Gear": func() {
+      ent := _ent.Game().EntityById(id)
       if ent.ExplorerEnt != nil && ent.ExplorerEnt.Gear != nil {
         L.PushString(ent.ExplorerEnt.Gear.Name)
       } else {
@@ -293,6 +307,7 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "Actions": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       for _, action := range ent.Actions {
         L.PushString(action.String())
@@ -301,28 +316,36 @@ func LuaPushEntity(L *lua.State, ent *Entity) {
       }
     },
     "Pos": func() {
+      ent := _ent.Game().EntityById(id)
       x, y := ent.Pos()
       LuaPushPoint(L, x, y)
     },
     "Corpus": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.Corpus())
     },
     "Ego": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.Ego())
     },
     "HpCur": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.HpCur())
     },
     "HpMax": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.HpMax())
     },
     "ApCur": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.ApCur())
     },
     "ApMax": func() {
+      ent := _ent.Game().EntityById(id)
       L.PushInteger(ent.Stats.ApMax())
     },
     "Info": func() {
+      ent := _ent.Game().EntityById(id)
       L.NewTable()
       L.PushString("LastEntityThatIAttacked")
       LuaPushEntity(L, ent.Game().EntityById(ent.Info.LastEntThatIAttacked))

@@ -1,6 +1,7 @@
 *.6
 haunts_app
 haunts.app
+shaunts.app
 .DS_Store
 _test
 *.sublime-project

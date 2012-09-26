@@ -14,7 +14,8 @@ import (
 type NetId int64
 type GameKey string
 
-const Host_url = "http://mobrulesgames.appspot.com/"
+// const Host_url = "http://mobrulesgames.appspot.com/"
+const Host_url = "http://localhost:8080"
 
 func DoAction(name string, input, output interface{}) error {
   buf := bytes.NewBuffer(nil)
@@ -88,9 +89,10 @@ type UpdateGameRequest struct {
   Round     int
   Intruders bool
 
-  // Exactly one of the following two should be set
-  State []byte
-  Execs []byte
+  // Exactly one of the following should be set
+  State  []byte
+  Execs  []byte
+  Script []byte
 }
 
 type UpdateGameResponse struct {
@@ -134,8 +136,9 @@ type Game struct {
   Intruders_name string
   Intruders_id   NetId
 
-  State [][]byte
-  Execs [][]byte
+  State  [][]byte
+  Execs  [][]byte
+  Script []byte
 
   // If this is non-zero then the game is over and the winner is the player
   // whose NetId matches this value

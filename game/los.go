@@ -1413,6 +1413,7 @@ func (g *Game) UpdateEntLos(ent *Entity, force bool) {
   if !force && ex == ent.los.x && ey == ent.los.y {
     return
   }
+  base.Log().Printf("UpdateEntLos(%s): %t (%d, %d) -> (%d, %d)", ent.Name, force, ent.los.x, ent.los.y, ex, ey)
   ent.los.x = ex
   ent.los.y = ey
 
