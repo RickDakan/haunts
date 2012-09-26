@@ -1,6 +1,7 @@
-function Init(data)
+ function Init(data)
   -- check data.map == "random" or something else
-  Script.LoadHouse("tutorial_denizens")  
+  Script.LoadHouse("tutorial_denizens")
+  Script.DialogBox("ui/dialog/tutorial/denizens_tutorial_1_unit_selection.json")  
 
   store.side = "Intruders"
   Script.BindAi("denizen", "human")
@@ -26,14 +27,20 @@ end
 
 function denizensSetup() 
   Script.SetVisibility("denizens")
-  master_spawn = Script.GetSpawnPointsMatching("Master_start")
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Master_Start")
+    ents = {
+    {"Bosch", 1},
+    }
+  placed = {}
+  while table.getn(placed) == 0 do
+  placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
+  end
   store.MasterName = "Bosch"
-  Script.SelectEnt(ent)
   ServitorEnts = 
   {
     {"Angry Shade", 1},
     {"Lost Soul", 1},
+    {"Vengeful Wraith", 1}
   }  
 
   setLosModeToRoomsWithSpawnsMatching("denizens", "Servitors_Start1")
@@ -45,7 +52,6 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/tutorial/denizens_tutorial_1_unit_selection.json")
       denizensSetup()
       Script.DialogBox("ui/dialog/tutorial/denizens_tutorial_2_movement.json")
     end
@@ -137,7 +143,7 @@ function OnAction(intruders, round, exec)
 
       filename = "tutorial/" .. "Detective" .. ".lua"
       spawns = Script.GetSpawnPointsMatching("intruders_start")
-      ent = Script.SpawnEntitySomewhereInSpawnPoints("Detective", spawns, false)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Tutorial Detective", spawns, false)
       Script.BindAi(ent, filename)
     end  
   end
@@ -146,15 +152,16 @@ function OnAction(intruders, round, exec)
   if store.nSecondWaypointDown then
     if exec.Ent.Name == store.MasterName and GetDistanceBetweenPoints(exec.Ent.Pos, Script.GetSpawnPointsMatching("Waypoint3")[1].Pos) <= 2 and not store.bThirdWaypointDown then
       store.bThirdWaypointDown = true
+      Script.RemoveWaypoint("Waypoint3")
       Script.DialogBox("ui/dialog/tutorial/denizens_tutorial_5_actions_two.json")
 
       spawns = Script.GetSpawnPointsMatching("intruders_start2")
       filename = "tutorial/" .. "Occultist" .. ".lua"
-      ent = Script.SpawnEntitySomewhereInSpawnPoints("Occultist", spawns, false)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Tutorial Occultist", spawns, false)
       Script.BindAi(ent, filename)
 
       filename = "tutorial/" .. "Teen" .. ".lua"
-      ent = Script.SpawnEntitySomewhereInSpawnPoints("Teen", spawns, false)
+      ent = Script.SpawnEntitySomewhereInSpawnPoints("Tutorial Teen", spawns, false)
       Script.BindAi(ent, filename)
     end   
   end

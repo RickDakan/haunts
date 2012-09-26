@@ -6,7 +6,7 @@ end
 
 function GetTarget()
   print("targetting1")
-  targets = {"Ghost Hunter", "Occultist", "Detective"}
+  targets = {"Ghost Hunter", "Occultist", "Teen"}
   print("targetting2")
   for _, target in pairs(targets) do
     print("targetting3", target)

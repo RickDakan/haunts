@@ -1,6 +1,7 @@
 function Init(data)
   -- check data.map == "random" or something else
-  Script.LoadHouse("tutorial_intruders")  
+  Script.LoadHouse("tutorial_intruders")
+  Script.DialogBox("ui/dialog/tutorial/intruders_tutorial_1_units_explained.json")  
 
   store.side = "Intruders"
   Script.BindAi("denizen", "tutorial/denizens.lua")
@@ -16,7 +17,7 @@ function Init(data)
 end
 
 function intrudersSetup()
-  intruder_names = {"Detective", "Occultist", "Ghost Hunter"}
+  intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
   intruder_spawn = Script.GetSpawnPointsMatching("intruders_start")
 
   for _, name in pairs(intruder_names) do
@@ -33,6 +34,7 @@ function denizensSetup()
 end
 
 function RoundStart(intruders, round)
+  side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   if round == 1 then
     if intruders then
       intrudersSetup() 
@@ -41,7 +43,7 @@ function RoundStart(intruders, round)
     end
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
-
+    SelectCharAtTurnStart(side)
     Script.EndPlayerInteraction()
     return 
   end
@@ -51,14 +53,7 @@ function RoundStart(intruders, round)
   Script.ShowMainBar(true)
   end
 
-  if not bIntruderIntroDone then
-    bIntruderIntroDone = true
-    Script.DialogBox("ui/dialog/tutorial/intruders_tutorial_1_units_explained.json")
-  end
-
   store.game = Script.SaveGameState()
-
-  side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
 end
 
@@ -129,15 +124,11 @@ function OnAction(intruders, round, exec)
       Script.BindAi(ent, filename)
       ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, false)
       Script.BindAi(ent, filename)
-      ent = Script.SpawnEntitySomewhereInSpawnPoints("Angry Shade", spawns, false)    
-      Script.BindAi(ent, filename)
 
       filename = "tutorial/" .. "Wisp" .. ".lua"
       ent = Script.SpawnEntitySomewhereInSpawnPoints("Lost Soul", spawns, false)
       Script.BindAi(ent, filename)
       ent = Script.SpawnEntitySomewhereInSpawnPoints("Lost Soul", spawns, false)
-      Script.BindAi(ent, filename)
-      ent = Script.SpawnEntitySomewhereInSpawnPoints("Lost Soul", spawns, false)         
       Script.BindAi(ent, filename)
     end  
   end
@@ -157,7 +148,6 @@ function OnAction(intruders, round, exec)
   if store.bThirdWaypointDown and not MasterIsAlive() then
     Script.RemoveWaypoint("Waypoint3")
     Script.DialogBox("ui/dialog/tutorial/Finale_Tutorial_Intruders.json")
-    Script.RemoveWaypoint("Waypoint3")
   end
 
   if not AnyIntrudersAlive() then

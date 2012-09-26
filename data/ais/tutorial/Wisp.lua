@@ -5,6 +5,5 @@ function Think()
   if target then
     HeadTowards(target.Pos)
   end
-  MoveLikeZombie()
   return false
 end

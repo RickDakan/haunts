@@ -34,7 +34,7 @@
     },
 	  "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -49,7 +49,7 @@
     },
     "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -57,21 +57,21 @@
           "Text": "Also, you can play through the Intruders Tutorial to learn more about them and refresh you knowledge of some of the game's core mechanics.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
+            "Path": "ui/dialog/Lvl01/Occultist3.png"
           }
         }
       ]
     },
     "Start5": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Text": "Welcome to Tyree Manse. We hope you survive your stay.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist3.png"
+            "Path": "ui/dialog/Lvl01/1892c.png"
           }
         }
       ]
