@@ -191,20 +191,18 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           loadGameStateRaw(gp, gp.script.L, string(resp.Game.State[len(resp.Game.Execs)-1]))
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
-          if net_id == resp.Game.Denizens_id {
+          gp.game.Turn = len(resp.Game.Execs) + 1
+          if gp.game.Turn%2 == 1 {
             gp.game.Side = SideHaunt
-            gp.game.Turn = len(resp.Game.Execs) + 1
-            if gp.game.Turn%2 == 0 {
-              gp.game.Turn--
-            }
-            base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
           } else {
             gp.game.Side = SideExplorers
-            gp.game.Turn = len(resp.Game.Execs) + 1
-            if gp.game.Turn%2 == 1 {
-              gp.game.Turn--
-            }
+          }
+          if net_id == resp.Game.Denizens_id {
+            base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
+            gp.game.net.side = SideHaunt
+          } else {
             base.Log().Printf("Setting side to Intruders, Turn %d", gp.game.Turn)
+            gp.game.net.side = SideExplorers
           }
         }
       }

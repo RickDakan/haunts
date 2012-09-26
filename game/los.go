@@ -131,6 +131,7 @@ type gameDataTransient struct {
   net struct {
     key  mrgnet.GameKey
     game *mrgnet.Game
+    side Side
   }
 }
 
