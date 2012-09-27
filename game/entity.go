@@ -122,9 +122,11 @@ func (e *Entity) LoadAi() {
     return
   }
   ai_maker(filename, e.Game(), e, &e.Ai, EntityAi)
-  base.Log().Printf("Made Ai for '%s'", e.Name)
   if e.Ai == nil {
     e.Ai = inactiveAi{}
+    base.Log().Printf("Failed to make Ai for '%s' with %s", e.Name, filename)
+  } else {
+    base.Log().Printf("Made Ai for '%s' with %s", e.Name, filename)
   }
 }
 
@@ -161,7 +163,7 @@ func (e *Entity) Load(g *Game) {
 
   e.game = g
 
-  e.Ai_file_override = e.Ai_path
+  e.Ai_path = e.Ai_file_override
   e.LoadAi()
 }
 
