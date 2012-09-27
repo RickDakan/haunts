@@ -31,10 +31,28 @@ function Init(data)
   end
 
   math.randomseed(os.time())
-end
 
-function intrudersSetup()
+  --spawn denizens
+  Script.SetVisibility("denizens")
 
+  spawn = Script.GetSpawnPointsMatching("Child_Start")
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Chaos Child", spawn, false)
+  filename = "ch08/" .. "Chaos Child" .. ".lua"
+  Script.BindAi(ent, filename)
+  store.MasterName = "Chaos Child"  --littler weird, since he's not actually a master.  But he's the one we care about.
+  ServitorEnts = {} 
+  ServitorEnts[1] = "Care Provider"
+  ServitorEnts[2] = "Tutor"
+  ServitorEnts[3] = "Foster Father"
+  
+
+  store.execs = {} 
+  for index = 1, 6, 1 do
+    SpawnNearChild(RandomServitor())
+  end
+  SpawnNearChild(ServitorEnts[3])  --spawn a big daddy
+
+  --spawn intruders
   if IsStoryMode() then
     intruder_names = {"Detective", "Occultist", "Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
@@ -42,57 +60,20 @@ function intrudersSetup()
 
   for _, name in pairs(intruder_names) do
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
+    Script.SetGear(ent, "Pylons")
   end
 
-  -- Choose entry point here.
   Script.SaveStore()
-end
 
-function denizensSetup()
-  Script.SetVisibility("denizens")
-
-  spawn = Script.GetSpawnPointsMatching("Child_Start")
-  Script.SpawnEntitySomewhereInSpawnPoints("Chaos Child", spawn, false)
-
-  store.MasterName = "Chaos Child"
-  ServitorEnts = 
-  {
-    {"Care Provider"},
-    {"Tutor"},
-    {"Foster Father"},
-  }  
-
-  for index = 1, 10, 1 do
-    SpawnNearChild(RandomServitor())
-  end
+  Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Opening_Denizens.json")
+  Script.FocusPos(MasterEnt().Pos)   
+  SelectNewOpPoint()
+  store.execs = {} 
 end
 
 function RoundStart(intruders, round)
   if store.execs == nil then
     store.execs = {}
-  end
-  if round == 1 then
-    if intruders and not store.bDoneIntruderSetup then
-      store.bDoneIntruderSetup = true
-      intrudersSetup()     
-    else
-      if not store.bDoneDeniSetup then
-        store.bDoneDeniSetup = true
-        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Opening_Denizens.json")
-        denizensSetup()
-        Script.FocusPos(MasterEnt().Pos)
-      end
-    end
-    Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
-
-    if IsStoryMode() then
-      DoTutorials()
-    end
-
-    store.execs = {}  
-    Script.EndPlayerInteraction()
-    return
   end
 
   if not intruders then
@@ -155,27 +136,32 @@ function OnAction(intruders, round, exec)
   store.execs[table.getn(store.execs) + 1] = exec
 
   --put a waypoint around the kid to show his escort
-
+  if exec.Ent.Name == store.MasterName then
+    StoreWaypoint("Kid", "intruders", MasterEnt().Pos, 1, false)
+    StoreWaypoint("Kid2", "denizens", MasterEnt().Pos, 1, false)
+  end
 
   --has the kid reached an op point?
   if exec.Ent.Name == store.MasterName then
-    if GetDistanceBetweenEnts(exec.Ent, GetEntWithName("Toy")) then
+    if GetDistanceBetweenEnts(exec.Ent, GetEntWithName("Toy")) <= 3 then
       --kid's gonna flip out!
-
-      --!!!!dialogue!!!!
+      choice = Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Waypoint_Choice_Denizens.json")
       if choice[1] == "Reinforce" then
-        for index = 1, 4, 1 do
+        for index = 1, 4, 1 do        
           SpawnNearChild(RandomServitor())
+          store.bReinforce = true
         end 
       end
       if choice[1] == "Maws" then
-        for i = 1, 3, 1 do
+        for i = 1, 3, 1 do       
           SpawnRandomMaw()
+          store.bMaws = true
         end
       end
       if choice[1] == "Turrets" then
-        for i = 1, 4, 1 do
+        for i = 1, 4, 1 do        
           KillTurret()
+          store.bTurrets = true
         end
       end
 
@@ -183,18 +169,31 @@ function OnAction(intruders, round, exec)
     end
   end
 
-  --Is the kid vulnerable
+  --are the intruders trying to win?
+  if exec.Ent.Side.Intruder then
+    if GetDistanceBetweenEnts(exec.Ent, MasterEnt()) <= 2 then
+      --Is the kid vulnerable
+      if not DeniEntNearKid() then
+        --they did it.
+        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Intruders.json")   
+      end
+    end
+  end
 
-    --Is this new?
-
-    --Are the intruders grabbing the kid?
-
-
+  --warn the denizens if there aren't any near the kid.
+  if not store.WarnedDenizensAboutVulnerableKid then
+    if exec.Ent.Side.Denizen then
+      if not DeniEntNearKid() then
+        store.WarnedDenizensAboutVulnerableKid = true
+        --!!!!!!!Dialogue to warn the denizens
+      end
+    end
+  end
 
 
   if not AnyIntrudersAlive() then
     --game over, the denizens win.
-    Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Denizens.json")
+    Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Denizens.json")
   end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
@@ -210,16 +209,13 @@ function OnAction(intruders, round, exec)
 end
 
 function RoundEnd(intruders, round)
-  if round == 1 then
-    return
-  end
 
   bSkipOtherChecks = false  --Resets this every round
 
   if store.side == "Humans" then
     Script.ShowMainBar(false)
-    Script.SetLosMode("intruders", "blind")
-    Script.SetLosMode("denizens", "blind")
+    Script.SetLosMode("intruders", "entities")
+    Script.SetLosMode("denizens", "entities")
     if intruders then
       Script.SetVisibility("denizens")
     else
@@ -239,6 +235,20 @@ function RoundEnd(intruders, round)
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
         Script.DialogBox("ui/dialog/Lvl08/pass_to_intruders.json")
       end
+
+      if store.bReinforce then
+        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Choice_Reinforce_Intruders.json")
+        store.bReinforce = false
+      end
+      if store.bMaws then
+        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Choice_Maws_Intruders.json")
+        store.bMaws = false
+      end
+      if store.bTurrets then
+        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Choice_Turrets_Intruders.json")
+        store.bTurrets = false
+      end            
+
     end
 
     Script.SetLosMode("intruders", "entities")
@@ -302,6 +312,17 @@ function AnyIntrudersAlive()
     end
   end
   return false  
+end
+
+function DeniEntNearKid()
+  master = MasterEnt()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Side.Denizen and ent.Name ~= store.MasterName then
+      if GetDistanceBetweenEnts(ent, MasterEnt()) <= 5 then
+        return true
+      end
+    end
+  end
 end
 
 function pointIsInSpawn(pos, sp)
@@ -382,7 +403,12 @@ function doWaypoint(waypointExec)
   end
 end
 
-function StoreDamage(amnt, ent)
+function StoreDamage(ent, amnt)
+  if ent.HpCur - amnt <= 0 then
+    StoreDespawn(ent)
+    Script.SetPosition(ent, Script.GetSpawnPointsMatching("Dead_People")[1].Pos) --!!!!stop gap.  The despawn wasn't working on the turn that we did damage.
+    return
+  end
   damage_exec = {script_damage=true, amount=amnt, entity=ent, hpcur=ent.HpCur}
   store.execs[table.getn(store.execs) + 1] = damage_exec
   doDamage(damage_exec)
@@ -404,7 +430,7 @@ end
 
 
 function SpawnNearChild(sNameOfThingToSpawn)
-  childEnt = GetMasterEnt()
+  childEnt = MasterEnt()
 
   i = 1
   while i <= 1 do
@@ -416,7 +442,7 @@ function SpawnNearChild(sNameOfThingToSpawn)
       if nRandomCounter == nRandomNumberOfAwesomenoess then
         ent = StoreSpawn(sNameOfThingToSpawn, PossibleSpawn) 
         if ent then  --we succeeded at spawning a dude
-          Script.SetAp(ent, 0)
+          --Script.SetAp(ent, 0)
           i = i + 1
           break
         end
@@ -432,7 +458,7 @@ function SpawnNearChild(sNameOfThingToSpawn)
 end
 
 function RandomServitor()
-  if math.random() then
+  if math.random(1, 4) > 2 then
     return ServitorEnts[1]
   else
     return ServitorEnts[2]
@@ -445,14 +471,14 @@ function SelectNewOpPoint()
     startPos = ent.Pos
   else
     spawn = Script.GetSpawnPointsMatching("Toy_Start")[1]
-    StoreSpawn("Toy", spawn.Pos)
+    ent = StoreSpawn("Toy", spawn.Pos)
     startPos = spawn.Pos
   end
   newPos = startPos
 
   while newPos.X == startPos.X and newPos.Y == startPos.Y do
     spawns = Script.GetSpawnPointsMatching("Op_Point")
-    newPos = spawns[table.getn(spawns)].Pos
+    newPos = spawns[math.random(1, table.getn(spawns))].Pos
     StoreSetPos(ent, newPos)
     StoreWaypoint("OpPoint", "denizens", newPos, 1, false)
   end
@@ -489,7 +515,7 @@ function MawAttack()
     if mawEnt.Name == "Maelstrom" then
       for _, ent in pairs(Script.GetAllEnts()) do
         if ent.Side.Intruder then
-          if GetDistanceBetweenEnts(mawEnt, ent) < = 7 then
+          if GetDistanceBetweenEnts(mawEnt, ent) <= 7 then
             StoreDamage(ent, 4)
           end
         end
@@ -502,9 +528,8 @@ function SpawnRandomMaw()
   i = 1
   while i <= 1 do
     --Summon a new minion
-    omgCounter = 1
     MawSpawns = Script.GetSpawnPointsMatching("Maw_Spawn")
-    ent = StoreSpawn("Maelstrom" MawSpawns[math.random(1, table.getn(MawSpawns))].Pos)
+    ent = StoreSpawn("Maelstrom", MawSpawns[math.random(1, table.getn(MawSpawns))].Pos)
     if ent then --succeeded.  We can bail.
       i = i + 1
     end

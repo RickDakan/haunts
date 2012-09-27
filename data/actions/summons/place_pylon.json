@@ -1,0 +1,12 @@
+{
+  "Name"     : "Place Pylon",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  },
+  "Ap"       : 8,
+  "Range"    : 1,
+  "Ent_name" : "Pylon",
+  "Personal_los": true
+}

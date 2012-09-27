@@ -1,0 +1,26 @@
+{
+  "Name": "Pylon",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/sigil",
+  "Still": {
+    "Path": "entities/sigil_still.png"
+  },
+  "Action_names": [
+    "Dire Curse"
+  ],
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Curb Stompers"
+    ]
+  },
+  "Base": {
+    "Ap_max": 8,
+    "Hp_max": 4,
+    "Corpus": 1,
+    "Ego": 1,
+    "Sight": 15
+  },
+  "Dissolve": true
+}
