@@ -90,8 +90,9 @@ type UpdateGameRequest struct {
   Intruders bool
 
   // Exactly one of the following should be set
-  State  []byte
+  Before []byte
   Execs  []byte
+  After  []byte
   Script []byte
 }
 
@@ -136,8 +137,9 @@ type Game struct {
   Intruders_name string
   Intruders_id   NetId
 
-  State  [][]byte
+  Before [][]byte
   Execs  [][]byte
+  After  [][]byte
   Script []byte
 
   // If this is non-zero then the game is over and the winner is the player

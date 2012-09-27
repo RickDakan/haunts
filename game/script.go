@@ -188,7 +188,24 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           return
         }
         if len(resp.Game.Execs) > 0 {
-          loadGameStateRaw(gp, gp.script.L, string(resp.Game.State[len(resp.Game.Execs)-1]))
+          var side Side
+          if net_id == resp.Game.Denizens_id {
+            side = SideHaunt
+          } else {
+            side = SideExplorers
+          }
+          var states []byte
+          if (len(resp.Game.Execs)%2 == 1) == (side == SideExplorers) {
+            // It is our turn to play, so we grab the last state so that we
+            // can do the replay.
+            states = resp.Game.After[len(resp.Game.Execs)-1]
+          } else {
+            // We made the last move, so we can grab what the state of the
+            // game was after we finished our turn and then just wait.
+            states = resp.Game.After[len(resp.Game.Execs)-1]
+          }
+          loadGameStateRaw(gp, gp.script.L, string(states))
+
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
           gp.game.Turn = len(resp.Game.Execs) + 1
@@ -1686,7 +1703,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
     req.Game_key = gp.game.net.key
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
-    req.State = []byte(L.ToString(-1))
+    req.Before = []byte(L.ToString(-1))
     var resp mrgnet.UpdateGameResponse
     mrgnet.DoAction("update", req, &resp)
     if resp.Err != "" {
@@ -1700,7 +1717,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
 
 func updateExecsFunc(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "UpdateExecs", LuaArray) {
+    if !LuaCheckParamsOk(L, "UpdateExecs", LuaString, LuaArray) {
       return 0
     }
     if gp.game.net.key == "" {
@@ -1723,6 +1740,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
     req.Execs = buf.Bytes()
+    req.After = []byte(L.ToString(-2))
     var resp mrgnet.UpdateGameResponse
     mrgnet.DoAction("update", req, &resp)
     if resp.Err != "" {
@@ -1756,7 +1774,7 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
         return 0
       }
       expect := gp.game.Turn + 1
-      if len(resp.Game.State) == len(resp.Game.Execs) && len(resp.Game.State) == expect {
+      if len(resp.Game.Before) == len(resp.Game.Execs) && len(resp.Game.Before) == expect {
         base.Log().Printf("Found the expected %d states", expect)
         break
       }
@@ -1787,11 +1805,11 @@ func netLatestStateAndExecsFunc(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("%s", resp.Err)
       return 0
     }
-    if len(resp.Game.State) != len(resp.Game.Execs) {
+    if len(resp.Game.Before) != len(resp.Game.Execs) {
       base.Error().Printf("Not the same number of States and Execss")
       return 0
     }
-    state := resp.Game.State[len(resp.Game.State)-1]
+    state := resp.Game.Before[len(resp.Game.Before)-1]
     L.PushString(string(state))
     buf := bytes.NewBuffer(resp.Game.Execs[len(resp.Game.Execs)-1])
     gp.script.syncStart()
