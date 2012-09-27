@@ -237,6 +237,9 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
         gp.script.syncEnd()
       } else {
         gp.script.L.DoString("Init(__data)")
+        for i := range gp.game.Ents {
+          gp.game.Ents[i].Ai.Activate()
+        }
         if gp.game.Side == SideHaunt {
           gp.game.Ai.minions.Activate()
           gp.game.Ai.denizens.Activate()

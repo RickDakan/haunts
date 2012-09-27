@@ -2,62 +2,97 @@ package ai
 
 import (
   "fmt"
-  "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
   lua "github.com/xenith-studios/golua"
 )
 
 func (a *Ai) addMinionsContext() {
-  a.L.Register("activeMinions", activeMinionsFunc(a))
-  a.L.Register("execMinion", execMinionFunc(a))
+  a.L.Register("IsActive", isActiveMinion(a))
+  a.L.Register("ExecMinion", execMinion(a))
+  a.L.Register("SetEntityMasterInfo", setMinionMasterInfo(a))
+  a.L.Register("AllMinions", allMinions(a))
 }
 
-// Input:
-//   None
-// Output:
-// 1 - Table - Contains a mapping from index to entity Id of all active
-//     minions.
-func activeMinionsFunc(a *Ai) lua.GoFunction {
+func isActiveMinion(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    if !game.LuaNumParamsOk(L, 0, "activeMinions") {
+    if !game.LuaCheckParamsOk(L, "IsActive", game.LuaEntity) {
+      return 0
+    }
+    ent := game.LuaToEntity(L, a.game, -1)
+    if ent == nil {
+      game.LuaDoError(L, "Tried to IsActive on an invalid entity.")
+      return 0
+    }
+    if ent.HauntEnt == nil {
+      game.LuaDoError(L, "Tried to IsActive on a non-minion.")
+      return 0
+    }
+    L.PushBoolean(ent.Ai.Active())
+    return 1
+  }
+}
+
+func allMinions(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaCheckParamsOk(L, "AllMinions") {
       return 0
     }
     L.NewTable()
     count := 0
     for _, ent := range a.game.Ents {
-      if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
-        continue
+      if ent.HauntEnt != nil {
+        count++
+        L.PushInteger(count)
+        game.LuaPushEntity(L, ent)
+        L.SetTable(-3)
       }
-      if !ent.Ai.Active() {
-        continue
-      }
-      count++
-      L.PushInteger(count)
-      game.LuaPushEntity(L, ent)
-      L.SetTable(-3)
     }
-    base.Log().Printf("activeMinions: %d", count)
     return 1
   }
 }
 
-func execMinionFunc(a *Ai) lua.GoFunction {
+func setMinionMasterInfo(a *Ai) lua.GoFunction {
   return func(L *lua.State) int {
-    base.Log().Printf("Exec minion")
-    if !game.LuaNumParamsOk(L, 1, "execMinion") {
+    if !game.LuaCheckParamsOk(L, "SetEntityMasterInfo", game.LuaEntity, game.LuaString, game.LuaAnything) {
+      return 0
+    }
+    ent := game.LuaToEntity(L, a.game, -3)
+    if ent == nil {
+      game.LuaDoError(L, "Tried to ExecMinion on an invalid entity.")
+      return 0
+    }
+    if ent.HauntEnt == nil {
+      game.LuaDoError(L, "Tried to ExecMinion on a non-minion.")
+      return 0
+    }
+    if ent.Ai_data == nil {
+      ent.Ai_data = make(map[string]string)
+    }
+    if L.IsNil(-1) {
+      delete(ent.Ai_data, L.ToString(-2))
+    } else {
+      ent.Ai_data[L.ToString(-2)] = L.ToString(-1)
+    }
+    return 0
+  }
+}
+
+func execMinion(a *Ai) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !game.LuaNumParamsOk(L, 1, "ExecMinion") {
       return 0
     }
     ent := game.LuaToEntity(L, a.game, -1)
     if ent == nil {
-      game.LuaDoError(L, "Tried to execMinion entity which doesn't exist.")
+      game.LuaDoError(L, "Tried to ExecMinion on an invalid entity.")
       return 0
     }
-    if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
-      game.LuaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not a minion.", ent.Id))
+    if ent.HauntEnt == nil {
+      game.LuaDoError(L, "Tried to ExecMinion on a non-minion.")
       return 0
     }
     if !ent.Ai.Active() {
-      game.LuaDoError(L, fmt.Sprintf("Tried to execMinion entity with Id=%d, which is not active.", ent.Id))
+      game.LuaDoError(L, fmt.Sprintf("Tried to ExecMinion '%s', who is not active.", ent.Name))
       return 0
     }
     exec := <-ent.Ai.ActionExecs()

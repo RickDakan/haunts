@@ -7,11 +7,11 @@
     "Path": "entities/creepy_child_still.png"
   },
   "Action_names": [
-  "Move",
-  "Interact",
-	"Crozier",
-	"Revelations of Despair",
-	"Voice of the Beyond"    
+    "Move",
+    "Interact",
+  	"Crozier",
+  	"Revelations of Despair",
+  	"Voice of the Beyond"    
   ],
   "HauntEnt": {
     "Cost":    15,
