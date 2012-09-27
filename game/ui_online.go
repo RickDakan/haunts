@@ -30,7 +30,14 @@ type onlineLayout struct {
   Background texture.Object
   Back       Button
 
-  User TextEntry
+  User    TextEntry
+  NewGame Button
+
+  Error struct {
+    X, Y int
+    Size int
+    err  string
+  }
 
   Text struct {
     String        string
@@ -51,6 +58,13 @@ type OnlineMenu struct {
   update_user  chan mrgnet.UpdateUserResponse
   update_alpha float64
   update_time  time.Time
+
+  control struct {
+    in  chan struct{}
+    out chan struct{}
+  }
+
+  ui gui.WidgetParent
 }
 
 func InsertOnlineMenu(ui gui.WidgetParent) error {
@@ -67,17 +81,65 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     &sm.layout.Active.Up,
     &sm.layout.Active.Down,
     &sm.layout.User,
+    &sm.layout.NewGame,
   }
+  sm.control.in = make(chan struct{})
+  sm.control.out = make(chan struct{})
   sm.layout.Back.f = func(interface{}) {
     ui.RemoveChild(&sm)
     InsertStartMenu(ui)
   }
+  sm.ui = ui
 
   var net_id mrgnet.NetId
   fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
   if net_id == 0 {
     net_id = mrgnet.NetId(mrgnet.RandomId())
     base.SetStoreVal("netid", fmt.Sprintf("%d", net_id))
+  }
+
+  in_newgame := false
+  sm.layout.NewGame.f = func(interface{}) {
+    if in_newgame {
+      return
+    }
+    in_newgame = true
+    go func() {
+      var req mrgnet.NewGameRequest
+      req.Id = net_id
+      var resp mrgnet.NewGameResponse
+      done := make(chan bool, 1)
+      go func() {
+        mrgnet.DoAction("new", req, &resp)
+        done <- true
+      }()
+      select {
+      case <-done:
+      case <-time.After(3 * time.Second):
+        resp.Err = "Couldn't connect to server."
+      }
+      <-sm.control.in
+      defer func() {
+        in_newgame = false
+        sm.control.out <- struct{}{}
+      }()
+      if resp.Err != "" {
+        sm.layout.Error.err = resp.Err
+        base.Error().Printf("Couldn't make new game: %v", resp.Err)
+        return
+      }
+      ui.RemoveChild(&sm)
+      err := InsertMapChooser(
+        ui,
+        func(name string) {
+          ui.AddChild(MakeGamePanel(name, nil, nil, resp.Game_key))
+        },
+        InsertOnlineMenu,
+      )
+      if err != nil {
+        base.Error().Printf("Error making Map Chooser: %v", err)
+      }
+    }()
   }
 
   for _, _glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
@@ -102,7 +164,6 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     sm.layout.Active.update <- resp
   }()
 
-  sm.update_user = make(chan mrgnet.UpdateUserResponse)
   sm.layout.User.Button.f = func(interface{}) {
     var req mrgnet.UpdateUserRequest
     req.Name = sm.layout.User.Entry.text
@@ -110,13 +171,21 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
     var resp mrgnet.UpdateUserResponse
     go func() {
       mrgnet.DoAction("user", req, &resp)
-      sm.update_user <- resp
+      <-sm.control.in
+      sm.layout.User.SetText(resp.Name)
+      sm.update_alpha = 1.0
+      sm.update_time = time.Now()
+      sm.control.out <- struct{}{}
     }()
   }
   go func() {
     var resp mrgnet.UpdateUserResponse
     mrgnet.DoAction("user", mrgnet.UpdateUserRequest{Id: net_id}, &resp)
-    sm.update_user <- resp
+    <-sm.control.in
+    sm.layout.User.SetText(resp.Name)
+    sm.update_alpha = 1.0
+    sm.update_time = time.Now()
+    sm.control.out <- struct{}{}
   }()
 
   ui.AddChild(&sm)
@@ -150,18 +219,20 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
   }
   dt := t - sm.last_t
   sm.last_t = t
-  sm.layout.Unstarted.Scroll.Think(dt)
   if sm.mx == 0 && sm.my == 0 {
     sm.mx, sm.my = gin.In().GetCursor("Mouse").Point()
   }
 
-  select {
-  case resp := <-sm.update_user:
-    sm.layout.User.Entry.text = resp.Name
-    sm.update_alpha = 1.0
-    sm.update_time = time.Now()
-  default:
+  done := false
+  for !done {
+    select {
+    case sm.control.in <- struct{}{}:
+      <-sm.control.out
+    default:
+      done = true
+    }
   }
+
   var net_id mrgnet.NetId
   fmt.Sscanf(base.GetStoreVal("netid"), "%d", &net_id)
   for _, glb := range []*gameListBox{&sm.layout.Active, &sm.layout.Unstarted} {
@@ -174,12 +245,73 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
         b.Text.Justification = sm.layout.Text.Justification
         b.Text.Size = sm.layout.Text.Size
         b.Text.String = list.Games[i].Name
+        game_key := list.Game_keys[i]
+        active := (glb == &sm.layout.Active)
+        in_joingame := false
         b.f = func(interface{}) {
-          // var req mrgnet.JoinGameRequest
-          // req.Id = net_id
-          // req.Game_key = list.Ids[i]
-          // var resp mrgnet.JoinGameResponse
-          // mrgnet.DoAction("join", req, &resp)
+          if in_joingame {
+            return
+          }
+          in_joingame = true
+          if active {
+            go func() {
+              var req mrgnet.StatusRequest
+              req.Id = net_id
+              req.Game_key = game_key
+              var resp mrgnet.StatusResponse
+              done := make(chan bool, 1)
+              go func() {
+                mrgnet.DoAction("status", req, &resp)
+                done <- true
+              }()
+              select {
+              case <-done:
+              case <-time.After(3 * time.Second):
+                resp.Err = "Couldn't connect to server."
+              }
+              <-sm.control.in
+              defer func() {
+                in_joingame = false
+                sm.control.out <- struct{}{}
+              }()
+              if resp.Err != "" || resp.Game == nil {
+                sm.layout.Error.err = resp.Err
+                base.Error().Printf("Couldn't join game: %v", resp.Err)
+                return
+              }
+              sm.ui.RemoveChild(sm)
+              sm.ui.AddChild(MakeGamePanel("", nil, nil, game_key))
+            }()
+          } else {
+            go func() {
+              var req mrgnet.JoinGameRequest
+              req.Id = net_id
+              req.Game_key = game_key
+              var resp mrgnet.JoinGameResponse
+              done := make(chan bool, 1)
+              go func() {
+                mrgnet.DoAction("join", req, &resp)
+                done <- true
+              }()
+              select {
+              case <-done:
+              case <-time.After(3 * time.Second):
+                resp.Err = "Couldn't connect to server."
+              }
+              <-sm.control.in
+              defer func() {
+                in_joingame = false
+                sm.control.out <- struct{}{}
+              }()
+              if resp.Err != "" || !resp.Successful {
+                sm.layout.Error.err = resp.Err
+                base.Error().Printf("Couldn't join game: %v", resp.Err)
+                return
+              }
+              sm.ui.RemoveChild(sm)
+              sm.ui.AddChild(MakeGamePanel("", nil, nil, game_key))
+            }()
+          }
         }
         glb.games = append(glb.games, &b)
       }
@@ -188,7 +320,6 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
 
     default:
     }
-    base.Log().Printf("Num: %d, region: %v", len(glb.games), glb.Scroll.Region())
 
     if (gui.Point{sm.mx, sm.my}.Inside(glb.Scroll.Region())) {
       for _, button := range glb.games {
@@ -199,6 +330,7 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
         button.Think(sm.region.X, sm.region.Y, 0, 0, dt)
       }
     }
+    glb.Scroll.Think(dt)
   }
 
   if sm.update_alpha > 0.0 && time.Now().Sub(sm.update_time).Seconds() >= 2 {
@@ -281,6 +413,13 @@ func (sm *OnlineMenu) Draw(region gui.Region) {
   sx := sm.layout.User.Entry.X + sm.layout.User.Entry.Dx + 10
   sy := sm.layout.User.Button.Y
   d.RenderString("Name Updated", float64(sx), float64(sy), 0, d.MaxHeight(), gui.Left)
+
+  if sm.layout.Error.err != "" {
+    gl.Color4ub(255, 0, 0, 255)
+    l := sm.layout.Error
+    d := base.GetDictionary(l.Size)
+    d.RenderString(fmt.Sprintf("ERROR: %s", l.err), float64(l.X), float64(l.Y), 0, d.MaxHeight(), gui.Left)
+  }
 }
 
 func (sm *OnlineMenu) DrawFocused(region gui.Region) {

@@ -1,10 +1,10 @@
 package mrgnet
 
 import (
-  "Fmt"
   "bytes"
   "crypto/rand"
   "encoding/gob"
+  "fmt"
   "io/ioutil"
   "math/big"
   "net/http"
@@ -12,7 +12,9 @@ import (
 )
 
 type NetId int64
+type GameKey string
 
+// const Host_url = "http://mobrulesgames.appspot.com/"
 const Host_url = "http://localhost:8080"
 
 func DoAction(name string, input, output interface{}) error {
@@ -59,14 +61,13 @@ type UpdateUserResponse struct {
 }
 
 type NewGameRequest struct {
-  Id     NetId
-  Script string
+  Id NetId
 }
 
 type NewGameResponse struct {
-  Err  string
-  Name string
-  Id   string
+  Err      string
+  Name     string
+  Game_key GameKey
 }
 
 type ListGamesRequest struct {
@@ -75,19 +76,56 @@ type ListGamesRequest struct {
 }
 
 type ListGamesResponse struct {
-  Err   string
-  Games []Game
-  Ids   []string
+  Err       string
+  Games     []Game
+  Game_keys []GameKey
+}
+
+// Updates an active game by appending a Playback, or updating the last
+// playback, with either new State or new Execs
+type UpdateGameRequest struct {
+  Id        NetId
+  Game_key  GameKey
+  Round     int
+  Intruders bool
+
+  // Exactly one of the following should be set
+  State  []byte
+  Execs  []byte
+  Script []byte
+}
+
+type UpdateGameResponse struct {
+  Err string
 }
 
 type JoinGameRequest struct {
   Id       NetId
-  Game_key string
+  Game_key GameKey
 }
 
 type JoinGameResponse struct {
   Err        string
   Successful bool
+}
+
+type StatusRequest struct {
+  Id       NetId
+  Game_key GameKey
+}
+
+type StatusResponse struct {
+  Err  string
+  Game *Game
+}
+
+type KillRequest struct {
+  Id       NetId
+  Game_key GameKey
+}
+
+type KillResponse struct {
+  Err string
 }
 
 type Game struct {
@@ -98,17 +136,11 @@ type Game struct {
   Intruders_name string
   Intruders_id   NetId
 
-  Playbacks []Playback
+  State  [][]byte
+  Execs  [][]byte
+  Script []byte
 
   // If this is non-zero then the game is over and the winner is the player
   // whose NetId matches this value
   Winner NetId
-}
-
-// State is the state of the game before the playback.
-// The state of the game after the playback is the State field of the next
-// Playback.
-type Playback struct {
-  State []byte
-  Execs []byte
 }

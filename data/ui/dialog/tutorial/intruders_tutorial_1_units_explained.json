@@ -1,0 +1,171 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "It takes a certain type of brave, slightly suicidal person to trespass in Tyree Manse. It would take a total madman to enter alone. Most intruders enter the house in sets of three. ",
+    		  "Image":
+          {
+            "Path": "ui/dialog/Lvl01/1892c.png"
+          }
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Each Intruder has his or her own, unique capabilites, but all of them are controlled in a very similar manner.",
+    		  "Image":
+          {
+            "Path": "ui/dialog/tutorial/tut_intruders_part1_01.png"
+          }       
+        }   
+     ] 
+    },
+	  "Start3": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "In this tutorial you will play three Intruders. An Occultist specializing in ranged attacks, a Ghost Hunter with melee attacks, and a Teen with both ranged and melee as well as psychic abilities that can aid her allies.",
+		      "Image":
+          {
+            "Path": "ui/dialog/tutorial/group_shot.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "Your three Intruders will start the game near the entrance to Tyree Manse. ",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/group_shot.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "You can select which unit to use first by either clicking on them or using the Arrow buttons to switch between them. The Tab key also switches between units.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/Action_display.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Each unit has a number of Action Points (Ap) that limit how much it can do in a turn.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/Ap_display.png"
+          }
+        }
+      ]
+    },
+    "Start7": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "To select an action, either press the number key assigned to it in the Action Display (1 for Move) or click on the action in the display.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/move_select_example.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Selecting Move will let you trace a path for your unit to move, shown with bright red circles. Dim circles represent spaces that are beyond your range this turn.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_move_circles.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start10",
+          "Text": "Click on the bright red circle you wish to move to.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_move_circles.png"
+          }
+        }
+      ]
+    },
+    "Start10": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start11",
+          "Text": "Notice that the the Action Display indicates how much AP your current Move action will cost.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/movement_AP_UI_01.png"
+          }
+        }
+      ]
+    },
+    "Start11": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Move any one of your Intruders to the red circle to continue the tutorial. Click End Turn to start a new turn if you are out of AP.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/end_turn.png"
+          }
+        }
+      ]
+    }                                                                   
+  }
+}
+	

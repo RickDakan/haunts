@@ -9,10 +9,10 @@
       [
         {
           "Next": "Start2",
-          "Text": "Now it's time to select and move your ghosts. Each unit has a number of Action Points (AP) that limit how much it can do in a turn.",
+          "Text": "Now it's time to select and move Bosch. Each unit has a number of Action Points (AP) that limit how much it can do in a turn.",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1892c.png"
+            "Path": "ui/dialog/tutorial/bosch_action_bar.png"
           }
         }
       ]
@@ -27,14 +27,14 @@
           "Text": "It costs 1 AP to move 1 space, and 1 AP to open a door or interact with an object. Other actions, like attacks, have a range of AP costs depending on how powerful they are.",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1892c.png"
+            "Path": "ui/dialog/tutorial/bosch_action_bar.png"
           }       
         }   
      ] 
     },
 	  "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -42,14 +42,14 @@
           "Text": "To select an action, either press the number key for that action (1 for Move) or click on the action in the display.",
 		      "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/move_ui.png"
           }
         }
       ]
     },
     "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -57,14 +57,14 @@
           "Text": "Selecting move will let you trace a path for your unit to move, shown with bright red circles. Dim circles represent spaces that are beyond your range this turn.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
+            "Path": "ui/dialog/tutorial/bosch_move.png"
           }
         }
       ]
     },
     "Start5": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -72,14 +72,14 @@
           "Text": "Click on the bright red circle you wish to move to. Notice that the display indicates how many AP it will cost to make this move. Hit the Escape key to cancel the action.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist3.png"
+            "Path": "ui/dialog/tutorial/bosch_move.png"
           }
         }
       ]
     },
     "Start6": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -87,21 +87,21 @@
           "Text": "You can switch between units by either clicking on them or by using the arrows in the display. You can also use the Tab key to move to the next unit.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/bosch_action_bar.png"
           }
         }
       ]
     },
     "Start7": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Text": "When you have finished moving, click on the End Turn button in the lower right of the display.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Master.png"
+            "Path": "ui/dialog/tutorial/end_turn.png"
           }
         }
       ]

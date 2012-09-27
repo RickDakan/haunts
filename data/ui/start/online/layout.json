@@ -40,7 +40,7 @@
       "X": 200,
       "Y": 350,
       "Dx": 520,
-      "Dy": 200
+      "Dy": 120
     }
   },
   "Unstarted": {
@@ -62,8 +62,22 @@
       "X": 200,
       "Y": 110,
       "Dx": 520,
-      "Dy": 200
+      "Dy": 120
     }
+  },
+  "NewGame": {
+    "X": 100,
+    "Y": 580,
+    "Text": {
+      "String": "Start New Game",
+      "Size": 15,
+      "Justification": "left"
+    }
+  },
+  "Error": {
+    "X": 100,
+    "Y": 100,
+    "Size": 15
   },
   "User": {
     "Button": {

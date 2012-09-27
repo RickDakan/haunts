@@ -10,6 +10,7 @@ import (
   "github.com/runningwild/glop/util/algorithm"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/house"
+  "github.com/runningwild/haunts/mrgnet"
   "reflect"
   "regexp"
   "time"
@@ -126,6 +127,11 @@ type gameDataTransient struct {
   // Indicates if we're waiting for a script to run or something
   Turn_state   turnState
   Action_state actionState
+
+  net struct {
+    key  mrgnet.GameKey
+    game *mrgnet.Game
+  }
 }
 
 func (gdt *gameDataTransient) alloc() {
@@ -258,10 +264,16 @@ func (g *Game) GobDecode(data []byte) error {
   for _, ent := range g.Ents {
     base.GetObject("entities", ent)
   }
+
   g.setup()
   for _, ent := range g.Ents {
     ent.Load(g)
+    base.Log().Printf("Ungob, ent: %p, %s", ent, ent.Name)
+    g.UpdateEntLos(ent, true)
   }
+  g.mergeLos(SideHaunt)
+  g.mergeLos(SideExplorers)
+
   var sss []sprite.SpriteState
   if err := dec.Decode(&sss); err != nil {
     return err
@@ -402,24 +414,30 @@ func (g *Game) SetVisibility(side Side) {
 // 1. The game script gets to run its OnRound() function
 // 2. Entities with stats and HpCur() <= 0 are removed.
 // 3. Entities all have their OnRound() function called.
-func (g *Game) OnRound() {
+func (g *Game) OnRound(do_scripts bool) {
   // Don't end the round if any of the following are true
   // An action is currently executing
   if g.Action_state != noAction {
+    base.Log().Printf("No OnRound - have action")
     return
   }
   // Any master ai is still active
   if g.Side == SideHaunt && (g.Ai.minions.Active() || g.Ai.denizens.Active()) {
+    base.Log().Printf("No OnRound - waiting on ais")
     return
   }
 
-  g.Turn++
-  if g.Side == SideExplorers {
-    g.Side = SideHaunt
-  } else {
-    g.Side = SideExplorers
+  if do_scripts {
+    g.Turn++
+    if g.Side == SideExplorers {
+      base.Log().Printf("OnRound from %d Intruders to %d Denizens", g.Turn-1, g.Turn)
+      g.Side = SideHaunt
+    } else {
+      base.Log().Printf("OnRound from %d Denizens to %d Intruders", g.Turn-1, g.Turn)
+      g.Side = SideExplorers
+    }
+    g.viewer.Los_tex.Remap()
   }
-  g.viewer.Los_tex.Remap()
 
   for i := range g.Ents {
     if g.Ents[i].Side() == g.Side {
@@ -430,18 +448,20 @@ func (g *Game) OnRound() {
   // The entity ais must be activated before the master ais, otherwise the
   // masters might be running with stale data if one of the entities has been
   // reloaded.
-  for i := range g.Ents {
-    g.Ents[i].Ai.Activate()
-    base.Log().Printf("EntityActive '%s': %t", g.Ents[i].Name, g.Ents[i].Ai.Active())
-  }
+  if do_scripts {
+    for i := range g.Ents {
+      g.Ents[i].Ai.Activate()
+      base.Log().Printf("EntityActive '%s': %t", g.Ents[i].Name, g.Ents[i].Ai.Active())
+    }
 
-  if g.Side == SideHaunt {
-    g.Ai.minions.Activate()
-    g.Ai.denizens.Activate()
-    g.player_inactive = g.Ai.denizens.Active()
-  } else {
-    g.Ai.intruders.Activate()
-    g.player_inactive = g.Ai.intruders.Active()
+    if g.Side == SideHaunt {
+      g.Ai.minions.Activate()
+      g.Ai.denizens.Activate()
+      g.player_inactive = g.Ai.denizens.Active()
+    } else {
+      g.Ai.intruders.Activate()
+      g.player_inactive = g.Ai.intruders.Active()
+    }
   }
 
   for i := range g.Ents {
@@ -453,7 +473,9 @@ func (g *Game) OnRound() {
     return ent.Stats == nil || ent.Stats.HpCur() > 0
   })
 
-  g.script.OnRound(g)
+  if do_scripts {
+    g.script.OnRound(g)
+  }
 
   if g.selected_ent != nil {
     g.selected_ent.hovered = false
@@ -773,13 +795,6 @@ func (g *Game) setup() {
   g.gameDataTransient.alloc()
   g.all_ents_in_game = make(map[*Entity]bool)
   g.all_ents_in_memory = make(map[*Entity]bool)
-  for i := range g.Ents {
-    base.Log().Printf("Ungob, ent: %p", g.Ents[i])
-    if g.Ents[i].Side() == g.Side {
-      base.Log().Printf("Ungob, ent: %p", g.Ents[i])
-      g.UpdateEntLos(g.Ents[i], true)
-    }
-  }
   if g.Side == SideHaunt {
     g.viewer.Los_tex = g.los.intruders.tex
   } else {
@@ -1009,7 +1024,7 @@ func (g *Game) Think(dt int64) {
     case <-g.comm.script_to_game:
       g.Turn_state = turnStateStart
       base.Log().Printf("ScriptComm: change to turnStateStart")
-      g.OnRound()
+      g.OnRound(true)
     default:
     }
   }
@@ -1062,9 +1077,13 @@ func (g *Game) Think(dt int64) {
   for _, ent := range g.Ents {
     ent.Think(dt)
     s := ent.Sprite()
-    if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
-      g.viewer.RemoveFloorDrawable(g.current_action)
-      ent.current_action = nil
+    if s == nil {
+      base.Error().Printf("Not sprite for %s", ent.Sprite_path)
+    } else {
+      if s.AnimState() == "ready" && s.Idle() && g.current_action == nil && ent.current_action != nil {
+        g.viewer.RemoveFloorDrawable(g.current_action)
+        ent.current_action = nil
+      }
     }
   }
   if g.new_ent != nil {
@@ -1394,6 +1413,7 @@ func (g *Game) UpdateEntLos(ent *Entity, force bool) {
   if !force && ex == ent.los.x && ey == ent.los.y {
     return
   }
+  base.Log().Printf("UpdateEntLos(%s): %t (%d, %d) -> (%d, %d)", ent.Name, force, ent.los.x, ent.los.y, ex, ey)
   ent.los.x = ex
   ent.los.y = ey
 

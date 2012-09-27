@@ -907,9 +907,10 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
   hdt.viewer = viewer
 
   names := GetAllDoorNames()
+  door_buttons := gui.MakeVerticalTable()
   for _, name := range names {
     n := name
-    hdt.VerticalTable.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
+    door_buttons.AddChild(gui.MakeButton("standard", name, 300, 1, 1, 1, 1, func(int64) {
       if len(hdt.house.Floors[0].Rooms) < 2 || hdt.temp_door != nil {
         return
       }
@@ -919,10 +920,12 @@ func makeHouseDoorTab(house *HouseDef, viewer *HouseViewer) *houseDoorTab {
       hdt.temp_room = hdt.house.Floors[0].Rooms[0]
     }))
   }
-
+  scroller := gui.MakeScrollFrame(door_buttons, 300, 700)
+  hdt.VerticalTable.AddChild(scroller)
   return &hdt
 }
 func (hdt *houseDoorTab) Think(ui *gui.Gui, t int64) {
+  hdt.VerticalTable.Think(ui, t)
 }
 func (hdt *houseDoorTab) onEscape() {
   if hdt.temp_door != nil {

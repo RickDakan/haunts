@@ -11,7 +11,7 @@ end
 
 function Think()
   intruders = AllIntruders()
-  leader = GetLeader(intruders, {"Occultist", "Detective", "Teen"})
+  leader = GetLeader(intruders, {"Tutorial Occultist", "Tutorial Detective", "Tutorial Teen"})
   for _, ent in pairs(intruders) do
     SetEntityMasterInfo(ent, "Name", ent.Name)
     SetEntityMasterInfo(ent, "Leader", leader.Name)

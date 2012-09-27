@@ -21,3 +21,8 @@ install_name_tool -change  ./libfmodex.dylib @executable_path/../lib/libfmodex.d
 go install ./tools/scr
 ls data | awk '{print "scr --src data/" $0 " --dst haunts.app/Contents/" $0}' | bash
 
+rm -rf shaunts.app
+cp -r haunts.app shaunts.app
+mv shaunts.app/Contents/MacOS/haunts shaunts.app/Contents/MacOS/shaunts
+rm shaunts.app/Contents/store
+

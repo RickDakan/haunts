@@ -1,4 +1,4 @@
-{
+  {
   "Size": "large",
   "Pages": 
   {
@@ -9,10 +9,10 @@
       [
         {
           "Next": "Start2",
-          "Text": "Some meddlesome intruders have forced their way into Bosch's home. Time to take care of them.",
+          "Text": "Bosch has called up some of the foul spirits at his command to drive you from the house.",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1892c.png"
+            "Path": "ui/dialog/tutorial/1892c.png"
           }
         }
       ]
@@ -24,32 +24,32 @@
       [
         {
           "Next": "Start3",
-          "Text": "Now your servitors are activated, and can move and attack the intruders.",
+          "Text": "You will need to use your Actions to attack and dispel these malevolent ghosts.",
     		  "Image":
           {
-            "Path": "ui/dialog/Lvl01/1892c.png"
+            "Path": "ui/dialog/tutorial/fighting.png"
           }       
         }   
      ] 
     },
 	  "Start3": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Next": "Start4",
-          "Text": "Attacking works like moving or interacting. Select an attack either by clicking on it or pressing the corresponding number key.",
+          "Text": "Attacking works like Moving or Interacting. Select an attack either by clicking on it or pressing the corresponding number key.",
 		      "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/action_select.png"
           }
         }
       ]
     },
     "Start4": 
     {
-      "Format": "NoOptionsLeftImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -57,14 +57,14 @@
           "Text": "Some actions will be dimmed and you will be unable to select them. This means you don't have a valid target in range of that action, so you need to move closer (or let them come to you).",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
+            "Path": "ui/dialog/tutorial/teen_pistol_group.png"
           }
         }
       ]
     },
     "Start5": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
@@ -72,40 +72,70 @@
           "Text": "Once you have selected an action, click on the target you wish to use it on. The display indicates how much AP the action will cost. Hit the Escape key to choose a different action.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/occultist3.png"
+            "Path": "ui/dialog/tutorial/teen_pistol_group.png"
           }
         }
       ]
     },
     "Start6": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
           "Next": "Start7",
-          "Text": "Your Angry Shades have a melee attack, Chill Touch, which they must be adjacent to the target to use. Lost Souls can use their Ectoplasmic Discharge at a range of 6 spaces.",
+          "Text": "Your Ghost Hunter and Occultist both have area of effect attacks that target multiple squares at once.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/master.png"
+            "Path": "ui/dialog/tutorial/aoe_pulse.png"
           }
         }
       ]
     },
     "Start7": 
     {
-      "Format": "NoOptionsRightImage",
+      "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
-          "Text": "Go ahead and attack the Intruder with your ghosts.",
+          "Next": "Start8",
+          "Text": "If the square is red, it his out of range. If it is white, anything within its area, maybe even other Intruders, will be hit by the attack.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl01/Master.png"
+            "Path": "ui/dialog/tutorial/aoe_no.png"
           }
         }
       ]
-    }                                        
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "Your Teen's Psychic Shroud can be used on herself or on your Intruders to make them more resistant to attacks.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/psychic_shroud.png"
+          }
+        }
+      ]
+    },
+    "Start9": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Take care of these ghosts, and then move on to the red circle in the next room.",
+          "Image":
+          {
+            "Path": "ui/dialog/tutorial/teen_next_waypoint.png"
+          }
+        }
+      ]
+    }                                                       
   }
 }
 	

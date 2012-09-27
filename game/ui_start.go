@@ -45,7 +45,17 @@ func InsertStartMenu(ui gui.WidgetParent) error {
   sm.layout.Menu.Continue.f = func(interface{}) {}
   sm.layout.Menu.Versus.f = func(interface{}) {
     ui.RemoveChild(&sm)
-    ui.AddChild(MakeGamePanel("versus/basic.lua", nil, nil))
+    err := InsertMapChooser(
+      ui,
+      func(name string) {
+        ui.AddChild(MakeGamePanel(name, nil, nil, ""))
+      },
+      InsertStartMenu,
+    )
+    if err != nil {
+      base.Error().Printf("Unable to make Map Chooser: %v", err)
+      return
+    }
   }
   sm.layout.Menu.Settings.f = func(interface{}) {}
   sm.layout.Menu.Online.f = func(interface{}) {

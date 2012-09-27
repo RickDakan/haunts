@@ -54,7 +54,7 @@
       [
         {
           "Next": "Start5",
-          "Text": "Selecting move will let you trace a path for your unit to move, shown with bright red circles. Dim circles represent spaces that are beyond your range this turn.",
+          "Text": "Selecting Move will let you trace a path for your unit to move, shown with bright red circles. Dim circles represent spaces that are beyond your range this turn.",
           "Image":
           {
             "Path": "ui/dialog/Lvl01/Tyree_Ghost.png"
@@ -105,7 +105,7 @@
           }
         }
       ]
-    }                                        
+    }
   }
 }
 	
