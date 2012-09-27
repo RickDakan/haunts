@@ -1,0 +1,44 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsNoImage",
+      "Sections":[
+        {
+          "Next": "Choice1",
+          "Text": "Kid is flipping out."
+        }
+      ]
+    },
+    "Choice1": {
+      "Format": "ThreeOptions",
+      "Sections":[
+        {
+          "Id":   "Reinforce",
+          "Text": "Reinforce.",
+          "Image":{
+            "Path": "ui/dialog/Lvl08/denizens.png"
+          }
+        },
+        {
+          "Id":   "Maws",
+          "Text": "Maws.",
+          "Image":{
+            "Path": "ui/dialog/Lvl08/denizens.png"
+          }
+        },        
+        {
+          "Id":   "Turrets",
+          "Text": "Turrets.",
+          "Image":{
+            "Path": "ui/dialog/Lvl08/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}
+
+	
+	
+	

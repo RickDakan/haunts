@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "The kid spawned maws.",
+          "Image":{
+            "Path": "ui/dialog/Lvl08/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}
