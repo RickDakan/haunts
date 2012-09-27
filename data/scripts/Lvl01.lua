@@ -387,7 +387,6 @@ function DoPlayback(state, execs)
     end
     checkExec(exec)
   end
-  -- Script.GameOnRound()
 end
 
 function denizensOnRound()
@@ -405,7 +404,7 @@ end
 function RoundEnd(intruders, round)
   print("SCRIPT: Round End:", Net.Side())
   print("Update Execs Round/Intruders: ", round, intruders)
-  Net.UpdateExecs(store.execs)
+  Net.UpdateExecs(Script.SaveGameState(), store.execs)
   if Net.Active() then
     if Side() == "Denizens" then
       Script.SetVisibility("denizens")
