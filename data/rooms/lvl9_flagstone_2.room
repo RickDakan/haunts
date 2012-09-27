@@ -1,0 +1,1 @@
+{"Name":"lvl9_flagstone_2","Size":{"Name":"Medium_B","Dx":15,"Dy":20},"Furniture":[{"Defname":"Armor","X":8,"Y":10,"Rotation":0,"Flip":false}],"WallTextures":[],"Floor":{"Path":"rooms/floors/floor_13_flag_medium_b.png"},"Wall":{"Path":"rooms/walls/wall_01.png"},"Themes":null,"Sizes":null,"Decor":null}
