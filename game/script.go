@@ -209,6 +209,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
           gp.game.Turn = len(resp.Game.Execs) + 1
+
           if net_id == resp.Game.Denizens_id {
             base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
             gp.game.net.side = SideHaunt
@@ -217,6 +218,10 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
             base.Log().Printf("Setting side to Intruders, Turn %d", gp.game.Turn)
             gp.game.net.side = SideExplorers
             gp.game.Side = SideExplorers
+          }
+
+          if (len(resp.Game.Execs)%2 == 1) == (side == SideExplorers) {
+            gp.game.OnRound(false)
           }
         }
       }
