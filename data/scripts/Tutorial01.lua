@@ -142,39 +142,37 @@ function OnAction(intruders, round, exec)
       ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", spawns, false)
       filename = "tutorial/" .. "Bosch" .. ".lua"
       Script.BindAi(ent, filename)
+      Script.RemoveWaypoint("Waypoint3")
     end   
   end
 
   if store.bThirdWaypointDown and not MasterIsAlive() then
-    Script.RemoveWaypoint("Waypoint3")
+    --Script.Sleep(2)
     Script.DialogBox("ui/dialog/tutorial/Finale_Tutorial_Intruders.json")
   end
 
   if not AnyIntrudersAlive() then
+    --Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
 
 
-  -- --after any action, if this ent's Ap is 0, we can select the next ent for them
-  -- if exec.Ent.ApCur == 0 then 
-  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-  --   if nextEnt.ApCur > 0 then
-  --     Script.SelectEnt(nextEnt)
-  --   end
-  -- end  
-
-
+  --after any action, if this ent's Ap is 0, we can select the next ent for them
+  if exec.Ent.ApCur == 0 then
+    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+    if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        -- print("poo")
+       --  Script.Sleep(2)
+       --  print("poo2")
+      end
+      Script.SelectEnt(nextEnt)
+    end
+  end   
 end
 
 function SelectSpawn(SpawnName)
-  math.randomseed(os.time())
   possible_spawns = Script.GetSpawnPointsMatching(SpawnName)
-  bUsedOne = false   
-  for _, spawn in pairs(possible_spawns) do
-    if math.random(4) > 2 then
-      return spawn
-    end 
-  end  
   return possible_spawns[1]      
 end
  
@@ -185,11 +183,6 @@ function RoundEnd(intruders, round)
   end
 
   Script.ShowMainBar(false)
-
-  -- if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
-  --   Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-  -- end
-
   store.execs = {}
 end
 
@@ -212,26 +205,7 @@ function AnyIntrudersAlive()
 end
 
 function SelectCharAtTurnStart(side)
---   bDone = false
---   if LastIntruderEnt then
---     if side.Intruder then
---    -- if LastIntruderEnt.Side == side then
---       Script.SelectEnt(LastIntruderEnt)
---       bDone = true
---     end
---   end  
---   if LastDenizenEnt and not bDone then
---     if side.Denizen then
--- --    if LastDenizenEnt.Side == side then      
---       Script.SelectEnt(LastDenizenEnt)
---       bDone = true
---     end  
---   end   
-
---   if not bDone then
---     --select the dood with the most AP
---     Script.SelectEnt(GetEntityWithMostAP(side))
---   end  
+  Script.SelectEnt(GetEntityWithMostAP(side))
 end
 
 function GetEntityWithMostAP(side)
