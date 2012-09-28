@@ -2,9 +2,11 @@ package mrgnet
 
 import (
   "bytes"
+  "compress/gzip"
   "crypto/rand"
   "encoding/gob"
   "fmt"
+  "io"
   "io/ioutil"
   "math/big"
   "net/http"
@@ -14,21 +16,44 @@ import (
 type NetId int64
 type GameKey string
 
-// const Host_url = "http://mobrulesgames.appspot.com/"
-const Host_url = "http://localhost:8080"
+const Host_url = "http://mobrulesgames.appspot.com/"
+
+// const Host_url = "http://localhost:8080"
 
 func DoAction(name string, input, output interface{}) error {
+  zipit := true
   buf := bytes.NewBuffer(nil)
-  err := gob.NewEncoder(buf).Encode(input)
+  var gzw io.Writer
+  if zipit {
+    gzw = gzip.NewWriter(buf)
+  } else {
+    gzw = buf
+  }
+  err := gob.NewEncoder(gzw).Encode(input)
   if err != nil {
     return err
   }
+  if zipit {
+    gzw.(*gzip.Writer).Close()
+  }
   host_url := fmt.Sprintf("%s/%s", Host_url, name)
+  // fmt.Printf("Sending %d bytes\n", buf.Len())
   r, err := http.PostForm(host_url, url.Values{"data": []string{string(buf.Bytes())}})
   if err != nil {
     return err
   }
-  data, err := ioutil.ReadAll(r.Body)
+  // fmt.Printf("Received %d bytes\n", r.ContentLength)
+  var gzr io.Reader
+  if zipit {
+    gzr, err = gzip.NewReader(r.Body)
+    if err != nil {
+      panic(err.Error())
+      return nil
+    }
+  } else {
+    gzr = r.Body
+  }
+  data, err := ioutil.ReadAll(gzr)
   if err != nil {
     panic(err.Error())
     return nil
@@ -137,6 +162,8 @@ type Game struct {
   Intruders_name string
   Intruders_id   NetId
 
+  // When in the datastore each of these []byte is a blobstore key for the
+  // actual data.  When sent to a user the data is fetched and filled out.
   Before [][]byte
   Execs  [][]byte
   After  [][]byte
