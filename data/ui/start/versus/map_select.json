@@ -97,5 +97,16 @@
     },
     "Text": "1958 - Waxworks",
     "Size": 20
+  },
+  {
+    "Id": "Lvl08.lua",
+    "Small": {
+      "Path": "ui/start/versus/child.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "1958 - Waxworks",
+    "Size": 20
   }
 ]
