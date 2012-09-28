@@ -399,6 +399,25 @@ function denizensOnRound()
     store.bShowedSecondWaypointMessage = true
     Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Denizens.json")
   end
+
+  if not MasterIsAlive() then
+    master_spawn = Script.GetSpawnPointsMatching("Master_Start")
+    if store.MasterName == "Bosch" then
+      store.MasterName = "Bosch's Ghost"
+      store.bUsingGhostBosch = true 
+      Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
+      store.bBoschRespawnedTellIntruders = true
+    end
+    Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
+  end
+end
+
+function intrudersOnRound()
+  --if the Master is down, respawn him
+  if store.bBoschRespawnedTellIntruders then
+    Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Intruders.json")
+    store.bBoschRespawnedTellIntruders = false --keep this dialogue from getting triggered ever again
+  end
 end
 
 function RoundEnd(intruders, round)
@@ -418,6 +437,8 @@ function RoundEnd(intruders, round)
     DoPlayback(state, execs)
     if Side() == "Denizens" then
       denizensOnRound()
+    else
+      intrudersOnRound()
     end
     Script.ShowMainBar(true)
     return
@@ -459,27 +480,6 @@ function RoundEnd(intruders, round)
     Script.SetLosMode("denizens", "entities")
     DoPlayback(store.game, store.execs)
   end
-
-
-  --if the Master is down, respawn him
-  if intruders then
-    if not MasterIsAlive() then
-      master_spawn = Script.GetSpawnPointsMatching("Master_Start")
-      if store.MasterName == "Bosch" then
-        store.MasterName = "Bosch's Ghost"
-        store.bUsingGhostBosch = true 
-        Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
-        store.bBoschRespawnedTellIntruders = true
-      end
-      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
-    end
-  else
-    if store.bBoschRespawnedTellIntruders then
-      Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Intruders.json")
-      store.bBoschRespawnedTellIntruders = false --keep this dialogue from getting triggered ever again
-    end
-  end
-
 end
 
 function MasterIsAlive()
