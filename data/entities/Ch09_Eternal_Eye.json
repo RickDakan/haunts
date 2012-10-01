@@ -1,0 +1,26 @@
+{
+  "Name": "Eternal Eye",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/Wisp",
+  "Still": {
+    "Path": "entities/sigil_still.png"
+  },
+  "Action_names": [
+    "Move Test"
+  ],
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": [
+      "Curb Stompers"
+    ]
+  },
+  "Base": {
+    "Ap_max": 0,
+    "Hp_max": 1,
+    "Corpus": 1,
+    "Ego": 1,
+    "Sight": 15
+  },
+  "Dissolve": true
+}

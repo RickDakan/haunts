@@ -1,0 +1,26 @@
+{
+  "Name": "Sacrificial Orb",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/wisp",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Minion"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 4,
+    "Corpus": 7,
+    "Ego": 7,
+    "Sight": 15
+  },
+  "Dissolve": true,
+  "Ai_path": "ais/ch09/orb.lua"
+}

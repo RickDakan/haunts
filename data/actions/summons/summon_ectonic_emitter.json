@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Ectonic Emitter",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/abjurate.png"
+  },
+  "Ap"       : 6,
+  "Range"    : 5,
+  "Ent_name" : "Ectonic Emitter",
+  "Personal_los": true
+}

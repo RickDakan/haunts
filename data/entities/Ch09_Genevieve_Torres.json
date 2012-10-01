@@ -1,0 +1,31 @@
+{
+  "Name": "Genevieve Torres",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/reporter",
+  "Still": {
+    "Path": "entities/reporter_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Runescribed Cudgel",
+    "Disruption Broadcaster",
+    "Summon Caederal Ward"
+  ],
+  "Walking_speed": 0.5,
+  "ExplorerEnt": {
+    "Gear_names": 
+    [
+	   "Pick Me Ups"
+    ]
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 10,
+    "Ego": 10,
+    "Sight": 10
+  },
+  "Dissolve": false
+}

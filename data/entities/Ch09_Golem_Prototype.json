@@ -1,0 +1,26 @@
+{
+  "Name": "Golem Prototype",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/golem",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Minion"
+  },
+  "Base": {
+    "Ap_max": 10,
+    "Hp_max": 20,
+    "Corpus": 7,
+    "Ego": 7,
+    "Sight": 10
+  },
+  "Dissolve": true,
+  "Ai_path": "ais/ch09/golem.lua"
+}
