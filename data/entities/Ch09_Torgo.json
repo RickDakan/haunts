@@ -1,0 +1,29 @@
+{
+  "Name": "Major Torgo Klortho",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/evil_genius",
+  "Still": 
+  {
+    "Path": "entities/evil_genius_still.png"
+  },
+  "Action_names": 
+  [
+    "Move", 
+    "Interact",
+    "Summon Swarming Shade",
+    "Summon Serum Fiend"
+  ],
+  "HauntEnt": {
+    "Cost":    15,
+    "Minions": 25,
+    "Level":   "Master"
+  },
+  "Base": {
+    "Ap_max": 20,
+    "Hp_max": 10,
+    "Corpus": 5,
+    "Ego": 7,
+    "Sight": 20
+  }
+}

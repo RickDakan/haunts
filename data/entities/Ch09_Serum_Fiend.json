@@ -1,0 +1,27 @@
+{
+  "Name": "Serum Fiend",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/eidolon",
+  "Still": {
+    "Path": "entities/shade_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Interact",
+    "Chill Touch"
+  ],
+  "HauntEnt": {
+    "Cost":  1,
+    "Level": "Minion"
+  },
+  "Base": {
+    "Ap_max": 14,
+    "Hp_max": 6,
+    "Corpus": 7,
+    "Ego": 7,
+    "Sight": 10
+  },
+  "Dissolve": true,
+  "Ai_path": "ais/ch09/fiend.lua"
+}

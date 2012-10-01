@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Swarming Shade",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 3,
+  "Range"    : 3,
+  "Ent_name" : "Swarming Shade",
+  "Personal_los": true
+}

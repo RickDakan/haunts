@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Serum Fiend",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 15,
+  "Range"    : 3,
+  "Ent_name" : "Serum Fiend",
+  "Personal_los": true
+}

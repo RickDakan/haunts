@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Sacrificial Orb",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 5,
+  "Range"    : 3,
+  "Ent_name" : "Sacrificial Orb",
+  "Personal_los": true
+}

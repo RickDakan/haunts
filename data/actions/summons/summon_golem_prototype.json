@@ -1,0 +1,12 @@
+{
+  "Name"     : "Summon Golem Prototype",
+  "Kind"     : "Fire",
+  "Animation": "summon",
+ "Texture"   : {
+    "Path": "actions/icons/summon_shade.png"
+  },
+  "Ap"       : 17,
+  "Range"    : 3,
+  "Ent_name" : "Golem Prototype",
+  "Personal_los": true
+}
