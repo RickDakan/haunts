@@ -167,8 +167,18 @@ function RoundStart(intruders, round)
 
     Script.EndPlayerInteraction()
     store.game = Script.SaveGameState()
-    Net.UpdateState(store.game)
+    if Net.Active() then
+      Net.UpdateState(store.game)
+    end
     return
+  end
+
+  if Net.Active() then
+    if Side() == "Denizens" then
+      denizensOnRound()
+    else
+      intrudersOnRound()
+    end
   end
 
   if store.nFirstWaypointDown and not store.bSetup2Done then
@@ -220,14 +230,11 @@ function RoundStart(intruders, round)
   -- store and still have it saved to the game state that we upload to the
   -- server.
   if Net.Active() then
-    if Side() == "Denizens" then
-      denizensOnRound()
-    else
-      intrudersOnRound()
-    end
     store.game = Script.SaveGameState()
     print("Update State Round/Intruders: ", round, intruders)
     Net.UpdateState(store.game)
+  else
+    store.game = Script.SaveGameState()
   end
 end
 
@@ -288,24 +295,42 @@ end
 -- Does any special processing from an exec.  This is in its own function because
 -- it might be called during DoAction if the exec occurred locally, or in a
 -- playback if the exec occurred remotely.
-function checkExec(exec)
+function checkExec(exec, is_playback)
+  print("POWER: In")
+  if exec.Ent then
+    print("POWER: In ent ", exec.Ent.Name)
+  end
   if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
+    print("POWER: pass")
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
-    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
+    print("POWER: waypoint2:", store.Waypoint2)
+    print("POWER: waypoint2 id:", store.Waypoint2.id)
+    print("POWER: waypoint2 pos:", store.Waypoint2.Pos)
+    if not is_playback then
+      Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
+    end
     store.tension = 0.3
     Script.SetMusicParam("tension_level", 0.3) 
 
-    StoreWaypoint("Waypoint1", "", "", "", true)
-    StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
+    -- StoreWaypoint("Waypoint1", "", "", "", true)
+    -- StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
     Script.RemoveWaypoint("Waypoint1")
     Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
+    print("POWER: done")
 
 
   if store.nFirstWaypointDown then
+    if exec.Ent then
+      print("POWER: Try waypoint2 id:", store.Waypoint2.id)
+      print("POWER: Try:", store.Waypoint2)
+      a = store.Waypoint2.Pos
+      print("POWER: Try")
+      print("POWER: Try")
+    end
     if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
       --The intruders got to the second waypoint.
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
@@ -313,14 +338,17 @@ function checkExec(exec)
       store.Waypoint3 = StoreSpawn("Mirror", store.waypoint_spawn.Pos)
       store.tension = 0.5
       Script.SetMusicParam("tension_level", 0.5) 
-      Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
+      if not is_playback then
+        Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
+      end
 
       StoreWaypoint("Waypoint2", "", "", "", true)
       StoreWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3, false) 
-      Script.RemoveWaypoint("Waypoint2")
-      Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
+      -- Script.RemoveWaypoint("Waypoint2")
+      -- Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
     end  
   end
+  print("POWER: In2")
 
 
   if store.nSecondWaypointDown then
@@ -331,11 +359,13 @@ function checkExec(exec)
       Script.SetMusicParam("tension_level", 0.7)
     end   
   end
+  print("POWER: In3")
 
 
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
+  print("POWER: In4")
 
   -- --after any action, if this ent's Ap is 0, we can select the next ent for them
   -- if exec.Ent.ApCur == 0 then 
@@ -352,7 +382,7 @@ function OnAction(intruders, round, exec)
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
-  checkExec(exec)
+  checkExec(exec, false)
 end
  
 
@@ -394,8 +424,9 @@ function DoPlayback(state, execs)
         store.LastDenizenEnt = exec.Ent
       end
     end
-    checkExec(exec)
+    checkExec(exec, true)
   end
+  print("SCRIPT: Playback complete")
 end
 
 -- Logically denizensOnRound() contains code that we want to run after the
@@ -468,7 +499,6 @@ function RoundEnd(intruders, round)
 
     if intruders then
       Script.DialogBox("ui/dialog/Lvl01/pass_to_denizens.json")
-      denizensOnRound()
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
@@ -480,12 +510,17 @@ function RoundEnd(intruders, round)
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
       end
-      intrudersOnRound()
     end
 
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     DoPlayback(store.game, store.execs)
+
+    if intruders then
+      denizensOnRound()
+    else
+      intrudersOnRound()
+    end
   end
 end
 
