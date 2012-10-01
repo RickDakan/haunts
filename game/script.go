@@ -547,27 +547,29 @@ func loadGameStateRaw(gp *GamePanel, L *lua.State, state string) {
   // gp.game = ts.Game
   gp.game.script = gp.script
   LuaDecodeValue(bytes.NewBuffer(ts.Store), L, gp.game)
-  L.GetGlobal("store")
-  // Other side's store on the stack, with our store on top, we're going to
-  // take every key/value pair from our store and put it into theirs, then
-  // that one becomes ours.
-  L.PushNil()
-  for L.Next(-2) != 0 {
-    // Stack: RemoteStore LocalStore K V
+  if false {
+    L.GetGlobal("store")
+    // Other side's store on the stack, with our store on top, we're going to
+    // take every key/value pair from our store and put it into theirs, then
+    // that one becomes ours.
+    L.PushNil()
+    for L.Next(-2) != 0 {
+      // Stack: RemoteStore LocalStore K V
+      L.Pop(1)
+      // Stack: RemoteStore LocalStore K
+      L.PushValue(-1)
+      // Stack: RemoteStore LocalStore K K
+      L.PushValue(-1)
+      // Stack: RemoteStore LocalStore K K K
+      L.GetTable(-4)
+      // Stack: RemoteStore LocalStore K K V
+      L.SetTable(-5)
+      // Stack: RemoteStore LocalStore K
+      // So we can call next and repeat this process
+    }
+    // Stack: UpdateRemoteStore LocalStore
     L.Pop(1)
-    // Stack: RemoteStore LocalStore K
-    L.PushValue(-1)
-    // Stack: RemoteStore LocalStore K K
-    L.PushValue(-1)
-    // Stack: RemoteStore LocalStore K K K
-    L.GetTable(-4)
-    // Stack: RemoteStore LocalStore K K V
-    L.SetTable(-5)
-    // Stack: RemoteStore LocalStore K
-    // So we can call next and repeat this process
   }
-  // Stack: UpdateRemoteStore LocalStore
-  L.Pop(1)
   L.SetGlobal("store")
 
   gp.AnchorBox.RemoveChild(viewer)
