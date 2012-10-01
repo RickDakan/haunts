@@ -36,8 +36,8 @@ function Init(data)
   ServitorEnts = {} 
   ServitorEnts[1] = "Major Torgo Klortho"
   ServitorEnts[2] = "Dr. Beatrice Klortho"
-  Script.SpawnEntitySomewhereInSpawnPoints(ServitorEnts[1], spawn)
-  Script.SpawnEntitySomewhereInSpawnPoints(ServitorEnts[2], spawn)
+  Script.SpawnEntitySomewhereInSpawnPoints(ServitorEnts[1], spawn, false)
+  Script.SpawnEntitySomewhereInSpawnPoints(ServitorEnts[2], spawn, false)
   
   intruder_names = {"Genevieve Torres", "Nikola Fury", "Doc Pulver"}
   intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
@@ -45,12 +45,14 @@ function Init(data)
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
   end
   spawn = Script.GetSpawnPointsMatching("Device_Spawn")
-  Script.SpawnEntitySomewhereInSpawnPoints("Device", spawn)
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Device", spawn, false)
   store.DeviceName = "Device"
+  Script.SetWaypoint("Device", "denizens", ent.Pos, 2, false)
+  Script.SetWaypoint("Device", "intruders", ent.Pos, 2, false)
 
   Script.SaveStore()
 
-  Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Opening_Denizens.json")
+  Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Opening_Denizens.json")
   Script.FocusPos(MasterEnt().Pos)   
   SelectNewOpPoint()
   store.execs = {}
@@ -61,11 +63,6 @@ end
 function RoundStart(intruders, round)
   if store.execs == nil then
     store.execs = {}
-  end
-
-  if not intruders then
-    MawTrigger()
-    MawAttack()
   end
 
   store.game = Script.SaveGameState()
@@ -121,33 +118,32 @@ function OnAction(intruders, round, exec)
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
+  
+  if exec.Ent.Side.Denizen then
+    --if a deni ent attacks the Device, kill that ent and aoe the room.
+    if GetDistanceBetweenEnts(exec.Ent, DeviceEnt()) <= 2 then
+      StoreDespawn(exec.Ent)
+      DeviceAoe()
+    end
 
-  --spiker
-  --spotter
-  --splasher
+    --If a bane attacks a turret, kill it and damage everything around it.
+    if exec.Ent.Name == "Sacrificial Orb" then
+      if IsBaneNearIntruder(exec.Ent) then
+        BaneAoe(exec.Ent)
+        StoreDespawn(exec.Ent)
+      end
+    end
+  end
 
-  --bane
-  --beef
-  --swarmer
-  --hunter
-
-  --if a deni ent attacks the Device, kill that ent and aoe the room.
-
-
-  --If a bane attacks a turret, kill it and damage everything around it.
-
-
-
-  --killing all the intruders still counts as a win
   if not DeviceIsAlive() then
     --game over, the denizens win.
-    Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Denizens.json")
+    Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Denizens.json")
   end
 
   --so does killing all the denizens
   if not AnyDenizensAlive() then
     --game over, the denizens win.
-    Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Intruders.json")
+    Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Intruders.json")
   end  
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
@@ -177,17 +173,17 @@ function RoundEnd(intruders, round)
     end
 
     if intruders then
-      Script.DialogBox("ui/dialog/Lvl08/pass_to_denizens.json")
+      Script.DialogBox("ui/dialog/Lvl09/pass_to_denizens.json")
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
-        Script.DialogBox("ui/dialog/Lvl08/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Opening_Intruders.json")
+        Script.DialogBox("ui/dialog/Lvl09/pass_to_intruders.json")
+        Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 
       if not bSkipOtherChecks then  --if we haven't showed any of the other start messages, use the generic pass.
-        Script.DialogBox("ui/dialog/Lvl08/pass_to_intruders.json")
+        Script.DialogBox("ui/dialog/Lvl09/pass_to_intruders.json")
       end          
     end
 
@@ -374,6 +370,33 @@ function GetEntWithName(name)
   for _, ent in pairs(Script.GetAllEnts()) do
     if ent.Name == name then
       return ent
+    end
+  end
+end
+
+function DeviceAoe()
+  device = DeviceEnt()
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if GetDistanceBetweenEnts(ent, device) <= 6 then
+      StoreDamage(ent, 4)
+    end
+  end
+end
+
+function IsBaneNearIntruder(baneEnt)
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Side.Intruder then
+      if GetDistanceBetweenEnts(baneEnt, ent) <= 1 then
+        return true
+      end
+    end
+  end
+end
+
+function BaneAoe(baneEnt)
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if GetDistanceBetweenEnts(ent, baneEnt) <= 4 then
+      StoreDamage(ent, 4)
     end
   end
 end
