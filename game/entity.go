@@ -116,8 +116,12 @@ func (g *Game) placeEntity(pattern string) bool {
 }
 
 func (e *Entity) LoadAi() {
-  filename := e.Ai_file_override.String()
+  filename := e.Ai_path.String()
+  if e.Ai_file_override != "" {
+    filename = e.Ai_file_override.String()
+  }
   if filename == "" {
+    base.Log().Printf("No ai for %s", e.Name)
     e.Ai = inactiveAi{}
     return
   }
@@ -163,7 +167,6 @@ func (e *Entity) Load(g *Game) {
 
   e.game = g
 
-  e.Ai_path = e.Ai_file_override
   e.LoadAi()
 }
 
