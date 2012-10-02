@@ -1,0 +1,16 @@
+{
+  "Name"     : "Butcher",
+  "Kind"     : "Brutal",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/knife.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 3,
+  "Range"    : 1,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "knife": "Haunts/SFX/Denizens/Bosses/Psychopath/Knife"
+    }  
+}

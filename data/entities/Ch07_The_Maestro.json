@@ -2,7 +2,7 @@
   "Name": "The Maestro",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/golem",
+  "Sprite_path" : "entities/psycho",
   "Still": 
   {
     "Path": "entities/psychopath_still.png"
@@ -11,7 +11,10 @@
   [
     "Move",
     "Interact",
-    "Smash"
+    "Butcher",
+    "Toss",
+    "Psychotic Laugh",
+    "Unstoppable"
   ],
   "HauntEnt": {
     "Cost":    15,
