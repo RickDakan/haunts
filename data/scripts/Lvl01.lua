@@ -16,6 +16,10 @@ function DoTutorials()
   --It would be super cool.
 end
 
+-- This function tells us what side the person playing the game is, or if it
+-- is a pass-and-play game.
+-- A Net game will always return either "Denizens" or "Intruders".
+-- An offline game can be "Denizens", "Intruders", or "Humans"
 function Side()
   if Net.Active() then
     return Net.Side()
@@ -32,16 +36,16 @@ end
 
 function Init(data)
   if Net.Active() then
+    -- The Init() function will only be run by the player starting the game who
+    -- is necessarily the Denizens player.
     side_choices = {"Denizens"}
   else
     side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
   end
 
-  -- check data.map == "random" or something else
   Script.LoadHouse("Lvl_01_Haunted_House")
 
   store.side = side_choices[1]
-  -- Side() = "Humans"
   if Side() == "Humans" or Net.Active() then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
@@ -66,16 +70,12 @@ function Init(data)
   store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
   store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn, false)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
-
-  -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
 end
 
 function intrudersSetup()
   if IsStoryMode() then
     intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
-  -- else
-  --   --permit all choices for normal vs play
   end
 
   for _, name in pairs(intruder_names) do
@@ -296,41 +296,23 @@ end
 -- it might be called during DoAction if the exec occurred locally, or in a
 -- playback if the exec occurred remotely.
 function checkExec(exec, is_playback)
-  print("POWER: In")
-  if exec.Ent then
-    print("POWER: In ent ", exec.Ent.Name)
-  end
   if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
-    print("POWER: pass")
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
-    print("POWER: waypoint2:", store.Waypoint2)
-    print("POWER: waypoint2 id:", store.Waypoint2.id)
-    print("POWER: waypoint2 pos:", store.Waypoint2.Pos)
     if not is_playback then
       Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
     end
     store.tension = 0.3
-    Script.SetMusicParam("tension_level", 0.3) 
+    Script.SetMusicParam("tension_level", 0.3)
 
-    -- StoreWaypoint("Waypoint1", "", "", "", true)
-    -- StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
     Script.RemoveWaypoint("Waypoint1")
     Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
-    print("POWER: done")
 
 
   if store.nFirstWaypointDown then
-    if exec.Ent then
-      print("POWER: Try waypoint2 id:", store.Waypoint2.id)
-      print("POWER: Try:", store.Waypoint2)
-      a = store.Waypoint2.Pos
-      print("POWER: Try")
-      print("POWER: Try")
-    end
     if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint2) <= 3 and not store.nSecondWaypointDown then
       --The intruders got to the second waypoint.
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
@@ -342,13 +324,10 @@ function checkExec(exec, is_playback)
         Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
       end
 
-      StoreWaypoint("Waypoint2", "", "", "", true)
-      StoreWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3, false) 
-      -- Script.RemoveWaypoint("Waypoint2")
-      -- Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
-    end  
+      Script.RemoveWaypoint("Waypoint2")
+      Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
+    end
   end
-  print("POWER: In2")
 
 
   if store.nSecondWaypointDown then
@@ -359,13 +338,11 @@ function checkExec(exec, is_playback)
       Script.SetMusicParam("tension_level", 0.7)
     end   
   end
-  print("POWER: In3")
 
 
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
-  print("POWER: In4")
 
   -- --after any action, if this ent's Ap is 0, we can select the next ent for them
   -- if exec.Ent.ApCur == 0 then 
