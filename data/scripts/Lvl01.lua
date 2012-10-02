@@ -32,6 +32,13 @@ end
 function OnStartup()
   Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
   Script.SetMusicParam("tension_level", store.tension)
+  if Net.Active() then
+    if Side() == "Denizens" then
+      Script.SetVisibility("denizens")
+    else
+      Script.SetVisibility("intruders")
+    end
+  end
 end
 
 function Init(data)
@@ -98,7 +105,8 @@ function denizensSetup()
     --permit all choices for normal vs play.
 
   end
-  
+
+  -- If the game is Intruders vs. Ai then the computer needs to do the setup.
   if Side() == "Intruders" then
     master_spawn = Script.GetSpawnPointsMatching("Master_.*")
     ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
@@ -125,7 +133,6 @@ function denizensSetup()
       {"Lost Soul", 1},
     }  
   end
---      {"Vengeful Wraith", 3},
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
@@ -444,11 +451,6 @@ end
 function RoundEnd(intruders, round)
   if Net.Active() then
     Net.UpdateExecs(Script.SaveGameState(), store.execs)
-    if Side() == "Denizens" then
-      Script.SetVisibility("denizens")
-    else
-      Script.SetVisibility("intruders")
-    end
     Script.ShowMainBar(false)
     Net.Wait()
     -- cur = Script.SaveGameState()
