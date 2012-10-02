@@ -5,9 +5,9 @@
       "Format": "NoOptionsLeftImage",
       "Sections":[
         {
-          "Text": "Intruders found the victim (intruders).",
+          "Text": "Bozeman has been rescued, now make for the exit as fast as possible!",
           "Image":{
-            "Path": "ui/dialog/Lvl07/intruders2.png"
+            "Path": "ui/dialog/Lvl07/Collector.png"
           }
         }
       ]

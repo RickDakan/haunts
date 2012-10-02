@@ -4,15 +4,75 @@
   {
     "Start": 
     {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "Bozeman thought his revelations about The Maestro and his museum would shock the world.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "But the local authorities have grown accustomed to such tales from Tyree Manse, and quietly moved in to shut the waxworks down.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "The Maestro himself was nowhere to be found.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
       "Format": "NoOptionsCenterImage",
       "Sections":
       [
         {
-          "Text": "Intruders FTW.",
+          "Next": "Start5",
+          "Text": "The Tyree Trust seized Burton’s sculptures and auctioned them off to raise funds to refurbish the manse. The Board of Trustees thinks the whole grounds needs an overhaul. Something positive for community.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl07/intruders2.png"
-          }   
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "There’s talk that the building would be the perfect place for a new orphanage.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }
         }
       ]
     }
