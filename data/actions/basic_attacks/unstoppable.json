@@ -1,0 +1,19 @@
+{
+  "Name"     : "Unstoppable",
+  "Kind"     : "Terror",
+  "Animation": "summon",
+  "Texture"   : {
+    "Path": "actions/icons/wind.png"
+  },
+  "Ap"       : 3,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true,
+  "Sounds"   : {
+    "recover": "Haunts/SFX/Bosses/Psychopath/Recover"
+  },
+  "Conditions": [
+     "Restore"
+   ]
+}
