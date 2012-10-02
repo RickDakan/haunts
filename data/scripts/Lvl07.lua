@@ -91,7 +91,9 @@ function denizensSetup()
   setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_1")
   placed = Script.PlaceEntities("Wax_Denizen_1", ServitorEnts, 0,3)
   setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_2")
-  placed = Script.PlaceEntities("Wax_Denizen_2", ServitorEnts, 0,8)
+  placed = Script.PlaceEntities("Wax_Denizen_2", ServitorEnts, 0,3)
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_3")
+  placed = Script.PlaceEntities("Wax_Denizen_3", ServitorEnts, 0,4)
 
   SaveDeniPositions()
   --put wax dudes in the rest of the deni spawnpoints
