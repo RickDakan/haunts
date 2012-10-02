@@ -45,8 +45,8 @@ function Init(data)
     ent = Script.SpawnEntitySomewhereInSpawnPoints(name, intruder_spawn, false)
   end
   spawn = Script.GetSpawnPointsMatching("Device_Spawn")
-  ent = Script.SpawnEntitySomewhereInSpawnPoints("Device", spawn, false)
-  store.DeviceName = "Device"
+  ent = Script.SpawnEntitySomewhereInSpawnPoints("Belascic Purgation Engine", spawn, false)
+  store.DeviceName = "Belascic Purgation Engine"
   Script.SetWaypoint("Device", "denizens", ent.Pos, 2, false)
   Script.SetWaypoint("Device", "intruders", ent.Pos, 2, false)
 
@@ -135,7 +135,7 @@ function OnAction(intruders, round, exec)
     end
   end
 
-  if not DeviceIsAlive() then
+  if DeviceEnt().HpCur <= 0 then
     --game over, the denizens win.
     Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Denizens.json")
   end
@@ -145,6 +145,29 @@ function OnAction(intruders, round, exec)
     --game over, the denizens win.
     Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Intruders.json")
   end  
+
+  --if they just summoned, we need to find the thing they summoned, bind it's ai and kill it's ap.
+  if exec.Action.Type == "Summon" and exec.Ent.Side.Denizen then
+    --get all minions, bind their ai's and set their ap to 0
+    for _, ent in pairs(Script.GetAllEnts()) do
+      if ent.Name == "Swarming Shade" then
+        Script.BindAi(ent, "ch09/shade.lua")
+        Script.SetAp(ent, 0)
+      end
+      if ent.Name == "Golem Prototype" then
+        Script.BindAi(ent, "ch09/golem.lua")
+        Script.SetAp(ent, 0)
+      end
+      if ent.Name == "Sacrificial Orb" then
+        Script.BindAi(ent, "ch09/orb.lua")
+        Script.SetAp(ent, 0)
+      end        
+      if ent.Name == "Serum Fiend" then
+        Script.BindAi(ent, "ch09/fiend.lua")
+        Script.SetAp(ent, 0)
+      end
+    end
+  end
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
   if exec.Ent.ApCur == 0 then
@@ -378,7 +401,11 @@ function DeviceAoe()
   device = DeviceEnt()
   for _, ent in pairs(Script.GetAllEnts()) do
     if GetDistanceBetweenEnts(ent, device) <= 6 then
-      StoreDamage(ent, 4)
+      if ent.Name == store.DeviceName then
+        StoreDamage(ent, 50)
+      else
+        StoreDamage(ent, 4)
+      end
     end
   end
 end
@@ -397,6 +424,14 @@ function BaneAoe(baneEnt)
   for _, ent in pairs(Script.GetAllEnts()) do
     if GetDistanceBetweenEnts(ent, baneEnt) <= 4 then
       StoreDamage(ent, 4)
+    end
+  end
+end
+
+function GetEntAtPos(pos)
+  for _, ent in pairs(Script.GetAllEnts()) do
+    if ent.Pos.X == pos.X and ent.Pos.Y == pos.Y then
+      return ent 
     end
   end
 end
