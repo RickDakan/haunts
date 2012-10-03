@@ -4,12 +4,12 @@
   "Dy": 1,
   "Sprite_path" : "entities/eidolon",
   "Still": {
-    "Path": "entities/shade_still.png"
+    "Path": "entities/eidolon_still.png"
   },
   "Action_names": [
     "Move",
     "Interact",
-    "Chill Touch"
+    "Feast"
   ],
   "HauntEnt": {
     "Cost":  1,

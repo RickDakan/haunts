@@ -4,7 +4,7 @@
   "Dy": 1,
   "Sprite_path" : "entities/golem",
   "Still": {
-    "Path": "entities/shade_still.png"
+    "Path": "entities/golem_still.png"
   },
   "Action_names": [
     "Move",

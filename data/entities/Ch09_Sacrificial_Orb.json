@@ -2,9 +2,9 @@
   "Name": "Sacrificial Orb",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/wisp",
+  "Sprite_path" : "entities/red_wisp",
   "Still": {
-    "Path": "entities/shade_still.png"
+    "Path": "entities/wisp_still.png"
   },
   "Action_names": [
     "Move",
