@@ -87,7 +87,7 @@ func execMinion(a *Ai) lua.GoFunction {
       game.LuaDoError(L, "Tried to ExecMinion on an invalid entity.")
       return 0
     }
-    if ent.HauntEnt == nil {
+    if ent.HauntEnt == nil || ent.HauntEnt.Level != game.LevelMinion {
       game.LuaDoError(L, "Tried to ExecMinion on a non-minion.")
       return 0
     }
