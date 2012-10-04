@@ -240,12 +240,14 @@ function OnAction(intruders, round, exec)
 
     if store.Room1 and store.Room2 and store.Room3 and store.Room4 and store.Room5 then
       --Intruders win
+      Script.Sleep(2)
       Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Victory_Intruders.json")
     end 
   end
 
   --deni's win when the intruder carrying the beacons is dead.
   if not AnyIntrudersAlive() then
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl04/Lvl_04_Victory_Denizens.json")
   end 
 
@@ -269,6 +271,9 @@ function OnAction(intruders, round, exec)
   if exec.Ent.ApCur == 0 then
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end      
       Script.SelectEnt(nextEnt)
     end
   end

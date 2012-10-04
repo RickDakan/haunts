@@ -59,7 +59,6 @@ function Init(data)
   store.WaypointCount = i
 
   --we will incorporate some randomness here.
-  math.randomseed(os.time())
   store.MaxWaxIntruders = WaxIntruderCount()
 end
 
@@ -201,7 +200,7 @@ function OnAction(intruders, round, exec)
               StoreWaypoint("Waypoint" .. i, "", "", "", true)    
             end
           end
-          i = math.random(1, 3)
+          i = Script.Rand(3)
           spawns = Script.GetSpawnPointsMatching("Escape")
           store.EscapePoint = spawns[i].Pos
           StoreWaypoint("Escape", "intruders", store.EscapePoint, 3, false)
@@ -446,7 +445,7 @@ function IsThisTheIntruder()
     store.nCount = store.nCount - 1
   end
   nMax = store.MaxWaxIntruders
-  nWinner = math.random(1, nMax)
+  nWinner = Script.Rand(nMax)
   --last wax intruder.  Has to be winner.
   if store.nCount == 1 then
     return true
