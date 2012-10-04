@@ -42,7 +42,7 @@ func DoAction(name string, input, output interface{}) error {
   if err != nil {
     return err
   }
-  // fmt.Printf("Received %d bytes\n", r.ContentLength)
+
   var gzr io.Reader
   if zipit {
     gzr, err = gzip.NewReader(r.Body)
@@ -136,8 +136,9 @@ type JoinGameResponse struct {
 }
 
 type StatusRequest struct {
-  Id       NetId
-  Game_key GameKey
+  Id         NetId
+  Game_key   GameKey
+  Sizes_only bool
 }
 
 type StatusResponse struct {
