@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsRightImage",
+      "Sections":[
+        {
+          "Text": "It is the Denizens' turn.",
+          "Image":{
+            "Path": "ui/dialog/Lvl09/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

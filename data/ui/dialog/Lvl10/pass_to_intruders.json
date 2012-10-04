@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "It is the Intruders' turn.",
+          "Image":{
+            "Path": "ui/dialog/Lvl09/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}
