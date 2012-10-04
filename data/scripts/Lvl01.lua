@@ -118,6 +118,8 @@ function denizensSetup()
     placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
   end
 
+  Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+
   if placed[1].Name == "Chosen One" then
     store.MasterName = "Chosen One"
     ServitorEnts = {
@@ -161,8 +163,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
-      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
     end
     Script.SetLosMode("intruders", "entities")
@@ -371,7 +372,6 @@ end
  
 
 function DoPlayback(state, execs)
-  print("SCRIPT: DoPlayback - ", table.getn(execs))
   Script.LoadGameState(state)
 
   --focus the camera on somebody on each team.
@@ -482,7 +482,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
+        -- Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 

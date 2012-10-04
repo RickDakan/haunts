@@ -16,9 +16,9 @@ import (
 type NetId int64
 type GameKey string
 
-const Host_url = "http://mobrulesgames.appspot.com/"
+// const Host_url = "http://mobrulesgames.appspot.com/"
 
-// const Host_url = "http://localhost:8080"
+const Host_url = "http://localhost:8080"
 
 func DoAction(name string, input, output interface{}) error {
   zipit := true
