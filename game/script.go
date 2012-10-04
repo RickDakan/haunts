@@ -72,6 +72,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
     "SelectEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(selectEnt(gp)) },
     "FocusPos":                          func() { gp.script.L.PushGoFunctionAsCFunction(focusPos(gp)) },
+    "FocusZoom":                         func() { gp.script.L.PushGoFunctionAsCFunction(focusZoom(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
@@ -502,7 +503,7 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     L.GetGlobal("store")
     LuaEncodeValue(buf, L, -1)
     L.Pop(1)
-
+    base.Log().Printf("SaveGameState-1: %d", buf.Len())
     ts := totalState{
       Game:  &gp.game,
       Store: buf.Bytes(),
@@ -512,6 +513,7 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error gobbing game state: %v", err)
       return 0
     }
+    base.Log().Printf("SaveGameState-2: %d", len(str)-buf.Len())
 
     L.PushString(str)
     return 1
@@ -679,6 +681,18 @@ func focusPos(gp *GamePanel) lua.GoFunction {
     defer gp.script.syncEnd()
     x, y := LuaToPoint(L, -1)
     gp.game.viewer.Focus(float64(x), float64(y))
+    return 0
+  }
+}
+
+func focusZoom(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "FocusZoom", LuaFloat) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gp.game.viewer.FocusZoom(L.ToNumber(-1))
     return 0
   }
 }
@@ -1776,6 +1790,7 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
     var req mrgnet.StatusRequest
     req.Game_key = gp.game.net.key
     req.Id = net_id
+    req.Sizes_only = true
     for {
       var resp mrgnet.StatusResponse
       mrgnet.DoAction("status", req, &resp)
@@ -1786,6 +1801,12 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
       expect := gp.game.Turn + 1
       if len(resp.Game.Before) == len(resp.Game.Execs) && len(resp.Game.Before) == expect {
         base.Log().Printf("Found the expected %d states", expect)
+        req.Sizes_only = false
+        mrgnet.DoAction("status", req, &resp)
+        if resp.Err != "" {
+          base.Error().Printf("%s", resp.Err)
+          return 0
+        }
         break
       }
       base.Log().Printf("Found %d instead of %d states", len(resp.Game.Execs), expect)
