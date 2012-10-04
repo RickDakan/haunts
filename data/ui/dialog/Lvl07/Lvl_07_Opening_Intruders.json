@@ -1,13 +1,122 @@
 {
-  "Size": "medium",
-  "Pages": {
-    "Start": {
-      "Format": "NoOptionsLeftImage",
-      "Sections":[
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
         {
-          "Text": "Opening Intruders.",
-          "Image":{
-            "Path": "ui/dialog/Lvl07/intruders2.png"
+          "Next": "Start2",
+          "Text": "Matthew Burton's wax museum has thrived as a tourist trap for most of the 1950s, a low-class horror-show that taps into the public's basest desire for cheap thrills.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "The only thing that set this waxwork aside from all the other side shows, was that the horrors on display in wax form were all terrifying events from the house’s own sordid and bloody past.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Brett Bozeman, a struggling artist desperate for work, took a job apprenticing to Burton. The work was good, despite The Maestro’s eccentricities, until attendance at the museum began to drop.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "The Maestro became more and more obsessed with the house’s history, and drew in new employees that shared his obsession, even if they didn’t have a talent for sculpture.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Bozeman, curious as to how such obvious sycophants were managing to produce such life-like wax figures, stumbled upon The Maestro’s secret: the wax itself is the product of dark magic and ritual sacrifice.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/wax_cultist.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "Tutored by some evil presence in the house, The Maestro has been rendering down bodies stolen from local graves and producing a thaumaturgical wax that can take any form.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/wax_dead_hunter.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Bozeman tried to flee, but his former co-workers have trapped him in the museum. Now he hides there, disguised via the disgusting wax as one of the exhibits.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "His only hope is that his fiancee and sister will find him and rescue him in time, before The Maestro discovers his hiding place.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/reporter.png"
           }
         }
       ]

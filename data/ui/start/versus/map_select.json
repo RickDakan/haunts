@@ -106,7 +106,18 @@
     "Large": {
       "Path": "ui/start/versus/lvl_01.png"
     },
-    "Text": "1958 - Waxworks",
+    "Text": "1967 - Nursery",
+    "Size": 20
+  },
+  {
+    "Id": "Lvl09.lua",
+    "Small": {
+      "Path": "ui/start/versus/scientist2.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "1972 - Pandaemonium",
     "Size": 20
   }
 ]

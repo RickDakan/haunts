@@ -2,6 +2,8 @@ package ai
 
 import (
   "encoding/gob"
+  "errors"
+  "fmt"
   "github.com/howeyc/fsnotify"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/haunts/game"
@@ -82,18 +84,25 @@ func makeAi(path string, g *game.Game, ent *game.Entity, dst_iface *game.Ai, kin
   ai_struct.execs = make(chan game.ActionExec)
   ai_struct.kind = kind
 
-  ai_struct.setupLuaState()
+  err = ai_struct.setupLuaState()
+  if err != nil {
+    base.Error().Printf("Unable to make ai: %v", err)
+    if ai_struct.watcher != nil {
+      ai_struct.watcher.Close()
+    }
+    dst_iface = nil
+    return
+  }
   go ai_struct.masterRoutine()
 
   *dst_iface = ai_struct
 }
 
-func (a *Ai) setupLuaState() {
+func (a *Ai) setupLuaState() error {
   base.CheckPathCasing(a.path)
   prog, err := ioutil.ReadFile(a.path)
   if err != nil {
-    base.Error().Printf("Unable to load ai file %s: %v", a.path, err)
-    return
+    return errors.New(fmt.Sprintf("Unable to load ai file %s: %v", a.path, err))
   }
   a.Prog = string(prog)
   a.watcher.Watch(a.path)
@@ -150,6 +159,7 @@ func (a *Ai) setupLuaState() {
     return 1
   })
   a.L.DoString(a.Prog)
+  return nil
 }
 
 func (a *Ai) loadUtils(dir string) {
@@ -196,6 +206,10 @@ func (a *Ai) masterRoutine() {
           base.Log().Printf("Ent %p inactivated", a.ent)
         }
         a.evaluating = false
+      } else {
+        if a.ent != nil {
+          base.Log().Printf("Ent %s activated", a.ent.Name)
+        }
       }
 
     case a.active_query <- a.active:

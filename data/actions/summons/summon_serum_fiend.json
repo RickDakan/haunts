@@ -2,11 +2,14 @@
   "Name"     : "Summon Serum Fiend",
   "Kind"     : "Fire",
   "Animation": "summon",
- "Texture"   : {
+  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"
   },
   "Ap"       : 15,
   "Range"    : 3,
   "Ent_name" : "Serum Fiend",
+  "Sounds"   : {
+    "summon": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Arc of Decay"
+  },  
   "Personal_los": true
 }

@@ -72,6 +72,7 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
     "DoExec":                            func() { gp.script.L.PushGoFunctionAsCFunction(doExec(gp)) },
     "SelectEnt":                         func() { gp.script.L.PushGoFunctionAsCFunction(selectEnt(gp)) },
     "FocusPos":                          func() { gp.script.L.PushGoFunctionAsCFunction(focusPos(gp)) },
+    "FocusZoom":                         func() { gp.script.L.PushGoFunctionAsCFunction(focusZoom(gp)) },
     "SelectHouse":                       func() { gp.script.L.PushGoFunctionAsCFunction(selectHouse(gp)) },
     "LoadHouse":                         func() { gp.script.L.PushGoFunctionAsCFunction(loadHouse(gp)) },
     "SaveStore":                         func() { gp.script.L.PushGoFunctionAsCFunction(saveStore(gp, player)) },
@@ -188,23 +189,40 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
           return
         }
         if len(resp.Game.Execs) > 0 {
-          loadGameStateRaw(gp, gp.script.L, string(resp.Game.State[len(resp.Game.Execs)-1]))
+          var side Side
+          if net_id == resp.Game.Denizens_id {
+            side = SideHaunt
+          } else {
+            side = SideExplorers
+          }
+          var states []byte
+          if (len(resp.Game.Execs)%2 == 1) == (side == SideExplorers) {
+            // It is our turn to play, so we grab the last state so that we
+            // can do the replay.
+            states = resp.Game.After[len(resp.Game.Execs)-1]
+          } else {
+            // We made the last move, so we can grab what the state of the
+            // game was after we finished our turn and then just wait.
+            states = resp.Game.After[len(resp.Game.Execs)-1]
+          }
+          loadGameStateRaw(gp, gp.script.L, string(states))
+
           gp.game.net.game = resp.Game
           gp.game.net.key = game_key
+          gp.game.Turn = len(resp.Game.Execs) + 1
+
           if net_id == resp.Game.Denizens_id {
-            gp.game.Side = SideHaunt
-            gp.game.Turn = len(resp.Game.Execs) + 1
-            if gp.game.Turn%2 == 0 {
-              gp.game.Turn--
-            }
             base.Log().Printf("Setting side to Denizens, Turn %d", gp.game.Turn)
+            gp.game.net.side = SideHaunt
+            gp.game.Side = SideHaunt
           } else {
-            gp.game.Side = SideExplorers
-            gp.game.Turn = len(resp.Game.Execs) + 1
-            if gp.game.Turn%2 == 1 {
-              gp.game.Turn--
-            }
             base.Log().Printf("Setting side to Intruders, Turn %d", gp.game.Turn)
+            gp.game.net.side = SideExplorers
+            gp.game.Side = SideExplorers
+          }
+
+          if (len(resp.Game.Execs)%2 == 1) == (side == SideExplorers) {
+            gp.game.OnRound(false)
           }
         }
       }
@@ -225,6 +243,9 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
         gp.script.syncEnd()
       } else {
         gp.script.L.DoString("Init(__data)")
+        for i := range gp.game.Ents {
+          gp.game.Ents[i].Ai.Activate()
+        }
         if gp.game.Side == SideHaunt {
           gp.game.Ai.minions.Activate()
           gp.game.Ai.denizens.Activate()
@@ -244,12 +265,58 @@ func startGameScript(gp *GamePanel, path string, player *Player, data map[string
   }()
 }
 
+func (gs *gameScript) OnRoundWaiting(g *Game) {
+  g.Side = g.net.side
+  g.Turn--
+  go func() {
+    // // round begins automatically
+    // <-round_middle
+    // for
+    //   <-action stuff
+    // <- round end
+    // <- round end done
+    // base.Log().Printf("Game script: %p", gs)
+    // base.Log().Printf("Lua state: %p", gs.L)
+    // gs.L.SetExecutionLimit(250000)
+    // cmd := fmt.Sprintf("RoundStart(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
+    // base.Log().Printf("cmd: '%s'", cmd)
+    // gs.L.DoString(cmd)
+
+    // signals to the game that we're done with the startup stuff
+    g.comm.script_to_game <- nil
+    // base.Log().Printf("ScriptComm: Done with RoundStart")
+
+    g.player_inactive = true
+    _exec := <-g.comm.game_to_script
+    if _exec != nil {
+      panic("Got an exec when we shouldn't have gotten one.")
+    }
+
+    gs.L.SetExecutionLimit(250000)
+    base.Log().Printf("Doing RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2)
+    gs.L.DoString(fmt.Sprintf("RoundEnd(%t, %d)", g.Side == SideExplorers, (g.Turn+1)/2))
+
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase out")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Starting the RoundEnd phase in")
+
+    // Signal that we're done with the round end
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase in")
+    g.comm.script_to_game <- nil
+    base.Log().Printf("ScriptComm: Done with the RoundEnd phase out")
+  }()
+}
+
 // Runs RoundStart
 // Lets the game know that the round middle can begin
 // Runs RoundEnd
 func (gs *gameScript) OnRound(g *Game) {
   base.Log().Printf("Launching script.RoundStart")
-
+  if (g.Turn%2 == 1) != (g.Side == SideHaunt) {
+    base.Log().Printf("SCRIPT: OnRoundWaiting")
+    gs.OnRoundWaiting(g)
+    return
+  }
   go func() {
     // // round begins automatically
     // <-round_middle
@@ -436,7 +503,7 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
     L.GetGlobal("store")
     LuaEncodeValue(buf, L, -1)
     L.Pop(1)
-
+    base.Log().Printf("SaveGameState-1: %d", buf.Len())
     ts := totalState{
       Game:  &gp.game,
       Store: buf.Bytes(),
@@ -446,6 +513,7 @@ func saveGameState(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("Error gobbing game state: %v", err)
       return 0
     }
+    base.Log().Printf("SaveGameState-2: %d", len(str)-buf.Len())
 
     L.PushString(str)
     return 1
@@ -481,27 +549,29 @@ func loadGameStateRaw(gp *GamePanel, L *lua.State, state string) {
   // gp.game = ts.Game
   gp.game.script = gp.script
   LuaDecodeValue(bytes.NewBuffer(ts.Store), L, gp.game)
-  L.GetGlobal("store")
-  // Other side's store on the stack, with our store on top, we're going to
-  // take every key/value pair from our store and put it into theirs, then
-  // that one becomes ours.
-  L.PushNil()
-  for L.Next(-2) != 0 {
-    // Stack: RemoteStore LocalStore K V
+  if false {
+    L.GetGlobal("store")
+    // Other side's store on the stack, with our store on top, we're going to
+    // take every key/value pair from our store and put it into theirs, then
+    // that one becomes ours.
+    L.PushNil()
+    for L.Next(-2) != 0 {
+      // Stack: RemoteStore LocalStore K V
+      L.Pop(1)
+      // Stack: RemoteStore LocalStore K
+      L.PushValue(-1)
+      // Stack: RemoteStore LocalStore K K
+      L.PushValue(-1)
+      // Stack: RemoteStore LocalStore K K K
+      L.GetTable(-4)
+      // Stack: RemoteStore LocalStore K K V
+      L.SetTable(-5)
+      // Stack: RemoteStore LocalStore K
+      // So we can call next and repeat this process
+    }
+    // Stack: UpdateRemoteStore LocalStore
     L.Pop(1)
-    // Stack: RemoteStore LocalStore K
-    L.PushValue(-1)
-    // Stack: RemoteStore LocalStore K K
-    L.PushValue(-1)
-    // Stack: RemoteStore LocalStore K K K
-    L.GetTable(-4)
-    // Stack: RemoteStore LocalStore K K V
-    L.SetTable(-5)
-    // Stack: RemoteStore LocalStore K
-    // So we can call next and repeat this process
   }
-  // Stack: UpdateRemoteStore LocalStore
-  L.Pop(1)
   L.SetGlobal("store")
 
   gp.AnchorBox.RemoveChild(viewer)
@@ -611,6 +681,18 @@ func focusPos(gp *GamePanel) lua.GoFunction {
     defer gp.script.syncEnd()
     x, y := LuaToPoint(L, -1)
     gp.game.viewer.Focus(float64(x), float64(y))
+    return 0
+  }
+}
+
+func focusZoom(gp *GamePanel) lua.GoFunction {
+  return func(L *lua.State) int {
+    if !LuaCheckParamsOk(L, "FocusZoom", LuaFloat) {
+      return 0
+    }
+    gp.script.syncStart()
+    defer gp.script.syncEnd()
+    gp.game.viewer.FocusZoom(L.ToNumber(-1))
     return 0
   }
 }
@@ -1645,7 +1727,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
     req.Game_key = gp.game.net.key
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
-    req.State = []byte(L.ToString(-1))
+    req.Before = []byte(L.ToString(-1))
     var resp mrgnet.UpdateGameResponse
     mrgnet.DoAction("update", req, &resp)
     if resp.Err != "" {
@@ -1659,7 +1741,7 @@ func updateStateFunc(gp *GamePanel) lua.GoFunction {
 
 func updateExecsFunc(gp *GamePanel) lua.GoFunction {
   return func(L *lua.State) int {
-    if !LuaCheckParamsOk(L, "UpdateExecs", LuaArray) {
+    if !LuaCheckParamsOk(L, "UpdateExecs", LuaString, LuaArray) {
       return 0
     }
     if gp.game.net.key == "" {
@@ -1682,6 +1764,7 @@ func updateExecsFunc(gp *GamePanel) lua.GoFunction {
     req.Round = (gp.game.Turn+1)/2 - 1 // Server is base-0, lua is base-1
     req.Intruders = gp.game.Side == SideExplorers
     req.Execs = buf.Bytes()
+    req.After = []byte(L.ToString(-2))
     var resp mrgnet.UpdateGameResponse
     mrgnet.DoAction("update", req, &resp)
     if resp.Err != "" {
@@ -1707,6 +1790,7 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
     var req mrgnet.StatusRequest
     req.Game_key = gp.game.net.key
     req.Id = net_id
+    req.Sizes_only = true
     for {
       var resp mrgnet.StatusResponse
       mrgnet.DoAction("status", req, &resp)
@@ -1715,8 +1799,14 @@ func netWaitFunc(gp *GamePanel) lua.GoFunction {
         return 0
       }
       expect := gp.game.Turn + 1
-      if len(resp.Game.State) == len(resp.Game.Execs) && len(resp.Game.State) == expect {
+      if len(resp.Game.Before) == len(resp.Game.Execs) && len(resp.Game.Before) == expect {
         base.Log().Printf("Found the expected %d states", expect)
+        req.Sizes_only = false
+        mrgnet.DoAction("status", req, &resp)
+        if resp.Err != "" {
+          base.Error().Printf("%s", resp.Err)
+          return 0
+        }
         break
       }
       base.Log().Printf("Found %d instead of %d states", len(resp.Game.Execs), expect)
@@ -1746,11 +1836,11 @@ func netLatestStateAndExecsFunc(gp *GamePanel) lua.GoFunction {
       base.Error().Printf("%s", resp.Err)
       return 0
     }
-    if len(resp.Game.State) != len(resp.Game.Execs) {
+    if len(resp.Game.Before) != len(resp.Game.Execs) {
       base.Error().Printf("Not the same number of States and Execss")
       return 0
     }
-    state := resp.Game.State[len(resp.Game.State)-1]
+    state := resp.Game.Before[len(resp.Game.Before)-1]
     L.PushString(string(state))
     buf := bytes.NewBuffer(resp.Game.Execs[len(resp.Game.Execs)-1])
     gp.script.syncStart()

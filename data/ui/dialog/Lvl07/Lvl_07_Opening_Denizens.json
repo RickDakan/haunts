@@ -1,20 +1,140 @@
 {
-  "Size": "medium",
+  "Size": "large",
   "Pages": 
   {
     "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start2",
+          "Text": "After the mortifying Research Incident, the house was sealed, until 1953 when famed sculptor and showman, Matthew Burton, leased Tyree Manse with plans to turn it into a showcase for his wax sculptures of historic figures.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "Burton's art changed once he moved his studio into the manse. He became obsessed with the house's history, and soon replaced the famous wax figures of people like Henry VIII and Marie Antoinette with gruesome recreations Cornelius Bosch and the Elias Tyree.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "Attendance soared, as did Burton’s fame - for much of the early 1950s, The Tyree Wax Museum drew tourists from hundreds of miles. But now, in 1958, attendance has fallen and Burton knows he needs new exhibits: wax figures that capture the true essence of horror in every detail.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
     {
       "Format": "NoOptionsRightImage",
       "Sections":
       [
         {
-          "Text": "Opening Denizens.",
+          "Next": "Start5",
+          "Text": "This house has always attracted the sort of devotees willing to shed a little blood for the sake of art. Willing to give of themselves to be part of something bigger than themselves.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl07/denizens.png"
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start6",
+          "Text": "Burton's wax process is nearly perfected. It lets his devotees mimic any being, living or dead. And if the secret ingredient costs a few lives and even more minds in the process, well, such has always been the price of art.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/wax_cultist.png"
+          }
+        }
+      ]
+    },
+    "Start6": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start7",
+          "Text": "But one assistant has changed his mind. He claims to have moral qualms, whatever that means. He has hidden himself in the museum, waiting for his friends to rescue him.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/wax_dead_hunter.png"
+          }
+        }
+      ]
+    },                
+    "Start7": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start8",
+          "Text": "Burton’s mimics look like wax figures to the intruders, and cannot be harmed or attacked while in disguise. But attacking the intruders breaks the wax, leaving the mimics vulnerable.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
+          }
+        }
+      ]
+    },
+    "Start8": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start9",
+          "Text": "The intruders will try to find their friend and then escape with him out one of the back entrances. ",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/reporter.png"
+          }
+        }
+      ]
+    },
+   "Start9": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Text": "Kill them all before they escape, especially the traitor who prizes such meaningless trifles as friendship and life above true artistic immortality. ",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/collector.png"
           }
         }
       ]
     }
-  }
+   }
 }
