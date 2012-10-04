@@ -207,7 +207,8 @@ func CheckPathCasing(path string) {
     return
   }
   parts := strings.Split(rel, string(filepath.Separator))
-  running := base
+  running := filepath.Join(base, parts[0])
+  parts = parts[1:]
   for _, part := range parts {
     f, err := os.Open(running)
     if err != nil {

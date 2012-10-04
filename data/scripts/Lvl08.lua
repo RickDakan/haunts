@@ -30,8 +30,6 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  math.randomseed(os.time())
-
   --spawn denizens
   Script.SetVisibility("denizens")
 
@@ -436,7 +434,7 @@ function SpawnNearChild(sNameOfThingToSpawn)
   while i <= 1 do
     --Summon a new minion
     omgCounter = 1
-    nRandomNumberOfAwesomenoess = math.random(200)
+    nRandomNumberOfAwesomenoess = Script.Rand(200)
     nRandomCounter = 1
     for _, PossibleSpawn in pairs(Script.GetLos(childEnt)) do
       if nRandomCounter == nRandomNumberOfAwesomenoess then
@@ -458,7 +456,7 @@ function SpawnNearChild(sNameOfThingToSpawn)
 end
 
 function RandomServitor()
-  if math.random(1, 4) > 2 then
+  if Script.Rand(4) > 2 then
     return ServitorEnts[1]
   else
     return ServitorEnts[2]
@@ -478,7 +476,7 @@ function SelectNewOpPoint()
 
   while newPos.X == startPos.X and newPos.Y == startPos.Y do
     spawns = Script.GetSpawnPointsMatching("Op_Point")
-    newPos = spawns[math.random(1, table.getn(spawns))].Pos
+    newPos = spawns[Script.Rand(table.getn(spawns))].Pos
     StoreSetPos(ent, newPos)
     StoreWaypoint("OpPoint", "denizens", newPos, 1, false)
   end
@@ -529,7 +527,7 @@ function SpawnRandomMaw()
   while i <= 1 do
     --Summon a new minion
     MawSpawns = Script.GetSpawnPointsMatching("Maw_Spawn")
-    ent = StoreSpawn("Maelstrom", MawSpawns[math.random(1, table.getn(MawSpawns))].Pos)
+    ent = StoreSpawn("Maelstrom", MawSpawns[Script.Rand(table.getn(MawSpawns))].Pos)
     if ent then --succeeded.  We can bail.
       i = i + 1
     end

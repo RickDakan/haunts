@@ -11,7 +11,7 @@
   },
   "Text": {
     "String": "Start New Game",
-    "Size": 15,
+    "Size": 12,
     "Justification": "left"
   },
   "Back": {
@@ -23,45 +23,45 @@
   },
   "Active": {
     "Up": {
-      "X": 760,
+      "X": 900,
       "Y": 350,
       "Texture": {
         "Path": "ui/up_arrow.png"
       }
     },
     "Down": {
-      "X": 720,
+      "X": 820,
       "Y": 350,
       "Texture": {
         "Path": "ui/down_arrow.png"
       }
     },
     "Scroll": {
-      "X": 200,
+      "X": 100,
       "Y": 350,
-      "Dx": 520,
+      "Dx": 720,
       "Dy": 120
     }
   },
   "Unstarted": {
     "Up": {
-      "X": 760,
+      "X": 900,
       "Y": 110,
       "Texture": {
         "Path": "ui/up_arrow.png"
       }
     },
     "Down": {
-      "X": 720,
+      "X": 820,
       "Y": 110,
       "Texture": {
         "Path": "ui/down_arrow.png"
       }
     },
     "Scroll": {
-      "X": 200,
+      "X": 100,
       "Y": 110,
-      "Dx": 520,
+      "Dx": 720,
       "Dy": 120
     }
   },

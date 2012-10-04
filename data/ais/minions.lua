@@ -1,9 +1,14 @@
 function Think()
-  minions = activeMinions()
-  print("fooo?")
-  while minions[1] do
-  	print("fooo2")
-    execMinion(minions[1])
-    minions = activeMinions()
+  print("A")
+  minions = AllMinions()
+  print("B")
+  for _, minion in pairs(minions) do
+  print("C", minion.Name)
+    while IsActive(minion) do
+  print("D")
+      ExecMinion(minion)
+  print("E")
+    end
+  print("F")
   end
 end

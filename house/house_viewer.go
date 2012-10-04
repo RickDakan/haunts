@@ -25,6 +25,10 @@ type HouseViewerState struct {
   targetx, targety float32
   target_on        bool
 
+  // as above, but for zooming
+  targetzoom     float32
+  target_zoom_on bool
+
   // Need to keep track of time so we can measure time between thinks
   last_timestamp int64
 }
@@ -93,15 +97,23 @@ func (hv *HouseViewer) Think(g *gui.Gui, t int64) {
     dt = 0
   }
   hv.last_timestamp = t
+
+  scale := 1 - float32(math.Pow(0.005, float64(dt)/1000))
+
   if hv.target_on {
     f := mathgl.Vec2{hv.fx, hv.fy}
     v := mathgl.Vec2{hv.targetx, hv.targety}
     v.Subtract(&f)
-    scale := 1 - float32(math.Pow(0.005, float64(dt)/1000))
     v.Scale(scale)
     f.Add(&v)
     hv.fx = f.X
     hv.fy = f.Y
+  }
+
+  if hv.target_zoom_on {
+    exp := math.Log(float64(hv.zoom))
+    exp += (float64(hv.targetzoom) - exp) * float64(scale)
+    hv.zoom = float32(math.Exp(exp))
   }
 }
 
@@ -172,6 +184,7 @@ func (hv *HouseViewer) Zoom(dz float64) {
   // [25,100]
   exp = float64(clamp(float32(exp), 2.87130468509059, 4.25759904621048))
   hv.zoom = float32(math.Exp(exp))
+  hv.target_zoom_on = false
 }
 
 func (hv *HouseViewer) SetBounds() {
@@ -218,12 +231,22 @@ func (hv *HouseViewer) Drag(dx, dy float64) {
     hv.fx, hv.fy = v.X, v.Y
   }
   hv.target_on = false
+  hv.target_zoom_on = false
 }
 
 func (hv *HouseViewer) Focus(bx, by float64) {
   hv.targetx = float32(bx)
   hv.targety = float32(by)
   hv.target_on = true
+}
+
+func (hv *HouseViewer) FocusZoom(z float64) {
+  z = float64(clamp(float32(z), 0, 1))
+  max := 4.25759904621048
+  min := 2.87130468509059
+  z = z*(max-min) + min
+  hv.targetzoom = float32(z)
+  hv.target_zoom_on = true
 }
 
 func (hv *HouseViewer) String() string {

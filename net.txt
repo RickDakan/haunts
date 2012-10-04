@@ -1,0 +1,120 @@
+k, I have online and offline working-ish at the same time.  I've commented the level one file a bit and hopefully that helps as well, but here is a lengthy description of how it works:
+
+In level scripts there is a new set of functions:
+
+
+--------------------------------------------------------------------------------
+
+active = Net.Active()
+This returns a single boolean indicating if the script is being run in network mode.  It is sadly necessary to know this while running the script so that we know when to do things like update the server with our moves.  In an ideal world you could write a script oblivious of this value, but I don't have time to make those changes.
+
+--------------------------------------------------------------------------------
+
+side = Net.Side()
+This returns either "Intruders" or "Denizens", depending on which computer it is running on.
+
+Net.UpdateState(state)
+Sends state to the server as the state of the game at the beginning of the turn.  In level one i call it like this:
+
+    store.game = Script.SaveGameState()
+    Net.UpdateState(store.game)
+
+so that I store the game state for local games and also send it to the server for networked games.
+
+--------------------------------------------------------------------------------
+
+Net.UpdateExecs(state, execs)
+This is like Net.UpdateState() but it notifies the server of the execs that happened this turn as well as the state of the game at the end of the turn.
+
+--------------------------------------------------------------------------------
+
+Net.Wait()
+This waits until the server has received the other player's next turn.  One this function returns we can grab the state and execs from them and do a playback.
+
+--------------------------------------------------------------------------------
+
+state, execs = Net.LatestStateAndExecs()
+This gets the state at the beginning of the turn and the execs to play for that turn.  The end of turn function should have a stanza like this in it:
+
+    Net.Wait()
+    state, execs = Net.LatestStateAndExecs()
+    DoPlayback(state, execs)
+
+Yes, I have factored the playback into its own function because it needs to be called differently for networked and offline games, and this made it easier.
+
+--------------------------------------------------------------------------------
+
+
+In addition to these new Net.* functions there is one more function that scripts should define, which is OnStartup().  Since Init() is only called when the game is created it will never be called for an intruder who is playing online, and it won't be called for anyone joining an online game that is in progress.  So in level one right now I have the following OnStartup() function:
+
+    function OnStartup()
+      Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+      Script.SetMusicParam("tension_level", store.tension)
+      if Net.Active() then
+        if Side() == "Denizens" then
+          Script.SetVisibility("denizens")
+        else
+          Script.SetVisibility("intruders")
+        end
+      end
+    end
+
+This sets music and visibility, two things that need to be done for anyone joining a game in progress.  I also set the tension here to whatever it is (and have appropriately stored it elsewhere).
+
+
+--------------------------------------------------------------------------------
+
+Now I'm going to go over some of the larger changes that I made in the level one script.
+
+I have defined the following function in the script:
+
+    function Side()
+      if Net.Active() then
+        return Net.Side()
+      end
+      return store.side
+    end
+
+This is just for the sake of convenience, since this check needs to be done in a lot of places, so every reference to store.side has been replaced by this.
+
+-----
+
+Init begins with the following code:
+
+    if Net.Active() then
+      side_choices = {"Denizens"}
+    else
+      side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
+    end
+
+This is because an online game always starts with the denizens.
+
+-----
+
+The binding of Ais in Init() looks a little different, but it's fairly obvious.
+
+-----
+
+Anything the happened at the end of the round depending on which player it was has been factored into either denizensOnRound() or intrudersOnRound().  This is so that in offline games these can be called in RoundEnd(), and in networked games they can be called in RoundStart() of the next round.  This is annoying, complicated, and gross, I know.
+
+-----
+
+I moved a lot of logic into a function called checkExec(exec) which looks at exec and the game state and checks to see if anything needs to happen.  For example the check to see if the intruders have reached a spawn points happens in here now.  This is called in OnAction() on the machine that the action happened on, and in DoPlayback() on the remote machine.  I *think* this has allowed me to drop some of the exec objects that we'd been using.
+
+-----
+
+LastIntruderEnt and LastDenizenEnt are now store.LastIntruderEnt and store.LastDenizenEnt since otherwise they might not be there when you try to load a game in progress.
+
+-----
+
+
+So those are the major changes, let me know if any of this made sense to you guys.  I've pushed all of my changes as well so you can look at the script.  If you're savvy enough to do a git diff to look at the difference you might want to try diffing data/scripts/Lvl01.lua against commit cd90e6388f2e8e4425e0cffc2e7f10166b8e0464.  From the command line that would be:
+git diff cd90e6388f2e8e4425e0cffc2e7f10166b8e0464 data/scripts/Lvl01.lua 
+
+
+
+
+
+
+
+

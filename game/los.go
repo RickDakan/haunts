@@ -131,6 +131,7 @@ type gameDataTransient struct {
   net struct {
     key  mrgnet.GameKey
     game *mrgnet.Game
+    side Side
   }
 }
 
@@ -1016,7 +1017,6 @@ func (g *Game) Think(dt int64) {
         base.Log().Printf("ScriptComm: change to turnStateEnd for realzes")
       }
     default:
-      base.Log().Printf("ScriptComm: turnStateMainPhaseOver default")
     }
 
   case turnStateEnd:

@@ -16,6 +16,10 @@ function DoTutorials()
   --It would be super cool.
 end
 
+-- This function tells us what side the person playing the game is, or if it
+-- is a pass-and-play game.
+-- A Net game will always return either "Denizens" or "Intruders".
+-- An offline game can be "Denizens", "Intruders", or "Humans"
 function Side()
   if Net.Active() then
     return Net.Side()
@@ -23,19 +27,32 @@ function Side()
   return store.side
 end
 
+-- This function is run once when the game is loaded, regardless of whether or
+-- not Init is run.
+function OnStartup()
+  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+  Script.SetMusicParam("tension_level", store.tension)
+  if Net.Active() then
+    if Side() == "Denizens" then
+      Script.SetVisibility("denizens")
+    else
+      Script.SetVisibility("intruders")
+    end
+  end
+end
+
 function Init(data)
   if Net.Active() then
+    -- The Init() function will only be run by the player starting the game who
+    -- is necessarily the Denizens player.
     side_choices = {"Denizens"}
   else
     side_choices = Script.ChooserFromFile("ui/start/versus/side.json")
   end
 
-  -- check data.map == "random" or something else
-  Script.LoadHouse("Lvl_01_Haunted_House")  
-  Script.PlayMusic("Haunts/Music/Adaptive/Bed 1")
+  Script.LoadHouse("Lvl_01_Haunted_House")
 
   store.side = side_choices[1]
-  -- Side() = "Humans"
   if Side() == "Humans" or Net.Active() then
     Script.BindAi("denizen", "human")
     Script.BindAi("minions", "minions.lua")
@@ -60,16 +77,12 @@ function Init(data)
   store.waypoint_spawn = Script.GetSpawnPointsMatching("Waypoint1")
   store.Waypoint1 = Script.SpawnEntitySomewhereInSpawnPoints("Table", store.waypoint_spawn, false)
   Script.SetWaypoint("Waypoint1" , "intruders", store.Waypoint1.Pos, 3)
-
-  -- StoreWaypoint("Waypoint1", "intruders", store.Waypoint1.Pos, 3, false)    
 end
 
 function intrudersSetup()
   if IsStoryMode() then
     intruder_names = {"Teen", "Occultist", "Ghost Hunter"}
     intruder_spawn = Script.GetSpawnPointsMatching("Intruders_Start")
-  -- else
-  --   --permit all choices for normal vs play
   end
 
   for _, name in pairs(intruder_names) do
@@ -92,7 +105,8 @@ function denizensSetup()
     --permit all choices for normal vs play.
 
   end
-  
+
+  -- If the game is Intruders vs. Ai then the computer needs to do the setup.
   if Side() == "Intruders" then
     master_spawn = Script.GetSpawnPointsMatching("Master_.*")
     ent = Script.SpawnEntitySomewhereInSpawnPoints("Bosch", master_spawn, false)
@@ -119,7 +133,6 @@ function denizensSetup()
       {"Lost Soul", 1},
     }  
   end
---      {"Vengeful Wraith", 3},
 
   -- Just like before the user gets a ui to place these entities, but this
   -- time they can place more, and this time they go into spawn points that
@@ -161,8 +174,18 @@ function RoundStart(intruders, round)
 
     Script.EndPlayerInteraction()
     store.game = Script.SaveGameState()
-    Net.UpdateState(store.game)
+    if Net.Active() then
+      Net.UpdateState(store.game)
+    end
     return
+  end
+
+  if Net.Active() then
+    if Side() == "Denizens" then
+      denizensOnRound()
+    else
+      intrudersOnRound()
+    end
   end
 
   if store.nFirstWaypointDown and not store.bSetup2Done then
@@ -185,9 +208,6 @@ function RoundStart(intruders, round)
   end
 
   spawns = Script.GetSpawnPointsMatching("Servitors_Start1")
-  store.game = Script.SaveGameState()
-  print("Update State Round/Intruders: ", round, intruders)
-  Net.UpdateState(store.game)
 
   side = {Intruder = intruders, Denizen = not intruders, Npc = false, Object = false}
   SelectCharAtTurnStart(side)
@@ -211,6 +231,17 @@ function RoundStart(intruders, round)
       Script.SetVisibility("denizens")
       Script.ShowMainBar(not intruders)
     end
+  end
+
+  -- We run the *OnRound() functions here so that they can modify data in the
+  -- store and still have it saved to the game state that we upload to the
+  -- server.
+  if Net.Active() then
+    store.game = Script.SaveGameState()
+    print("Update State Round/Intruders: ", round, intruders)
+    Net.UpdateState(store.game)
+  else
+    store.game = Script.SaveGameState()
   end
 end
 
@@ -271,27 +302,18 @@ end
 -- Does any special processing from an exec.  This is in its own function because
 -- it might be called during DoAction if the exec occurred locally, or in a
 -- playback if the exec occurred remotely.
-function checkExec(exec)
-  print("SCRIPT: Checking Exec")
-  print("SCRIPT:", exec.Ent)
-  if exec.Ent then
-    print("SCRIPT:", exec.Ent.Side.Intruder)
-    print("SCRIPT: Ent - ", exec.Ent.Pos.X, exec.Ent.Pos.Y)
-    print("SCRIPT: Ent - ", store.Waypoint1.Pos.X, store.Waypoint1.Pos.Y)
-    print("SCRIPT:", GetDistanceBetweenEnts(exec.Ent, store.Waypoint1))
-    print("SCRIPT:", store.nFirstWaypointDown)
-  end
+function checkExec(exec, is_playback)
   if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint1) <= 3 and not store.nFirstWaypointDown then
     --The intruders got to the first waypoint.
     store.nFirstWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
-    print("WAYPOINT SET MONKEY")
     store.waypoint_spawn = SelectSpawn("Waypoint2") 
     store.Waypoint2 = StoreSpawn("Chest",  store.waypoint_spawn.Pos)   
-    Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
-    Script.SetMusicParam("tension_level", 0.3) 
+    if not is_playback then
+      Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Intruders.json")
+    end
+    store.tension = 0.3
+    Script.SetMusicParam("tension_level", 0.3)
 
-    StoreWaypoint("Waypoint1", "", "", "", true)
-    StoreWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3, false)  
     Script.RemoveWaypoint("Waypoint1")
     Script.SetWaypoint("Waypoint2", "intruders", store.Waypoint2.Pos, 3)   
   end 
@@ -303,14 +325,15 @@ function checkExec(exec)
       store.nSecondWaypointDown = 2 --2 because that's what we want to add to the deni's deploy 
       store.waypoint_spawn = SelectSpawn("Waypoint3") 
       store.Waypoint3 = StoreSpawn("Mirror", store.waypoint_spawn.Pos)
+      store.tension = 0.5
       Script.SetMusicParam("tension_level", 0.5) 
-      Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
+      if not is_playback then
+        Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Intruders.json")    
+      end
 
-      StoreWaypoint("Waypoint2", "", "", "", true)
-      StoreWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3, false) 
       Script.RemoveWaypoint("Waypoint2")
       Script.SetWaypoint("Waypoint3", "intruders", store.Waypoint3.Pos, 3)             
-    end  
+    end
   end
 
 
@@ -318,6 +341,7 @@ function checkExec(exec)
     if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
       Script.DialogBox("ui/dialog/Lvl01/Victory_Intruders.json")
+      store.tension = 0.7
       Script.SetMusicParam("tension_level", 0.7)
     end   
   end
@@ -326,7 +350,6 @@ function checkExec(exec)
   if not AnyIntrudersAlive() then
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
-
 
   -- --after any action, if this ent's Ap is 0, we can select the next ent for them
   -- if exec.Ent.ApCur == 0 then 
@@ -343,7 +366,7 @@ function OnAction(intruders, round, exec)
     store.execs = {}
   end
   store.execs[table.getn(store.execs) + 1] = exec
-  checkExec(exec)
+  checkExec(exec, false)
 end
  
 
@@ -379,47 +402,60 @@ function DoPlayback(state, execs)
 
       --will be used at turn start to try to reselect the last thing they acted with.
       if exec.Ent.Side == "intruders" then
-        LastIntruderEnt = exec.Ent
+        store.LastIntruderEnt = exec.Ent
       end
       if exec.Ent.Side == "denizens" then
-        LastDenizenEnt = exec.Ent
+        store.LastDenizenEnt = exec.Ent
       end
     end
-    checkExec(exec)
+    checkExec(exec, true)
   end
-  -- Script.GameOnRound()
+  print("SCRIPT: Playback complete")
 end
 
+-- Logically denizensOnRound() contains code that we want to run after the
+-- denizens player has taken their turn.  This could be called from one of
+-- two different places depending on whether it is an online game or not.
 function denizensOnRound()
   if store.nFirstWaypointDown and not store.bShowedFirstWaypointMessage then
     store.bShowedFirstWaypointMessage = true
     Script.DialogBox("ui/dialog/Lvl01/First_Waypoint_Down_Denizens.json")
   end
-
   if store.nSecondWaypointDown and not store.bShowedSecondWaypointMessage then
     store.bShowedSecondWaypointMessage = true
     Script.DialogBox("ui/dialog/Lvl01/Second_Waypoint_Down_Denizens.json")
   end
+  if not MasterIsAlive() then
+    master_spawn = Script.GetSpawnPointsMatching("Master_Start")
+    if store.MasterName == "Bosch" then
+      store.MasterName = "Bosch's Ghost"
+      store.bUsingGhostBosch = true 
+      Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
+      store.bBoschRespawnedTellIntruders = true
+    end
+    Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
+  end
+end
+
+-- Logically intrudersOnRound() contains code that we want to run after the
+-- intruders player has taken their turn.  This could be called from one of
+-- two different places depending on whether it is an online game or not.
+function intrudersOnRound()
+  --if the Master is down, respawn him
+  if store.bBoschRespawnedTellIntruders then
+    Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Intruders.json")
+    store.bBoschRespawnedTellIntruders = false --keep this dialogue from getting triggered ever again
+  end
 end
 
 function RoundEnd(intruders, round)
-  print("SCRIPT: Round End:", Net.Side())
-  print("Update Execs Round/Intruders: ", round, intruders)
-  Net.UpdateExecs(store.execs)
   if Net.Active() then
-    if Side() == "Denizens" then
-      Script.SetVisibility("denizens")
-    else
-      Script.SetVisibility("intruders")
-    end
+    Net.UpdateExecs(Script.SaveGameState(), store.execs)
     Script.ShowMainBar(false)
     Net.Wait()
     -- cur = Script.SaveGameState()
     state, execs = Net.LatestStateAndExecs()
     DoPlayback(state, execs)
-    if Side() == "Denizens" then
-      denizensOnRound()
-    end
     Script.ShowMainBar(true)
     return
   end
@@ -442,7 +478,6 @@ function RoundEnd(intruders, round)
 
     if intruders then
       Script.DialogBox("ui/dialog/Lvl01/pass_to_denizens.json")
-      denizensOnRound()
     else
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
@@ -459,28 +494,13 @@ function RoundEnd(intruders, round)
     Script.SetLosMode("intruders", "entities")
     Script.SetLosMode("denizens", "entities")
     DoPlayback(store.game, store.execs)
-  end
 
-
-  --if the Master is down, respawn him
-  if intruders then
-    if not MasterIsAlive() then
-      master_spawn = Script.GetSpawnPointsMatching("Master_Start")
-      if store.MasterName == "Bosch" then
-        store.MasterName = "Bosch's Ghost"
-        store.bUsingGhostBosch = true 
-        Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Denizens.json")
-        store.bBoschRespawnedTellIntruders = true
-      end
-      Script.SpawnEntitySomewhereInSpawnPoints(store.MasterName, master_spawn, false)
-    end
-  else
-    if store.bBoschRespawnedTellIntruders then
-      Script.DialogBox("ui/dialog/Lvl01/Bosch_Rises_Intruders.json")
-      store.bBoschRespawnedTellIntruders = false --keep this dialogue from getting triggered ever again
+    if intruders then
+      denizensOnRound()
+    else
+      intrudersOnRound()
     end
   end
-
 end
 
 function MasterIsAlive()
@@ -503,24 +523,27 @@ end
 
 function SelectCharAtTurnStart(side)
   bDone = false
-  if LastIntruderEnt then
+  if store.LastIntruderEnt then
     if side.Intruder then
-   -- if LastIntruderEnt.Side == side then
-      Script.SelectEnt(LastIntruderEnt)
+   -- if store.LastIntruderEnt.Side == side then
+      Script.SelectEnt(store.LastIntruderEnt)
       bDone = true
     end
   end  
-  if LastDenizenEnt and not bDone then
+  if store.LastDenizenEnt and not bDone then
     if side.Denizen then
---    if LastDenizenEnt.Side == side then      
-      Script.SelectEnt(LastDenizenEnt)
+--    if store.LastDenizenEnt.Side == side then      
+      Script.SelectEnt(store.LastDenizenEnt)
       bDone = true
     end  
   end   
 
   if not bDone then
     --select the dood with the most AP
-    Script.SelectEnt(GetEntityWithMostAP(side))
+    ent = GetEntityWithMostAP(side)
+    if ent then
+      Script.SelectEnt(ent)
+    end
   end  
 end
 
