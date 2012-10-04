@@ -317,15 +317,14 @@ function RoundEnd(intruders, round)
   end
 end
 
-function DoPlayback()
-
-  Script.LoadGameState(store.game)
+function DoPlayback(state, execs)
+  Script.LoadGameState(state)
 
   --focus the camera on somebody on each team.
   side2 = {Intruder = not intruders, Denizen = intruders, Npc = false, Object = false}  --reversed because it's still one side's turn when we're replaying their actions for the other side.
   Script.FocusPos(GetEntityWithMostAP(side2).Pos)
 
-  for _, exec in pairs(store.execs) do
+  for _, exec in pairs(execs) do
     bDone = false
     if exec.script_spawn then
       doSpawn(exec)
