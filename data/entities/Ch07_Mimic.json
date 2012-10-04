@@ -2,15 +2,15 @@
   "Name": "Mimic",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/female_cultist",
+  "Sprite_path" : "entities/mimic",
   "Still": {
     "Path": "entities/psychopath_still.png"
   },
   "Action_names": [
   "Move Test",
   "Interact",
-	"Parasitic Gift",
-	"Envenomed Blade"
+    "Butcher",
+    "Psychotic Laugh"
   ],
   "HauntEnt": {
     "Cost":  1,

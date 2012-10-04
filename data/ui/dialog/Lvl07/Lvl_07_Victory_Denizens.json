@@ -8,11 +8,71 @@
       "Sections":
       [
         {
-          "Text": "The denizens did it n stuff.",
+          "Next": "Start2",
+          "Text": "The Museum's exhibits are safe, the cause of great art has survived the vandal hordes who sought to extinguish The Maestro's vision.",
           "Image":
           {
-            "Path": "ui/dialog/Lvl07/denizens.png"
+            "Path": "ui/dialog/Lvl07/1952c.png"
           }   
+        }
+      ]
+    },
+    "Start2": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Next": "Start3",
+          "Text": "And now there is new flesh for the rendering process. Where once The Maestro relied solely on bodies from graveyards to create his wonderful wax, now he has bodies still warm from life.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/1952c.png"
+          }       
+        }   
+     ] 
+    },
+    "Start3": 
+    {
+      "Format": "NoOptionsLeftImage",
+      "Sections":
+      [
+        {
+          "Next": "Start4",
+          "Text": "If the whispers in his dreams are right - and thus far they always have been - then the sculptures he and his acolytes create from this new batch will be the most moving and expressive yet.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start4": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Next": "Start5",
+          "Text": "A whole new era of artistic triumph is about to begin for the Tyree Wax Museum.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/psychopath.png"
+          }
+        }
+      ]
+    },
+    "Start5": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "All The Maestro needs is more fresh raw material.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl07/wax_cultist.png"
+          }
         }
       ]
     }

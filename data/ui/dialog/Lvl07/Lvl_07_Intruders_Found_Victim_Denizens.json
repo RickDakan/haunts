@@ -8,10 +8,10 @@
       "Sections":
       [
         {
-          "Text": "Intruders found the victom (denizens).",
+          "Text": "The treacherous Bozeman has been found, stop him before he escapes!",
           "Image":
           {
-            "Path": "ui/dialog/Lvl07/denizens.png"
+            "Path": "ui/dialog/Lvl07/collector.png"
           }
         }
       ]

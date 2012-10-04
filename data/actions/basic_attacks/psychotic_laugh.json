@@ -1,0 +1,19 @@
+{
+  "Name"     : "Psychotic Laugh",
+  "Kind"     : "Terror",
+  "Animation": "cast",
+  "Texture"   : {
+    "Path": "actions/icons/laugh.png"
+  },
+  "Ap"       : 2,
+  "Strength" : 10,
+  "Damage"   : 0,
+  "Range"    : 1,
+  "Target_allies": true,
+  "Sounds"   : {
+    "laugh": "Haunts/SFX/Denizens/Bosses/Psychopath/Laugh"
+    },  
+  "Conditions": [
+     "Corpus +2"
+   ]
+}

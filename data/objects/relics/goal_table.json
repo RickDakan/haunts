@@ -1,6 +1,6 @@
 {
   "Name": "Table",
-  "Dx": 1,
+  "Dx": 2,
   "Dy": 1,
   "Sprite_path" : "objects/relics/goal_table",
   "Still": {

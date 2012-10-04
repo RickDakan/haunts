@@ -52,6 +52,9 @@ function Init(data)
     Script.SetWaypoint("Waypoint" .. i , "intruders", spawn.Pos, 1)
     store.ActiveWaypoints[i] = i
     i = i + 1
+    if i > 18 then 
+      i = 1
+    end
   end
   store.WaypointCount = i
 
@@ -85,14 +88,18 @@ function denizensSetup()
     {"Mimic", 1},
   }  
 
-  setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen")
-  placed = Script.PlaceEntities("Wax_Denizen", ServitorEnts, 0,10)
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_1")
+  placed = Script.PlaceEntities("Wax_Denizen_1", ServitorEnts, 0,3)
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_2")
+  placed = Script.PlaceEntities("Wax_Denizen_2", ServitorEnts, 0,3)
+  setLosModeToRoomsWithSpawnsMatching("denizens", "Wax_Denizen_3")
+  placed = Script.PlaceEntities("Wax_Denizen_3", ServitorEnts, 0,4)
 
   SaveDeniPositions()
   --put wax dudes in the rest of the deni spawnpoints
   i = 1
   storagePos = Script.GetSpawnPointsMatching("Wax_Storage")[1].Pos
-  for _, spawn in pairs(Script.GetSpawnPointsMatching("Wax_Denizen")) do
+  for _, spawn in pairs(Script.GetSpawnPointsMatching("Wax_Denizen.*")) do
     if i < 10 then
       str = "Wax_Denizen0"
     else
@@ -108,7 +115,7 @@ function denizensSetup()
     i = i + 1
     if i > 20 then 
       i = 1
-    end 
+    end
   end
 end
 
@@ -212,6 +219,7 @@ function OnAction(intruders, round, exec)
     if intruders then
       if GetDistanceBetweenPoints(exec.Ent.Pos, store.EscapePoint) <= 3 then
         --The intruders got to the exit.  Game over.
+        Script.Sleep(2)
         Script.DialogBox("ui/dialog/Lvl07/Lvl_07_Victory_Intruders.json")    
       end
     end
@@ -219,6 +227,7 @@ function OnAction(intruders, round, exec)
 
   --deni's win when all intruders dead.
   if not AnyIntrudersAlive() then
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl07/Lvl_07_Victory_Denizens.json")
   end 
 
@@ -226,7 +235,9 @@ function OnAction(intruders, round, exec)
   if exec.Ent.ApCur == 0 then
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
-      Script.SelectEnt(nextEnt)
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end
     end
   end
 end

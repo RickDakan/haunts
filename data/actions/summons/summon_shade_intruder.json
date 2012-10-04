@@ -1,7 +1,7 @@
 {
   "Name"     : "Summon Shadow",
   "Kind"     : "Fire",
-  "Animation": "summon",
+  "Animation": "pulse",
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"
   },

@@ -1,0 +1,16 @@
+{
+  "Name"     : "Toss",
+  "Kind"     : "Brutal",
+  "Animation": "melee",
+  "Texture"   : {
+    "Path": "actions/icons/thrown.png"
+  },
+  "Ap"       : 2,
+  "Strength" : 10,
+  "Damage"   : 1,
+  "Range"    : 8,
+  "Target_enemies": true,
+  "Sounds"   : {
+    "toss": "Haunts/SFX/Denizens/Bosses/Psychopath/Toss"
+    }  
+}

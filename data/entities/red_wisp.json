@@ -1,0 +1,26 @@
+{
+  "Name": "Enraged Soul",
+  "Dx": 1,
+  "Dy": 1,
+  "Sprite_path" : "entities/wisp",
+  "Still": {
+    "Path": "entities/wisp_still.png"
+  },
+  "Action_names": [
+    "Move",
+    "Ectoplasmic Discharge"
+  ],
+  "HauntEnt": {
+    "Cost": 1,
+    "Level": "Servitor"
+  },
+  "Base": {
+    "Ap_max": 13,
+    "Hp_max": 1,
+    "Corpus": 9,
+    "Ego": 9,
+    "Sight": 20
+  },
+  "Dissolve": true,
+  "Ai_path": "ais/wisp_new.lua"
+}
