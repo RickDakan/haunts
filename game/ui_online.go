@@ -115,7 +115,7 @@ func InsertOnlineMenu(ui gui.WidgetParent) error {
       }()
       select {
       case <-done:
-      case <-time.After(3 * time.Second):
+      case <-time.After(10 * time.Second):
         resp.Err = "Couldn't connect to server."
       }
       <-sm.control.in
@@ -244,7 +244,11 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
         base.Log().Printf("Adding button: %s", list.Games[i].Name)
         b.Text.Justification = sm.layout.Text.Justification
         b.Text.Size = sm.layout.Text.Size
-        b.Text.String = list.Games[i].Name
+        if net_id == list.Games[i].Denizens_id {
+          b.Text.String = fmt.Sprintf("%s vs %s as the Intruders", list.Games[i].Name, list.Games[i].Intruders_name)
+        } else {
+          b.Text.String = fmt.Sprintf("%s vs %s as the Denizens", list.Games[i].Name, list.Games[i].Denizens_name)
+        }
         game_key := list.Game_keys[i]
         active := (glb == &sm.layout.Active)
         in_joingame := false
@@ -266,7 +270,7 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
               }()
               select {
               case <-done:
-              case <-time.After(3 * time.Second):
+              case <-time.After(10 * time.Second):
                 resp.Err = "Couldn't connect to server."
               }
               <-sm.control.in
@@ -295,7 +299,7 @@ func (sm *OnlineMenu) Think(g *gui.Gui, t int64) {
               }()
               select {
               case <-done:
-              case <-time.After(3 * time.Second):
+              case <-time.After(10 * time.Second):
                 resp.Err = "Couldn't connect to server."
               }
               <-sm.control.in
