@@ -1,0 +1,16 @@
+{
+  "Size": "medium",
+  "Pages": {
+    "Start": {
+      "Format": "NoOptionsLeftImage",
+      "Sections":[
+        {
+          "Text": "The intruders activated {points} this turn.  They will win if they get {countdown} more charges.",
+          "Image":{
+            "Path": "ui/dialog/Lvl10/intruders2.png"
+          }
+        }
+      ]
+    }
+  }
+}

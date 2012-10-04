@@ -1,0 +1,20 @@
+{
+  "Size": "medium",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsRightImage",
+      "Sections":
+      [
+        {
+          "Text": "Opening Denizens.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl10/denizens.png"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "Size": "large",
+  "Pages": 
+  {
+    "Start": 
+    {
+      "Format": "NoOptionsCenterImage",
+      "Sections":
+      [
+        {
+          "Text": "Intruders FTW.",
+          "Image":
+          {
+            "Path": "ui/dialog/Lvl10/intruders2.png"
+          }   
+        }
+      ]
+    }
+  }
+}
