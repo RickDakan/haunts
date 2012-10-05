@@ -152,7 +152,7 @@ function OnAction(intruders, round, exec)
   end
 
   if not AnyIntrudersAlive() then
-    --Script.Sleep(2)
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
 
@@ -162,9 +162,7 @@ function OnAction(intruders, round, exec)
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
       if exec.Action.Type ~= "Move" then
-        -- print("poo")
-       --  Script.Sleep(2)
-       --  print("poo2")
+        Script.Sleep(2)
       end
       Script.SelectEnt(nextEnt)
     end

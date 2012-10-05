@@ -62,9 +62,6 @@ function Init(data)
     Script.SpawnEntitySomewhereInSpawnPoints("Patient", patient_spawn, false)
   end 
 
-  --we will incorporate some randomness here.
-  math.randomseed(os.time())
-
   --set these modular variables.
   store.nIntrudersFound = 0
   store.nMonstersFound = 0
@@ -163,7 +160,7 @@ function RoundStart(intruders, round)
     if ValueForReinforce() > 1 then
       for i = 1,  math.floor((ValueForReinforce()/2) + .5) , 1 do
         --Pick an entity
-        if math.random(4) > 2 then
+        if Script.Rand(4) > 2 then
           floodEnt = ServitorEnts[1][1]
         else
           floodEnt = ServitorEnts[2][1]
@@ -284,6 +281,7 @@ function OnAction(intruders, round, exec)
       if pointIsInSpawns(exec.Ent.Pos, "Escape") then
         if exec.Ent.Conditions["Carrying Antidote"] then
           --The intruders got to the exit with the Antidote.  Game over.
+          Script.Sleep(2)
           Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Victory_Intruders.json")    
         end
       end
@@ -301,6 +299,7 @@ function OnAction(intruders, round, exec)
 
   --deni's win when all intruders dead.
   if not AnyIntrudersAlive() then
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Victory_Denizens.json")
   end 
 
@@ -324,12 +323,15 @@ function OnAction(intruders, round, exec)
   end 
 
   --after any action, if this ent's Ap is 0, we can select the next ent for them
-  -- if exec.Ent.ApCur == 0 then
-  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-  --   if nextEnt.ApCur > 0 then
-  --     Script.SelectEnt(nextEnt)
-  --   end
-  -- end
+  if exec.Ent.ApCur == 0 then
+    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+    if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end      
+      Script.SelectEnt(nextEnt)
+    end
+  end
 end
  
 
@@ -562,7 +564,7 @@ function SpawnIntruderOrMonster(entToKillAndReplace)
       Script.DialogBox("ui/dialog/Lvl03/Lvl_03_Rescued_Intruder1.json")
     end
   else
-    if (math.random(1, 5) > 2 and store.nIntrudersFound <= 3) then
+    if (Script.Rand(5) > 2 and store.nIntrudersFound <= 3) then
       --Spawn intruder
       store.nIntrudersFound = store.nIntrudersFound + 1
       if store.nIntrudersFound == 2 then

@@ -1,12 +1,12 @@
 package house
 
 import (
-  "math"
   "github.com/runningwild/glop/gin"
   "github.com/runningwild/glop/gui"
   "github.com/runningwild/haunts/base"
   "github.com/runningwild/mathgl"
   "github.com/runningwild/opengl/gl"
+  "math"
 )
 
 type RectObject interface {
@@ -159,7 +159,7 @@ func makeRoomMats(room *roomDef, region gui.Region, focusx, focusy, angle, zoom 
 
   // Move the viewer so that the focus is at the origin, and hence becomes centered
   // in the window
-  m.Translation(-focusx, -focusy, 0)
+  m.Translation(-(focusx + 300/s), -(focusy + 300/s), 0)
   floor.Multiply(&m)
 
   ifloor.Assign(&floor)

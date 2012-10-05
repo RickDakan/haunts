@@ -60,6 +60,7 @@ type SummonActionDef struct {
   Animation    string
   Conditions   []string
   Texture      texture.Object
+  Sounds       map[string]string
 }
 type summonActionTempData struct {
   ent    *game.Entity
@@ -83,7 +84,7 @@ func (exec summonExec) Push(L *lua.State, g *game.Game) {
 }
 
 func (a *SummonAction) SoundMap() map[string]string {
-  return nil
+  return a.Sounds
 }
 
 func (a *SummonAction) Push(L *lua.State) {

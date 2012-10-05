@@ -40,15 +40,12 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  --we will incorporate some randomness here.
-  math.randomseed(os.time())
-
   store.ActivatedObjectives = {}
   --ok lissen.  We're gonna spawn a lotta buncha op points.
   store.Objectives = Script.GetSpawnPointsMatching("Artifact")
   i = 1
   while i <= 10 do
-    nRandomNumberOfAwesomenoess = math.random(25)
+    nRandomNumberOfAwesomenoess = Script.Rand(25)
     nRandomCounter = 1
     for _, obj in pairs(store.Objectives) do
       if nRandomCounter == nRandomNumberOfAwesomenoess then
@@ -211,7 +208,7 @@ function StartSummon()
   while i <= store.ObjectivesAcquired do
     --Summon a new minion
     omgCounter = 1
-    nRandomNumberOfAwesomenoess = math.random(200)
+    nRandomNumberOfAwesomenoess = Script.Rand(200)
     nRandomCounter = 1
     for _, PossibleSpawn in pairs(Script.GetLos(GetMasterEnt())) do
       if nRandomCounter == nRandomNumberOfAwesomenoess then
@@ -285,12 +282,14 @@ function OnAction(intruders, round, exec)
 
     if exec.Target.Name == store.MasterName and store.bSummoning then
       if exec.Target.HpCur <= 0 then
+        Script.Sleep(2)
         Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Intruders.json")
       end
     end
   end
 
   if not AnyIntrudersAlive() then
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl05/Lvl_05_Victory_Denizens.json")
   end
 
@@ -298,6 +297,9 @@ function OnAction(intruders, round, exec)
   if exec.Ent.ApCur == 0 then 
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end      
       Script.SelectEnt(nextEnt)
     end
   end  

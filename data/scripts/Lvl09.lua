@@ -137,12 +137,14 @@ function OnAction(intruders, round, exec)
 
   if DeviceEnt().HpCur <= 0 then
     --game over, the denizens win.
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Denizens.json")
   end
 
   --so does killing all the denizens
   if not AnyDenizensAlive() then
     --game over, the denizens win.
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl09/Lvl_09_Victory_Intruders.json")
   end  
 

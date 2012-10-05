@@ -180,6 +180,7 @@ function OnAction(intruders, round, exec)
   if exec.Action.Type == "Basic Attack" then
     if exec.Target.Name == store.MasterName and exec.Target.Hp <= 0 then
       --master is dead.  Intruders win.
+      Script.Sleep(2)
       Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Intruders.json")
     end
   end
@@ -203,6 +204,7 @@ function OnAction(intruders, round, exec)
 
   if not AnyIntrudersAlive() then
     --game over, the denizens win.
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl02/Lvl_02_Victory_Denizens.json")
   end
 

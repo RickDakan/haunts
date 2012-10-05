@@ -173,6 +173,7 @@ function OnAction(intruders, round, exec)
       --Is the kid vulnerable
       if not DeniEntNearKid() then
         --they did it.
+        Script.Sleep(2)
         Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Intruders.json")   
       end
     end
@@ -191,6 +192,7 @@ function OnAction(intruders, round, exec)
 
   if not AnyIntrudersAlive() then
     --game over, the denizens win.
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl08/Lvl_08_Victory_Denizens.json")
   end
 
@@ -199,7 +201,7 @@ function OnAction(intruders, round, exec)
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
       if exec.Action.Type ~= "Move" then
-        --When a wait function exists, add it here!!!!
+        Script.Sleep(2)
       end
       Script.SelectEnt(nextEnt)
     end

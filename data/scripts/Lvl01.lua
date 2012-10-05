@@ -118,6 +118,8 @@ function denizensSetup()
     placed = Script.PlaceEntities("Master_.*", ents, 1, 1)
   end
 
+  Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+
   if placed[1].Name == "Chosen One" then
     store.MasterName = "Chosen One"
     ServitorEnts = {
@@ -161,8 +163,7 @@ function RoundStart(intruders, round)
     if intruders then
       intrudersSetup() 
     else
-      Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
-      Script.FocusPos(Script.GetSpawnPointsMatching("Master_Start")[1].Pos)
+      -- Script.DialogBox("ui/dialog/Lvl01/Opening_Denizens.json")
       denizensSetup()
     end
     Script.SetLosMode("intruders", "entities")
@@ -288,11 +289,10 @@ function OnMove(ent, path)
 end
 
 function SelectSpawn(SpawnName)
-  math.randomseed(os.time())
   possible_spawns = Script.GetSpawnPointsMatching(SpawnName)
   bUsedOne = false   
   for _, spawn in pairs(possible_spawns) do
-    if math.random(4) > 2 then
+    if Script.Rand(4) > 2 then
       return spawn
     end 
   end  
@@ -340,6 +340,7 @@ function checkExec(exec, is_playback)
   if store.nSecondWaypointDown then
     if exec.Ent and exec.Ent.Side.Intruder and GetDistanceBetweenEnts(exec.Ent, store.Waypoint3) <= 3 then
       --The intruders got to the third waypoint.  Game over, man.  Game over.
+      Script.Sleep(2)
       Script.DialogBox("ui/dialog/Lvl01/Victory_Intruders.json")
       store.tension = 0.7
       Script.SetMusicParam("tension_level", 0.7)
@@ -348,16 +349,20 @@ function checkExec(exec, is_playback)
 
 
   if not AnyIntrudersAlive() then
+    Script.Sleep(2)
     Script.DialogBox("ui/dialog/Lvl01/Victory_Denizens.json")
   end 
 
   -- --after any action, if this ent's Ap is 0, we can select the next ent for them
-  -- if exec.Ent.ApCur == 0 then 
-  --   nextEnt = GetEntityWithMostAP(exec.Ent.Side)
-  --   if nextEnt.ApCur > 0 then
-  --     Script.SelectEnt(nextEnt)
-  --   end
-  -- end  
+  if exec.Ent.ApCur == 0 then 
+    nextEnt = GetEntityWithMostAP(exec.Ent.Side)
+    if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end
+      Script.SelectEnt(nextEnt)
+    end
+  end  
 end
 
 function OnAction(intruders, round, exec)
@@ -371,7 +376,6 @@ end
  
 
 function DoPlayback(state, execs)
-  print("SCRIPT: DoPlayback - ", table.getn(execs))
   Script.LoadGameState(state)
 
   --focus the camera on somebody on each team.
@@ -482,7 +486,7 @@ function RoundEnd(intruders, round)
       if not bIntruderIntroDone then
         bIntruderIntroDone = true
         Script.DialogBox("ui/dialog/Lvl01/pass_to_intruders.json")
-        Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
+        -- Script.DialogBox("ui/dialog/Lvl01/Opening_Intruders.json")
         bSkipOtherChecks = true
       end
 

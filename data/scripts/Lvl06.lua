@@ -35,9 +35,6 @@ function Init(data)
     Script.BindAi("intruder", "human")
   end
 
-  --we will incorporate some randomness here.
-  math.randomseed(os.time())
-
   --Spawn intro versions of each of the 4 master.
   ent = Script.SpawnEntitySomewhereInSpawnPoints("Subject Orlac", Script.GetSpawnPointsMatching("Vampire_Start"), false)
   Script.SetWaypoint("Vampire", "intruders", ent.Pos, 1)
@@ -174,9 +171,11 @@ function OnAction(intruders, round, exec)
         --If the golem reaches the doors on either side, the opposing side wins.
         Script.SetAp(exec.Ent, 0)
         if store.ScoreCounter >= 20 then
+          Script.Sleep(2)
           Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Victory_Intruders.json")
         end
         if store.ScoreCounter <= 0 then
+          Script.Sleep(2)
           Script.DialogBox("ui/dialog/Lvl06/Lvl_06_Victory_Denizens.json")
         end
       end
@@ -189,6 +188,9 @@ function OnAction(intruders, round, exec)
   if exec.Ent.ApCur == 0 then 
     nextEnt = GetEntityWithMostAP(exec.Ent.Side)
     if nextEnt.ApCur > 0 then
+      if exec.Action.Type ~= "Move" then
+        Script.Sleep(2)
+      end      
       Script.SelectEnt(nextEnt)
     end
   end  

@@ -63,6 +63,7 @@ type AoeAttackDef struct {
   Animation  string
   Conditions []string
   Texture    texture.Object
+  Sounds     map[string]string
 }
 type aoeAttackTempData struct {
   ent *game.Entity
@@ -92,7 +93,7 @@ func (exec aoeExec) Push(L *lua.State, g *game.Game) {
 }
 
 func (a *AoeAttack) SoundMap() map[string]string {
-  return nil
+  return a.Sounds
 }
 
 func (a *AoeAttack) Push(L *lua.State) {
