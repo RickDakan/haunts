@@ -817,7 +817,8 @@ time:400</attribute>
 		</section>
 		<section name="node">
 			<attribute key="id" type="int">39</attribute>
-			<attribute key="label" type="String">defending_01</attribute>
+			<attribute key="label" type="String">defending_01
+func:summon</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">681.3515625</attribute>
 				<attribute key="y" type="double">140.0791015625</attribute>
@@ -828,7 +829,8 @@ time:400</attribute>
 				<attribute key="outline" type="String">#000000</attribute>
 			</section>
 			<section name="LabelGraphics">
-				<attribute key="text" type="String">defending_01</attribute>
+				<attribute key="text" type="String">defending_01
+func:summon</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

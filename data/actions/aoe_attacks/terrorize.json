@@ -9,7 +9,7 @@
   "Animation" : "pulse",
   "Target_enemies": true,
   "Sounds"   : {
-    "blast": "Haunts/SFX/Intruders/Occultist/Exorcise"
+    "blast": "Haunts/SFX/Denizens/Bosses/Vampire/Terror"
   },
   "Texture"   : {
     "Path": "actions/icons/terror.png"

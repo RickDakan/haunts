@@ -10,6 +10,9 @@
   "Texture"   : {
     "Path": "actions/icons/coordination.png"
   },
+  "Sounds"   : {
+    "telepathic": "Haunts/SFX/Intruders/Teen/Telepathic Coordination"
+  },
   "Conditions": [
     "Telepathic Coordination"
   ]

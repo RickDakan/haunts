@@ -29,5 +29,8 @@
     "Ego": 9,
     "Sight": 3
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": false
 }

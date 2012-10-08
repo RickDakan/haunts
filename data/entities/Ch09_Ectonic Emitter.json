@@ -2,7 +2,7 @@
   "Name": "Ectonic Emitter",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/sigil",
+  "Sprite_path" : "entities/terminal",
   "Still": {
     "Path": "entities/sigil_still.png"
   },

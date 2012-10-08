@@ -26,5 +26,9 @@
     "Corpus": 5,
     "Ego": 7,
     "Sight": 20
-  }
+  },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
+   "Dissolve": false
 }

@@ -11,7 +11,7 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "melee": "Haunts/SFX/Denizens/Ghosts/Corpse/Pummel"
+    "smash": "Haunts/SFX/Denizens/Bosses/Golem/Smash"
   },
   "Conditions": [
      "Attack -2"

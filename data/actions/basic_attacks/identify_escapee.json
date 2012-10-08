@@ -1,10 +1,13 @@
 {
   "Name"     : "Identify Escapee",
   "Kind"     : "Fire",
-  "Animation": "ranged",
+  "Animation": "pulse",
   "Texture"   : 
   {
     "Path": "actions/icons/interact.png"
+  },
+  "Sounds"   : {
+    "activate": "Haunts/SFX/Denizens/Evil Genius/Activate"
   },
   "Ap"       : 6,
   "Strength" : 10,

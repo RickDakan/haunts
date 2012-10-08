@@ -22,5 +22,8 @@
     "Ego": 10,
     "Sight": 10
   },
+    "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
     "Ai_path": "ais/ch03/Orderly.lua"
 }

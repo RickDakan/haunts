@@ -23,6 +23,9 @@
     "Ego": 8,
     "Sight": 20
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": false,
   "Ai_path": "ais/corpse.lua"
 }

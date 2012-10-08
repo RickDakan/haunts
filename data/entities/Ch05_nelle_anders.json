@@ -23,5 +23,7 @@
     "Ego": 2,
     "Sight": 10
   },
-    "Ai_path": "ais/technician.lua"
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  }
 }

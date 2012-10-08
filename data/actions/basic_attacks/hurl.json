@@ -1,7 +1,7 @@
 {
   "Name"     : "Hurl",
   "Kind"     : "Brutal",
-  "Animation": "cast",
+  "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/piece.png"
   },
@@ -11,6 +11,6 @@
   "Range"    : 10,
   "Target_enemies": true,
   "Sounds"   : {
-    "melee": "Haunts/SFX/Denizens/Ghosts/Corpse/Pummel"
+    "hurl": "Haunts/SFX/Denizens/Bosses/Golem/Hurl"
   }
 }

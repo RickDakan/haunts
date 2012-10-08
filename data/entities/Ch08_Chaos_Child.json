@@ -2,7 +2,7 @@
   "Name": "Chaos Child",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/cult_leader",
+  "Sprite_path" : "entities/child",
   "Still": {
     "Path": "entities/creepy_child_still.png"
   },

@@ -22,6 +22,9 @@
     "Ego": 10,
     "Sight": 10
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": false,
     "ai_path": "ais/male_cultist.lua"
 }

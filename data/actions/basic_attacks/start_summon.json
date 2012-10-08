@@ -1,9 +1,12 @@
 {
   "Name"     : "Start Summon",
   "Kind"     : "Terror",
-  "Animation": "pulse",
+  "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/chant.png"
+  },
+  "Sounds"   : {
+    "ritual": "Haunts/SFX/Denizens/Bosses/Ancient One/Ritual"
   },
   "Ap"       : 20,
   "Strength" : 30,

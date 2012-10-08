@@ -2,9 +2,9 @@
   "Name": "Alexander Tostowaryk",
   "Dx": 1,
   "Dy": 1,
-  "Sprite_path" : "entities/bosch",
+  "Sprite_path" : "entities/psycho",
   "Still": {
-    "Path": "entities/bosch_still.png"
+    "Path": "entities/psychopath_still.png"
   },
   "Action_names": [
     "Move",
@@ -21,6 +21,9 @@
     "Corpus": 2,
     "Ego": 2,
     "Sight": 10
+  },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
   },
     "Ai_path": "ais/technician.lua"
 }

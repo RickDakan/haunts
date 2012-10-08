@@ -10,7 +10,7 @@
   "Animation" : "cast",
   "Target_enemies": true,
   "Sounds"   : {
-    "blast": "Haunts/SFX/Intruders/Detective/Dragonfire"
+    "blast": "Haunts/SFX/Intruders/Detective/Bombard"
   },
   "Texture"   : {
     "Path": "actions/icons/bombard.png"

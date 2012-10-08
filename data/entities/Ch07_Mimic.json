@@ -24,5 +24,7 @@
     "Sight": 10
   },
   "Dissolve": false,
-  "ai_path": "ais/female_cultist.lua"
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  }
 }

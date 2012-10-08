@@ -29,7 +29,8 @@
 		<section name="node">
 			<attribute key="id" type="int">1</attribute>
 			<attribute key="label" type="String">walk_02
-time:150</attribute>
+time:150
+func:step</attribute>
 			<section name="graphics">
 				<attribute key="x" type="double">-150.0</attribute>
 				<attribute key="y" type="double">286.8330078125</attribute>
@@ -41,7 +42,8 @@ time:150</attribute>
 			</section>
 			<section name="LabelGraphics">
 				<attribute key="text" type="String">walk_02
-time:150</attribute>
+time:150
+func:step</attribute>
 				<attribute key="fontSize" type="int">12</attribute>
 				<attribute key="fontName" type="String">Dialog</attribute>
 				<attribute key="anchor" type="String">c</attribute>

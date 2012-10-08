@@ -23,5 +23,8 @@
     "Ego": 10,
     "Sight": 10
   },
+    "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
     "Ai_path": "ais/robed_cultist_new.lua"
 }

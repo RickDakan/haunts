@@ -1,9 +1,12 @@
 {
   "Name"     : "Summon Shadow",
   "Kind"     : "Fire",
-  "Animation": "pulse",
+  "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"
+  },
+  "Sounds"   : {
+    "summon": "Haunts//SFX/Denizens/Cultists/Cult Leader/Summon"
   },
   "Ap"       : 8,
   "Range"    : 3,

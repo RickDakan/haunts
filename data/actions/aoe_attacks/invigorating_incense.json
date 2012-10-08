@@ -12,7 +12,7 @@
   "Diameter"  : 3,
   "Target_allies": true,
   "Sounds"   : {
-    "smoking": "Haunts/SFX/Intruders/Reporter/beaker_b.png"
+    "smoking": "Haunts/SFX/Intruders/Reporter/smoking"
   },  
   "Conditions": [
      "Attack +2"

@@ -9,7 +9,7 @@
   "Animation" : "inhibit",
   "Target_enemies": true,
   "Sounds"   : {
-  "inhibit": "Haunts/SFX/Intruders/Hunter/Paramagnetic Pulse"
+  "inhibit": "Haunts/SFX/Intruders/Hunter/EMR Inhibitor"
   },
   "Texture"   : {
     "Path": "actions/icons/inhibit.png"

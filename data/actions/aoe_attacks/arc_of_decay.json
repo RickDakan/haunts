@@ -9,7 +9,7 @@
   "Animation" : "melee",
   "Target_enemies": true,
   "Sounds"   : {
-    "summon": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Arc of Decay"
+    "arc": "Haunts/SFX/Denizens/Ghosts/Master of the Manse/Arc of Decay"
   },  
   "Texture"   : {
     "Path": "actions/icons/arc.png"

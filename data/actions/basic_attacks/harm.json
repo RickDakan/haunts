@@ -11,6 +11,6 @@
   "Range"    : 1,
   "Target_enemies": true,
   "Sounds"   : {
-    "fire": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
+    "blade": "Haunts/SFX/Denizens/Cultists/Robed Cultist/Sacrificial Blade"
     }  
 }

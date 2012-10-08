@@ -22,6 +22,9 @@
     "Ego": 7,
     "Sight": 10
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": true,
   "Ai_path": "ais/ch09/fiend.lua"
 }

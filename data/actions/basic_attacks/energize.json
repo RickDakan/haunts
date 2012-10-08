@@ -11,7 +11,7 @@
   "Range"    : 1,
   "Target_allies": true,
   "Sounds"   : {
-    "soothe": "Haunts/SFX/Intruders/Teen/Psychic Shroud"
+    "energize": "Haunts/SFX/Denizens/Bosses/Golem/Energize"
   },
   "Conditions": [
      "Restore"

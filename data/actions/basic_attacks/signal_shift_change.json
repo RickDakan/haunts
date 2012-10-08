@@ -5,6 +5,9 @@
   "Texture"   : {
     "Path": "actions/icons/device.png"
   },
+  "Sounds"   : {
+    "activate": "Haunts/SFX/Denizens/Evil Genius/Activate"
+  },
   "Ap"       : 7,
   "Strength" : 30,
   "Damage"   : 0,

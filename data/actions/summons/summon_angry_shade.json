@@ -2,6 +2,9 @@
   "Name"     : "Summon Angry Shade",
   "Kind"     : "Fire",
   "Animation": "summon",
+  "Sounds"   : {
+    "summon": "Haunts//SFX/Denizens/Cultists/Cult Leader/Summon"
+  },  
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"
   },

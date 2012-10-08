@@ -22,6 +22,9 @@
     "Ego": 9,
     "Sight": 10
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": false,
   "ai_path": "ais/eidolon.lua"
 }

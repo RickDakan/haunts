@@ -23,6 +23,9 @@
     "Ego": 10,
     "Sight": 10
   },
+  "Sounds": {
+    "step": "Haunts/SFX/Intruders/Footsteps"
+  },
   "Dissolve": true,
   "ai_path": "ais/wraith_new.lua"
 }

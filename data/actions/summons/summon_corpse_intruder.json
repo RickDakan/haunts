@@ -5,6 +5,9 @@
  "Texture"   : {
     "Path": "actions/icons/summon_chill.png"
   },
+  "Sounds"   : {
+    "summon": "Haunts//SFX/Denizens/Cultists/Cult Leader/Summon"
+  },
   "Ap"       : 7,
   "Range"    : 3,
   "Ent_name" : "Corpse for Evans",
