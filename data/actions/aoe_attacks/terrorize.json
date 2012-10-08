@@ -1,6 +1,6 @@
 {
   "Name"      : "Terrorize",
-  "Kind"      : "Fire",
+  "Kind"      : "AP",
   "Ap"        : 3,
   "Strength"  : 10,
   "Damage"    : 0,

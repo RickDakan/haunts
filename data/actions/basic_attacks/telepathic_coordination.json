@@ -1,6 +1,6 @@
 {
   "Name"      : "Telepathic Coordination",
-  "Kind"      : "Poison",
+  "Kind"      : "Attack",
   "Ap"        : 3,
   "Strength"  : 10,
   "Damage"    : 0,

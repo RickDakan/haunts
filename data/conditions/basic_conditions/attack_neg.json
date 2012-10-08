@@ -1,7 +1,7 @@
 {
   "Name": "Attack -2",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "Attack",
   "Duration": 2,
   "Base": {
     "Attack": -2

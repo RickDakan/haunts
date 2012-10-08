@@ -1,6 +1,6 @@
 {
   "Name"     : "Unstoppable",
-  "Kind"     : "Terror",
+  "Kind"     : "HP",
   "Animation": "summon",
   "Texture"   : {
     "Path": "actions/icons/wind.png"

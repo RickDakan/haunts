@@ -1,7 +1,7 @@
 {
   "Name": "Corpus -2",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "Corpus",
   "Duration": 2,
   "Base": {
     "Corpus": -2

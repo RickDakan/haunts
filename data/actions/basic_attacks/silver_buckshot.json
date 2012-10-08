@@ -1,6 +1,6 @@
 {
   "Name"     : "Silver Buckshot",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/silver.png"

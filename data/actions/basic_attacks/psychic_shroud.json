@@ -1,6 +1,6 @@
 {
   "Name"     : "Psychic Shroud",
-  "Kind"     : "Terror",
+  "Kind"     : "Ego",
   "Animation": "summon",
   "Texture"   : {
     "Path": "actions/icons/shroud.png"

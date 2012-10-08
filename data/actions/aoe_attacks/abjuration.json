@@ -1,6 +1,6 @@
 {
   "Name"      : "Abjuration",
-  "Kind"      : "Fire",
+  "Kind"      : "HP",
   "Ap"        : 5,
   "Strength"  : 10,
   "Damage"    : 3,

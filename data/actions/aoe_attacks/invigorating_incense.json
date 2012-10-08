@@ -1,6 +1,6 @@
 {
   "Name"     : "Invigorating Incense",
-  "Kind"     : "Fire",
+  "Kind"     : "Attack",
   "Animation": "ward",
   "Texture"   : {
     "Path": "actions/icons/disrupt.png"

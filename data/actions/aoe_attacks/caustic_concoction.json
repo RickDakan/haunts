@@ -1,6 +1,6 @@
 {
   "Name"      : "Caustic Concoction",
-  "Kind"      : "Fire",
+  "Kind"      : "AP",
   "Ap"        : 5,
   "Strength"  : 10,
   "Damage"    : 2,

@@ -1,7 +1,7 @@
 {
   "Name": "Poison",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "HP",
   "Duration": 3,
   "Dynamic": {
     "Hp": -1

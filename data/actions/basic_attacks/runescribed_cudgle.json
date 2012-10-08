@@ -1,6 +1,6 @@
 {
   "Name"     : "Runescribed Cudgel",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/truncheon.png"

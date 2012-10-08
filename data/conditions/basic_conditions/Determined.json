@@ -1,7 +1,7 @@
 {
   "Name": "Determined",
   "Strength": 5,
-  "Kind": "Terror",
+  "Kind": "HP",
   "Duration": 300,
   "Base": {
     "HpCur": 20

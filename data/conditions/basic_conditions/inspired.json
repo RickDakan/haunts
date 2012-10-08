@@ -1,7 +1,7 @@
 {
   "Name": "Inspired",
   "Strength": 5,
-  "Kind": "Terror",
+  "Kind": "Ego",
   "Duration": 3,
   "Base": {
     "Ego": 2

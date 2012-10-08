@@ -1,6 +1,6 @@
 {
   "Name"     : "Disruption Broadcaster",
-  "Kind"     : "Fire",
+  "Kind"     : "Attack",
   "Animation": "pulse",
   "Texture"   : {
     "Path": "actions/icons/device.png"

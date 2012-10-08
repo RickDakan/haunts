@@ -1,6 +1,6 @@
 {
   "Name"     : "Vengeful Curse",
-  "Kind"     : "Terror",
+  "Kind"     : "Corpus",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/vengeful.png"

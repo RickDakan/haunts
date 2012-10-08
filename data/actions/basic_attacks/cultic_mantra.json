@@ -1,6 +1,6 @@
 {
   "Name"     : "Cultic Mantra",
-  "Kind"     : "Terror",
+  "Kind"     : "Corpus",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/chant_b.png"

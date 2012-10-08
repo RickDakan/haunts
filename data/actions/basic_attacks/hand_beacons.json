@@ -1,6 +1,6 @@
 {
   "Name"     : "Hand Beacons",
-  "Kind"     : "Terror",
+  "Kind"     : "HP",
   "Animation": "pulse",
   "Texture"   : {
     "Path": "actions/icons/abjurate.png"

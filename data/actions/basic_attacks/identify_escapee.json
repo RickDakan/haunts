@@ -1,6 +1,6 @@
 {
   "Name"     : "Identify Escapee",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "pulse",
   "Texture"   : 
   {

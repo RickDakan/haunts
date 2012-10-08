@@ -1,6 +1,6 @@
 {
   "Name"     : "Pistol",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/pistol.png"

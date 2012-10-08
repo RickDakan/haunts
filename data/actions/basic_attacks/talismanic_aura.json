@@ -1,6 +1,6 @@
 {
   "Name"     : "Talismanic Aura",
-  "Kind"     : "Fire",
+  "Kind"     : "AP",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/nazar.png"

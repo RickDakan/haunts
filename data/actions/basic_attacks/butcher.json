@@ -1,6 +1,6 @@
 {
   "Name"     : "Butcher",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/knife.png"

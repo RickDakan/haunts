@@ -1,6 +1,6 @@
 {
   "Name"     : "Parasitic Gift",
-  "Kind"     : "Poison",
+  "Kind"     : "AP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/squid.png"

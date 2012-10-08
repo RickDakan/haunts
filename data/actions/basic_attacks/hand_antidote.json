@@ -1,6 +1,6 @@
 {
   "Name"     : "Hand Antidote",
-  "Kind"     : "Terror",
+  "Kind"     : "HP",
   "Animation": "pulse",
   "Texture"   : {
     "Path": "actions/icons/beaker_b.png"

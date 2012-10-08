@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Swarming Shade",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "pulse",
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"

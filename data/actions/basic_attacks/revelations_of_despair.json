@@ -1,6 +1,6 @@
 {
   "Name"     : "Revelations of Despair",
-  "Kind"     : "Terror",
+  "Kind"     : "AP",
   "Animation": "chant",
   "Texture"   : {
     "Path": "actions/icons/visions_b.png"

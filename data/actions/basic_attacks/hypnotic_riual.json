@@ -1,6 +1,6 @@
 {
   "Name"     : "Hypnotic Ritual",
-  "Kind"     : "Terror",
+  "Kind"     : "AP",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/chant.png"

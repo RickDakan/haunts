@@ -1,7 +1,7 @@
 {
   "Name": "Energized",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "AP",
   "Duration": 3,
   "Dynamic": {
     "Ap": 1

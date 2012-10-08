@@ -1,6 +1,6 @@
 {
   "Name"     : "Codex",
-  "Kind"     : "Fire",
+  "Kind"     : "Corpus",
   "Animation": "summon",
   "Texture"   : {
     "Path": "actions/icons/white_codex.png"

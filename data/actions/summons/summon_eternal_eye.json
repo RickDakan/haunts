@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Eternal Eye",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/abjurate.png"

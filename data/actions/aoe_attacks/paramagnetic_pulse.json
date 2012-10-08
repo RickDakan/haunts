@@ -1,6 +1,6 @@
 {
   "Name"      : "Paramagnetic Pulse",
-  "Kind"      : "Fire",
+  "Kind"      : "HP",
   "Ap"        : 4,
   "Strength"  : 10,
   "Damage"    : 4,

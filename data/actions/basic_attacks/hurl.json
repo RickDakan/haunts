@@ -1,6 +1,6 @@
 {
   "Name"     : "Hurl",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/piece.png"

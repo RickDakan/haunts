@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Golem Prototype",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "pulse",
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"

@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Angry Shade",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
   "Sounds"   : {
     "summon": "Haunts//SFX/Denizens/Cultists/Cult Leader/Summon"

@@ -1,6 +1,6 @@
 {
   "Name"     : "Swipe",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/squid_hand.png"

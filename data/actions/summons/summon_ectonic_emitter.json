@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Ectonic Emitter",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/abjurate.png"

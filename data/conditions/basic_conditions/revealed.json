@@ -1,7 +1,7 @@
 {
   "Name": "Revealed",
   "Strength": 100,
-  "Kind": "Terror",
+  "Kind": "Corpus",
   "Duration": 100,
   "Base": {
     "Corpus": 3

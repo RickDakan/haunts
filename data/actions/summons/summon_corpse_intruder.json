@@ -1,6 +1,6 @@
 {
   "Name"     : "Raise Corpse",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/summon_chill.png"

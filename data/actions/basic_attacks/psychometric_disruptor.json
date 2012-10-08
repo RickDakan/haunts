@@ -1,6 +1,6 @@
 {
   "Name"     : "Psychometric Disruptor",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/disrupt.png"

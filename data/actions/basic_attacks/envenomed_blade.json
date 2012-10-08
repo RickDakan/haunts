@@ -1,6 +1,6 @@
 {
   "Name"     : "Envenomed Blade",
-  "Kind"     : "Poison",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/dagger.png"

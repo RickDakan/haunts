@@ -1,6 +1,6 @@
 {
   "Name"      : "Umbral Leech",
-  "Kind"      : "Fire",
+  "Kind"      : "HP",
   "Ap"        : 8,
   "Strength"  : 10,
   "Damage"    : 3,

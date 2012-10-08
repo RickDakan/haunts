@@ -1,6 +1,6 @@
 {
   "Name"     : "Sedate",
-  "Kind"     : "Poison",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/dagger_b.png"

@@ -1,7 +1,7 @@
 {
   "Name": "Dot",
   "Strength": 3,
-  "Kind": "Poison",
+  "Kind": "HP",
   "Duration": 30,
   "Dynamic": {
     "Hp": -1

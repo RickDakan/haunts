@@ -1,7 +1,7 @@
 {
   "Name": "Restore",
   "Strength": 20,
-  "Kind": "Poison",
+  "Kind": "HP",
   "Duration": 1,
   "Dynamic": {
     "Hp": 5

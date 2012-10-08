@@ -1,6 +1,6 @@
 {
   "Name"     : "Aetheric Flintlocks",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/flintlock.png"

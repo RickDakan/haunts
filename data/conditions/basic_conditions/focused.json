@@ -1,7 +1,7 @@
 {
   "Name": "Focused",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "Attack",
   "Duration": 5,
   "Base": {
     "Attack": 2

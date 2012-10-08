@@ -1,6 +1,6 @@
 {
   "Name"     : "Start Summon",
-  "Kind"     : "Terror",
+  "Kind"     : "Corpus",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/chant.png"

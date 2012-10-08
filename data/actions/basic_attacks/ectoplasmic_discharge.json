@@ -1,6 +1,6 @@
 {
   "Name"     : "Ectoplasmic Discharge",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/discharge.png"

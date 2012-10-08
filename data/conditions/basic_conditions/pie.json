@@ -1,7 +1,7 @@
 {
   "Name": "Mmmm pie....",
   "Strength": 10,
-  "Kind": "Terror",
+  "Kind": "Corpus",
   "Base": {
     "Corpus": 3
   }

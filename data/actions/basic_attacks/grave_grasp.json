@@ -1,6 +1,6 @@
 {
   "Name"     : "Grave Grasp",
-  "Kind"     : "Terror",
+  "Kind"     : "AP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/grasp.png"

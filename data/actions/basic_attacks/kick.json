@@ -1,6 +1,6 @@
 {
   "Name"     : "Kick",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/kick.png"

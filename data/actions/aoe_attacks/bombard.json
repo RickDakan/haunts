@@ -1,6 +1,6 @@
 {
   "Name"      : "Blessed Bombard",
-  "Kind"      : "Fire",
+  "Kind"      : "HP",
   "Ap"        : 3,
   "Strength"  : 10,
   "Damage"    : 6,

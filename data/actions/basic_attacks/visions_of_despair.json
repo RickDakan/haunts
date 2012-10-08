@@ -1,6 +1,6 @@
 {
   "Name"     : "Visions of Despair",
-  "Kind"     : "Terror",
+  "Kind"     : "AP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/visions.png"

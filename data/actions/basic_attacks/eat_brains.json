@@ -1,6 +1,6 @@
 {
   "Name"     : "Eat Brains",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Ap"       : 4,
   "Strength" : 10,

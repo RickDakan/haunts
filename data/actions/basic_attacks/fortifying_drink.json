@@ -1,6 +1,6 @@
 {
   "Name"     : "Fortifying Drink",
-  "Kind"     : "Terror",
+  "Kind"     : "Corpus",
   "Animation": "fortify",
   "Texture"   : {
     "Path": "actions/icons/flask.png"

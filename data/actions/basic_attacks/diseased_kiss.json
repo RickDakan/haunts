@@ -1,6 +1,6 @@
 {
   "Name"     : "Diseased Kiss",
-  "Kind"     : "Poison",
+  "Kind"     : "HP",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/kiss.png"

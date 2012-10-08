@@ -1,6 +1,6 @@
 {
   "Name"     : "Brandish Idol",
-  "Kind"     : "Fire",
+  "Kind"     : "AP",
   "Animation": "pulse",
   "Texture"   : {
     "Path": "actions/icons/idol.png"

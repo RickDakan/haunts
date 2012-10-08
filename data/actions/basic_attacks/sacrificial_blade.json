@@ -1,6 +1,6 @@
 {
   "Name"     : "Sacrificial Blade",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/sword.png"

@@ -1,7 +1,7 @@
 {
   "Name": "Visions of Despair",
   "Strength": 10,
-  "Kind": "Panic",
+  "Kind": "Sight",
   "Duration": 3,
   "Dynamic": {
     "Sight": -28

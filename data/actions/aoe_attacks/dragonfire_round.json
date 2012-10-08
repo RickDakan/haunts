@@ -1,6 +1,6 @@
 {
   "Name"      : "Dragonfire Round",
-  "Kind"      : "Fire",
+  "Kind"      : "HP",
   "Ap"        : 5,
   "Strength"  : 12,
   "Damage"    : 5,

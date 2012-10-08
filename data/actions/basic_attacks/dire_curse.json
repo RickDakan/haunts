@@ -1,6 +1,6 @@
 {
   "Name"     : "Dire Curse",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "ranged",
   "Texture"   : {
     "Path": "actions/icons/dire_curse.png"

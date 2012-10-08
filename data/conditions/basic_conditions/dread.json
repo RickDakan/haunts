@@ -1,7 +1,7 @@
 {
   "Name": "Dread",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "AP",
   "Duration": 4,
   "Dynamic": {
     "Ap": -1

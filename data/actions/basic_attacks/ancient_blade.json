@@ -1,6 +1,6 @@
 {
   "Name"     : "Ancient Blade",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/sword_b.png"

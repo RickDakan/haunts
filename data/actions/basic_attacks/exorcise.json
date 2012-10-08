@@ -1,6 +1,6 @@
 {
   "Name"     : "Exorcise",
-  "Kind"     : "Fire",
+  "Kind"     : "HP",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/exorcise.png"

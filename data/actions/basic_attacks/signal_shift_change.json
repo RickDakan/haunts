@@ -1,6 +1,6 @@
 {
   "Name"     : "Signal Shift Change",
-  "Kind"     : "Terror",
+  "Kind"     : "Ego",
   "Animation": "pulse",
   "Texture"   : {
     "Path": "actions/icons/device.png"

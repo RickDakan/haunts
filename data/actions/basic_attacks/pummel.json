@@ -1,6 +1,6 @@
 {
   "Name"     : "Pummel",
-  "Kind"     : "Brutal",
+  "Kind"     : "HP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/pummel.png"

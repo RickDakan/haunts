@@ -1,6 +1,6 @@
 {
   "Name"     : "Energize",
-  "Kind"     : "Terror",
+  "Kind"     : "HP",
   "Animation": "ward",
   "Texture"   : {
     "Path": "actions/icons/charge.png"

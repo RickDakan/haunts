@@ -1,7 +1,7 @@
 {
   "Name": "AP -2",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "AP",
   "Duration": 2,
   "Dynamic": {
     "Ap": -2

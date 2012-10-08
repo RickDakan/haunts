@@ -1,6 +1,6 @@
 {
   "Name"     : "Place Pylon",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/abjurate.png"

@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Lost Soul",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/summon_orb.png"

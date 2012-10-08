@@ -1,7 +1,7 @@
 {
   "Name": "Grave Grasp",
   "Strength": 5,
-  "Kind": "Poison",
+  "Kind": "Corpus",
   "Duration": 3,
   "Base": {
     "Corpus": -2

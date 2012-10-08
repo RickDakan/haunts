@@ -1,7 +1,7 @@
 {
   "Name": "Panic",
   "Strength": 5,
-  "Kind": "Poison",
+  "Kind": "Attack",
   "Duration": 2,
   "Base": {
     "Attack": -2

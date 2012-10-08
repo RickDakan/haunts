@@ -1,6 +1,6 @@
 {
   "Name"     : "Psychotic Laugh",
-  "Kind"     : "Terror",
+  "Kind"     : "Corpus",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/laugh.png"

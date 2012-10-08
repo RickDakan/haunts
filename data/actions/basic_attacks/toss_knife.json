@@ -1,6 +1,6 @@
 {
   "Name"     : "Toss",
-  "Kind"     : "Brutal",
+  "Kind"     : "AP",
   "Animation": "melee",
   "Texture"   : {
     "Path": "actions/icons/thrown.png"

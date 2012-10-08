@@ -1,6 +1,6 @@
 {
   "Name"     : "Crozier",
-  "Kind"     : "Terror",
+  "Kind"     : "AP",
   "Animation": "ranged",
   "Texture"   : {
   "Path": "actions/icons/cast.png"

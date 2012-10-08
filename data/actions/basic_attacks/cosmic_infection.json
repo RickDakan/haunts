@@ -1,6 +1,6 @@
 {
   "Name"     : "Cosmic Infection",
-  "Kind"     : "Poison",
+  "Kind"     : "HP",
   "Animation": "infect",
   "Texture"   : {
     "Path": "actions/icons/infect.png"

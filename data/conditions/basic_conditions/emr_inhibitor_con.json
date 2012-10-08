@@ -1,7 +1,7 @@
 {
   "Name": "EMR Inhibitor",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "Attack",
   "Duration": 2,
   "Base": {
     "Attack": -2

@@ -1,6 +1,6 @@
 {
   "Name"     : "Ghastly Howl",
-  "Kind"     : "Terror",
+  "Kind"     : "Attack",
   "Animation": "cast",
   "Texture"   : {
     "Path": "actions/icons/grasp.png"

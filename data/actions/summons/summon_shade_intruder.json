@@ -1,6 +1,6 @@
 {
   "Name"     : "Summon Shadow",
-  "Kind"     : "Fire",
+  "Kind"     : "Ego",
   "Animation": "summon",
  "Texture"   : {
     "Path": "actions/icons/summon_shade.png"

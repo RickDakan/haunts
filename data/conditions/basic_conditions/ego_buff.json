@@ -1,7 +1,7 @@
 {
   "Name": "Ego +2",
   "Strength": 10,
-  "Kind": "Poison",
+  "Kind": "Ego",
   "Duration": 3,
   "Base": {
     "Ego": 2
