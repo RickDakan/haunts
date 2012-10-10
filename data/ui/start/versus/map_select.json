@@ -119,5 +119,16 @@
     },
     "Text": "1972 - Pandaemonium",
     "Size": 20
+  },
+  {
+    "Id": "Lvl10.lua",
+    "Small": {
+      "Path": "ui/start/versus/eidolon.png"
+    },
+    "Large": {
+      "Path": "ui/start/versus/lvl_01.png"
+    },
+    "Text": "1982 - Welcome to your nightmare",
+    "Size": 20
   }
 ]
